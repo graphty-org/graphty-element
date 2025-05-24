@@ -1,6 +1,6 @@
-import type { Preview } from '@storybook/html'
+import type {Preview} from '@storybook/html'
 import '@storybook/addon-console';
-import { setCustomElementsManifest } from '@storybook/web-components'
+import {setCustomElementsManifest} from '@storybook/web-components'
 // @ts-ignore
 import manifest from 'virtual:vite-plugin-cem/custom-elements-manifest';
 
@@ -11,8 +11,8 @@ const preview: Preview = {
     // actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {
       matchers: {
-       color: /(background|color)$/i,
-       date: /Date$/i,
+        color: /(background|color)$/i,
+        date: /Date$/i,
       },
     },
   },

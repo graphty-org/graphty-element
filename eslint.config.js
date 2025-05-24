@@ -5,7 +5,13 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config({
-    files: ["src/**/*.ts", "stories/**/*.ts", "eslint.config.js"],
+    files: [
+        "src/**/*.ts",
+        "stories/**/*.ts",
+        "index.ts",
+        "eslint.config.js",
+        "vite.config.ts",
+    ],
     ignores: ["dist/**/*"],
     extends: [
         eslint.configs.recommended,
