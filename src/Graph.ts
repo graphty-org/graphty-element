@@ -10,8 +10,8 @@ import {
     WebXRDefaultExperience,
     WebXREnterExitUIButton,
 } from "@babylonjs/core";
-import {EdgeEvent, EventCallbackType, EventType, GraphEvent, NodeEvent} from "./Events";
-import {FetchEdges, FetchNodes, GraphConfig, GraphOpts, LoadJsonDataOpts, getConfig, getJsonDataOpts} from "./Config";
+import {EdgeEvent, EventCallbackType, EventType, GraphEvent, NodeEvent} from "./events";
+import {FetchEdges, FetchNodes, GraphConfig, GraphOpts, LoadJsonDataOpts, getConfig, getJsonDataOpts} from "./config";
 import {GraphEngine, GraphEngineNames} from "./engine/GraphEngine";
 import {Node, NodeIdType} from "./Node";
 import {D3GraphEngine} from "./engine/D3GraphEngine";

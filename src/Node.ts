@@ -10,7 +10,7 @@ import {
     StandardMaterial,
 } from "@babylonjs/core";
 import type {Graph} from "./Graph";
-import type {NodeStyleConfig} from "./Config";
+import type {NodeStyleConfig} from "./config";
 import {colorNameToHex} from "./util";
 
 const GOLDEN_RATIO = 1.618;

@@ -13,7 +13,7 @@ import {
     Vector3,
 } from "@babylonjs/core";
 import {Node, NodeIdType} from "./Node";
-import type {EdgeStyleConfig} from "./Config";
+import type {EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import {colorNameToHex} from "./util";
 
