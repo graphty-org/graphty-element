@@ -1,4 +1,4 @@
-import {Graph} from "../../index.ts";
+import {Graph} from "../index.ts";
 
 export interface GraphProps {
     // nodeColor?: string;

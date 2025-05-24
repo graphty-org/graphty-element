@@ -1,4 +1,4 @@
-import "../../index.ts";
+import "../index.ts";
 
 export default {
     title: "Graphty",
