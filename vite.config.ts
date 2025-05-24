@@ -1,21 +1,26 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, UserConfig } from "vite";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import VitePluginCustomElementsManifest from 'vite-plugin-cem';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
-  return {
-    plugins: [],
+  let config: UserConfig = {
+    plugins: [
+      VitePluginCustomElementsManifest({
+        files: ['./src/Component.ts']
+      })
+    ],
     build: {
       lib: {
         // Could also be a dictionary or array of multiple entry points
         entry: "./index.ts",
-        name: "HtmlMesh",
+        name: "Graphty",
         // the proper extensions will be added
-        fileName: "babylon-forcegraph",
+        // fileName: "graphty",
       },
       rollupOptions: {
         external: [
@@ -39,26 +44,32 @@ export default defineConfig(({ command, mode }) => {
         "@babylonjs/loaders"
       ]
     },
-    server: {
-      hmr: {
-        host: env.HOST
-      },
-      host: env.HOST,
-      watch: {
-        usePolling: true,
-      },
-      port: parseInt(env.PORT),
-      https: {
-        key: readFileSync(env.HTTPS_KEY_PATH),
-        cert: readFileSync(env.HTTPS_CERT_PATH),
-      }
-    },
     resolve: {
       alias: {
         "babylon-forcegraph": resolve(__dirname, "./index.ts"),
       },
     },
+    server: {
+      host: true
+    }
   }
+
+  if(env.HOST) {
+    config.server!.host = env.HOST;
+  }
+
+  if (env.PORT) {
+    config.server!.port = parseInt(env.PORT);
+  }
+
+  if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH) {
+    config.server!.https = {
+      key: readFileSync(env.HTTPS_KEY_PATH),
+      cert: readFileSync(env.HTTPS_CERT_PATH)
+    };
+  }
+  
+  return config;
 })
 
 

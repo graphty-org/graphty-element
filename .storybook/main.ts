@@ -1,4 +1,4 @@
-import type { StorybookConfig } from '@storybook/html-vite';
+import type { StorybookConfig } from '@storybook/web-components-vite';
 
 const config: StorybookConfig = {
   "stories": [
@@ -7,11 +7,11 @@ const config: StorybookConfig = {
   ],
   "addons": [
     "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "@chromatic-com/storybook"
+    "@chromatic-com/storybook",
+    "@storybook/experimental-addon-test"
   ],
   "framework": {
-    "name": "@storybook/html-vite",
+    "name": "@storybook/web-components-vite",
     "options": {}
   },
   "core": {
