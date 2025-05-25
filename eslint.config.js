@@ -8,6 +8,7 @@ export default tseslint.config({
     files: [
         "src/**/*.ts",
         "stories/**/*.ts",
+        ".storybook/**/*.ts",
         "index.ts",
         "eslint.config.js",
         "vite.config.ts",

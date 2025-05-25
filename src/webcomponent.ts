@@ -1,16 +1,20 @@
+/**
+ * Graphty creates a graph
+ */
 export class Graphty extends HTMLElement {
-    /**
-     * @attr {boolean} thing - some random thing that I'm trying out
-     */
     connectedCallback() {
         this.innerHTML = "<p>Placeholder: Graphty goes here.</p>";
     }
 
-    get thing() {
-        return 1;
+    /**
+     * This is my thing description
+     * @default false
+     */
+    get thing(): boolean {
+        return true;
     }
 
-    set thing(_v) {}
+    set thing(_v: boolean) {}
 }
 
 window.customElements.define("graphty-core", Graphty);
