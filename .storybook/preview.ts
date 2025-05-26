@@ -1,5 +1,6 @@
 import "@storybook/addon-console";
 import {Preview, setCustomElementsManifest} from "@storybook/web-components";
+import DocumentationTemplate from "./DocumentationTemplate.mdx";
 // @ts-expect-error TS doesn't recognize virtual imports?
 import manifest from "virtual:vite-plugin-cem/custom-elements-manifest";
 
@@ -14,6 +15,9 @@ const preview: Preview = {
                 color: /(background|color)$/i,
                 date: /Date$/i,
             },
+        },
+        docs: {
+            page: DocumentationTemplate,
         },
     },
 };
