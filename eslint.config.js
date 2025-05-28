@@ -7,6 +7,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config({
     files: [
         "src/**/*.ts",
+        "test/**/*.ts",
         "stories/**/*.ts",
         ".storybook/**/*.ts",
         "index.ts",
