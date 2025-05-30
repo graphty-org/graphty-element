@@ -5,7 +5,6 @@ import type {GraphEngineNames} from "./engine/GraphEngine";
 import {Node} from "./Node";
 import color from "color-string";
 import convert from "color-convert";
-// @ts-expect-error module is missing typescript definitions
 import defaultsDeep from "lodash.defaultsdeep";
 import {z} from "zod/v4";
 
@@ -89,7 +88,6 @@ export const NodeShapes = z.enum([
 
 export function colorToHex(s: string): string | undefined {
     const c = color.get(s);
-    console.log("c", c);
     if (c === null) {
         console.warn("invalid color:", s);
         return undefined;
@@ -111,9 +109,7 @@ export function colorToHex(s: string): string | undefined {
         return undefined;
     }
     const alpha: number = c.value[3] ?? 1;
-    console.log("alpha", alpha);
     const alphaStr: string = Math.round(alpha * 255).toString(16).padStart(2, "0").toUpperCase();
-    console.log("alphaStr", alphaStr);
 
     return `#${hex}${alphaStr}`;
 }
@@ -125,7 +121,7 @@ export const NodeStyle = z.strictObject({
     color: z.optional(z.string().pipe(z.transform(colorToHex))),
     label: z.optional(z.boolean()),
     shape: z.optional(NodeShapes),
-    // nodeMeshFactory?: NodeMeshFactory;
+    nodeMeshFactory: z.optional(z.instanceof(Function)),
 });
 
 export const EdgeStyle = z.strictObject({});
@@ -151,7 +147,12 @@ export const StyleLayer = z.strictObject({
     );
 
 export const StyleSchema = z.array(StyleLayer);
+
+// style types
 export type StyleSchemaType = z.infer<typeof StyleSchema>
+export type StyleLayerType = z.infer<typeof StyleLayer>
+export type NodeStyleType = z.infer<typeof NodeStyle>
+export type EdgeStyleType = z.infer<typeof EdgeStyle>
 
 /** * GRAPH TYPES ***/
 

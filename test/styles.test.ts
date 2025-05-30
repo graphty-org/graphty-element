@@ -1,9 +1,13 @@
-import {BasicDualStyle, BasicEdgeStyle, BasicNodeStyle} from "./helpers/styles.ts";
+import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, DefaultNodeStyle} from "./helpers/styles.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
+import {NodeStyle, colorToHex} from "../src/config.ts";
 import {assert, describe, it} from "vitest";
 import {Styles} from "../src/Styles.ts";
 import {ZodError} from "zod/v4";
-import {colorToHex} from "../src/config.ts";
+import data2Edges from "./helpers/data2-edges.json";
+import data2Nodes from "./helpers/data2-nodes.json";
+
+const ParsedDefaultNodeStyle = NodeStyle.parse(DefaultNodeStyle);
 
 describe("Styles", () => {
     it("exists and is a class", () => {
@@ -91,6 +95,60 @@ describe("Styles", () => {
 
             it("converted by hwba", () => {
                 assert.strictEqual(colorToHex("hwb(60, 3%, 60%, 0.6)"), "#66660899");
+            });
+        });
+
+        describe("applyData", () => {
+            it("picks node ids", () => {
+                const s = Styles.fromObject(BasicNodeSelector);
+
+                s.applyData(data2Nodes, data2Edges);
+
+                assert.lengthOf(s.layerSelectedNodes, 1);
+                assert.lengthOf(s.layerSelectedNodes[0], 3);
+                assert(s.layerSelectedNodes[0].has("Mlle.Baptistine"));
+                assert(s.layerSelectedNodes[0].has("Mlle.Gillenormand"));
+                assert(s.layerSelectedNodes[0].has("Mlle.Vaubois"));
+            });
+
+            it("all node ids", () => {
+                const s = Styles.fromObject(BasicNodeStyle);
+
+                s.applyData(data2Nodes, data2Edges);
+
+                assert.lengthOf(s.layerSelectedNodes, 1);
+                assert.lengthOf(s.layerSelectedNodes[0], 77);
+            });
+        });
+
+        describe("getStyleForNode", () => {
+            it("returns basic node style", () => {
+                const s = Styles.fromObject(BasicNodeStyle);
+                s.applyData(data2Nodes, data2Edges);
+
+                const style = s.getStyleForNode("Mlle.Baptistine");
+
+                assert.deepStrictEqual(style, ParsedDefaultNodeStyle);
+            });
+
+            it("returns empty style for node with no style", () => {
+                // picks out three nodes to style...
+                const s = Styles.fromObject(BasicNodeSelector);
+                s.applyData(data2Nodes, data2Edges);
+
+                // ...and asks for the style of one of the nodes with no style
+                const style = s.getStyleForNode("CountessdeLo");
+
+                assert.deepStrictEqual(style, {});
+            });
+
+            it("returns empty style when no styles loaded", () => {
+                const s = Styles.fromJson("[]");
+                s.applyData(data2Nodes, data2Edges);
+
+                const style = s.getStyleForNode("CountessdeLo");
+
+                assert.deepStrictEqual(style, {});
             });
         });
     });

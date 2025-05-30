@@ -1,31 +1,48 @@
+export const DefaultNodeStyle = {
+    size: 3.14,
+    opacity: 0.5,
+    wireframe: true,
+    color: "#c0ffee",
+    label: true,
+    shape: "goldberg",
+};
+
+export const DefaultAppliedNodeStyle = {
+    selector: "",
+    style: DefaultNodeStyle,
+};
+
+export const DefaultEdgeStyle = {};
+
+export const DefaultAppliedEdgeStyle = {
+    selector: "",
+    style: DefaultEdgeStyle,
+};
+
 export const BasicNodeStyle = [
     {
-        node: {
-            selector: "x",
-            style: {
-                size: 3.14,
-                opacity: 0.5,
-                wireframe: true,
-                color: "#c0ffee",
-                label: true,
-                shape: "goldberg",
-            },
-        },
+        node: DefaultAppliedNodeStyle,
     },
 ];
 
 export const BasicEdgeStyle = [
     {
-        edge: {
-            selector: "x",
-            style: {},
-        },
+        edge: DefaultAppliedEdgeStyle,
     },
 ];
 
 export const BasicDualStyle = [
     {
-        node: BasicNodeStyle[0].node,
-        edge: BasicEdgeStyle[0].edge,
+        node: DefaultAppliedNodeStyle,
+        edge: DefaultAppliedEdgeStyle,
+    },
+];
+
+export const BasicNodeSelector = [
+    {
+        node: {
+            selector: "starts_with(id, 'Mlle') == `true`",
+            style: DefaultNodeStyle,
+        },
     },
 ];
