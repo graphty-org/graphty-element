@@ -10,12 +10,30 @@ import {
     WebXRDefaultExperience,
     WebXREnterExitUIButton,
 } from "@babylonjs/core";
-import {EdgeEvent, EventCallbackType, EventType, GraphEvent, NodeEvent} from "./events";
-import {FetchEdges, FetchNodes, GraphConfig, GraphOpts, LoadJsonDataOpts, getConfig, getJsonDataOpts} from "./config";
-import {GraphEngine, GraphEngineNames} from "./engine/GraphEngine";
+
+import {
+    EdgeEvent,
+    EventCallbackType,
+    EventType,
+    GraphEvent,
+    NodeEvent,
+} from "./events";
+
+import {
+    FetchEdgesFn,
+    FetchNodesFn,
+    GraphConfig,
+    GraphEngineNamesType,
+    GraphOptsType,
+    LoadJsonDataConfig,
+    getConfig,
+    getJsonDataOpts,
+} from "./config";
+
 import {Node, NodeIdType} from "./Node";
 import {D3GraphEngine} from "./engine/D3GraphEngine";
 import {Edge} from "./Edge";
+import {GraphEngine} from "./engine/GraphEngine";
 import {MeshCache} from "./MeshCache";
 import {NGraphEngine} from "./engine/NGraphEngine";
 import {Stats} from "./Stats";
@@ -33,25 +51,30 @@ export class Graph {
     xrHelper?: WebXRDefaultExperience;
     meshCache: MeshCache;
     // graph engine
-    graphEngineType?: GraphEngineNames;
+    graphEngineType?: GraphEngineNamesType;
     graphEngine: GraphEngine;
     running = true;
     pinOnDrag?: boolean;
     // graph
-    fetchNodes?: FetchNodes;
-    fetchEdges?: FetchEdges;
+    fetchNodes?: FetchNodesFn;
+    fetchEdges?: FetchEdgesFn;
     // observeables
     graphObservable: Observable<GraphEvent> = new Observable();
     nodeObservable: Observable<NodeEvent> = new Observable();
     edgeObservable: Observable<EdgeEvent> = new Observable();
 
-    constructor(element: HTMLElement | string, opts: GraphOpts = {}) {
+    constructor(element: HTMLElement | string, opts?: GraphOptsType) {
         this.config = getConfig(opts);
         this.meshCache = new MeshCache();
 
         // configure graph
-        this.fetchNodes = this.config.behavior.fetchNodes;
-        this.fetchEdges = this.config.behavior.fetchEdges;
+        if (this.config.behavior.fetchNodes) {
+            this.fetchNodes = this.config.behavior.fetchNodes as FetchNodesFn;
+        }
+
+        if (this.config.behavior.fetchEdges) {
+            this.fetchEdges = this.config.behavior.fetchEdges as FetchEdgesFn;
+        }
 
         // get the element that we are going to use for placing our canvas
         if (typeof (element) === "string") {
@@ -269,12 +292,12 @@ export class Graph {
         }
     }
 
-    async loadJsonData(url: string, opts: LoadJsonDataOpts = {}): Promise<void> {
+    async loadJsonData(url: string, opts?: LoadJsonDataConfig): Promise<void> {
         this.stats.loadTime.beginMonitoring();
-        const {nodeListProp, edgeListProp, nodeIdProp, edgeSrcIdProp, edgeDstIdProp} = getJsonDataOpts(opts);
+        const {nodeListProp, edgeListProp, nodeIdProp, edgeSrcIdProp, edgeDstIdProp, fetchOpts} = getJsonDataOpts(opts);
 
         // fetch data from URL
-        const response = await fetch(url, opts.fetchOpts);
+        const response = await fetch(url, fetchOpts);
         const data = await response.json();
 
         // check data

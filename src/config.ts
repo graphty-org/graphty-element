@@ -1,64 +1,12 @@
-import {DeepRequired} from "./util";
 import {Edge} from "./Edge";
-import type {Graph} from "./Graph";
-import type {GraphEngineNames} from "./engine/GraphEngine";
+import {Graph} from "./Graph";
 import {Node} from "./Node";
 import color from "color-string";
 import convert from "color-convert";
-import defaultsDeep from "lodash.defaultsdeep";
 import {z} from "zod/v4";
 
-/** * DEFAULTS ***/
-
-export const defaultNodeStyleOpts: NodeStyleConfig = {
-    size: 1,
-    opacity: 1,
-    wireframe: false,
-    color: "lightgrey",
-    shape: "icosphere",
-    nodeMeshFactory: Node.defaultNodeMeshFactory,
-    label: false,
-};
-
-export const defaultEdgeStyleOpts: EdgeStyleConfig = {
-    type: "moving",
-    color: "white",
-    width: 0.25,
-    arrowCap: false,
-    movingLineOpts: {
-        baseColor: "lightgrey",
-    },
-    edgeMeshFactory: Edge.defaultEdgeMeshFactory,
-};
-
-export const defaultGraphOpts: GraphConfig = {
-    style: {
-        node: defaultNodeStyleOpts,
-        edge: defaultEdgeStyleOpts,
-        skybox: "",
-        startingCameraDistance: 30,
-    },
-    behavior: {
-        node: {
-            pinOnDrag: true,
-        },
-        fetchNodes: () => new Set(),
-        fetchEdges: () => new Set(),
-    },
-    engine: {
-        type: "ngraph",
-        stepMultiplier: 1,
-        preSteps: 0,
-        minDelta: 0,
-    },
-};
-
-export function getConfig(o: GraphOpts): GraphConfig {
-    return defaultsDeep({}, o, defaultGraphOpts);
-}
-
-// shape:
 /** * STYLES ***/
+
 export const NodeShapes = z.enum([
     "box",
     "sphere",
@@ -114,26 +62,45 @@ export function colorToHex(s: string): string | undefined {
     return `#${hex}${alphaStr}`;
 }
 
-export const NodeStyle = z.strictObject({
-    size: z.optional(z.number().min(0)),
-    opacity: z.optional(z.number().min(0).max(1)),
-    wireframe: z.optional(z.boolean()),
-    color: z.optional(z.string().pipe(z.transform(colorToHex))),
-    label: z.optional(z.boolean()),
-    shape: z.optional(NodeShapes),
-    nodeMeshFactory: z.optional(z.instanceof(Function)),
+export const NodeStyleOpts = z.strictObject({
+    size: z.number().min(0).default(1),
+    opacity: z.number().min(0).max(1).default(1),
+    wireframe: z.boolean().default(false),
+    color: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF"),
+    label: z.boolean().default(false),
+    shape: NodeShapes.default("icosphere"),
+    nodeMeshFactory: z.instanceof(Function).default(() => Node.defaultNodeMeshFactory),
 });
 
-export const EdgeStyle = z.strictObject({});
+export const MovingLineOpts = z.strictObject({
+    baseColor: z.string().default("#D3D3D3FF"),
+});
+
+const EdgeType = z.enum([
+    "plain",
+    "moving",
+]);
+
+export const EdgeStyleOpts = z.strictObject({
+    type: EdgeType.default("moving"),
+    arrowCap: z.boolean().default(false),
+    color: z.string().pipe(z.transform(colorToHex)).default("#FFFFFFFF"),
+    width: z.number().default(0.25),
+    movingLineOpts: MovingLineOpts.default(MovingLineOpts.parse({})),
+    edgeMeshFactory: z.instanceof(Function).default(() => Edge.defaultEdgeMeshFactory),
+});
+
+export type EdgeStyleConfig = EdgeStyleOptsType;
+export type EdgeMeshFactory = typeof Edge.defaultEdgeMeshFactory;
 
 export const AppliedNodeStyle = z.strictObject({
     selector: z.string(),
-    style: NodeStyle,
+    style: NodeStyleOpts,
 });
 
 export const AppliedEdgeStyle = z.strictObject({
     selector: z.string(),
-    style: EdgeStyle,
+    style: EdgeStyleOpts,
 });
 
 export const StyleLayer = z.strictObject({
@@ -151,122 +118,90 @@ export const StyleSchema = z.array(StyleLayer);
 // style types
 export type StyleSchemaType = z.infer<typeof StyleSchema>
 export type StyleLayerType = z.infer<typeof StyleLayer>
-export type NodeStyleType = z.infer<typeof NodeStyle>
-export type EdgeStyleType = z.infer<typeof EdgeStyle>
+export type NodeStyleOptsType = z.infer<typeof NodeStyleOpts>
+export type EdgeStyleOptsType = z.infer<typeof EdgeStyleOpts>
+
+/** * BEHAVIOR ***/
+export const NodeBehaviorOpts = z.strictObject({
+    pinOnDrag: z.boolean().default(true),
+});
 
 /** * GRAPH TYPES ***/
-
-export interface GraphOpts {
-    style?: GraphStyleOpts,
-    behavior?: GraphBehaviorOpts,
-    engine?: GraphEngineOpts,
-}
-
-export type GraphConfig = DeepRequired<GraphOpts>;
-
-export interface NodeObject {
-    id: NodeIdType,
-    metadata: object,
-}
-
-export interface EdgeObject {
-    src: NodeIdType,
-    dst: NodeIdType,
-    metadata: object,
-}
-
-export type FetchNodes = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObject>;
-export type FetchEdges = (node: Node, g: Graph) => Set<EdgeObject>;
-
-export interface GraphStyleOpts {
-    skybox?: string;
-    node?: NodeStyleOpts;
-    edge?: EdgeStyleOpts;
-    startingCameraDistance: number;
-}
-
-export interface GraphBehaviorOpts {
-    node?: NodeBehaviorOpts;
-    fetchNodes?: FetchNodes;
-    fetchEdges?: FetchEdges;
-}
-
-export interface GraphEngineOpts {
-    type?: GraphEngineNames,
-    preSteps?: number,
-    stepMultiplier?: number,
-    minDelta?: number,
-}
-
-/** * NODE TYPES ***/
-export interface NodeObject {
-    id: NodeIdType,
-    metadata: object,
-}
-
-export type NodeIdType = string | number;
+export const NodeId = z.string().or(z.number());
+export type NodeIdType = z.infer<typeof NodeId>
 export type NodeMeshFactory = typeof Node.defaultNodeMeshFactory;
 
-export interface NodeStyleOpts {
-    size?: number;
-    opacity?: number;
-    wireframe?: boolean;
-    color?: string;
-    shape?: "box" | "sphere" | "cylinder" | "cone" | "capsule" | "torus-knot" | "tetrahedron" | "octahedron" | "dodecahedron" | "icosahedron" | "rhombicuboctahedron" | "triangular_prism" | "pentagonal_prism" | "hexagonal_prism" | "square_pyramid" | "pentagonal_pyramid" | "triangular_dipyramid" | "pentagonal_dipyramid" | "elongated_square_dypyramid" | "elongated_pentagonal_dipyramid" | "elongated_pentagonal_cupola" | "goldberg" | "icosphere" | "geodesic";
-    nodeMeshFactory?: NodeMeshFactory;
-    label?: boolean;
-}
+export const NodeObject = z.object({
+    id: NodeId,
+    metadata: z.object(),
+});
 
-export interface NodeBehaviorOpts {
-    pinOnDrag: boolean;
-}
+export const EdgeObject = z.object({
+    src: NodeId,
+    dst: NodeId,
+    metadata: z.object(),
+});
 
-export type NodeStyleConfig = DeepRequired<NodeStyleOpts>;
+export type NodeObjectType = z.infer<typeof NodeObject>
+export type EdgeObjectType = z.infer<typeof EdgeObject>
+export type GraphOptsType = z.infer<typeof GraphOpts>
+export type GraphConfig = GraphOptsType;
 
-/** * EDGE TYPES ***/
-export interface EdgeObject {
-    source: NodeIdType,
-    target: NodeIdType,
-    metadata: object,
-}
+export const GraphStyleOpts = z.strictObject({
+    skybox: z.string().default(""),
+    node: NodeStyleOpts.default(NodeStyleOpts.parse({})),
+    edge: EdgeStyleOpts.default(EdgeStyleOpts.parse({})),
+    startingCameraDistance: z.number().default(30),
+});
 
-export interface MovingLineOpts {
-    baseColor?: string;
-}
+export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
+export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;
 
-export interface EdgeStyleOpts {
-    type?: "plain" | "moving";
-    arrowCap?: boolean;
-    color?: string;
-    width?: number;
-    movingLineOpts?: MovingLineOpts;
-    edgeMeshFactory?: EdgeMeshFactory;
-}
+export const GraphBehaviorOpts = z.strictObject({
+    node: NodeBehaviorOpts.default(NodeBehaviorOpts.parse({})),
+    fetchNodes: z.optional(z.instanceof(Function)),
+    fetchEdges: z.optional(z.instanceof(Function)),
+});
 
-export type EdgeStyleConfig = DeepRequired<EdgeStyleOpts>;
-export type EdgeMeshFactory = typeof Edge.defaultEdgeMeshFactory;
+export const GraphEngineNames = z.enum([
+    "ngraph",
+    "d3",
+]);
+
+export const GraphEngineOpts = z.strictObject({
+    type: GraphEngineNames.default("ngraph"),
+    preSteps: z.number().default(0),
+    stepMultiplier: z.number().default(1),
+    minDelta: z.number().default(0),
+});
+
+// types
+export type GraphEngineNamesType = z.infer<typeof GraphEngineNames>
 
 /** * DATA LOADING TYPES ***/
+export const LoadJsonDataOpts = z.strictObject({
+    nodeListProp: z.string().default("nodes"),
+    edgeListProp: z.string().default("edges"),
+    nodeIdProp: z.string().default("id"),
+    edgeSrcIdProp: z.string().default("src"),
+    edgeDstIdProp: z.string().default("dst"),
+    // fetchOpts?: Parameters<typeof fetch>[1];
+    fetchOpts: z.object().default({}),
+});
 
-const defaultJsonDataOpts = {
-    nodeListProp: "nodes",
-    edgeListProp: "edges",
-    nodeIdProp: "id",
-    edgeSrcIdProp: "src",
-    edgeDstIdProp: "dst",
-};
+export type LoadJsonDataConfig = z.infer<typeof LoadJsonDataOpts>;
 
-export interface LoadJsonDataOpts {
-    nodeListProp?: string;
-    edgeListProp?: string;
-    nodeIdProp?: string;
-    edgeSrcIdProp?: string;
-    edgeDstIdProp?: string;
-    fetchOpts?: Parameters<typeof fetch>[1];
+export function getJsonDataOpts(o: object = {}): LoadJsonDataConfig {
+    return LoadJsonDataOpts.parse(o);
 }
 
-type LoadJsonDataConfig = DeepRequired<LoadJsonDataOpts>;
+/** * CONFIG ***/
+export const GraphOpts = z.strictObject({
+    style: GraphStyleOpts.default(GraphStyleOpts.parse({})),
+    behavior: GraphBehaviorOpts.default(GraphBehaviorOpts.parse({})),
+    engine: GraphEngineOpts.default(GraphEngineOpts.parse({})),
+});
 
-export function getJsonDataOpts(o: LoadJsonDataOpts): LoadJsonDataConfig {
-    return defaultsDeep({}, o, defaultJsonDataOpts);
+export function getConfig(o: object = {}): GraphOptsType {
+    return GraphOpts.parse(o);
 }

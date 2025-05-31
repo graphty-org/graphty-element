@@ -1,102 +1,268 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-
-<head>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Styles Example</title>
 
     <style>
-        html,
-        body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        #forceGraph {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
+      #forceGraph {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
     </style>
 
     <script type="importmap">
-    {
+      {
         "imports": {
-            "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
-            "babylon-forcegraph": "https://cdn.jsdelivr.net/gh/apowers313/babylon-forcegraph@master/dist/babylon-forcegraph.js"
+          "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
+          "graphty": "https://cdn.jsdelivr.net/gh/apowers313/graphty@master/dist/graphty.js"
         }
-    }
+      }
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="forceGraph"></div>
 
     <script type="module" async>
-        import { Graph, util } from "babylon-forcegraph";
+      import { Graph } from 'graphty'
 
-        function randomFromList(list) {
-            const idx = Math.floor(Math.random() * list.length);
-            return list[idx];
+      const colors = [
+        'aliceblue',
+        'antiquewhite',
+        'aqua',
+        'aquamarine',
+        'azure',
+        'beige',
+        'bisque',
+        'black',
+        'blanchedalmond',
+        'blue',
+        'blueviolet',
+        'brown',
+        'burlywood',
+        'cadetblue',
+        'chartreuse',
+        'chocolate',
+        'coral',
+        'cornflowerblue',
+        'cornsilk',
+        'crimson',
+        'cyan',
+        'darkblue',
+        'darkcyan',
+        'darkgoldenrod',
+        'darkgray',
+        'darkgreen',
+        'darkkhaki',
+        'darkmagenta',
+        'darkolivegreen',
+        'darkorange',
+        'darkorchid',
+        'darkred',
+        'darksalmon',
+        'darkseagreen',
+        'darkslateblue',
+        'darkslategray',
+        'darkturquoise',
+        'darkviolet',
+        'deeppink',
+        'deepskyblue',
+        'dimgray',
+        'dodgerblue',
+        'firebrick',
+        'floralwhite',
+        'forestgreen',
+        'fuchsia',
+        'gainsboro',
+        'ghostwhite',
+        'gold',
+        'goldenrod',
+        'gray',
+        'green',
+        'greenyellow',
+        'honeydew',
+        'hotpink',
+        'indianred ',
+        'indigo',
+        'ivory',
+        'khaki',
+        'lavender',
+        'lavenderblush',
+        'lawngreen',
+        'lemonchiffon',
+        'lightblue',
+        'lightcoral',
+        'lightcyan',
+        'lightgoldenrodyellow',
+        'lightgrey',
+        'lightgreen',
+        'lightpink',
+        'lightsalmon',
+        'lightseagreen',
+        'lightskyblue',
+        'lightslategray',
+        'lightsteelblue',
+        'lightyellow',
+        'lime',
+        'limegreen',
+        'linen',
+        'magenta',
+        'maroon',
+        'mediumaquamarine',
+        'mediumblue',
+        'mediumorchid',
+        'mediumpurple',
+        'mediumseagreen',
+        'mediumslateblue',
+        'mediumspringgreen',
+        'mediumturquoise',
+        'mediumvioletred',
+        'midnightblue',
+        'mintcream',
+        'mistyrose',
+        'moccasin',
+        'navajowhite',
+        'navy',
+        'oldlace',
+        'olive',
+        'olivedrab',
+        'orange',
+        'orangered',
+        'orchid',
+        'palegoldenrod',
+        'palegreen',
+        'paleturquoise',
+        'palevioletred',
+        'papayawhip',
+        'peachpuff',
+        'peru',
+        'pink',
+        'plum',
+        'powderblue',
+        'purple',
+        'rebeccapurple',
+        'red',
+        'rosybrown',
+        'royalblue',
+        'saddlebrown',
+        'salmon',
+        'sandybrown',
+        'seagreen',
+        'seashell',
+        'sienna',
+        'silver',
+        'skyblue',
+        'slateblue',
+        'slategray',
+        'snow',
+        'springgreen',
+        'steelblue',
+        'tan',
+        'teal',
+        'thistle',
+        'tomato',
+        'turquoise',
+        'violet',
+        'wheat',
+        'white',
+        'whitesmoke',
+        'yellow',
+        'yellowgreen'
+      ]
+
+      function randomFromList(list) {
+        const idx = Math.floor(Math.random() * list.length)
+        return list[idx]
+      }
+
+      function randomColor() {
+        return randomFromList(colors)
+      }
+
+      function randomBool(likelihood = 0.5) {
+        return !!(Math.random() < likelihood)
+      }
+
+      function randomRange(min, max) {
+        return Math.random() * (max - min) + min
+      }
+
+      const nodeStyleOpts = {
+        shape: randomFromList([
+          'box',
+          'sphere',
+          'cylinder',
+          'cone',
+          'capsule',
+          'torus-knot',
+          'tetrahedron',
+          'octahedron',
+          'dodecahedron',
+          'icosahedron',
+          'rhombicuboctahedron',
+          'triangular_prism',
+          'pentagonal_prism',
+          'hexagonal_prism',
+          'square_pyramid',
+          'pentagonal_pyramid',
+          'triangular_dipyramid',
+          'pentagonal_dipyramid',
+          'elongated_square_dypyramid',
+          'elongated_pentagonal_dipyramid',
+          'elongated_pentagonal_cupola',
+          'goldberg',
+          'icosphere',
+          'geodesic'
+        ]),
+        color: randomColor(),
+        wireframe: randomBool(0.1),
+        opacity: randomFromList([1, 1, 1, 1, 0.5]),
+        label: randomBool()
+      }
+
+      const edgeStyleOpts = {
+        type: randomFromList(['plain', 'moving']),
+        color: randomColor(),
+        width: randomRange(0.1, 0.7),
+        arrowCap: randomBool(),
+        movingLineOpts: {
+          baseColor: randomColor()
         }
+      }
 
-        function randomColor() {
-            return randomFromList([...util.colorMap.keys()]);
+      console.log('Node Style Options:', nodeStyleOpts)
+      console.log('Edge Style Options:', edgeStyleOpts)
+
+      const g = new Graph('forceGraph', {
+        style: {
+          node: nodeStyleOpts,
+          edge: edgeStyleOpts
         }
-
-        function randomBool(likelihood = 0.5) {
-            return !!(Math.random() < likelihood);
-        }
-
-        function randomRange(min, max) {
-            return (Math.random() * (max - min) + min);
-        }
-
-
-        const nodeStyleOpts = {
-            shape: randomFromList(["box", "sphere", "cylinder", "cone", "capsule", "torus-knot", "tetrahedron", "octahedron", "dodecahedron", "icosahedron", "rhombicuboctahedron", "triangular_prism", "pentagonal_prism", "hexagonal_prism", "square_pyramid", "pentagonal_pyramid", "triangular_dipyramid", "pentagonal_dipyramid", "elongated_square_dypyramid", "elongated_pentagonal_dipyramid", "elongated_pentagonal_cupola", "goldberg", "icosphere", "geodesic"]),
-            color: randomColor(),
-            wireframe: randomBool(0.1),
-            opacity: randomFromList([1, 1, 1, 1, 0.5]),
-            label: randomBool(),
-        };
-
-        const edgeStyleOpts = {
-            type: randomFromList(["plain", "moving"]),
-            color: randomColor(),
-            width: randomRange(0.1, 0.7),
-            arrowCap: randomBool(),
-            movingLineOpts: {
-                baseColor: randomColor(),
-            }
-        };
-
-        console.log("Node Style Options:", nodeStyleOpts);
-        console.log("Edge Style Options:", edgeStyleOpts);
-
-        const g = new Graph("forceGraph", {
-            style: {
-                node: nodeStyleOpts,
-                edge: edgeStyleOpts,
-            },
-        });
-        g.addNode(0);
-        g.addNode(1);
-        g.addNode(2);
-        g.addNode(3);
-        g.addNode(4);
-        g.addNode(5);
-        g.addEdge(0, 1);
-        g.addEdge(0, 2);
-        g.addEdge(2, 3);
-        g.addEdge(3, 0);
-        g.addEdge(3, 4);
-        g.addEdge(3, 5);
-        await g.init();
+      })
+      g.addNode(0)
+      g.addNode(1)
+      g.addNode(2)
+      g.addNode(3)
+      g.addNode(4)
+      g.addNode(5)
+      g.addEdge(0, 1)
+      g.addEdge(0, 2)
+      g.addEdge(2, 3)
+      g.addEdge(3, 0)
+      g.addEdge(3, 4)
+      g.addEdge(3, 5)
+      await g.init()
     </script>
-</body>
-
+  </body>
 </html>

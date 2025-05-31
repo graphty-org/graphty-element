@@ -1,87 +1,87 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-
-<head>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Expanding Example</title>
 
     <style>
-        html,
-        body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        #forceGraph {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
+      #forceGraph {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
     </style>
 
     <script type="importmap">
-    {
+      {
         "imports": {
-            "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
-            "babylon-forcegraph": "https://cdn.jsdelivr.net/gh/apowers313/babylon-forcegraph@master/dist/babylon-forcegraph.js"
+          "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
+          "graphty": "https://cdn.jsdelivr.net/gh/apowers313/graphty@master/dist/graphty.js"
         }
-    }
+      }
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="forceGraph"></div>
 
     <script type="module" async>
-        import { Graph, Node } from "babylon-forcegraph";
+      import { Graph, Node } from 'graphty'
 
-        const response = await fetch("./data/miserables.json");
-        const data = await response.json();
+      const response = await fetch('./data/miserables.json')
+      const data = await response.json()
 
-        // graph calls this when it needs all the edges associated with a node
-        // the node is passed in as 'n'; return data is a Set of all the
-        // edges connected to 'n'
-        function fetchEdges(n, _g) {
-            // find all edges with source and target links that match our
-            // specified node
-            const edgeArray = data.links.filter((e) => e.source === n.id || e.target === n.id);
-            // rename edge attributes to match expectations
-            edgeArray.forEach((e) => {
-                e.src = e.source;
-                e.dst = e.target;
-                delete e.source;
-                delete e.target;
-            })
-            return new Set(edgeArray);
+      // graph calls this when it needs all the edges associated with a node
+      // the node is passed in as 'n'; return data is a Set of all the
+      // edges connected to 'n'
+      function fetchEdges(n, _g) {
+        // find all edges with source and target links that match our
+        // specified node
+        const edgeArray = data.links.filter(
+          e => e.source === n.id || e.target === n.id
+        )
+        // rename edge attributes to match expectations
+        edgeArray.forEach(e => {
+          e.src = e.source
+          e.dst = e.target
+          delete e.source
+          delete e.target
+        })
+        return new Set(edgeArray)
+      }
+
+      // graph calls this when it needs data for specific nodes
+      // needed data is in nodeIdSet; return data is a Set of all the
+      // requested Nodes
+      function fetchNodes(nodeIdSet, _g) {
+        const nodeArray = data.nodes.filter(n => nodeIdSet.has(n.id))
+        return new Set(nodeArray)
+      }
+
+      const g = new Graph(document.getElementById('forceGraph'), {
+        behavior: {
+          fetchEdges,
+          fetchNodes
+        },
+        style: {
+          node: {
+            label: true
+          }
         }
+      })
 
-        // graph calls this when it needs data for specific nodes
-        // needed data is in nodeIdSet; return data is a Set of all the
-        // requested Nodes
-        function fetchNodes(nodeIdSet, _g) {
-            const nodeArray = data.nodes.filter((n) => nodeIdSet.has(n.id));
-            return new Set(nodeArray);
-        }
-
-        const g = new Graph(document.getElementById("forceGraph"), {
-            behavior: {
-                fetchEdges,
-                fetchNodes,
-            },
-            style: {
-                node: {
-                    label: true
-                }
-            }
-        });
-
-        const firstNode = data.nodes[64]; // 64 = "Bossuet", because it's an interesting node
-        g.addNode(firstNode.id, firstNode);
-        await g.init();
+      const firstNode = data.nodes[64] // 64 = "Bossuet", because it's an interesting node
+      g.addNode(firstNode.id, firstNode)
+      await g.init()
     </script>
-</body>
-
+  </body>
 </html>

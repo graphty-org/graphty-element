@@ -1,141 +1,149 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-
-<head>
+  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Pretty Example</title>
 
     <style>
-        html,
-        body {
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
+      html,
+      body {
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
 
-        #forceGraph {
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
+      #forceGraph {
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
     </style>
 
     <script type="importmap">
-    {
+      {
         "imports": {
-            "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
-            "babylon-forcegraph": "https://cdn.jsdelivr.net/gh/apowers313/babylon-forcegraph@master/dist/babylon-forcegraph.js"
+          "@babylonjs/core": "https://cdn.jsdelivr.net/npm/@babylonjs/core@6.48.1/+esm",
+          "graphty": "https://cdn.jsdelivr.net/gh/apowers313/graphty@master/dist/graphty.js"
         }
-    }
+      }
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="forceGraph"></div>
 
     <script type="module" async>
-        import { Graph } from "babylon-forcegraph";
-        import {
-            MeshBuilder,
-            ActionManager,
-            ExecuteCodeAction,
-            PBRMaterial,
-            Texture,
-            Color3,
-            GlowLayer,
-        } from "@babylonjs/core";
+      import { Graph } from 'graphty'
+      import {
+        MeshBuilder,
+        ActionManager,
+        ExecuteCodeAction,
+        PBRMaterial,
+        Texture,
+        Color3,
+        GlowLayer
+      } from '@babylonjs/core'
 
-        const g = new Graph("forceGraph", {
-            style: {
-                skybox: "./assets/rolling_hills_equirectangular_skybox.png",
-                node: {
-                    nodeMeshFactory: function nodeMeshFactory(node, graph, opts) {
-                        const mesh = MeshBuilder.CreateSphere("sphere", { diameter: 4 });
-                        mesh.material = CreateMagic();
-                        mesh.isPickable = true;
-                        mesh.actionManager = new ActionManager(g.scene);
+      const g = new Graph('forceGraph', {
+        style: {
+          skybox: './assets/rolling_hills_equirectangular_skybox.png',
+          node: {
+            nodeMeshFactory: function nodeMeshFactory(node, graph, opts) {
+              const mesh = MeshBuilder.CreateSphere('sphere', { diameter: 4 })
+              mesh.material = CreateMagic()
+              mesh.isPickable = true
+              mesh.actionManager = new ActionManager(g.scene)
 
-                        //ON MOUSE ENTER
-                        mesh.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnPointerOverTrigger, function (ev) {
-                            g.scene.hoverCursor = "pointer";
-                            mesh.material.emissiveIntensity = 3;
-                        }));
+              //ON MOUSE ENTER
+              mesh.actionManager.registerAction(
+                new ExecuteCodeAction(
+                  ActionManager.OnPointerOverTrigger,
+                  function (ev) {
+                    g.scene.hoverCursor = 'pointer'
+                    mesh.material.emissiveIntensity = 3
+                  }
+                )
+              )
 
-                        //ON MOUSE EXIT
-                        mesh.actionManager.registerAction(new ExecuteCodeAction(ActionManager.OnPointerOutTrigger, function (ev) {
-                            mesh.material.emissiveIntensity = 0.5;
-                        }));
-                        return mesh;
-                    }
-                }
+              //ON MOUSE EXIT
+              mesh.actionManager.registerAction(
+                new ExecuteCodeAction(
+                  ActionManager.OnPointerOutTrigger,
+                  function (ev) {
+                    mesh.material.emissiveIntensity = 0.5
+                  }
+                )
+              )
+              return mesh
             }
-        });
-
-        function CreateMagic() {
-            const pbr = new PBRMaterial("pbr", g.scene);
-            pbr.albedoTexture = new Texture(
-                "./assets/magic/MagicCurvesStoneFloor_basecolor.png",
-                g.scene
-            );
-
-            pbr.bumpTexture = new Texture(
-                "./assets/magic/MagicCurvesStoneFloor_normal.png",
-                g.scene
-            );
-
-            pbr.invertNormalMapX = true;
-            pbr.invertNormalMapY = true;
-
-            pbr.ambientTexture = new Texture(
-                "./assets/magic/MagicCurvesStoneFloor_ambientocclusion.png",
-                g.scene
-            );
-
-            // pbr.metallicTexture = new Texture(
-            //   // "./assets/magic/MagicCurvesStoneFloor_metallic.png",
-            //   // "./assets/magic/MagicCurvesStoneFloor_roughness.png",
-            //   g.scene
-            // );
-
-            pbr.metallicReflectanceTexture = new Texture(
-                // "./assets/magic/MagicCurvesStoneFloor_roughness.png",
-                "./assets/magic/MagicCurvesStoneFloor_metallic.png",
-                g.scene
-            );
-
-            pbr.emissiveColor = new Color3(1, 1, 1);
-
-            pbr.emissiveTexture = new Texture(
-                "./assets/magic/MagicCurvesStoneFloor_emissive.png",
-                g.scene
-            );
-
-            pbr.emissiveIntensity = 0.25;
-
-            // pbr.roughness = 1;
-
-            return pbr;
+          }
         }
+      })
 
-        const glowLayer = new GlowLayer("glow", g.scene);
-        glowLayer.intensity = 1;
+      function CreateMagic() {
+        const pbr = new PBRMaterial('pbr', g.scene)
+        pbr.albedoTexture = new Texture(
+          './assets/magic/MagicCurvesStoneFloor_basecolor.png',
+          g.scene
+        )
 
-        g.addNode(0);
-        g.addNode(1);
-        g.addNode(2);
-        g.addNode(3);
-        g.addNode(4);
-        g.addNode(5);
-        g.addEdge(0, 1);
-        g.addEdge(0, 2);
-        g.addEdge(2, 3);
-        g.addEdge(3, 0);
-        g.addEdge(3, 4);
-        g.addEdge(3, 5);
-        await g.init();
+        pbr.bumpTexture = new Texture(
+          './assets/magic/MagicCurvesStoneFloor_normal.png',
+          g.scene
+        )
+
+        pbr.invertNormalMapX = true
+        pbr.invertNormalMapY = true
+
+        pbr.ambientTexture = new Texture(
+          './assets/magic/MagicCurvesStoneFloor_ambientocclusion.png',
+          g.scene
+        )
+
+        // pbr.metallicTexture = new Texture(
+        //   // "./assets/magic/MagicCurvesStoneFloor_metallic.png",
+        //   // "./assets/magic/MagicCurvesStoneFloor_roughness.png",
+        //   g.scene
+        // );
+
+        pbr.metallicReflectanceTexture = new Texture(
+          // "./assets/magic/MagicCurvesStoneFloor_roughness.png",
+          './assets/magic/MagicCurvesStoneFloor_metallic.png',
+          g.scene
+        )
+
+        pbr.emissiveColor = new Color3(1, 1, 1)
+
+        pbr.emissiveTexture = new Texture(
+          './assets/magic/MagicCurvesStoneFloor_emissive.png',
+          g.scene
+        )
+
+        pbr.emissiveIntensity = 0.25
+
+        // pbr.roughness = 1;
+
+        return pbr
+      }
+
+      const glowLayer = new GlowLayer('glow', g.scene)
+      glowLayer.intensity = 1
+
+      g.addNode(0)
+      g.addNode(1)
+      g.addNode(2)
+      g.addNode(3)
+      g.addNode(4)
+      g.addNode(5)
+      g.addEdge(0, 1)
+      g.addEdge(0, 2)
+      g.addEdge(2, 3)
+      g.addEdge(3, 0)
+      g.addEdge(3, 4)
+      g.addEdge(3, 5)
+      await g.init()
     </script>
-</body>
-
+  </body>
 </html>

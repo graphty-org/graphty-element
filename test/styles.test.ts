@@ -1,13 +1,13 @@
 import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, DefaultNodeStyle} from "./helpers/styles.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
-import {NodeStyle, colorToHex} from "../src/config.ts";
+import {NodeStyleOpts, colorToHex} from "../src/config.ts";
 import {assert, describe, it} from "vitest";
 import {Styles} from "../src/Styles.ts";
 import {ZodError} from "zod/v4";
 import data2Edges from "./helpers/data2-edges.json";
 import data2Nodes from "./helpers/data2-nodes.json";
 
-const ParsedDefaultNodeStyle = NodeStyle.parse(DefaultNodeStyle);
+const ParsedDefaultNodeStyle = NodeStyleOpts.parse(DefaultNodeStyle);
 
 describe("Styles", () => {
     it("exists and is a class", () => {
@@ -139,7 +139,7 @@ describe("Styles", () => {
                 // ...and asks for the style of one of the nodes with no style
                 const style = s.getStyleForNode("CountessdeLo");
 
-                assert.deepStrictEqual(style, {});
+                assert.deepStrictEqual(style, null);
             });
 
             it("returns empty style when no styles loaded", () => {
@@ -148,7 +148,7 @@ describe("Styles", () => {
 
                 const style = s.getStyleForNode("CountessdeLo");
 
-                assert.deepStrictEqual(style, {});
+                assert.strictEqual(style, null);
             });
         });
     });

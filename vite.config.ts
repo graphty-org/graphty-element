@@ -46,7 +46,7 @@ export default defineConfig(({mode}) => {
         },
         resolve: {
             alias: {
-                "babylon-forcegraph": resolve(__dirname, "./index.ts"),
+                graphty: resolve(__dirname, "./index.ts"),
             },
         },
         server: {

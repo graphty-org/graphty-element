@@ -1,8 +1,6 @@
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
-export type GraphEngineNames = "ngraph" | "d3";
-
 export interface Position {
     x: number,
     y: number,

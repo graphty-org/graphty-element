@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest",
-    "dev": "vite --force",
+    "dev": "vite --force --mode development",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "storybook": "storybook dev -p 9025 --no-open",

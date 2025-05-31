@@ -15,7 +15,6 @@ import {
 import {Node, NodeIdType} from "./Node";
 import type {EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
-import {colorNameToHex} from "./util";
 
 interface EdgeOpts {
     metadata?: object;
@@ -150,7 +149,7 @@ export class Edge {
                         // instance: line,
                     },
                     {
-                        color: Color3.FromHexString(colorNameToHex(o.color)),
+                        color: Color3.FromHexString(o.color.slice(0, 7)),
                     },
                     // e.parentGraph.scene
                 );
@@ -175,15 +174,15 @@ export class Edge {
                 points: Edge.unitVectorPoints,
             },
             {
-                color: Color3.FromHexString(colorNameToHex(o.color)),
+                color: Color3.FromHexString(o.color.slice(0, 7)),
                 width: o.width,
             },
         );
     }
 
     static createMovingLine(_e: Edge, g: Graph, o: EdgeStyleConfig): GreasedLineBaseMesh {
-        const baseColor = Color3.FromHexString(colorNameToHex(o.movingLineOpts.baseColor));
-        const movingColor = Color3.FromHexString(colorNameToHex(o.color));
+        const baseColor = Color3.FromHexString(o.movingLineOpts.baseColor.slice(0, 7));
+        const movingColor = Color3.FromHexString(o.color.slice(0, 7));
         const r1 = Math.floor(baseColor.r * 255);
         const g1 = Math.floor(baseColor.g * 255);
         const b1 = Math.floor(baseColor.b * 255);

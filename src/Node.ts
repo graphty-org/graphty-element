@@ -2,6 +2,7 @@ import {
     AbstractMesh,
     ActionManager,
     Color3,
+    Color4,
     DynamicTexture,
     ExecuteCodeAction,
     Mesh,
@@ -10,8 +11,7 @@ import {
     StandardMaterial,
 } from "@babylonjs/core";
 import type {Graph} from "./Graph";
-import type {NodeStyleConfig} from "./config";
-import {colorNameToHex} from "./util";
+import type {NodeStyleOptsType} from "./config";
 
 const GOLDEN_RATIO = 1.618;
 
@@ -19,7 +19,7 @@ export type NodeIdType = string | number;
 
 interface NodeOpts {
     metadata?: object;
-    nodeMeshConfig?: NodeStyleConfig;
+    nodeMeshConfig?: NodeStyleOptsType;
     pinOnDrag?: boolean;
 }
 
@@ -31,7 +31,7 @@ export class Node {
     label?: Mesh;
     meshDragBehavior: SixDofDragBehavior;
     dragging = false;
-    nodeMeshConfig: NodeStyleConfig;
+    nodeMeshConfig: NodeStyleOptsType;
     pinOnDrag: boolean;
 
     constructor(graph: Graph, nodeId: NodeIdType, opts: NodeOpts = {}) {
@@ -180,7 +180,7 @@ export class Node {
         return n;
     }
 
-    static defaultNodeMeshFactory(n: Node, g: Graph, o: NodeStyleConfig): AbstractMesh {
+    static defaultNodeMeshFactory(n: Node, g: Graph, o: NodeStyleOptsType): AbstractMesh {
         return g.meshCache.get("default-mesh", () => {
             let mesh: Mesh;
 
@@ -296,61 +296,62 @@ export class Node {
 
             // create mesh texture
             const mat = new StandardMaterial("defaultMaterial");
-            const nodeColor = o.color;
-            mat.diffuseColor = Color3.FromHexString(colorNameToHex(nodeColor));
+            const color = Color4.FromHexString(o.color);
+            mat.diffuseColor = new Color3(color.r, color.g, color.b);
             mat.wireframe = o.wireframe;
             mat.freeze();
 
-            mesh.visibility = o.opacity;
+            mesh.visibility = color.a;
+            mesh.visibility = 1;
             mesh.material = mat;
 
             return mesh;
         });
     }
 
-    static createBox(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createBox(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateBox("box", {size: o.size});
     }
 
-    static createSphere(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createSphere(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateSphere("sphere", {diameter: o.size});
     }
 
-    static createCylinder(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createCylinder(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateCylinder("cylinder", {height: o.size * GOLDEN_RATIO, diameter: o.size});
     }
 
-    static createCone(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createCone(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateCylinder("cylinder", {height: o.size * GOLDEN_RATIO, diameterTop: 0, diameterBottom: o.size});
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static createCapsule(_n: Node, _g: Graph, _o: NodeStyleConfig): Mesh {
+    static createCapsule(_n: Node, _g: Graph, _o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateCapsule("capsule", {});
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static createTorus(_n: Node, _g: Graph, _o: NodeStyleConfig): Mesh {
+    static createTorus(_n: Node, _g: Graph, _o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateTorus("torus", {});
     }
 
-    static createTorusKnot(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createTorusKnot(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateTorusKnot("tk", {radius: o.size * 0.3, tube: o.size * 0.2, radialSegments: 128});
     }
 
-    static createPolyhedron(type: number, _n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createPolyhedron(type: number, _n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreatePolyhedron("polyhedron", {size: o.size, type});
     }
 
-    static createGoldberg(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createGoldberg(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateGoldberg("goldberg", {size: o.size});
     }
 
-    static createIcoSphere(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createIcoSphere(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateIcoSphere("icosphere", {radius: o.size * 0.75});
     }
 
-    static createGeodesic(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
+    static createGeodesic(_n: Node, _g: Graph, o: NodeStyleOptsType): Mesh {
         return MeshBuilder.CreateGeodesic("geodesic", {size: o.size});
     }
 

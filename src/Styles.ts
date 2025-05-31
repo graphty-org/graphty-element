@@ -1,4 +1,4 @@
-import {EdgeStyleType, NodeStyleType, StyleLayerType, StyleSchema, StyleSchemaType} from "./config";
+import {EdgeStyleOptsType, NodeStyleOptsType, StyleLayerType, StyleSchema, StyleSchemaType} from "./config";
 import defaultsDeep from "lodash.defaultsdeep";
 import jmespath from "jmespath";
 
@@ -62,8 +62,8 @@ export class Styles {
         this.layers.splice(position, 0, layer);
     }
 
-    getStyleForNode(id: string | number): NodeStyleType {
-        const styles: Array<NodeStyleType> = [];
+    getStyleForNode(id: string | number): NodeStyleOptsType {
+        const styles: Array<NodeStyleOptsType> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {node} = this.layers[i];
             if (this.layerSelectedNodes[i].has(id) && node) {
@@ -79,10 +79,10 @@ export class Styles {
 }
 
 export class Style {
-    readonly nodeStyle: NodeStyleType| null = null;
-    readonly edgeStyle: EdgeStyleType | null = null;
+    readonly nodeStyle: NodeStyleOptsType| null = null;
+    readonly edgeStyle: EdgeStyleOptsType | null = null;
 
-    constructor(nodeStyle: NodeStyleType | null, edgeStyle: EdgeStyleType | null) {
+    constructor(nodeStyle: NodeStyleOptsType | null, edgeStyle: EdgeStyleOptsType | null) {
         if (!nodeStyle && !edgeStyle) {
             throw new Error("must specify one of nodeStyle or edgeStyle");
         }
