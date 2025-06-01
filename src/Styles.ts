@@ -1,15 +1,38 @@
-import {EdgeStyleOptsType, NodeStyleOptsType, StyleLayerType, StyleSchema, StyleSchemaType} from "./config";
+import {EdgeStyleOpts, EdgeStyleOptsType, NodeStyleOpts, NodeStyleOptsType, StyleLayerType, StyleSchema, StyleSchemaType} from "./config";
 import defaultsDeep from "lodash.defaultsdeep";
 import jmespath from "jmespath";
 
+const defaultNodeStyle = NodeStyleOpts.parse({});
+
+export interface StylesOpts {
+    layers?: object,
+    addDefaultStyle?: boolean,
+}
+
 export class Styles {
     readonly layers: StyleSchemaType = [];
-    dataLoaded = false;
     readonly layerSelectedNodes: Array<Set<string | number>> = [];
     readonly layerSelectedEdges: Array<Set<string | number>> = [];
 
-    constructor(schema: string | object) {
-        this.layers = StyleSchema.parse(schema);
+    constructor(opts: StylesOpts = {}) {
+        if (opts.layers) {
+            this.layers = StyleSchema.parse(opts.layers);
+        } else {
+            this.layers = [];
+        }
+
+        if (opts.addDefaultStyle) {
+            this.addLayer({
+                node: {
+                    selector: "",
+                    style: NodeStyleOpts.parse({}),
+                },
+                edge: {
+                    selector: "",
+                    style: EdgeStyleOpts.parse({}),
+                },
+            });
+        }
     }
 
     static fromJson(json: string): Styles {
@@ -18,17 +41,10 @@ export class Styles {
     }
 
     static fromObject(obj: object): Styles {
-        return new Styles(obj);
+        return new Styles({layers: obj});
     }
 
-    applyData(nodeData: Array<object>, edgeData: Array<object>) {
-        const nodeIdPath = "id";
-        const edgeSrcPath = "source";
-        const edgeDstPath = "target";
-
-        this.layerSelectedEdges.length = 0;
-        this.layerSelectedNodes.length = 0;
-
+    addNodes(nodeData: Array<object>, nodeIdPath: string = "id") {
         for (const layer of this.layers) {
             let selectedNodes: Set<string | number> = new Set();
             if (layer.node) {
@@ -39,7 +55,11 @@ export class Styles {
             }
 
             this.layerSelectedNodes.push(selectedNodes);
+        }
+    }
 
+    addEdges(edgeData: Array<object>, edgeSrcPath = "source", edgeDstPath = "target") {
+        for (const layer of this.layers) {
             let selectedEdges: Set<string | number> = new Set();
             if (layer.edge) {
                 const selector = layer.edge.selector.length ? `?${layer.edge.selector}` : "";
@@ -50,8 +70,6 @@ export class Styles {
 
             this.layerSelectedEdges.push(selectedEdges);
         }
-
-        this.dataLoaded = true;
     }
 
     addLayer(layer: StyleLayerType) {
@@ -73,7 +91,30 @@ export class Styles {
 
         // TODO: cache of previously calculated styles to save time?
 
+        const ret = defaultsDeep({}, ... styles, defaultNodeStyle);
+        if (styles.length === 0) {
+            ret.enabled = false;
+        }
+
+        return ret;
+    }
+
+    getStyleForEdge(id: string): EdgeStyleOptsType | null {
+        const styles: Array<EdgeStyleOptsType> = [];
+        for (let i = 0; i < this.layers.length; i++) {
+            const {edge} = this.layers[i];
+            if (this.layerSelectedEdges[i].has(id) && edge) {
+                styles.push(edge.style);
+            }
+        }
+
+        // TODO: cache of previously calculated styles to save time?
+
         const ret = defaultsDeep({}, ... styles);
+        if (Object.keys(ret).length === 0) {
+            return null;
+        }
+
         return ret;
     }
 }

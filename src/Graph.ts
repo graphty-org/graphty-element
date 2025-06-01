@@ -37,10 +37,13 @@ import {GraphEngine} from "./engine/GraphEngine";
 import {MeshCache} from "./MeshCache";
 import {NGraphEngine} from "./engine/NGraphEngine";
 import {Stats} from "./Stats";
+import {Styles} from "./Styles";
+import jmespath from "jmespath";
 
 export class Graph {
     config: GraphConfig;
     stats: Stats;
+    styles: Styles;
     // babylon
     element: HTMLElement;
     canvas: HTMLCanvasElement;
@@ -68,6 +71,7 @@ export class Graph {
         this.meshCache = new MeshCache();
 
         // configure graph
+        this.styles = new Styles({addDefaultStyle: true});
         if (this.config.behavior.fetchNodes) {
             this.fetchNodes = this.config.behavior.fetchNodes as FetchNodesFn;
         }
@@ -247,13 +251,35 @@ export class Graph {
         }
     }
 
-    addNode(nodeId: NodeIdType, metadata: object = {}): Node {
-        this.nodeObservable.notifyObservers({type: "node-add-before", nodeId, metadata});
-        return Node.create(this, nodeId, {
-            nodeMeshConfig: this.config.style.node,
-            pinOnDrag: this.pinOnDrag,
-            metadata,
-        });
+    addNode(node: object, idPath?: string) {
+        return this.addNodes([node], idPath);
+    }
+
+    addNodes(nodes: Array<object>, idPath?: string) {
+        // create path to node ids
+        let query: string;
+        if (idPath) {
+            query = idPath;
+        } else {
+            query = this.config.knownFields.nodeIdPath;
+        }
+
+        // update styles
+        this.styles.addNodes(nodes);
+
+        // create nodes
+        for (const node of nodes) {
+            const metadata = node;
+            const nodeId = jmespath.search(node, query);
+            this.nodeObservable.notifyObservers({type: "node-add-before", nodeId, metadata});
+            const style = this.styles.getStyleForNode(nodeId);
+            if (style) {
+                Node.create(this, nodeId, style, {
+                    pinOnDrag: this.pinOnDrag,
+                    metadata,
+                });
+            }
+        }
     }
 
     addEdge(srcNodeId: NodeIdType, dstNodeId: NodeIdType, metadata: object = {}): Edge {

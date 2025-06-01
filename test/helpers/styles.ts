@@ -1,4 +1,4 @@
-export const DefaultNodeStyle = {
+export const MyNodeStyle = {
     size: 3.14,
     opacity: 0.5,
     wireframe: true,
@@ -9,7 +9,7 @@ export const DefaultNodeStyle = {
 
 export const DefaultAppliedNodeStyle = {
     selector: "",
-    style: DefaultNodeStyle,
+    style: MyNodeStyle,
 };
 
 export const DefaultEdgeStyle = {};
@@ -42,7 +42,7 @@ export const BasicNodeSelector = [
     {
         node: {
             selector: "starts_with(id, 'Mlle') == `true`",
-            style: DefaultNodeStyle,
+            style: MyNodeStyle,
         },
     },
 ];

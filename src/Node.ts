@@ -19,7 +19,6 @@ export type NodeIdType = string | number;
 
 interface NodeOpts {
     metadata?: object;
-    nodeMeshConfig?: NodeStyleOptsType;
     pinOnDrag?: boolean;
 }
 
@@ -31,27 +30,27 @@ export class Node {
     label?: Mesh;
     meshDragBehavior: SixDofDragBehavior;
     dragging = false;
-    nodeMeshConfig: NodeStyleOptsType;
+    style: NodeStyleOptsType;
     pinOnDrag: boolean;
 
-    constructor(graph: Graph, nodeId: NodeIdType, opts: NodeOpts = {}) {
+    constructor(graph: Graph, nodeId: NodeIdType, style: NodeStyleOptsType, opts: NodeOpts = {}) {
         this.parentGraph = graph;
         this.id = nodeId;
         this.metadata = opts.metadata ?? {};
 
         // copy nodeMeshOpts
-        this.nodeMeshConfig = this.parentGraph.config.style.node;
+        this.style = style;
 
         // create graph node
         this.parentGraph.graphEngine.addNode(this);
 
         // create mesh
-        this.mesh = this.nodeMeshConfig.nodeMeshFactory(this, this.parentGraph, this.nodeMeshConfig);
+        this.mesh = this.style.nodeMeshFactory(this, this.parentGraph, this.style);
         this.mesh.isPickable = true;
         this.mesh.metadata = {parentNode: this};
 
         // create label
-        if (this.nodeMeshConfig.label) {
+        if (this.style.label) {
             this.label = Node.createLabel(this.id.toString(), this, this.parentGraph);
             this.label.parent = this.mesh;
             this.label.position.y += 1;
@@ -128,7 +127,7 @@ export class Node {
                         const nodes = fetchNodes(nodeIds, this.parentGraph);
 
                         // add all the nodes and edges we collected
-                        nodes.forEach((n) => this.parentGraph.addNode(n.id, n.metadata));
+                        this.parentGraph.addNodes([... nodes]);
                         edges.forEach((e) => this.parentGraph.addEdge(e.src, e.dst, e.metadata));
 
                         // TODO: fetch and add secondary edges
@@ -167,14 +166,14 @@ export class Node {
         return globalNodeList;
     }
 
-    static create(graph: Graph, nodeId: NodeIdType, opts: NodeOpts = {}): Node {
+    static create(graph: Graph, nodeId: NodeIdType, style: NodeStyleOptsType, opts: NodeOpts = {}): Node {
         // don't create duplicates
         const existingNode = Node.list.get(nodeId);
         if (existingNode) {
             return existingNode;
         }
 
-        const n = new Node(graph, nodeId, opts);
+        const n = new Node(graph, nodeId, style, opts);
         Node.list.set(nodeId, n);
 
         return n;

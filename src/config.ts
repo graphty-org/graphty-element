@@ -69,6 +69,7 @@ export const NodeStyleOpts = z.strictObject({
     color: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF"),
     label: z.boolean().default(false),
     shape: NodeShapes.default("icosphere"),
+    enabled: z.boolean().default(true),
     nodeMeshFactory: z.instanceof(Function).default(() => Node.defaultNodeMeshFactory),
 });
 
@@ -142,6 +143,12 @@ export const EdgeObject = z.object({
     metadata: z.object(),
 });
 
+export const GraphKnownFields = z.object({
+    nodeIdPath: z.string().default("id"),
+    edgeSrcPath: z.string().default("src"),
+    edgeDstPath: z.string().default("dst"),
+});
+
 export type NodeObjectType = z.infer<typeof NodeObject>
 export type EdgeObjectType = z.infer<typeof EdgeObject>
 export type GraphOptsType = z.infer<typeof GraphOpts>
@@ -200,6 +207,7 @@ export const GraphOpts = z.strictObject({
     style: GraphStyleOpts.default(GraphStyleOpts.parse({})),
     behavior: GraphBehaviorOpts.default(GraphBehaviorOpts.parse({})),
     engine: GraphEngineOpts.default(GraphEngineOpts.parse({})),
+    knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
 });
 
 export function getConfig(o: object = {}): GraphOptsType {

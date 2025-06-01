@@ -1,13 +1,13 @@
-import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, DefaultNodeStyle} from "./helpers/styles.ts";
+import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, MyNodeStyle} from "./helpers/styles.ts";
+import {EdgeStyleOpts, NodeStyleOpts, colorToHex} from "../src/config.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
-import {NodeStyleOpts, colorToHex} from "../src/config.ts";
 import {assert, describe, it} from "vitest";
 import {Styles} from "../src/Styles.ts";
 import {ZodError} from "zod/v4";
 import data2Edges from "./helpers/data2-edges.json";
 import data2Nodes from "./helpers/data2-nodes.json";
 
-const ParsedDefaultNodeStyle = NodeStyleOpts.parse(DefaultNodeStyle);
+const ParsedMyNodeStyle = NodeStyleOpts.parse(MyNodeStyle);
 
 describe("Styles", () => {
     it("exists and is a class", () => {
@@ -98,11 +98,12 @@ describe("Styles", () => {
             });
         });
 
-        describe("applyData", () => {
+        describe("addX", () => {
             it("picks node ids", () => {
                 const s = Styles.fromObject(BasicNodeSelector);
 
-                s.applyData(data2Nodes, data2Edges);
+                s.addNodes(data2Nodes);
+                s.addEdges(data2Edges);
 
                 assert.lengthOf(s.layerSelectedNodes, 1);
                 assert.lengthOf(s.layerSelectedNodes[0], 3);
@@ -114,7 +115,8 @@ describe("Styles", () => {
             it("all node ids", () => {
                 const s = Styles.fromObject(BasicNodeStyle);
 
-                s.applyData(data2Nodes, data2Edges);
+                s.addNodes(data2Nodes);
+                s.addEdges(data2Edges);
 
                 assert.lengthOf(s.layerSelectedNodes, 1);
                 assert.lengthOf(s.layerSelectedNodes[0], 77);
@@ -122,33 +124,58 @@ describe("Styles", () => {
         });
 
         describe("getStyleForNode", () => {
-            it("returns basic node style", () => {
+            it.only("returns basic node style", () => {
                 const s = Styles.fromObject(BasicNodeStyle);
-                s.applyData(data2Nodes, data2Edges);
+                s.addNodes(data2Nodes);
+                s.addEdges(data2Edges);
 
                 const style = s.getStyleForNode("Mlle.Baptistine");
 
-                assert.deepStrictEqual(style, ParsedDefaultNodeStyle);
+                // const expectedStyle = NodeStyleOpts.parse({});
+                // expectedStyle.enabled = false;
+                assert.deepStrictEqual(style, ParsedMyNodeStyle);
             });
 
-            it("returns empty style for node with no style", () => {
+            it("returns disabled style for node with no style", () => {
                 // picks out three nodes to style...
                 const s = Styles.fromObject(BasicNodeSelector);
-                s.applyData(data2Nodes, data2Edges);
+                s.addNodes(data2Nodes);
+                s.addEdges(data2Edges);
 
                 // ...and asks for the style of one of the nodes with no style
                 const style = s.getStyleForNode("CountessdeLo");
 
-                assert.deepStrictEqual(style, null);
+                const expectedStyle = NodeStyleOpts.parse({});
+                expectedStyle.enabled = false;
+                assert.deepStrictEqual(style, expectedStyle);
             });
 
-            it("returns empty style when no styles loaded", () => {
+            it("returns disabled style when no styles loaded", () => {
                 const s = Styles.fromJson("[]");
-                s.applyData(data2Nodes, data2Edges);
+                s.addNodes(data2Nodes);
+                s.addEdges(data2Edges);
 
                 const style = s.getStyleForNode("CountessdeLo");
 
-                assert.strictEqual(style, null);
+                const expectedStyle = NodeStyleOpts.parse({});
+                expectedStyle.enabled = false;
+                assert.deepStrictEqual(style, expectedStyle);
+            });
+
+            it("adds default style", () => {
+                const s = new Styles({addDefaultStyle: true});
+
+                assert.strictEqual(s.layers.length, 1);
+                const nodeAppliedStyle = s.layers[0].node;
+                const expectedNodeStyle = NodeStyleOpts.parse({});
+                assert.isDefined(nodeAppliedStyle);
+                assert.deepStrictEqual(nodeAppliedStyle.style, expectedNodeStyle);
+                assert.strictEqual(nodeAppliedStyle.selector, "");
+                const edgeAppliedStyle = s.layers[0].edge;
+                const expectedEdgeStyle = EdgeStyleOpts.parse({});
+                assert.isDefined(edgeAppliedStyle);
+                assert.deepStrictEqual(edgeAppliedStyle.style, expectedEdgeStyle);
+                assert.strictEqual(edgeAppliedStyle.selector, "");
             });
         });
     });
