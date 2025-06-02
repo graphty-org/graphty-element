@@ -1,4 +1,15 @@
-import {EdgeStyleOpts, EdgeStyleOptsType, NodeStyleOpts, NodeStyleOptsType, StyleLayerType, StyleSchema, StyleSchemaType} from "./config";
+import {
+    EdgeStyleOpts,
+    EdgeStyleOptsType,
+    GraphKnownFields,
+    GraphKnownFieldsType,
+    NodeStyleOpts,
+    NodeStyleOptsType,
+    StyleLayerType,
+    StyleSchema,
+    StyleSchemaType,
+} from "./config";
+
 import defaultsDeep from "lodash.defaultsdeep";
 import jmespath from "jmespath";
 
@@ -7,14 +18,18 @@ const defaultNodeStyle = NodeStyleOpts.parse({});
 export interface StylesOpts {
     layers?: object,
     addDefaultStyle?: boolean,
+    knownFields?: GraphKnownFieldsType,
 }
 
 export class Styles {
+    readonly knownFields: GraphKnownFieldsType;
     readonly layers: StyleSchemaType = [];
     readonly layerSelectedNodes: Array<Set<string | number>> = [];
     readonly layerSelectedEdges: Array<Set<string | number>> = [];
 
     constructor(opts: StylesOpts = {}) {
+        this.knownFields = opts.knownFields || GraphKnownFields.parse({});
+
         if (opts.layers) {
             this.layers = StyleSchema.parse(opts.layers);
         } else {
@@ -37,19 +52,23 @@ export class Styles {
 
     static fromJson(json: string): Styles {
         const o = JSON.parse(json);
+        // TODO: opts.knownFields
         return this.fromObject(o);
     }
 
     static fromObject(obj: object): Styles {
+        // TODO: opts.knownFields
         return new Styles({layers: obj});
     }
 
-    addNodes(nodeData: Array<object>, nodeIdPath: string = "id") {
+    addNodes(nodeData: Array<object>, nodeIdPath?: string) {
+        const idQuery = nodeIdPath || this.knownFields.nodeIdPath;
+
         for (const layer of this.layers) {
             let selectedNodes: Set<string | number> = new Set();
             if (layer.node) {
                 const selector = layer.node.selector.length ? `?${layer.node.selector}` : "";
-                const query = `[${selector}].${nodeIdPath}`;
+                const query = `[${selector}].${idQuery}`;
                 const nodeIds = jmespath.search(nodeData, query);
                 selectedNodes = new Set(nodeIds);
             }
@@ -58,12 +77,15 @@ export class Styles {
         }
     }
 
-    addEdges(edgeData: Array<object>, edgeSrcPath = "source", edgeDstPath = "target") {
+    addEdges(edgeData: Array<object>, edgeSrcIdPath?: string, edgeDstIdPath?: string) {
+        const srcQuery = edgeSrcIdPath || this.knownFields.edgeSrcIdPath;
+        const dstQuery = edgeDstIdPath || this.knownFields.edgeDstIdPath;
+
         for (const layer of this.layers) {
             let selectedEdges: Set<string | number> = new Set();
             if (layer.edge) {
                 const selector = layer.edge.selector.length ? `?${layer.edge.selector}` : "";
-                const query = `[${selector}].{src: ${edgeSrcPath}, dst: ${edgeDstPath}}`;
+                const query = `[${selector}].[to_string(${srcQuery}), to_string(${dstQuery})] | [*].join(',',@)`;
                 const edgeSrcDst = jmespath.search(edgeData, query);
                 selectedEdges = new Set(edgeSrcDst);
             }
@@ -74,10 +96,14 @@ export class Styles {
 
     addLayer(layer: StyleLayerType) {
         this.layers.push(layer);
+
+        // TODO: recalculate
     }
 
     insertLayer(position: number, layer: StyleLayerType) {
         this.layers.splice(position, 0, layer);
+
+        // TODO: recalculate
     }
 
     getStyleForNode(id: string | number): NodeStyleOptsType {
@@ -99,20 +125,22 @@ export class Styles {
         return ret;
     }
 
-    getStyleForEdge(id: string): EdgeStyleOptsType | null {
+    getStyleForEdge(srcId: string, dstId: string): EdgeStyleOptsType {
+        // XXX: this edgeId matches the output format of the jmespath query in addEdges
+        const edgeId = `${srcId},${dstId}`;
         const styles: Array<EdgeStyleOptsType> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {edge} = this.layers[i];
-            if (this.layerSelectedEdges[i].has(id) && edge) {
+            if (this.layerSelectedEdges[i].has(edgeId) && edge) {
                 styles.push(edge.style);
             }
         }
 
         // TODO: cache of previously calculated styles to save time?
 
-        const ret = defaultsDeep({}, ... styles);
-        if (Object.keys(ret).length === 0) {
-            return null;
+        const ret = defaultsDeep({}, ... styles, EdgeStyleOpts.parse({}));
+        if (styles.length === 0) {
+            ret.enabled = false;
         }
 
         return ret;

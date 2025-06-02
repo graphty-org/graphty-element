@@ -145,13 +145,14 @@ export const EdgeObject = z.object({
 
 export const GraphKnownFields = z.object({
     nodeIdPath: z.string().default("id"),
-    edgeSrcPath: z.string().default("src"),
-    edgeDstPath: z.string().default("dst"),
+    edgeSrcIdPath: z.string().default("src"),
+    edgeDstIdPath: z.string().default("dst"),
 });
 
 export type NodeObjectType = z.infer<typeof NodeObject>
 export type EdgeObjectType = z.infer<typeof EdgeObject>
 export type GraphOptsType = z.infer<typeof GraphOpts>
+export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
 export type GraphConfig = GraphOptsType;
 
 export const GraphStyleOpts = z.strictObject({

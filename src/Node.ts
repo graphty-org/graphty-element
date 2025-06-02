@@ -128,7 +128,7 @@ export class Node {
 
                         // add all the nodes and edges we collected
                         this.parentGraph.addNodes([... nodes]);
-                        edges.forEach((e) => this.parentGraph.addEdge(e.src, e.dst, e.metadata));
+                        this.parentGraph.addEdges([... edges]);
 
                         // TODO: fetch and add secondary edges
                     },

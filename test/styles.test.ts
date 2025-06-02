@@ -131,8 +131,6 @@ describe("Styles", () => {
 
                 const style = s.getStyleForNode("Mlle.Baptistine");
 
-                // const expectedStyle = NodeStyleOpts.parse({});
-                // expectedStyle.enabled = false;
                 assert.deepStrictEqual(style, ParsedMyNodeStyle);
             });
 

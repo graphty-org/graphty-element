@@ -45,13 +45,15 @@
         { id: 3 },
         { id: 4 },
         { id: 5 }
-      ]);
-      g.addEdge(0, 1)
-      g.addEdge(0, 2)
-      g.addEdge(2, 3)
-      g.addEdge(3, 0)
-      g.addEdge(3, 4)
-      g.addEdge(3, 5)
+      ])
+      g.addEdges([
+        { src: 0, dst: 1 },
+        { src: 0, dst: 2 },
+        { src: 2, dst: 3 },
+        { src: 3, dst: 0 },
+        { src: 3, dst: 4 },
+        { src: 3, dst: 5 }
+      ])
       await g.init()
     </script>
   </body>

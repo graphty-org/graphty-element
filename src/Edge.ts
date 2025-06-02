@@ -18,7 +18,6 @@ import type {Graph} from "./Graph";
 
 interface EdgeOpts {
     metadata?: object;
-    edgeMeshConfig?: EdgeStyleConfig;
 }
 
 export class Edge {
@@ -30,11 +29,11 @@ export class Edge {
     metadata: object;
     mesh: AbstractMesh;
     arrowMesh: AbstractMesh | null = null;
-    edgeStyleConfig: EdgeStyleConfig;
+    style: EdgeStyleConfig;
     // XXX: performance impact when not needed?
     ray: Ray;
 
-    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, opts: EdgeOpts = {}) {
+    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
@@ -58,13 +57,13 @@ export class Edge {
         this.ray = new Ray(this.srcNode.mesh.position, this.dstNode.mesh.position);
 
         // copy edgeMeshConfig
-        this.edgeStyleConfig = this.parentGraph.config.style.edge;
+        this.style = style;
 
         // create ngraph link
         this.parentGraph.graphEngine.addEdge(this);
 
         // create mesh
-        this.mesh = this.edgeStyleConfig.edgeMeshFactory(this, this.parentGraph, this.edgeStyleConfig);
+        this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
         this.mesh.isPickable = false;
         this.mesh.metadata = {};
         this.mesh.metadata.parentEdge = this;
@@ -116,13 +115,13 @@ export class Edge {
         return globalEdgeList;
     }
 
-    static create(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, opts: EdgeOpts = {}) {
+    static create(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, opts: EdgeOpts = {}) {
         const existingEdge = Edge.list.get(srcNodeId, dstNodeId);
         if (existingEdge) {
             return existingEdge;
         }
 
-        const e = new Edge(graph, srcNodeId, dstNodeId, opts);
+        const e = new Edge(graph, srcNodeId, dstNodeId, style, opts);
         Edge.list.set(srcNodeId, dstNodeId, e);
 
         return e;
@@ -284,7 +283,7 @@ export class Edge {
         let dstPoint: Vector3 | null = null;
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
-            const len = getArrowCapLen(this.edgeStyleConfig.width);
+            const len = getArrowCapLen(this.style.width);
 
             dstPoint = dstHitInfo[0].pickedPoint!;
             srcPoint = srcHitInfo[0].pickedPoint!;

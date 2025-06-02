@@ -30,12 +30,12 @@ import {
     getJsonDataOpts,
 } from "./config";
 
-import {Node, NodeIdType} from "./Node";
 import {D3GraphEngine} from "./engine/D3GraphEngine";
 import {Edge} from "./Edge";
 import {GraphEngine} from "./engine/GraphEngine";
 import {MeshCache} from "./MeshCache";
 import {NGraphEngine} from "./engine/NGraphEngine";
+import {Node} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 import jmespath from "jmespath";
@@ -257,12 +257,7 @@ export class Graph {
 
     addNodes(nodes: Array<object>, idPath?: string) {
         // create path to node ids
-        let query: string;
-        if (idPath) {
-            query = idPath;
-        } else {
-            query = this.config.knownFields.nodeIdPath;
-        }
+        const query = idPath || this.config.knownFields.nodeIdPath;
 
         // update styles
         this.styles.addNodes(nodes);
@@ -273,21 +268,36 @@ export class Graph {
             const nodeId = jmespath.search(node, query);
             this.nodeObservable.notifyObservers({type: "node-add-before", nodeId, metadata});
             const style = this.styles.getStyleForNode(nodeId);
-            if (style) {
-                Node.create(this, nodeId, style, {
-                    pinOnDrag: this.pinOnDrag,
-                    metadata,
-                });
-            }
+            Node.create(this, nodeId, style, {
+                pinOnDrag: this.pinOnDrag,
+                metadata,
+            });
         }
     }
 
-    addEdge(srcNodeId: NodeIdType, dstNodeId: NodeIdType, metadata: object = {}): Edge {
-        this.edgeObservable.notifyObservers({type: "edge-add-before", srcNodeId, dstNodeId, metadata});
-        return Edge.create(this, srcNodeId, dstNodeId, {
-            edgeMeshConfig: this.config.style.edge,
-            metadata,
-        });
+    addEdge(edge: object, srcIdPath?: string, dstIdPath?: string) {
+        this.addEdges([edge], srcIdPath, dstIdPath);
+    }
+
+    addEdges(edges: Array<object>, srcIdPath?: string, dstIdPath?: string) {
+        // get paths
+        const srcQuery = srcIdPath || this.config.knownFields.edgeSrcIdPath;
+        const dstQuery = dstIdPath || this.config.knownFields.edgeDstIdPath;
+
+        // update styles
+        this.styles.addEdges(edges);
+
+        // create nodes
+        for (const edge of edges) {
+            const metadata = edge;
+            const srcNodeId = jmespath.search(edge, srcQuery);
+            const dstNodeId = jmespath.search(edge, dstQuery);
+            this.edgeObservable.notifyObservers({type: "edge-add-before", srcNodeId, dstNodeId, metadata});
+            const style = this.styles.getStyleForEdge(srcNodeId, dstNodeId);
+            Edge.create(this, srcNodeId, dstNodeId, style, {
+                metadata,
+            });
+        }
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {
