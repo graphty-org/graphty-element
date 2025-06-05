@@ -1,4 +1,4 @@
-import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, MyNodeStyle} from "./helpers/styles.ts";
+import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
 import {EdgeStyleOpts, NodeStyleOpts, colorToHex} from "../src/config.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
 import {assert, describe, it} from "vitest";
@@ -8,10 +8,27 @@ import data2Edges from "./helpers/data2-edges.json";
 import data2Nodes from "./helpers/data2-nodes.json";
 
 const ParsedMyNodeStyle = NodeStyleOpts.parse(MyNodeStyle);
+const ParsedMyEdgeStyle = EdgeStyleOpts.parse(MyEdgeStyle);
 
 describe("Styles", () => {
     it("exists and is a class", () => {
         assert.isFunction(Styles);
+    });
+
+    it("adds default style", () => {
+        const s = new Styles({addDefaultStyle: true});
+
+        assert.strictEqual(s.layers.length, 1);
+        const nodeAppliedStyle = s.layers[0].node;
+        const expectedNodeStyle = NodeStyleOpts.parse({});
+        assert.isDefined(nodeAppliedStyle);
+        assert.deepStrictEqual(nodeAppliedStyle.style, expectedNodeStyle);
+        assert.strictEqual(nodeAppliedStyle.selector, "");
+        const edgeAppliedStyle = s.layers[0].edge;
+        const expectedEdgeStyle = EdgeStyleOpts.parse({});
+        assert.isDefined(edgeAppliedStyle);
+        assert.deepStrictEqual(edgeAppliedStyle.style, expectedEdgeStyle);
+        assert.strictEqual(edgeAppliedStyle.selector, "");
     });
 
     describe("fromJson", () => {
@@ -42,7 +59,6 @@ describe("Styles", () => {
         describe("for nodes", () => {
             it("accepts basic styling", () => {
                 const s = Styles.fromObject(BasicNodeStyle);
-                console.log("s", s);
                 assert.lengthOf(s.layers, 1);
                 // assert.strictEqual(s[0].node.style.color, "#C0FFEE");
             });
@@ -98,12 +114,11 @@ describe("Styles", () => {
             });
         });
 
-        describe("addX", () => {
+        describe("addNodes", () => {
             it("picks node ids", () => {
                 const s = Styles.fromObject(BasicNodeSelector);
 
                 s.addNodes(data2Nodes);
-                s.addEdges(data2Edges);
 
                 assert.lengthOf(s.layerSelectedNodes, 1);
                 assert.lengthOf(s.layerSelectedNodes[0], 3);
@@ -116,18 +131,24 @@ describe("Styles", () => {
                 const s = Styles.fromObject(BasicNodeStyle);
 
                 s.addNodes(data2Nodes);
-                s.addEdges(data2Edges);
 
                 assert.lengthOf(s.layerSelectedNodes, 1);
                 assert.lengthOf(s.layerSelectedNodes[0], 77);
             });
+
+            it("throws on bad node id path", () => {
+                const s = Styles.fromObject(BasicNodeStyle);
+
+                assert.throws(() => {
+                    s.addNodes(data2Nodes, "asdf"); // bad node id path
+                }, TypeError, "couldn't find node ID in first node data element");
+            });
         });
 
         describe("getStyleForNode", () => {
-            it.only("returns basic node style", () => {
+            it("returns basic node style", () => {
                 const s = Styles.fromObject(BasicNodeStyle);
                 s.addNodes(data2Nodes);
-                s.addEdges(data2Edges);
 
                 const style = s.getStyleForNode("Mlle.Baptistine");
 
@@ -138,7 +159,6 @@ describe("Styles", () => {
                 // picks out three nodes to style...
                 const s = Styles.fromObject(BasicNodeSelector);
                 s.addNodes(data2Nodes);
-                s.addEdges(data2Edges);
 
                 // ...and asks for the style of one of the nodes with no style
                 const style = s.getStyleForNode("CountessdeLo");
@@ -151,7 +171,6 @@ describe("Styles", () => {
             it("returns disabled style when no styles loaded", () => {
                 const s = Styles.fromJson("[]");
                 s.addNodes(data2Nodes);
-                s.addEdges(data2Edges);
 
                 const style = s.getStyleForNode("CountessdeLo");
 
@@ -159,21 +178,35 @@ describe("Styles", () => {
                 expectedStyle.enabled = false;
                 assert.deepStrictEqual(style, expectedStyle);
             });
+        });
 
-            it("adds default style", () => {
-                const s = new Styles({addDefaultStyle: true});
+        describe("addEdges", () => {
+            it("throws on bad src path", () => {
+                const s = Styles.fromObject(BasicEdgeStyle);
 
-                assert.strictEqual(s.layers.length, 1);
-                const nodeAppliedStyle = s.layers[0].node;
-                const expectedNodeStyle = NodeStyleOpts.parse({});
-                assert.isDefined(nodeAppliedStyle);
-                assert.deepStrictEqual(nodeAppliedStyle.style, expectedNodeStyle);
-                assert.strictEqual(nodeAppliedStyle.selector, "");
-                const edgeAppliedStyle = s.layers[0].edge;
-                const expectedEdgeStyle = EdgeStyleOpts.parse({});
-                assert.isDefined(edgeAppliedStyle);
-                assert.deepStrictEqual(edgeAppliedStyle.style, expectedEdgeStyle);
-                assert.strictEqual(edgeAppliedStyle.selector, "");
+                assert.throws(() => {
+                    s.addEdges(data2Edges, "foo", "target"); // bad source path
+                }, TypeError, "couldn't find edge source ID in first edge data element");
+            });
+
+            it("throws on bad dst path", () => {
+                const s = Styles.fromObject(BasicEdgeStyle);
+
+                assert.throws(() => {
+                    s.addEdges(data2Edges, "source", "foo"); // bad destination path
+                }, TypeError, "couldn't find edge destination ID in first edge data element");
+            });
+        });
+
+        describe("getStyleForEdge", () => {
+            it("returns basic edge style", () => {
+                const s = Styles.fromObject(BasicEdgeStyle);
+                s.addEdges(data2Edges, "source", "target");
+                // s.addEdges(data2Edges);
+
+                const style = s.getStyleForEdge("Mme.Magloire", "Mlle.Baptistine");
+
+                assert.deepStrictEqual(style, ParsedMyEdgeStyle);
             });
         });
     });

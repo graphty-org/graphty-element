@@ -63,6 +63,14 @@ export class Styles {
 
     addNodes(nodeData: Array<object>, nodeIdPath?: string) {
         const idQuery = nodeIdPath || this.knownFields.nodeIdPath;
+        console.log("idQuery", idQuery);
+        console.log("nodeData", nodeData);
+
+        const id0 = jmespath.search(nodeData, `[0].${idQuery}`);
+        console.log("id0", id0);
+        if (id0 === null || id0 === undefined) {
+            throw new TypeError("couldn't find node ID in first node data element");
+        }
 
         for (const layer of this.layers) {
             let selectedNodes: Set<string | number> = new Set();
@@ -80,6 +88,16 @@ export class Styles {
     addEdges(edgeData: Array<object>, edgeSrcIdPath?: string, edgeDstIdPath?: string) {
         const srcQuery = edgeSrcIdPath || this.knownFields.edgeSrcIdPath;
         const dstQuery = edgeDstIdPath || this.knownFields.edgeDstIdPath;
+
+        const srcRet0 = jmespath.search(edgeData, `[0].[to_string(${srcQuery})]`);
+        if (!srcRet0 || !Array.isArray(srcRet0) || srcRet0[0] === "null") {
+            throw new TypeError("couldn't find edge source ID in first edge data element");
+        }
+
+        const dstRet0 = jmespath.search(edgeData, `[0].[to_string(${dstQuery})]`);
+        if (!dstRet0 || !Array.isArray(dstRet0) || dstRet0[0] === "null") {
+            throw new TypeError("couldn't find edge destination ID in first edge data element");
+        }
 
         for (const layer of this.layers) {
             let selectedEdges: Set<string | number> = new Set();

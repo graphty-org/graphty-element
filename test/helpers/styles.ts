@@ -7,16 +7,24 @@ export const MyNodeStyle = {
     shape: "goldberg",
 };
 
+export const MyEdgeStyle = {
+    type: "plain",
+    arrowCap: true,
+    color: "#c0ffee",
+    width: 1,
+    movingLineOpts: {
+        baseColor: "#0badc0de",
+    },
+};
+
 export const DefaultAppliedNodeStyle = {
     selector: "",
     style: MyNodeStyle,
 };
 
-export const DefaultEdgeStyle = {};
-
 export const DefaultAppliedEdgeStyle = {
     selector: "",
-    style: DefaultEdgeStyle,
+    style: MyEdgeStyle,
 };
 
 export const BasicNodeStyle = [
