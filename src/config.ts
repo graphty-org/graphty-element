@@ -74,7 +74,7 @@ export const NodeStyleOpts = z.strictObject({
 });
 
 export const MovingLineOpts = z.strictObject({
-    baseColor: z.string().default("#D3D3D3FF"),
+    baseColor: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF"),
 });
 
 const EdgeType = z.enum([
