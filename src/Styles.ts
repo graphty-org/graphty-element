@@ -63,11 +63,8 @@ export class Styles {
 
     addNodes(nodeData: Array<object>, nodeIdPath?: string) {
         const idQuery = nodeIdPath || this.knownFields.nodeIdPath;
-        console.log("idQuery", idQuery);
-        console.log("nodeData", nodeData);
 
         const id0 = jmespath.search(nodeData, `[0].${idQuery}`);
-        console.log("id0", id0);
         if (id0 === null || id0 === undefined) {
             throw new TypeError("couldn't find node ID in first node data element");
         }
