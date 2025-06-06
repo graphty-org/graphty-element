@@ -1,9 +1,12 @@
+[![CI](https://github.com/apowers313/graphty/actions/workflows/ci.yml/badge.svg)](https://github.com/apowers313/graphty/actions/workflows/ci.yml)
+
 [Progressive WebXR](https://blog.mozvr.com/progressive-webxr-ar-store/)
 3D force-directed graph using [Babylon.js](https://www.babylonjs.com/).
 
 Inspired by [three-forcegraph](https://github.com/vasturiano/three-forcegraph).
 
 Examples:
+
 - [Basic](https://apowers313.github.io/graphty/examples/basic.html)
   ([source](https://github.com/apowers313/graphty/blob/master/examples/basic.html)): The simplest of demos.
 - [Styles](https://apowers313.github.io/graphty/examples/styles.html)
@@ -15,8 +18,8 @@ Examples:
 - [Loading JSON
   data](https://apowers313.github.io/graphty/examples/json_data.html)
   ([source](https://github.com/apowers313/graphty/blob/master/examples/json_data.html)): Example of loading nodes from a [JSON
-    file](https://github.com/apowers313/graphty/blob/master/examples/data/miserables.json)
-    that contains 77 nodes and 253 edges.
+  file](https://github.com/apowers313/graphty/blob/master/examples/data/miserables.json)
+  that contains 77 nodes and 253 edges.
 - [Expanding](https://apowers313.github.io/graphty/examples/expanding.html)
   ([source](https://github.com/apowers313/graphty/blob/master/examples/expanding.html)): Double click on a node to dynamically load the related nodes.
 - [D3 Graph
