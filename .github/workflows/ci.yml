@@ -26,20 +26,21 @@ jobs:
       - name: Run tests
         run: npm test
 
-deploy:
-  runs-on: ubuntu-latest
-  # Job steps
-  steps:
-    # Manual Checkout
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    # Set up Node
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-    #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
-    - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
-      with:
-        path: storybook-static # default: dist/storybook
-        checkout: false # default: true
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Job steps
+    steps:
+      # Manual Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Set up Node
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
+      - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+        with:
+          path: storybook-static # default: dist/storybook
+          checkout: false # default: true
