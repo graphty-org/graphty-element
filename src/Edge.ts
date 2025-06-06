@@ -40,12 +40,12 @@ export class Edge {
         this.metadata = opts.metadata ?? {};
 
         // make sure both srcNode and dstNode already exist
-        const srcNode = Node.list.get(srcNodeId);
+        const srcNode = graph.nodeCache.get(srcNodeId);
         if (!srcNode) {
             throw new Error(`Attempting to create edge '${srcNodeId}->${dstNodeId}', Node '${srcNodeId}' hasn't been created yet.`);
         }
 
-        const dstNode = Node.list.get(dstNodeId);
+        const dstNode = graph.nodeCache.get(dstNodeId);
         if (!dstNode) {
             throw new Error(`Attempting to create edge '${srcNodeId}->${dstNodeId}', Node '${dstNodeId}' hasn't been created yet.`);
         }
@@ -111,18 +111,14 @@ export class Edge {
         }
     }
 
-    static get list(): EdgeMap {
-        return globalEdgeList;
-    }
-
     static create(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, opts: EdgeOpts = {}) {
-        const existingEdge = Edge.list.get(srcNodeId, dstNodeId);
+        const existingEdge = graph.edgeCache.get(srcNodeId, dstNodeId);
         if (existingEdge) {
             return existingEdge;
         }
 
         const e = new Edge(graph, srcNodeId, dstNodeId, style, opts);
-        Edge.list.set(srcNodeId, dstNodeId, e);
+        graph.edgeCache.set(srcNodeId, dstNodeId, e);
 
         return e;
     }
@@ -327,7 +323,7 @@ function getArrowCapLen(w: number): number {
     return Math.max(w, 0.5);
 }
 
-class EdgeMap {
+export class EdgeMap {
     map: Map<NodeIdType, Map<NodeIdType, Edge>> = new Map();
 
     has(srcId: NodeIdType, dstId: NodeIdType): boolean {
@@ -371,5 +367,3 @@ class EdgeMap {
         return sz;
     }
 }
-
-const globalEdgeList = new EdgeMap();

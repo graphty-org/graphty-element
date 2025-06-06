@@ -31,11 +31,11 @@ import {
 } from "./config";
 
 import {D3GraphEngine} from "./engine/D3GraphEngine";
-import {Edge} from "./Edge";
+import {Edge, EdgeMap} from "./Edge";
 import {GraphEngine} from "./engine/GraphEngine";
 import {MeshCache} from "./MeshCache";
 import {NGraphEngine} from "./engine/NGraphEngine";
-import {Node} from "./Node";
+import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 import jmespath from "jmespath";
@@ -45,7 +45,7 @@ export class Graph {
     stats: Stats;
     styles: Styles;
     // babylon
-    element: HTMLElement;
+    element: Element;
     canvas: HTMLCanvasElement;
     engine: Engine;
     scene: Scene;
@@ -53,6 +53,8 @@ export class Graph {
     skybox?: string;
     xrHelper?: WebXRDefaultExperience;
     meshCache: MeshCache;
+    edgeCache: EdgeMap = new EdgeMap();
+    nodeCache: Map<NodeIdType, Node> = new Map();
     // graph engine
     graphEngineType?: GraphEngineNamesType;
     graphEngine: GraphEngine;
@@ -66,7 +68,7 @@ export class Graph {
     nodeObservable: Observable<NodeEvent> = new Observable();
     edgeObservable: Observable<EdgeEvent> = new Observable();
 
-    constructor(element: HTMLElement | string, opts?: GraphOptsType) {
+    constructor(element: Element | string, opts?: GraphOptsType) {
         this.config = getConfig(opts);
         this.meshCache = new MeshCache();
 
@@ -82,23 +84,23 @@ export class Graph {
 
         // get the element that we are going to use for placing our canvas
         if (typeof (element) === "string") {
-            const e: HTMLElement | null = document.getElementById(element);
+            const e: Element | null = document.getElementById(element);
             if (!e) {
                 throw new Error(`getElementById() could not find element '${element}'`);
             }
 
             this.element = e;
-        } else if (element instanceof HTMLElement) {
+        } else if (element instanceof Element) {
             this.element = element;
         } else {
-            throw new TypeError("Graph constructor requires 'element' argument that is either a string specifying the ID of the HTML element or an HTMLElement");
+            throw new TypeError("Graph constructor requires 'element' argument that is either a string specifying the ID of the HTML element or an Element");
         }
 
         this.element.innerHTML = "";
 
         // get a canvas element for rendering
         this.canvas = document.createElement("canvas");
-        this.canvas.setAttribute("id", "babylonForceGraphRenderCanvas");
+        this.canvas.setAttribute("id", `babylonForceGraphRenderCanvas${Date.now()}`);
         this.canvas.setAttribute("touch-action", "none");
         this.canvas.style.width = "100%";
         this.canvas.style.height = "100%";
@@ -150,6 +152,10 @@ export class Graph {
         for (let i = 0; i < this.config.engine.preSteps; i++) {
             this.graphEngine.step();
         }
+    }
+
+    shutdown() {
+        this.engine.dispose();
     }
 
     async init() {

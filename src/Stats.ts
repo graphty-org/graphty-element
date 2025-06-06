@@ -3,9 +3,7 @@ import {
     PerfCounter,
     SceneInstrumentation,
 } from "@babylonjs/core";
-import {Edge} from "./Edge";
 import type {Graph} from "./Graph";
-import {Node} from "./Node";
 
 export class Stats {
     graph: Graph;
@@ -102,11 +100,11 @@ export class Stats {
     }
 
     get numNodes(): number {
-        return Node.list.size;
+        return this.graph.nodeCache.size;
     }
 
     get numEdges(): number {
-        return Edge.list.size;
+        return this.graph.edgeCache.size;
     }
 
     get meshCacheHits(): number {

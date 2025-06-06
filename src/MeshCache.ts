@@ -1,15 +1,14 @@
 import {InstancedMesh, Mesh} from "@babylonjs/core";
 
-const meshCacheMap: Map<string, Mesh> = new Map();
-
 type MeshCreatorFn = () => Mesh;
 
 export class MeshCache {
+    meshCacheMap: Map<string, Mesh> = new Map();
     hits = 0;
     misses = 0;
 
     get(name: string, creator: MeshCreatorFn): InstancedMesh {
-        let mesh = meshCacheMap.get(name);
+        let mesh = this.meshCacheMap.get(name);
         if (mesh) {
             this.hits++;
             return mesh.createInstance(name);
@@ -18,7 +17,7 @@ export class MeshCache {
         this.misses++;
         mesh = creator();
         mesh.isVisible = false;
-        meshCacheMap.set(name, mesh);
+        this.meshCacheMap.set(name, mesh);
         return mesh.createInstance(name);
     }
 

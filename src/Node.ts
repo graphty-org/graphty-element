@@ -162,19 +162,15 @@ export class Node {
         this.parentGraph.graphEngine.unpin(this);
     }
 
-    static get list(): NodeListType {
-        return globalNodeList;
-    }
-
     static create(graph: Graph, nodeId: NodeIdType, style: NodeStyleOptsType, opts: NodeOpts = {}): Node {
         // don't create duplicates
-        const existingNode = Node.list.get(nodeId);
+        const existingNode = graph.nodeCache.get(nodeId);
         if (existingNode) {
             return existingNode;
         }
 
         const n = new Node(graph, nodeId, style, opts);
-        Node.list.set(nodeId, n);
+        graph.nodeCache.set(nodeId, n);
 
         return n;
     }
@@ -424,6 +420,3 @@ export class Node {
         return plane;
     }
 }
-
-type NodeListType = Map<NodeIdType, Node>;
-const globalNodeList: NodeListType = new Map();
