@@ -1,6 +1,13 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    - master
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
