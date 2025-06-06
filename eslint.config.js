@@ -11,6 +11,7 @@ export default tseslint.config({
         "stories/**/*.ts",
         ".storybook/**/*.ts",
         "index.ts",
+        "custom-elements-manifest.config.mjs",
         "eslint.config.js",
         "vite.config.ts",
     ],
@@ -24,7 +25,7 @@ export default tseslint.config({
     /* *****************
       * basic
       *******************/
-        "indent": ["error", 4],
+        "indent": ["error", 4, {ignoredNodes: ["PropertyDefinition"]}],
         "linebreak-style": ["error", "unix"],
         "quotes": ["error", "double"],
         "semi": ["error", "always"],
@@ -107,7 +108,7 @@ export default tseslint.config({
       *******************/
         "prefer-template": "error",
         "template-curly-spacing": ["error", "never"],
-        "sort-imports": ["error"],
+        "sort-imports": ["error", {ignoreDeclarationSort: true}],
         "rest-spread-spacing": ["error", "always"],
         "arrow-parens": ["error", "always"],
         // "require-await": "error", // annoying for API calls that don't contain await
