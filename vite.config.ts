@@ -12,6 +12,7 @@ export default defineConfig(({mode}) => {
         plugins: [
             VitePluginCustomElementsManifest({
                 files: ["./src/webcomponent.ts"],
+                lit: true,
             }),
         ],
         build: {

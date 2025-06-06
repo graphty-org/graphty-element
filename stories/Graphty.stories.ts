@@ -15,7 +15,7 @@ type Story = StoryObj<Graphty>
 
 export const Foo: Story = {
     parameters: {
-        controls: {include: ["thing"]},
+        controls: {exclude: /^(#|_)/},
     },
 };
 
