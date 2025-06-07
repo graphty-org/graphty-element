@@ -1,6 +1,6 @@
 import "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
-import {Graphty} from "../src/webcomponent.ts";
+import {Graphty} from "../src/graphty-element";
 
 const meta: Meta = {
     title: "Data",

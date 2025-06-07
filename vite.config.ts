@@ -11,7 +11,7 @@ export default defineConfig(({mode}) => {
     const config: UserConfig = {
         plugins: [
             VitePluginCustomElementsManifest({
-                files: ["./src/webcomponent.ts"],
+                files: ["./src/graphty-element.ts"],
                 lit: true,
             }),
         ],
