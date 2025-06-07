@@ -1,5 +1,5 @@
 [![CI](https://github.com/apowers313/graphty/actions/workflows/ci.yml/badge.svg)](https://github.com/apowers313/graphty/actions/workflows/ci.yml)
-<a href="https://github.com/storybooks/storybook" target="_blank"><img
+<a href="https://apowers313.github.io/graphty" target="_blank"><img
 src="https://raw.githubusercontent.com/storybooks/brand/master/badge/badge-storybook.svg"></a>
 
 [Progressive WebXR](https://blog.mozvr.com/progressive-webxr-ar-store/)
