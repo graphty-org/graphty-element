@@ -1,5 +1,5 @@
 import "@storybook/addon-console";
-import {Preview, setCustomElementsManifest} from "@storybook/web-components";
+import {Preview, setCustomElementsManifest} from "@storybook/web-components-vite";
 import DocumentationTemplate from "./DocumentationTemplate.mdx";
 // @ts-expect-error TS doesn't recognize virtual imports?
 import manifest from "virtual:vite-plugin-cem/custom-elements-manifest";

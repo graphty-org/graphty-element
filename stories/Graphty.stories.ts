@@ -1,5 +1,5 @@
 import "../index.ts";
-import type {Meta, StoryObj} from "@storybook/web-components";
+import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import {Graphty} from "../src/webcomponent.ts";
 
 const meta: Meta = {
