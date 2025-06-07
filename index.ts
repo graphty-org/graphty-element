@@ -4,3 +4,4 @@ export {Edge} from "./src/Edge";
 export {Graphty} from "./src/webcomponent";
 export {Styles} from "./src/Styles";
 export * as util from "./src/util";
+export type {GraphOptsType} from "./src/config";

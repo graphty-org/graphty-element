@@ -5,6 +5,12 @@ import color from "color-string";
 import convert from "color-convert";
 import {z} from "zod/v4";
 
+export type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
+export type PartiallyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 /** * STYLES ***/
 
 export const NodeShapes = z.enum([
@@ -151,9 +157,9 @@ export const GraphKnownFields = z.object({
 
 export type NodeObjectType = z.infer<typeof NodeObject>
 export type EdgeObjectType = z.infer<typeof EdgeObject>
-export type GraphOptsType = z.infer<typeof GraphOpts>
 export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
-export type GraphConfig = GraphOptsType;
+export type GraphConfig = z.infer<typeof GraphOpts>;
+export type GraphOptsType = DeepPartial<GraphConfig>
 
 export const GraphStyleOpts = z.strictObject({
     skybox: z.string().default(""),
@@ -203,14 +209,45 @@ export function getJsonDataOpts(o: object = {}): LoadJsonDataConfig {
     return LoadJsonDataOpts.parse(o);
 }
 
+export const GraphStyleTemplateVersions = z.enum([
+    "1.0.0",
+]);
+
+export const GraphBackground = z.discriminatedUnion("backgroundType", [
+    z.strictObject({backgroundType: "color", color: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF")}),
+    z.strictObject({backgroundType: "skybox", skyboxUrl: z.url({
+        protocol: /^https?$/,
+        // @ts-expect-error it exists in the source, not sure why TS complains about .domain not existing
+        hostname: z.regexes.domain,
+    })}),
+]);
+
+export const GraphStyleTemplate = z.strictObject({
+    version: GraphStyleTemplateVersions,
+    graph: z.strictObject({
+        layout: z.string(),
+        // background: GraphBackground.default(GraphBackground.parse({})),
+        knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
+    }),
+    layers: GraphStyleOpts.default(GraphStyleOpts.parse({})),
+});
+
+// export const GraphData = z.strictObject({
+//     provider: z.string().optional(),
+//     providerConfig: z.looseObject({}).optional(),
+//     nodes: z.array(z.looseObject({})).optional(),
+//     edges: z.array(z.looseObject({})).optional(),
+// });
+
 /** * CONFIG ***/
 export const GraphOpts = z.strictObject({
+    // data: GraphData.optional(),
     style: GraphStyleOpts.default(GraphStyleOpts.parse({})),
     behavior: GraphBehaviorOpts.default(GraphBehaviorOpts.parse({})),
     engine: GraphEngineOpts.default(GraphEngineOpts.parse({})),
     knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
 });
 
-export function getConfig(o: object = {}): GraphOptsType {
+export function getConfig(o: object = {}): GraphConfig {
     return GraphOpts.parse(o);
 }

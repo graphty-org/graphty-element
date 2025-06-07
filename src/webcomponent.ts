@@ -1,11 +1,11 @@
 import {customElement, property} from "lit/decorators.js";
 import {LitElement} from "lit";
-import {Graph} from "./Graph";
+import {Graph, GraphOptsType} from "../index.ts";
 
 /**
  * Graphty creates a graph
  */
-@customElement("graphty-core")
+@customElement("graphty-element")
 export class Graphty extends LitElement {
     #graph: Graph;
     #element: Element;
@@ -14,34 +14,9 @@ export class Graphty extends LitElement {
         super();
 
         this.#element = document.createElement("div");
-        this.#graph = new Graph(this.#element);
+        const opts: GraphOptsType = {};
 
-        this.#graph.addNodes([
-            {id: 0},
-            {id: 1},
-            {id: 2},
-            {id: 3},
-            {id: 4},
-            {id: 5},
-        ]);
-
-        this.#graph.addEdges([
-            {src: 0, dst: 1},
-            {src: 0, dst: 2},
-            {src: 2, dst: 3},
-            {src: 3, dst: 0},
-            {src: 3, dst: 4},
-            {src: 3, dst: 5},
-        ]);
-
-        // TODO: use lit Task instead
-        this.#graph.init()
-            .then(() => {
-                this.#graph.engine.resize(true);
-            })
-            .catch((e) => {
-                throw e;
-            });
+        this.#graph = new Graph(this.#element, opts);
     }
 
     connectedCallback() {
@@ -49,25 +24,66 @@ export class Graphty extends LitElement {
         this.renderRoot.appendChild(this.#element);
     }
 
+    update(changedProperties: Map<string, unknown>) {
+        super.update(changedProperties);
+
+        if (changedProperties.has("nodeData")) {
+            const data = this.nodeData;
+            if (Array.isArray(data)) {
+                this.#graph.addNodes(data);
+            }
+        }
+
+        if (changedProperties.has("edgeData")) {
+            const data = this.edgeData;
+            if (Array.isArray(data)) {
+                this.#graph.addEdges(data);
+            }
+        }
+    }
+
+    async firstUpdated(changedProperties: Map<string, unknown>) {
+        super.firstUpdated(changedProperties);
+
+        await this.#graph.init();
+        this.#graph.engine.resize();
+    }
+
     render() {
         return this.#element;
     }
-
-    // override createRenderRoot() {
-    //     return this;
-    // }
 
     disconnectedCallback() {
         this.#graph?.shutdown();
     }
 
     /**
-     * This is my thing description
-     * @default false
+     * An array of objects describing the node data.
+     * The path to the unique ID for the node is `.id` unless
+     * otherwise specified in `known-properties`.
      */
-    @property()
-    thing: boolean = true;
+    @property({attribute: "node-data"})
+    nodeData?: { [x: string]: unknown; }[];
 
-    @property()
-    thing3: number = 42;
+    /**
+     * An array of objects describing the edge data.
+     * The path to the source node ID and destination node ID are `src` and
+     * `dst` (respectively) unless otherwise specified in `known-properties`.
+     */
+    @property({attribute: "edge-data"})
+    edgeData?: { [x: string]: unknown; }[];
+
+    /**
+     * The type of data provider (e.g. "json"). See documentation for
+     * data providers for more information.
+     */
+    @property({attribute: "data-provider"})
+    dataProvider?: string;
+
+    /**
+     * The configuration for the data provider. See documentation for
+     * data providers for more information.
+     */
+    @property({attribute: "data-provider-config"})
+    dataProviderConfig?: { [x: string]: unknown; };
 }

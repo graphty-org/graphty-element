@@ -63,6 +63,7 @@ export class Graph {
     // graph
     fetchNodes?: FetchNodesFn;
     fetchEdges?: FetchEdgesFn;
+    initialized = false;
     // observeables
     graphObservable: Observable<GraphEvent> = new Observable();
     nodeObservable: Observable<NodeEvent> = new Observable();
@@ -149,6 +150,17 @@ export class Graph {
         // setup stats
         this.stats = new Stats(this);
 
+        // setup data
+        // if (this.config.data) {
+        //     if (this.config.data.nodes) {
+        //         this.addNodes(this.config.data.nodes);
+        //     }
+        //     if (this.config.data.edges) {
+        //         this.addEdges(this.config.data.edges);
+        //     }
+        // }
+
+        // run layout
         for (let i = 0; i < this.config.engine.preSteps; i++) {
             this.graphEngine.step();
         }
@@ -159,6 +171,10 @@ export class Graph {
     }
 
     async init() {
+        if (this.initialized) {
+            return;
+        }
+
         // Register a render loop to repeatedly render the scene
         this.engine.runRenderLoop(() => {
             this.update();
@@ -220,6 +236,8 @@ export class Graph {
         window.addEventListener("resize", () => {
             this.engine.resize();
         });
+
+        this.initialized = true;
     }
 
     update() {

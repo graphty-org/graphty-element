@@ -1,24 +1,23 @@
 import * as z4 from "zod/v4/core";
-import {DataProvider} from "./DataProvider.ts";
+import {DataProvider} from "./DataProvider";
 import {JSONParser} from "@streamparser/json";
+import type {PartiallyOptional} from "../config";
 import {z} from "zod/v4";
 
 export const JsonDataProviderConfig = z.object({
-    edgesPath: z.string().default(""),
-    nodesPath: z.string().default(""),
-    // schema: z.object().or(z.null()).default(null),
-    // schema: z.custom<z4.$ZodObject>(),
+    data: z.string(),
+    edgesPath: z.string().default("nodes"),
+    nodesPath: z.string().default("edges"),
     schema: z.custom<z4.$ZodObject>(),
 });
 
-export type JsonDataProviderConfigType = Partial<z.infer<typeof JsonDataProviderConfig>>
-const defaultConfig = JsonDataProviderConfig.parse({});
+export type JsonDataProviderConfigType = PartiallyOptional<z.infer<typeof JsonDataProviderConfig>, "edgesPath" | "nodesPath" | "schema">
 
 export class JsonDataProvider extends DataProvider {
     name = "json";
     url: string;
 
-    constructor(url: string, opts: JsonDataProviderConfigType = defaultConfig) {
+    constructor(opts: JsonDataProviderConfigType) {
         super();
 
         opts = JsonDataProviderConfig.parse(opts);
@@ -26,7 +25,7 @@ export class JsonDataProvider extends DataProvider {
             this.schema = opts.schema;
         }
 
-        this.url = url;
+        this.url = opts.data;
     }
 
     async *providerFetchData(): AsyncGenerator<object[], void, unknown> {

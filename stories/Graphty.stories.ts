@@ -5,28 +5,14 @@ import {Graphty} from "../src/webcomponent.ts";
 const meta: Meta = {
     title: "Graphty",
     tags: ["autodocs"],
-    component: "graphty-core",
-};
-export default meta;
-
-// export const Default = () => "<graphty-core></graphty-core>";
-
-type Story = StoryObj<Graphty>
-
-export const Foo: Story = {
+    component: "graphty-element",
     parameters: {
         controls: {exclude: /^(#|_)/},
     },
 };
+export default meta;
 
-export const Blah: Story = {
-    args: {
-        thing: true,
-    },
+type Story = StoryObj<Graphty>
 
-    parameters: {
-        controls: {
-            include: ["thing"],
-        },
-    },
+export const Basic: Story = {
 };

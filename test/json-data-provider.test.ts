@@ -9,8 +9,8 @@ describe("JsonDataProvider", () => {
 
     describe("providerFetchData", () => {
         it("fetches data", async() => {
-            const url = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
-            const jdp = new JsonDataProvider(url);
+            const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
+            const jdp = new JsonDataProvider({data});
             let ret: object[] = [];
 
             for await (const data of jdp.getData()) {
@@ -27,23 +27,23 @@ describe("JsonDataProvider", () => {
 
     describe("schema validation", () => {
         it("passes", async() => {
-            const url = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
+            const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
             const schema = z.object({
                 id: z.string(),
                 group: z.number(),
             });
-            const jdp = new JsonDataProvider(url, {schema: schema});
+            const jdp = new JsonDataProvider({data, schema});
 
             await jdp.getData().next();
         });
 
         it("fails", async() => {
-            const url = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
+            const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
             const schema = z.object({
                 id: z.boolean(), // wrong type
                 group: z.number(),
             });
-            const jdp = new JsonDataProvider(url, {schema});
+            const jdp = new JsonDataProvider({data, schema});
 
             await expect(jdp.getData().next()).rejects.toThrow(/Invalid input: expected boolean, received string/);
         });
