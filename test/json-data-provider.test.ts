@@ -1,16 +1,16 @@
 import {assert, describe, expect, it} from "vitest";
-import {JsonDataProvider} from "../src/data/JsonDataProvider.ts";
+import {JsonDataSource} from "../src/data/JsonDataSource.ts";
 import {z} from "zod/v4";
 
-describe("JsonDataProvider", () => {
+describe("JsonDataSource", () => {
     it("exists", () => {
-        assert.isFunction(JsonDataProvider);
+        assert.isFunction(JsonDataSource);
     });
 
-    describe("providerFetchData", () => {
+    describe("sourceFetchData", () => {
         it("fetches data", async() => {
             const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
-            const jdp = new JsonDataProvider({data});
+            const jdp = new JsonDataSource({data});
             let ret: object[] = [];
 
             for await (const data of jdp.getData()) {
@@ -32,7 +32,7 @@ describe("JsonDataProvider", () => {
                 id: z.string(),
                 group: z.number(),
             });
-            const jdp = new JsonDataProvider({data, schema});
+            const jdp = new JsonDataSource({data, schema});
 
             await jdp.getData().next();
         });
@@ -43,7 +43,7 @@ describe("JsonDataProvider", () => {
                 id: z.boolean(), // wrong type
                 group: z.number(),
             });
-            const jdp = new JsonDataProvider({data, schema});
+            const jdp = new JsonDataSource({data, schema});
 
             await expect(jdp.getData().next()).rejects.toThrow(/Invalid input: expected boolean, received string/);
         });
