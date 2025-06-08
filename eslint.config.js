@@ -19,24 +19,29 @@ export default tseslint.config({
     extends: [
         eslint.configs.recommended,
         // ... storybook.configs["flat/recommended"],
+        // "extends": [
+        //   "plugin:storybook/recommended"
+        // ]
         ... tseslint.configs.recommended,
     ],
     rules: {
-    /* *****************
-      * basic
-      *******************/
+        /* *****************
+         * basic
+         *******************/
         "indent": ["error", 4, {ignoredNodes: ["PropertyDefinition"]}],
         "linebreak-style": ["error", "unix"],
         "quotes": ["error", "double"],
         "semi": ["error", "always"],
         "camelcase": ["error", {properties: "always"}],
         /* *****************
-      * error prevention
-      *******************/
+         * error prevention
+         *******************/
         "wrap-iife": ["error", "inside"],
         "consistent-return": "error",
         "no-template-curly-in-string": "error",
-        // "no-promise-executor-return": "error",
+        "no-promise-executor-return": "error",
+        // "no-misused-promises": "error",
+        // "no-floating-promises": "error",
         // "default-case-last": "error",
         "eqeqeq": "error",
         "dot-notation": "error",
@@ -45,8 +50,8 @@ export default tseslint.config({
         // "strict":                        ["error", "global"],
         // "complexity":                    ["error", {max: 10}],
         /* *****************
-      * cosmetic
-      *******************/
+         * cosmetic
+         *******************/
         "space-before-function-paren": ["error", "never"],
         "func-call-spacing": ["error", "never"],
         "function-call-argument-newline": ["error", "consistent"],
@@ -97,15 +102,15 @@ export default tseslint.config({
         // "no-new":                        "error", // bad for some Mocha tests that expect to throw
         // "one-var-declaration-per-line":  ["error", "never"],
         /* *****************
-      * style
-      *******************/
+         * style
+         *******************/
         "no-warning-comments": ["warn", {terms: ["TODO", "FIXME", "XXX", "NOTE"]}],
         "sort-vars": "error",
         "yoda": ["error", "never"],
         // "sort-keys": ["warn", "asc", {"natural": true}],
         /* *****************
-      * ES6
-      *******************/
+         * ES6
+         *******************/
         "prefer-template": "error",
         "template-curly-spacing": ["error", "never"],
         "sort-imports": ["error", {ignoreDeclarationSort: true}],
