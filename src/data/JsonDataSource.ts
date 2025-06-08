@@ -54,8 +54,6 @@ export class JsonDataSource extends DataSource {
 
         const data = await response.json();
 
-        // const data = JSON.parse(jsonString);
-
         const nodes = jmespath.search(data, this.opts.node.path);
         if (!Array.isArray(nodes)) {
             throw new TypeError(`JsonDataProvider expected 'nodes' to be an array of objects, got ${nodes}`);
@@ -69,46 +67,3 @@ export class JsonDataSource extends DataSource {
         yield {nodes, edges};
     }
 }
-
-//     async *sourceFetchData(): AsyncGenerator<object[], void, unknown> {
-//         let ret: object[] = [];
-//         console.log("json sourceFetchData");
-
-//         const parser = new JSONParser();
-//         parser.onValue = ({value, stack}) => {
-//             if (stack.length !== 1) {
-//                 return;
-//             }
-
-//             if (value instanceof Object) {
-//                 console.log("pushing ret", value);
-//                 ret.push(value);
-//             }
-//         };
-
-//         // TODO: fetch args
-//         const response = await fetch(this.url);
-//         // TODO: error handling
-//         if (!response.body) {
-//             throw new Error();
-//         }
-
-//         const reader = response.body.getReader();
-//         while (true) {
-//             console.log("getting body");
-//             const {done, value} = await reader.read();
-//             if (done) {
-//                 console.log("done");
-//                 break;
-//             }
-
-//             parser.write(value);
-
-//             if (ret.length > 0) {
-//                 console.log("yielding");
-//                 yield ret;
-//                 ret = [];
-//             }
-//         }
-//     }
-// }
