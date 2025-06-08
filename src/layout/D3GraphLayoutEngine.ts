@@ -7,7 +7,7 @@ import {
     forceManyBody,
     forceSimulation,
 } from "d3-force-3d";
-import type {EdgePosition, GraphEngine, Position} from "./GraphEngine";
+import type {EdgePosition, GraphEngine, Position} from "./LayoutEngine";
 import type {Node, NodeIdType} from "../Node";
 import type {Edge} from "../Edge";
 

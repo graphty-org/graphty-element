@@ -30,11 +30,11 @@ import {
     getJsonDataOpts,
 } from "./config";
 
-import {D3GraphEngine} from "./engine/D3GraphEngine";
+import {D3GraphEngine} from "./layout/D3GraphLayoutEngine";
 import {Edge, EdgeMap} from "./Edge";
-import {GraphEngine} from "./engine/GraphEngine";
+import {GraphEngine} from "./layout/LayoutEngine";
 import {MeshCache} from "./MeshCache";
-import {NGraphEngine} from "./engine/NGraphEngine";
+import {NGraphEngine} from "./layout/NGraphLayoutEngine";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";

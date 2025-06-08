@@ -1,4 +1,4 @@
-import type {EdgePosition, GraphEngine, Position} from "./GraphEngine";
+import type {EdgePosition, GraphEngine, Position} from "./LayoutEngine";
 import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
 import ngraphCreateLayout, {Layout as NGraphLayout} from "ngraph.forcelayout";
 
