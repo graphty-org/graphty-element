@@ -37,9 +37,14 @@ export const Basic: Story = {
 
 export const Json: Story = {
     args: {
-        dataProvider: "json",
-        dataProviderConfig: {
+        dataSource: "json",
+        dataSourceConfig: {
             data: "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2.json",
+            edge: {
+                path: "links",
+            },
         },
+        edgeSrcIdPath: "source",
+        edgeDstIdPath: "target",
     },
 };

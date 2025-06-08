@@ -26,6 +26,24 @@ export class Graphty extends LitElement {
 
     update(changedProperties: Map<string, unknown>) {
         super.update(changedProperties);
+        // console.log(`update: ${[... changedProperties.keys()].join(", ")}`);
+    }
+
+    async firstUpdated(changedProperties: Map<string, unknown>) {
+        super.firstUpdated(changedProperties);
+        // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
+
+        if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
+            this.#graph.config.knownFields.nodeIdPath = this.nodeIdPath;
+        }
+
+        if (changedProperties.has("edgeSrcIdPath") && this.edgeSrcIdPath) {
+            this.#graph.config.knownFields.edgeSrcIdPath = this.edgeSrcIdPath;
+        }
+
+        if (changedProperties.has("edgeDstIdPath") && this.edgeDstIdPath) {
+            this.#graph.config.knownFields.edgeDstIdPath = this.edgeDstIdPath;
+        }
 
         if (changedProperties.has("nodeData")) {
             const data = this.nodeData;
@@ -40,10 +58,14 @@ export class Graphty extends LitElement {
                 this.#graph.addEdges(data);
             }
         }
-    }
 
-    async firstUpdated(changedProperties: Map<string, unknown>) {
-        super.firstUpdated(changedProperties);
+        if (changedProperties.has("dataSource")) {
+            const source = this.dataSource;
+            const sourceOpts = this.dataSourceConfig || {};
+            if (source) {
+                await this.#graph.addDataFromSource(source, sourceOpts);
+            }
+        }
 
         await this.#graph.init();
         this.#graph.engine.resize();
@@ -74,16 +96,40 @@ export class Graphty extends LitElement {
     edgeData?: { [x: string]: unknown; }[];
 
     /**
-     * The type of data provider (e.g. "json"). See documentation for
-     * data providers for more information.
+     * The type of data source (e.g. "json"). See documentation for
+     * data sources for more information.
      */
-    @property({attribute: "data-provider"})
-    dataProvider?: string;
+    @property({attribute: "data-source"})
+    dataSource?: string;
 
     /**
-     * The configuration for the data provider. See documentation for
-     * data providers for more information.
+     * The configuration for the data source. See documentation for
+     * data sources for more information.
      */
-    @property({attribute: "data-provider-config"})
-    dataProviderConfig?: { [x: string]: unknown; };
+    @property({attribute: "data-source-config"})
+    dataSourceConfig?: { [x: string]: unknown; };
+
+    /**
+     * A jmespath string that can be used to select the unique node identifier
+     * for each node. Defaults to "id", as in `{id: 42}` is the identifier of
+     * the node.
+     */
+    @property({attribute: "node-id-path"})
+    nodeIdPath?: string;
+
+    /**
+     * Similar to the nodeIdPath property / node-id-path attribute, this is a
+     * jmespath that describes where to find the source node identifier for this edge.
+     * Defaults to "src", as in `{src: 42, dst: 31337}`
+     */
+    @property({attribute: "edge-src-id-path"})
+    edgeSrcIdPath?: string;
+
+    /**
+     * Similar to the nodeIdPath property / node-id-path attribute, this is a
+     * jmespath that describes where to find the desination node identifier for this edge.
+     * Defaults to "dst", as in `{src: 42, dst: 31337}`
+     */
+    @property({attribute: "edge-src-id-path"})
+    edgeDstIdPath?: string;
 }

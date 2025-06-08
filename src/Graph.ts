@@ -39,6 +39,10 @@ import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 import jmespath from "jmespath";
+import {DataSource} from "./data/DataSource";
+import {JsonDataSource} from "./data/JsonDataSource";
+
+DataSource.register(JsonDataSource);
 
 export class Graph {
     config: GraphConfig;
@@ -74,7 +78,7 @@ export class Graph {
         this.meshCache = new MeshCache();
 
         // configure graph
-        this.styles = new Styles({addDefaultStyle: true});
+        this.styles = new Styles({addDefaultStyle: true, knownFields: this.config.knownFields});
         if (this.config.behavior.fetchNodes) {
             this.fetchNodes = this.config.behavior.fetchNodes as FetchNodesFn;
         }
@@ -273,6 +277,22 @@ export class Graph {
             this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
             this.running = false;
         }
+    }
+
+    async addDataFromSource(type: string, opts: object = {}) {
+        this.stats.loadTime.beginMonitoring();
+
+        const source = DataSource.get(type, opts);
+        if (!source) {
+            throw new TypeError(`Error getting data from source: ${type}`);
+        }
+
+        for await (const chunk of source.getData()) {
+            this.addNodes(chunk.nodes);
+            this.addEdges(chunk.edges);
+        }
+
+        this.stats.loadTime.endMonitoring();
     }
 
     addNode(node: object, idPath?: string) {

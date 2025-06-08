@@ -1,67 +1,114 @@
 import * as z4 from "zod/v4/core";
-import {DataSource} from "./DataSource";
-import {JSONParser} from "@streamparser/json";
+import {DataSource, DataSourceChunk} from "./DataSource";
+// import {JSONParser} from "@streamparser/json";
 import type {PartiallyOptional} from "../config";
 import {z} from "zod/v4";
+import jmespath from "jmespath";
 
-export const JsonDataSourceConfig = z.object({
-    data: z.string(),
-    edgesPath: z.string().default("nodes"),
-    nodesPath: z.string().default("edges"),
+const JsonNodeConfig = z.strictObject({
+    path: z.string().default("nodes"),
     schema: z.custom<z4.$ZodObject>(),
 });
 
-export type JsonDataSourceConfigType = PartiallyOptional<z.infer<typeof JsonDataSourceConfig>, "edgesPath" | "nodesPath" | "schema">
+const JsonEdgeConfig = z.strictObject({
+    path: z.string().default("edges"),
+    schema: z.custom<z4.$ZodObject>(),
+});
 
+export const JsonDataSourceConfig = z.object({
+    data: z.string(),
+    node: JsonNodeConfig.default(JsonNodeConfig.parse({})),
+    edge: JsonEdgeConfig.default(JsonEdgeConfig.parse({})),
+});
+
+export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>
+export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigType, "node" | "edge">
+
+// @DataSource.register
 export class JsonDataSource extends DataSource {
-    name = "json";
+    static type = "json";
     url: string;
+    opts: JsonDataSourceConfigType;
 
-    constructor(opts: JsonDataSourceConfigType) {
+    constructor(anyOpts: object) {
         super();
 
-        opts = JsonDataSourceConfig.parse(opts);
-        if (opts.schema) {
-            this.schema = opts.schema;
+        const opts = JsonDataSourceConfig.parse(anyOpts);
+        this.opts = opts;
+        if (opts.node.schema) {
+            this.nodeSchema = opts.node.schema;
+        }
+
+        if (opts.edge.schema) {
+            this.edgeSchema = opts.edge.schema;
         }
 
         this.url = opts.data;
     }
 
-    async *SourceFetchData(): AsyncGenerator<object[], void, unknown> {
-        let ret: object[] = [];
-
-        const parser = new JSONParser();
-        parser.onValue = ({value, stack}) => {
-            if (stack.length !== 1) {
-                return;
-            }
-
-            if (value instanceof Object) {
-                ret.push(value);
-            }
-        };
-
-        // TODO: fetch args
+    async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         const response = await fetch(this.url);
-        // TODO: error handling
         if (!response.body) {
-            throw new Error();
+            throw new Error("JSON response had no body");
         }
 
-        const reader = response.body.getReader();
-        while (true) {
-            const {done, value} = await reader.read();
-            if (done) {
-                break;
-            }
+        const data = await response.json();
 
-            parser.write(value);
+        // const data = JSON.parse(jsonString);
 
-            if (ret.length > 3) {
-                yield ret;
-                ret = [];
-            }
+        const nodes = jmespath.search(data, this.opts.node.path);
+        if (!Array.isArray(nodes)) {
+            throw new TypeError(`JsonDataProvider expected 'nodes' to be an array of objects, got ${nodes}`);
         }
+
+        const edges = jmespath.search(data, this.opts.edge.path);
+        if (!Array.isArray(edges)) {
+            throw new TypeError(`JsonDataProvider expected 'edges' to be an array of objects, got ${edges}`);
+        }
+
+        yield {nodes, edges};
     }
 }
+
+//     async *sourceFetchData(): AsyncGenerator<object[], void, unknown> {
+//         let ret: object[] = [];
+//         console.log("json sourceFetchData");
+
+//         const parser = new JSONParser();
+//         parser.onValue = ({value, stack}) => {
+//             if (stack.length !== 1) {
+//                 return;
+//             }
+
+//             if (value instanceof Object) {
+//                 console.log("pushing ret", value);
+//                 ret.push(value);
+//             }
+//         };
+
+//         // TODO: fetch args
+//         const response = await fetch(this.url);
+//         // TODO: error handling
+//         if (!response.body) {
+//             throw new Error();
+//         }
+
+//         const reader = response.body.getReader();
+//         while (true) {
+//             console.log("getting body");
+//             const {done, value} = await reader.read();
+//             if (done) {
+//                 console.log("done");
+//                 break;
+//             }
+
+//             parser.write(value);
+
+//             if (ret.length > 0) {
+//                 console.log("yielding");
+//                 yield ret;
+//                 ret = [];
+//             }
+//         }
+//     }
+// }

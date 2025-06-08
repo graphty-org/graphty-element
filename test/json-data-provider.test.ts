@@ -7,6 +7,12 @@ describe("JsonDataSource", () => {
         assert.isFunction(JsonDataSource);
     });
 
+    it("has 'json' type", () => {
+        const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
+        const jdp = new JsonDataSource({data});
+        assert.strictEqual(jdp.type, "json");
+    });
+
     describe("sourceFetchData", () => {
         it("fetches data", async() => {
             const data = "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2-nodes.json";
@@ -32,7 +38,7 @@ describe("JsonDataSource", () => {
                 id: z.string(),
                 group: z.number(),
             });
-            const jdp = new JsonDataSource({data, schema});
+            const jdp = new JsonDataSource({data, nodes: {schema}});
 
             await jdp.getData().next();
         });
@@ -43,7 +49,7 @@ describe("JsonDataSource", () => {
                 id: z.boolean(), // wrong type
                 group: z.number(),
             });
-            const jdp = new JsonDataSource({data, schema});
+            const jdp = new JsonDataSource({data, nodes: {schema}});
 
             await expect(jdp.getData().next()).rejects.toThrow(/Invalid input: expected boolean, received string/);
         });
