@@ -36,8 +36,8 @@ export class Graphty extends LitElement {
         // XXX: order matters in how these attributes are initially set
 
         if (changedProperties.has("layout") && this.layout) {
-            const layoutOpts = this.layoutOpts || {};
-            this.#graph.setLayout(this.layout, layoutOpts);
+            const layoutConfig = this.layoutConfig || {};
+            this.#graph.setLayout(this.layout, layoutConfig);
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
@@ -142,6 +142,6 @@ export class Graphty extends LitElement {
      * Specifies which type of layout to use. See the layout documentation for
      * more information.
      */
-    @property({attribute: "layout-options"})
-    layoutOpts?: { [x: string]: unknown; };
+    @property({attribute: "layout-config"})
+    layoutConfig?: { [x: string]: unknown; };
 }
