@@ -32,5 +32,5 @@ export default meta;
 
 type Story = StoryObj<Graphty>
 
-export const Basic: Story = {
+export const graphty: Story = {
 };
