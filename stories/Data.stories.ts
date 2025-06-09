@@ -4,7 +4,6 @@ import {Graphty} from "../src/graphty-element";
 
 const meta: Meta = {
     title: "Data",
-    tags: ["autodocs"],
     component: "graphty-element",
     parameters: {
         controls: {exclude: /^(#|_)/},
