@@ -5,3 +5,9 @@ src="https://raw.githubusercontent.com/storybooks/brand/master/badge/badge-story
 Graph analysis tool using [Babylon.js](https://www.babylonjs.com/).
 
 Inspired by [three-forcegraph](https://github.com/vasturiano/three-forcegraph).
+
+ <iframe
+  src="https://graphty-org.github.io/graphty-element/?path=/story/data--basic&viewMode=story&shortcuts=false&singleStory=true"
+  width="800"
+  height="200"
+></iframe>
