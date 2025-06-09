@@ -19,6 +19,12 @@ const preview: Preview = {
         docs: {
             page: DocumentationTemplate,
         },
+        options: {
+            storySort: {
+                order: ["Graphty"],
+                method: "alphabetical",
+            },
+        },
     },
 };
 
