@@ -38,10 +38,12 @@ import {Styles} from "./Styles";
 import jmespath from "jmespath";
 import {DataSource} from "./data/DataSource";
 import {JsonDataSource} from "./data/JsonDataSource";
+import {SpiralLayout} from "./layout/SpiralEngine";
 
 DataSource.register(JsonDataSource);
 LayoutEngine.register(D3GraphEngine);
 LayoutEngine.register(NGraphEngine);
+LayoutEngine.register(SpiralLayout);
 
 export class Graph {
     config: GraphConfig;

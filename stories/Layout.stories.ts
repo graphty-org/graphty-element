@@ -4,7 +4,6 @@ import {Graphty} from "../src/graphty-element";
 
 const meta: Meta = {
     title: "Layout",
-    tags: ["autodocs"],
     component: "graphty-element",
     parameters: {
         controls: {exclude: /^(#|_)/},
@@ -29,5 +28,17 @@ export const ngraph: Story = {
 export const D3: Story = {
     args: {
         layout: "d3",
+        layoutConfig: {
+            alphaMin: 0.1,
+            alphaTarget: 0,
+            alphaDecay: 0.0228,
+            velocityDecay: 0.4,
+        },
+    },
+};
+
+export const Spiral: Story = {
+    args: {
+        layout: "spiral",
     },
 };
