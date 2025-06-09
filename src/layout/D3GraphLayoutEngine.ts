@@ -41,7 +41,7 @@ function isD3Node(n: unknown): n is D3Node {
 
 export const D3LayoutConfig = z.strictObject({
     alphaMin: z.number().positive().default(0.1),
-    alphaTarget: z.number().positive().default(0),
+    alphaTarget: z.number().min(0).default(0),
     alphaDecay: z.number().positive().default(0.0228),
     velocityDecay: z.number().positive().default(0.4),
 });
