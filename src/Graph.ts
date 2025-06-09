@@ -23,16 +23,13 @@ import {
     FetchEdgesFn,
     FetchNodesFn,
     GraphConfig,
-    GraphEngineNamesType,
     GraphOptsType,
-    LoadJsonDataConfig,
     getConfig,
-    getJsonDataOpts,
 } from "./config";
 
 import {D3GraphEngine} from "./layout/D3GraphLayoutEngine";
 import {Edge, EdgeMap} from "./Edge";
-import {GraphEngine} from "./layout/LayoutEngine";
+import {LayoutEngine} from "./layout/LayoutEngine";
 import {MeshCache} from "./MeshCache";
 import {NGraphEngine} from "./layout/NGraphLayoutEngine";
 import {Node, NodeIdType} from "./Node";
@@ -43,11 +40,15 @@ import {DataSource} from "./data/DataSource";
 import {JsonDataSource} from "./data/JsonDataSource";
 
 DataSource.register(JsonDataSource);
+LayoutEngine.register(D3GraphEngine);
+LayoutEngine.register(NGraphEngine);
 
 export class Graph {
     config: GraphConfig;
     stats: Stats;
     styles: Styles;
+    nodes: Array<Node> = [];
+    edges: Array<Edge> = [];
     // babylon
     element: Element;
     canvas: HTMLCanvasElement;
@@ -60,9 +61,8 @@ export class Graph {
     edgeCache: EdgeMap = new EdgeMap();
     nodeCache: Map<NodeIdType, Node> = new Map();
     // graph engine
-    graphEngineType?: GraphEngineNamesType;
-    graphEngine: GraphEngine;
-    running = true;
+    layoutEngine!: LayoutEngine;
+    running = false;
     pinOnDrag?: boolean;
     // graph
     fetchNodes?: FetchNodesFn;
@@ -142,32 +142,11 @@ export class Graph {
             );
         }
 
-        // setup force directed graph engine
-        if (this.config.engine.type === "ngraph") {
-            this.graphEngine = new NGraphEngine();
-        } else if (this.config.engine.type === "d3") {
-            this.graphEngine = new D3GraphEngine();
-        } else {
-            throw new TypeError(`Unknown graph engine type: '${this.graphEngineType}'`);
-        }
+        // setup default layout
+        this.setLayout(this.config.layout.type, {});
 
         // setup stats
         this.stats = new Stats(this);
-
-        // setup data
-        // if (this.config.data) {
-        //     if (this.config.data.nodes) {
-        //         this.addNodes(this.config.data.nodes);
-        //     }
-        //     if (this.config.data.edges) {
-        //         this.addEdges(this.config.data.edges);
-        //     }
-        // }
-
-        // run layout
-        for (let i = 0; i < this.config.engine.preSteps; i++) {
-            this.graphEngine.step();
-        }
     }
 
     shutdown() {
@@ -245,21 +224,21 @@ export class Graph {
     }
 
     update() {
-        if (!this.running) {
+        if (!this.layoutEngine || !this.running) {
             return;
         }
 
         // update graph engine
         this.stats.step();
         this.stats.graphStep.beginMonitoring();
-        for (let i = 0; i < this.config.engine.stepMultiplier; i++) {
-            this.graphEngine.step();
+        for (let i = 0; i < this.config.layout.stepMultiplier; i++) {
+            this.layoutEngine.step();
         }
         this.stats.graphStep.endMonitoring();
 
         // update nodes
         this.stats.nodeUpdate.beginMonitoring();
-        for (const n of this.graphEngine.nodes) {
+        for (const n of this.layoutEngine.nodes) {
             n.update();
         }
         this.stats.nodeUpdate.endMonitoring();
@@ -267,13 +246,13 @@ export class Graph {
         // update edges
         this.stats.edgeUpdate.beginMonitoring();
         Edge.updateRays(this);
-        for (const e of this.graphEngine.edges) {
+        for (const e of this.layoutEngine.edges) {
             e.update();
         }
         this.stats.edgeUpdate.endMonitoring();
 
         // check to see if we are done
-        if (this.graphEngine.isSettled) {
+        if (this.layoutEngine.isSettled) {
             this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
             this.running = false;
         }
@@ -284,7 +263,7 @@ export class Graph {
 
         const source = DataSource.get(type, opts);
         if (!source) {
-            throw new TypeError(`Error getting data from source: ${type}`);
+            throw new TypeError(`No data source named: ${type}`);
         }
 
         for await (const chunk of source.getData()) {
@@ -310,13 +289,20 @@ export class Graph {
         for (const node of nodes) {
             const metadata = node;
             const nodeId = jmespath.search(node, query);
-            this.nodeObservable.notifyObservers({type: "node-add-before", nodeId, metadata});
+
+            if (this.nodeCache.get(nodeId)) {
+                continue;
+            }
+
             const style = this.styles.getStyleForNode(nodeId);
-            Node.create(this, nodeId, style, {
+            const n = new Node(this, nodeId, style, {
                 pinOnDrag: this.pinOnDrag,
                 metadata,
             });
+            this.nodeCache.set(nodeId, n);
         }
+
+        this.running = true;
     }
 
     addEdge(edge: object, srcIdPath?: string, dstIdPath?: string) {
@@ -336,12 +322,39 @@ export class Graph {
             const metadata = edge;
             const srcNodeId = jmespath.search(edge, srcQuery);
             const dstNodeId = jmespath.search(edge, dstQuery);
-            this.edgeObservable.notifyObservers({type: "edge-add-before", srcNodeId, dstNodeId, metadata});
+
+            if (this.edgeCache.get(srcNodeId, dstNodeId)) {
+                continue;
+            }
+
             const style = this.styles.getStyleForEdge(srcNodeId, dstNodeId);
-            Edge.create(this, srcNodeId, dstNodeId, style, {
+            const e = new Edge(this, srcNodeId, dstNodeId, style, {
                 metadata,
             });
+            this.edgeCache.set(srcNodeId, dstNodeId, e);
         }
+
+        this.running = true;
+    }
+
+    async setLayout(type: string, opts: object = {}) {
+        const engine = LayoutEngine.get(type, opts);
+        if (!engine) {
+            throw new TypeError(`No layout named: ${type}`);
+        }
+
+        engine.addNodes(this.nodes);
+        engine.addEdges(this.edges);
+
+        this.layoutEngine = engine;
+        await engine.init();
+
+        // run layout presteps
+        for (let i = 0; i < this.config.layout.preSteps; i++) {
+            this.layoutEngine.step();
+        }
+
+        this.running = true;
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {
@@ -353,57 +366,9 @@ export class Graph {
                 }
             });
             break;
-        case "node-add-before":
-            this.nodeObservable.add((e) => {
-                if (e.type === type) {
-                    cb(e);
-                }
-            });
-            break;
-        case "edge-add-before":
-            this.edgeObservable.add((e) => {
-                if (e.type === type) {
-                    cb(e);
-                }
-            });
-            break;
         default:
             throw new TypeError(`Unknown listener type in addListener: ${type}`);
         }
-    }
-
-    async loadJsonData(url: string, opts?: LoadJsonDataConfig): Promise<void> {
-        this.stats.loadTime.beginMonitoring();
-        const {nodeListProp, edgeListProp, nodeIdProp, edgeSrcIdProp, edgeDstIdProp, fetchOpts} = getJsonDataOpts(opts);
-
-        // fetch data from URL
-        const response = await fetch(url, fetchOpts);
-        const data = await response.json();
-
-        // check data
-        if (!Array.isArray(data[nodeListProp])) {
-            throw TypeError(`when fetching JSON data: '${nodeListProp}' was not an Array`);
-        }
-
-        if (!Array.isArray(data[edgeListProp])) {
-            throw TypeError(`when fetching JSON data: '${edgeListProp}' was not an Array`);
-        }
-
-        // iterate nodes adding data
-        for (const n of data[nodeListProp]) {
-            const id = n[nodeIdProp];
-            const metadata = n;
-            this.addNode(id, metadata);
-        }
-
-        // iterate edges adding data
-        for (const e of data[edgeListProp]) {
-            const srcId = e[edgeSrcIdProp];
-            const dstId = e[edgeDstIdProp];
-            const metadata = e;
-            this.addEdge(srcId, dstId, metadata);
-        }
-        this.stats.loadTime.endMonitoring();
     }
 }
 

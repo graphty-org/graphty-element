@@ -42,7 +42,7 @@ export class Node {
         this.style = style;
 
         // create graph node
-        this.parentGraph.graphEngine.addNode(this);
+        this.parentGraph.layoutEngine.addNode(this);
 
         // create mesh
         this.mesh = this.style.nodeMeshFactory(this, this.parentGraph, this.style);
@@ -87,7 +87,7 @@ export class Node {
             this.parentGraph.running = true;
 
             // update the node position
-            this.parentGraph.graphEngine.setNodePosition(this, event.position);
+            this.parentGraph.layoutEngine.setNodePosition(this, event.position);
         });
 
         // TODO: this apparently updates dragging objects faster and more fluidly
@@ -144,7 +144,7 @@ export class Node {
 
         this.parentGraph.nodeObservable.notifyObservers({type: "node-update-before", node: this});
 
-        const pos = this.parentGraph.graphEngine.getNodePosition(this);
+        const pos = this.parentGraph.layoutEngine.getNodePosition(this);
         this.mesh.position.x = pos.x;
         this.mesh.position.y = pos.y;
         if (pos.z) {
@@ -155,24 +155,11 @@ export class Node {
     }
 
     pin(): void {
-        this.parentGraph.graphEngine.pin(this);
+        this.parentGraph.layoutEngine.pin(this);
     }
 
     unpin(): void {
-        this.parentGraph.graphEngine.unpin(this);
-    }
-
-    static create(graph: Graph, nodeId: NodeIdType, style: NodeStyleOptsType, opts: NodeOpts = {}): Node {
-        // don't create duplicates
-        const existingNode = graph.nodeCache.get(nodeId);
-        if (existingNode) {
-            return existingNode;
-        }
-
-        const n = new Node(graph, nodeId, style, opts);
-        graph.nodeCache.set(nodeId, n);
-
-        return n;
+        this.parentGraph.layoutEngine.unpin(this);
     }
 
     static defaultNodeMeshFactory(n: Node, g: Graph, o: NodeStyleOptsType): AbstractMesh {

@@ -60,7 +60,7 @@ export class Edge {
         this.style = style;
 
         // create ngraph link
-        this.parentGraph.graphEngine.addEdge(this);
+        this.parentGraph.layoutEngine.addEdge(this);
 
         // create mesh
         this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
@@ -70,7 +70,7 @@ export class Edge {
     }
 
     update(): void {
-        const lnk = this.parentGraph.graphEngine.getEdgePosition(this);
+        const lnk = this.parentGraph.layoutEngine.getEdgePosition(this);
 
         this.parentGraph.edgeObservable.notifyObservers({type: "edge-update-before", edge: this});
 
@@ -93,7 +93,7 @@ export class Edge {
 
     static updateRays(g: Graph): void {
         if (g.config.style.edge.arrowCap) {
-            for (const e of g.graphEngine.edges) {
+            for (const e of g.layoutEngine.edges) {
                 const srcMesh = e.srcNode.mesh;
                 const dstMesh = e.dstNode.mesh;
 
@@ -109,18 +109,6 @@ export class Edge {
             // to update rays and intersections
             g.scene.render();
         }
-    }
-
-    static create(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, opts: EdgeOpts = {}) {
-        const existingEdge = graph.edgeCache.get(srcNodeId, dstNodeId);
-        if (existingEdge) {
-            return existingEdge;
-        }
-
-        const e = new Edge(graph, srcNodeId, dstNodeId, style, opts);
-        graph.edgeCache.set(srcNodeId, dstNodeId, e);
-
-        return e;
     }
 
     static defaultEdgeMeshFactory(e: Edge, g: Graph, o: EdgeStyleConfig): AbstractMesh {

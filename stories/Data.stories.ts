@@ -39,7 +39,16 @@ export const Json: Story = {
     args: {
         dataSource: "json",
         dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/apowers313/graphty/refs/heads/master/test/helpers/data2.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        },
+    },
+};
+
+export const ModifiedJson: Story = {
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data2.json",
             edge: {
                 path: "links",
             },

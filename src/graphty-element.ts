@@ -33,6 +33,13 @@ export class Graphty extends LitElement {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
 
+        // XXX: order matters in how these attributes are initially set
+
+        if (changedProperties.has("layout") && this.layout) {
+            const layoutOpts = this.layoutOpts || {};
+            this.#graph.setLayout(this.layout, layoutOpts);
+        }
+
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
             this.#graph.config.knownFields.nodeIdPath = this.nodeIdPath;
         }
@@ -45,26 +52,17 @@ export class Graphty extends LitElement {
             this.#graph.config.knownFields.edgeDstIdPath = this.edgeDstIdPath;
         }
 
-        if (changedProperties.has("nodeData")) {
-            const data = this.nodeData;
-            if (Array.isArray(data)) {
-                this.#graph.addNodes(data);
-            }
+        if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {
+            this.#graph.addNodes(this.nodeData);
         }
 
-        if (changedProperties.has("edgeData")) {
-            const data = this.edgeData;
-            if (Array.isArray(data)) {
-                this.#graph.addEdges(data);
-            }
+        if (changedProperties.has("edgeData") && Array.isArray(this.edgeData)) {
+            this.#graph.addEdges(this.edgeData);
         }
 
-        if (changedProperties.has("dataSource")) {
-            const source = this.dataSource;
+        if (changedProperties.has("dataSource") && this.dataSource) {
             const sourceOpts = this.dataSourceConfig || {};
-            if (source) {
-                await this.#graph.addDataFromSource(source, sourceOpts);
-            }
+            await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
         }
 
         await this.#graph.init();
@@ -132,4 +130,18 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "edge-src-id-path"})
     edgeDstIdPath?: string;
+
+    /**
+     * Specifies which type of layout to use. See the layout documentation for
+     * more information.
+     */
+    @property()
+    layout?: string;
+
+    /**
+     * Specifies which type of layout to use. See the layout documentation for
+     * more information.
+     */
+    @property({attribute: "layout-options"})
+    layoutOpts?: { [x: string]: unknown; };
 }

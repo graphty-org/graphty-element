@@ -52,19 +52,20 @@ export default defineConfig(({mode}) => {
         },
         server: {
             host: true,
+            allowedHosts: true,
         },
     };
 
-    if (env.HOST) {
-        config.server!.host = env.HOST;
+    if (env.HOST && config.server) {
+        config.server.host = env.HOST;
     }
 
-    if (env.PORT) {
-        config.server!.port = parseInt(env.PORT);
+    if (env.PORT && config.server) {
+        config.server.port = parseInt(env.PORT);
     }
 
-    if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH) {
-        config.server!.https = {
+    if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH && config.server) {
+        config.server.https = {
             key: readFileSync(env.HTTPS_KEY_PATH),
             cert: readFileSync(env.HTTPS_CERT_PATH),
         };

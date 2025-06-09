@@ -7,9 +7,10 @@ import {
     forceManyBody,
     forceSimulation,
 } from "d3-force-3d";
-import type {EdgePosition, GraphEngine, Position} from "./LayoutEngine";
+import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 import type {Node, NodeIdType} from "../Node";
 import type {Edge} from "../Edge";
+import {z} from "zod/v4";
 
 interface D3InputNode extends Partial<D3Node> {
     id: NodeIdType;
@@ -38,6 +39,15 @@ function isD3Node(n: unknown): n is D3Node {
     return false;
 }
 
+export const D3LayoutConfig = z.strictObject({
+    alphaMin: z.number().positive().default(0.1),
+    alphaTarget: z.number().positive().default(0),
+    alphaDecay: z.number().positive().default(0.0228),
+    velocityDecay: z.number().positive().default(0.4),
+});
+
+export type D3LayoutOptions = Partial<z.infer<typeof D3LayoutConfig>>;
+
 function isD3Edge(e: unknown): e is D3Edge {
     if (typeof e === "object" &&
         e !== null &&
@@ -54,12 +64,13 @@ function isD3Edge(e: unknown): e is D3Edge {
     return false;
 }
 
-export class D3GraphEngine implements GraphEngine {
+export class D3GraphEngine extends LayoutEngine {
+    static type = "d3";
     d3ForceLayout: ReturnType<typeof forceSimulation>;
-    d3AlphaMin = 0.1;
-    d3AlphaTarget = 0;
-    d3AlphaDecay = 0.0228;
-    d3VelocityDecay = 0.4;
+    d3AlphaMin: number;
+    d3AlphaTarget: number;
+    d3AlphaDecay: number;
+    d3VelocityDecay: number;
     nodeMapping: Map<Node, D3Node> = new Map();
     edgeMapping: Map<Edge, D3Edge> = new Map();
     newNodeMap: Map<Node, D3InputNode> = new Map();
@@ -70,7 +81,15 @@ export class D3GraphEngine implements GraphEngine {
         return !!this.newNodeMap.size || !!this.newEdgeMap.size;
     }
 
-    constructor() {
+    constructor(anyOpts: D3LayoutOptions = {}) {
+        super();
+
+        const opts = D3LayoutConfig.parse(anyOpts);
+        this.d3AlphaMin = opts.alphaMin;
+        this.d3AlphaTarget = opts.alphaTarget;
+        this.d3AlphaDecay = opts.alphaDecay;
+        this.d3VelocityDecay = opts.velocityDecay;
+
         this.d3ForceLayout = forceSimulation()
             .numDimensions(3)
             .alpha(1)
@@ -133,7 +152,7 @@ export class D3GraphEngine implements GraphEngine {
     }
 
     get isSettled(): boolean {
-        console.log(`this.d3ForceLayout.alpha() ${this.d3ForceLayout.alpha()}`);
+        // console.log(`this.d3ForceLayout.alpha() ${this.d3ForceLayout.alpha()}`);
         return this.d3ForceLayout.alpha() < this.d3AlphaMin;
     }
 
@@ -174,7 +193,7 @@ export class D3GraphEngine implements GraphEngine {
         d3node.x = newPos.x;
         d3node.y = newPos.y;
         d3node.z = newPos.z ?? 0;
-        this.reheat = true; // TODO: is this necessary?
+        this.reheat = true;
     }
 
     getEdgePosition(e: Edge): EdgePosition {

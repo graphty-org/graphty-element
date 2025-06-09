@@ -177,37 +177,12 @@ export const GraphBehaviorOpts = z.strictObject({
     fetchEdges: z.optional(z.instanceof(Function)),
 });
 
-export const GraphEngineNames = z.enum([
-    "ngraph",
-    "d3",
-]);
-
-export const GraphEngineOpts = z.strictObject({
-    type: GraphEngineNames.default("ngraph"),
+export const GraphLayoutOpts = z.strictObject({
+    type: z.string().default("ngraph"),
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),
     minDelta: z.number().default(0),
 });
-
-// types
-export type GraphEngineNamesType = z.infer<typeof GraphEngineNames>
-
-/** * DATA LOADING TYPES ***/
-export const LoadJsonDataOpts = z.strictObject({
-    nodeListProp: z.string().default("nodes"),
-    edgeListProp: z.string().default("edges"),
-    nodeIdProp: z.string().default("id"),
-    edgeSrcIdProp: z.string().default("src"),
-    edgeDstIdProp: z.string().default("dst"),
-    // fetchOpts?: Parameters<typeof fetch>[1];
-    fetchOpts: z.object().default({}),
-});
-
-export type LoadJsonDataConfig = z.infer<typeof LoadJsonDataOpts>;
-
-export function getJsonDataOpts(o: object = {}): LoadJsonDataConfig {
-    return LoadJsonDataOpts.parse(o);
-}
 
 export const GraphStyleTemplateVersions = z.enum([
     "1.0.0",
@@ -232,19 +207,12 @@ export const GraphStyleTemplate = z.strictObject({
     layers: GraphStyleOpts.default(GraphStyleOpts.parse({})),
 });
 
-// export const GraphData = z.strictObject({
-//     provider: z.string().optional(),
-//     providerConfig: z.looseObject({}).optional(),
-//     nodes: z.array(z.looseObject({})).optional(),
-//     edges: z.array(z.looseObject({})).optional(),
-// });
-
 /** * CONFIG ***/
 export const GraphOpts = z.strictObject({
     // data: GraphData.optional(),
     style: GraphStyleOpts.default(GraphStyleOpts.parse({})),
     behavior: GraphBehaviorOpts.default(GraphBehaviorOpts.parse({})),
-    engine: GraphEngineOpts.default(GraphEngineOpts.parse({})),
+    layout: GraphLayoutOpts.default(GraphLayoutOpts.parse({})),
     knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
 });
 

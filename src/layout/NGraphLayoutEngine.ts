@@ -1,11 +1,12 @@
-import type {EdgePosition, GraphEngine, Position} from "./LayoutEngine";
+import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
 import ngraphCreateLayout, {Layout as NGraphLayout} from "ngraph.forcelayout";
 
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
-export class NGraphEngine implements GraphEngine {
+export class NGraphEngine extends LayoutEngine {
+    static type = "ngraph";
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
     nodeMapping: Map<Node, NGraphNode> = new Map();
@@ -13,6 +14,7 @@ export class NGraphEngine implements GraphEngine {
     _settled: boolean = true;
 
     constructor() {
+        super();
         this.ngraph = createGraph();
         this.ngraphLayout = ngraphCreateLayout(this.ngraph, {dimensions: 3});
     }
