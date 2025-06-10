@@ -1,4 +1,7 @@
 import type {StorybookConfig} from "@storybook/web-components-vite";
+import {UserConfig, loadEnv} from "vite";
+import {readFileSync} from "fs";
+import {resolve} from "path";
 
 const config: StorybookConfig = {
     stories: [
@@ -16,6 +19,52 @@ const config: StorybookConfig = {
     },
     core: {
         disableTelemetry: true,
+    },
+    async viteFinal(config, {configType}) {
+        const server: UserConfig["server"] = {
+            host: true,
+            allowedHosts: true,
+        };
+
+        let env: Record<string, string>;
+        if (configType) {
+            env = loadEnv(configType, process.cwd(), "");
+        } else {
+            env = {};
+        }
+
+        const {mergeConfig} = await import("vite");
+
+        if (env.HOST && config.server) {
+            console.log("storybook vite: setting server:", env.HOST);
+            server.host = env.HOST;
+        }
+
+        if (env.PORT && config.server) {
+            config.server.port = parseInt(env.PORT);
+        }
+
+        if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH && config.server) {
+            console.log("storybook vite: setting https");
+            server.https = {
+                key: readFileSync(env.HTTPS_KEY_PATH),
+                cert: readFileSync(env.HTTPS_CERT_PATH),
+            };
+        }
+
+        if (configType === "DEVELOPMENT") {
+            // Your development configuration goes here
+        }
+
+        if (configType === "PRODUCTION") {
+            // Your production configuration goes here.
+        }
+
+        // console.log("server cgonfig", server);
+        return mergeConfig(config, {
+            // Your environment configuration here
+            server,
+        });
     },
 };
 export default config;
