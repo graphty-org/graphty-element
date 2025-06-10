@@ -38,6 +38,7 @@
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
     "@babylonjs/gui": "^8.11.0",
+    "@graphty/layout": "^1.0.1",
     "@streamparser/json": "^0.0.22",
     "color-convert": "^3.1.0",
     "color-string": "^2.0.1",
