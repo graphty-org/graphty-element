@@ -35,22 +35,22 @@ const config: StorybookConfig = {
 
         const {mergeConfig} = await import("vite");
 
-        if (env.HOST && config.server) {
-            console.log("storybook vite: setting server:", env.HOST);
-            server.host = env.HOST;
-        }
+        // if (env.HOST && config.server) {
+        //     console.log("storybook vite: setting server:", env.HOST);
+        //     server.host = env.HOST;
+        // }
 
-        if (env.PORT && config.server) {
-            config.server.port = parseInt(env.PORT);
-        }
+        // if (env.PORT && config.server) {
+        //     config.server.port = parseInt(env.PORT);
+        // }
 
-        if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH && config.server) {
-            console.log("storybook vite: setting https");
-            server.https = {
-                key: readFileSync(env.HTTPS_KEY_PATH),
-                cert: readFileSync(env.HTTPS_CERT_PATH),
-            };
-        }
+        // if (env.HTTPS_KEY_PATH && env.HTTPS_CERT_PATH && config.server) {
+        //     console.log("storybook vite: setting https");
+        //     server.https = {
+        //         key: readFileSync(env.HTTPS_KEY_PATH),
+        //         cert: readFileSync(env.HTTPS_CERT_PATH),
+        //     };
+        // }
 
         if (configType === "DEVELOPMENT") {
             // Your development configuration goes here
@@ -60,11 +60,14 @@ const config: StorybookConfig = {
             // Your production configuration goes here.
         }
 
-        // console.log("server cgonfig", server);
-        return mergeConfig(config, {
+        // console.log("config", config);
+        // console.log("server config", server);
+        const merged = mergeConfig(config, {
             // Your environment configuration here
             server,
         });
+        // console.log("merged config", merged);
+        return merged;
     },
 };
 export default config;
