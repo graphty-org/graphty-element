@@ -1,7 +1,7 @@
 import type {StorybookConfig} from "@storybook/web-components-vite";
-import {UserConfig, loadEnv} from "vite";
-import {readFileSync} from "fs";
-import {resolve} from "path";
+import {loadEnv} from "vite";
+// eslint-disable-next-line no-duplicate-imports
+import type {UserConfig} from "vite";
 
 const config: StorybookConfig = {
     stories: [
