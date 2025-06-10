@@ -38,12 +38,14 @@ import {Styles} from "./Styles";
 import jmespath from "jmespath";
 import {DataSource} from "./data/DataSource";
 import {JsonDataSource} from "./data/JsonDataSource";
-import {SpiralLayout} from "./layout/SpiralEngine";
+import {SpiralLayout} from "./layout/SpiralLayoutEngine";
+import {CircularLayout} from "./layout/CircularLayoutEngine";
 
 DataSource.register(JsonDataSource);
 LayoutEngine.register(D3GraphEngine);
 LayoutEngine.register(NGraphEngine);
 LayoutEngine.register(SpiralLayout);
+LayoutEngine.register(CircularLayout);
 
 export class Graph {
     config: GraphConfig;

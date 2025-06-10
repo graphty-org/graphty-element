@@ -42,3 +42,9 @@ export const Spiral: Story = {
         layout: "spiral",
     },
 };
+
+export const Circle: Story = {
+    args: {
+        layout: "circle",
+    },
+};
