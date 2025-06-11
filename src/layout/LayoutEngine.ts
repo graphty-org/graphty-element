@@ -1,3 +1,4 @@
+import {z} from "zod/v4";
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
@@ -67,6 +68,12 @@ export abstract class LayoutEngine {
     }
 }
 
+export const SimpleLayoutConfig = z.strictObject({
+    scalingFactor: z.number().default(100),
+});
+export type SimpleLayoutConfigType = z.infer<typeof SimpleLayoutConfig>;
+export type SimpleLayoutOpts = Partial<SimpleLayoutConfigType>;
+
 export abstract class SimpleLayoutEngine extends LayoutEngine {
     static type: string;
     protected _nodes: Node[] = [];
@@ -74,6 +81,12 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     stale = true;
     positions: Record<string | number, Array<number>> = {};
     scalingFactor = 100;
+
+    constructor(opts: SimpleLayoutOpts = {}) {
+        super();
+        const config = SimpleLayoutConfig.parse(opts);
+        this.scalingFactor = config.scalingFactor;
+    }
 
     // basic functionality
     async init() {}

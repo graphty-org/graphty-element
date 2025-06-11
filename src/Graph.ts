@@ -2,6 +2,7 @@ import {
     ArcRotateCamera,
     Camera,
     Engine,
+    FlyCamera,
     HemisphericLight,
     Observable,
     PhotoDome,
@@ -40,12 +41,22 @@ import {DataSource} from "./data/DataSource";
 import {JsonDataSource} from "./data/JsonDataSource";
 import {SpiralLayout} from "./layout/SpiralLayoutEngine";
 import {CircularLayout} from "./layout/CircularLayoutEngine";
+import {ShellLayout} from "./layout/ShellLayoutEngine";
+import {RandomLayout} from "./layout/RandomLayoutEngine";
+import {SpringLayout} from "./layout/SpringLayoutEngine";
+import {PlanarLayout} from "./layout/PlanarLayoutEngine";
+import {KamadaKawaiLayout} from "./layout/KamadaKawaiLayoutEngine";
 
 DataSource.register(JsonDataSource);
 LayoutEngine.register(D3GraphEngine);
 LayoutEngine.register(NGraphEngine);
 LayoutEngine.register(SpiralLayout);
 LayoutEngine.register(CircularLayout);
+LayoutEngine.register(ShellLayout);
+LayoutEngine.register(RandomLayout);
+LayoutEngine.register(SpringLayout);
+LayoutEngine.register(PlanarLayout);
+LayoutEngine.register(KamadaKawaiLayout);
 
 export class Graph {
     config: GraphConfig;
@@ -76,6 +87,14 @@ export class Graph {
     graphObservable: Observable<GraphEvent> = new Observable();
     nodeObservable: Observable<NodeEvent> = new Observable();
     edgeObservable: Observable<EdgeEvent> = new Observable();
+    // 2d camera
+    orthoSize = 10;
+    moveSpeed = 0.5;
+    zoomLevel = 1.0;
+    minZoom = 0.1;
+    maxZoom = 10.0;
+    zoomSpeed = 0.1;
+    keys: Record<string, boolean> = {};
 
     constructor(element: Element | string, opts?: GraphOptsType) {
         this.config = getConfig(opts);
@@ -111,6 +130,8 @@ export class Graph {
         this.canvas = document.createElement("canvas");
         this.canvas.setAttribute("id", `babylonForceGraphRenderCanvas${Date.now()}`);
         this.canvas.setAttribute("touch-action", "none");
+        this.canvas.setAttribute("autofocus", "true");
+        this.canvas.setAttribute("tabindex", "0");
         this.canvas.style.width = "100%";
         this.canvas.style.height = "100%";
         this.canvas.style.touchAction = "none";
@@ -119,17 +140,40 @@ export class Graph {
         // setup babylonjs
         this.engine = new Engine(this.canvas, true); // Generate the BABYLON 3D engine
         this.scene = new Scene(this.engine);
-        this.camera = new ArcRotateCamera(
-            "camera",
-            -Math.PI / 2,
-            Math.PI / 2.5,
-            this.config.style.startingCameraDistance,
-            new Vector3(0, 0, 0),
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (this.camera as any).lowerBetaLimit;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (this.camera as any).upperBetaLimit;
+
+        // setup camera
+        if (this.config.layout.dimensions === 3) {
+            this.camera = new ArcRotateCamera(
+                "camera",
+                -Math.PI / 2,
+                Math.PI / 2.5,
+                this.config.style.startingCameraDistance,
+                new Vector3(0, 0, 0),
+            );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (this.camera as any).lowerBetaLimit;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (this.camera as any).upperBetaLimit;
+        } else {
+            this.camera = new FlyCamera("FlyCamera", new Vector3(0, 0, -10), this.scene);
+            this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            this.camera.orthoLeft = -this.orthoSize;
+            this.camera.orthoRight = this.orthoSize;
+            this.camera.orthoTop = this.orthoSize;
+            this.camera.orthoBottom = -this.orthoSize;
+
+            // Keyboard event listeners
+            window.addEventListener("keydown", (e) => {
+                this.keys[e.inputIndex] = true;
+                e.preventDefault();
+            });
+
+            window.addEventListener("keyup", (e) => {
+                this.keys[e.inputIndex] = false;
+                e.preventDefault();
+            });
+        }
+
         this.camera.attachControl(this.canvas, true);
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
@@ -227,7 +271,54 @@ export class Graph {
         this.initialized = true;
     }
 
+    // Update camera position and zoom
+    #updateCamera() {
+        // Arrow key movement
+        if (this.keys[37]) {
+            this.camera.position.x -= this.moveSpeed / this.zoomLevel;
+        }
+
+        if (this.keys[39]) {
+            this.camera.position.x += this.moveSpeed / this.zoomLevel;
+        }
+
+        if (this.keys[38]) {
+            this.camera.position.y += this.moveSpeed / this.zoomLevel;
+        }
+
+        if (this.keys[40]) {
+            this.camera.position.y -= this.moveSpeed / this.zoomLevel;
+        }
+
+        // Zoom controls (+ and - keys)
+        if (this.keys[187]) { // + key
+            this.zoomLevel = Math.min(this.zoomLevel + this.zoomSpeed, this.maxZoom);
+            this.#updateOrthographicSize();
+        }
+
+        if (this.keys[189]) { // - key
+            this.zoomLevel = Math.max(this.zoomLevel - this.zoomSpeed, this.minZoom);
+            this.#updateOrthographicSize();
+        }
+
+        // Always keep camera looking at origin
+        // this.camera.setTarget(Vector3.Zero());
+    };
+
+    #updateOrthographicSize() {
+        const rect = this.engine.getRenderingCanvasClientRect();
+        const aspect = rect!.height / rect!.width;
+        const size = this.orthoSize / this.zoomLevel;
+        this.camera.orthoLeft = -size;
+        this.camera.orthoRight = size;
+        this.camera.orthoTop = size * aspect;
+        this.camera.orthoBottom = -size * aspect;
+    };
+
     update() {
+        this.#updateCamera();
+        this.#updateOrthographicSize();
+
         if (!this.layoutEngine || !this.running) {
             return;
         }

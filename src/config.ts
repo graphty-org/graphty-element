@@ -178,6 +178,7 @@ export const GraphBehaviorOpts = z.strictObject({
 });
 
 export const GraphLayoutOpts = z.strictObject({
+    dimensions: z.number().min(2).max(3).default(3),
     type: z.string().default("ngraph"),
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),

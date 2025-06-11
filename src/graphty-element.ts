@@ -35,6 +35,10 @@ export class Graphty extends LitElement {
 
         // XXX: order matters in how these attributes are initially set
 
+        if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
+            this.#graph.config.layout.dimensions = 2;
+        }
+
         if (changedProperties.has("layout") && this.layout) {
             const layoutConfig = this.layoutConfig || {};
             this.#graph.setLayout(this.layout, layoutConfig);
@@ -144,4 +148,11 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "layout-config"})
     layoutConfig?: { [x: string]: unknown; };
+
+    /**
+     * Specifies that the layout should be rendered in two dimensions (as
+     * opposed to 3D)
+     */
+    @property({attribute: "layout-2d"})
+    layout2d?: boolean;
 }

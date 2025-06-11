@@ -279,8 +279,15 @@ export class Node {
             // create mesh texture
             const mat = new StandardMaterial("defaultMaterial");
             const color = Color4.FromHexString(o.color);
-            mat.diffuseColor = new Color3(color.r, color.g, color.b);
+            const color3 = new Color3(color.r, color.g, color.b);
             mat.wireframe = o.wireframe;
+            if (g.config.layout.dimensions === 3) {
+                mat.diffuseColor = color3;
+            } else {
+                mat.disableLighting = true;
+                mat.emissiveColor = color3;
+            }
+
             mat.freeze();
 
             mesh.visibility = color.a;
