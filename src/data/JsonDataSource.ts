@@ -8,17 +8,17 @@ import jmespath from "jmespath";
 const JsonNodeConfig = z.strictObject({
     path: z.string().default("nodes"),
     schema: z.custom<z4.$ZodObject>(),
-});
+}).prefault({});
 
 const JsonEdgeConfig = z.strictObject({
     path: z.string().default("edges"),
     schema: z.custom<z4.$ZodObject>(),
-});
+}).prefault({});
 
 export const JsonDataSourceConfig = z.object({
     data: z.string(),
-    node: JsonNodeConfig.default(JsonNodeConfig.parse({})),
-    edge: JsonEdgeConfig.default(JsonEdgeConfig.parse({})),
+    node: JsonNodeConfig,
+    edge: JsonEdgeConfig,
 });
 
 export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>

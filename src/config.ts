@@ -77,11 +77,11 @@ export const NodeStyleOpts = z.strictObject({
     shape: NodeShapes.default("icosphere"),
     enabled: z.boolean().default(true),
     nodeMeshFactory: z.instanceof(Function).default(() => Node.defaultNodeMeshFactory),
-});
+}).prefault({});
 
 export const MovingLineOpts = z.strictObject({
     baseColor: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF"),
-});
+}).prefault({});
 
 const EdgeType = z.enum([
     "plain",
@@ -93,9 +93,9 @@ export const EdgeStyleOpts = z.strictObject({
     arrowCap: z.boolean().default(false),
     color: z.string().pipe(z.transform(colorToHex)).default("#FFFFFFFF"),
     width: z.number().default(0.25),
-    movingLineOpts: MovingLineOpts.default(MovingLineOpts.parse({})),
+    movingLineOpts: MovingLineOpts,
     edgeMeshFactory: z.instanceof(Function).default(() => Edge.defaultEdgeMeshFactory),
-});
+}).prefault({});
 
 export type EdgeStyleConfig = EdgeStyleOptsType;
 export type EdgeMeshFactory = typeof Edge.defaultEdgeMeshFactory;
@@ -131,7 +131,7 @@ export type EdgeStyleOptsType = z.infer<typeof EdgeStyleOpts>
 /** * BEHAVIOR ***/
 export const NodeBehaviorOpts = z.strictObject({
     pinOnDrag: z.boolean().default(true),
-});
+}).prefault({});
 
 /** * GRAPH TYPES ***/
 export const NodeId = z.string().or(z.number());
@@ -153,7 +153,7 @@ export const GraphKnownFields = z.object({
     nodeIdPath: z.string().default("id"),
     edgeSrcIdPath: z.string().default("src"),
     edgeDstIdPath: z.string().default("dst"),
-});
+}).prefault({});
 
 export type NodeObjectType = z.infer<typeof NodeObject>
 export type EdgeObjectType = z.infer<typeof EdgeObject>
@@ -163,19 +163,19 @@ export type GraphOptsType = DeepPartial<GraphConfig>
 
 export const GraphStyleOpts = z.strictObject({
     skybox: z.string().default(""),
-    node: NodeStyleOpts.default(NodeStyleOpts.parse({})),
-    edge: EdgeStyleOpts.default(EdgeStyleOpts.parse({})),
+    node: NodeStyleOpts,
+    edge: EdgeStyleOpts,
     startingCameraDistance: z.number().default(30),
-});
+}).prefault({});
 
 export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
 export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;
 
 export const GraphBehaviorOpts = z.strictObject({
-    node: NodeBehaviorOpts.default(NodeBehaviorOpts.parse({})),
+    node: NodeBehaviorOpts,
     fetchNodes: z.optional(z.instanceof(Function)),
     fetchEdges: z.optional(z.instanceof(Function)),
-});
+}).prefault({});
 
 export const GraphLayoutOpts = z.strictObject({
     dimensions: z.number().min(2).max(3).default(3),
@@ -183,7 +183,7 @@ export const GraphLayoutOpts = z.strictObject({
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),
     minDelta: z.number().default(0),
-});
+}).prefault({});
 
 export const GraphStyleTemplateVersions = z.enum([
     "1.0.0",
@@ -198,23 +198,23 @@ export const GraphBackground = z.discriminatedUnion("backgroundType", [
     })}),
 ]);
 
-export const GraphStyleTemplate = z.strictObject({
-    version: GraphStyleTemplateVersions,
-    graph: z.strictObject({
-        layout: z.string(),
-        // background: GraphBackground.default(GraphBackground.parse({})),
-        knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
-    }),
-    layers: GraphStyleOpts.default(GraphStyleOpts.parse({})),
-});
+// export const GraphStyleTemplate = z.strictObject({
+//     version: GraphStyleTemplateVersions,
+//     graph: z.strictObject({
+//         layout: z.string(),
+//         // background: GraphBackground.default(GraphBackground.parse({})),
+//         knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
+//     }),
+//     layers: GraphStyleOpts,
+// }).prefault({});
 
 /** * CONFIG ***/
 export const GraphOpts = z.strictObject({
     // data: GraphData.optional(),
-    style: GraphStyleOpts.default(GraphStyleOpts.parse({})),
-    behavior: GraphBehaviorOpts.default(GraphBehaviorOpts.parse({})),
-    layout: GraphLayoutOpts.default(GraphLayoutOpts.parse({})),
-    knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
+    style: GraphStyleOpts,
+    behavior: GraphBehaviorOpts,
+    layout: GraphLayoutOpts,
+    knownFields: GraphKnownFields,
 });
 
 export function getConfig(o: object = {}): GraphConfig {
