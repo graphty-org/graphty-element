@@ -92,7 +92,7 @@ export class Edge {
     }
 
     static updateRays(g: Graph): void {
-        if (g.config.style.edge.arrowCap) {
+        if (g.config.style.edge.arrowHead.type !== "none") {
             for (const e of g.layoutEngine.edges) {
                 const srcMesh = e.srcNode.mesh;
                 const dstMesh = e.dstNode.mesh;
@@ -112,10 +112,10 @@ export class Edge {
     }
 
     static defaultEdgeMeshFactory(e: Edge, g: Graph, o: EdgeStyleConfig): AbstractMesh {
-        if (o.arrowCap) {
+        if (o.arrowHead.type !== "none") {
             e.arrowMesh = g.meshCache.get("default-arrow-cap", () => {
-                const width = getArrowCapWidth(o.width);
-                const len = getArrowCapLen(o.width);
+                const width = getArrowCapWidth(o.line.width);
+                const len = getArrowCapLen(o.line.width);
                 const cap1 = GreasedLineTools.GetArrowCap(
                     new Vector3(0, 0, -len), // position
                     new Vector3(0, 0, 1), // direction
@@ -132,7 +132,7 @@ export class Edge {
                         // instance: line,
                     },
                     {
-                        color: Color3.FromHexString(o.color.slice(0, 7)),
+                        color: Color3.FromHexString(o.line.color.slice(0, 7)),
                     },
                     // e.parentGraph.scene
                 );
@@ -140,14 +140,11 @@ export class Edge {
         }
 
         return g.meshCache.get("default-edge", () => {
-            switch (o.type) {
-            case "plain":
-                return Edge.createPlainLine(e, g, o);
-            case "moving":
+            if (o.line.animationSpeed) {
                 return Edge.createMovingLine(e, g, o);
-            default:
-                throw new TypeError(`Unknown Edge type: '${o.type}'`);
             }
+
+            return Edge.createPlainLine(e, g, o);
         });
     }
 
@@ -157,15 +154,17 @@ export class Edge {
                 points: Edge.unitVectorPoints,
             },
             {
-                color: Color3.FromHexString(o.color.slice(0, 7)),
-                width: o.width,
+                color: Color3.FromHexString(o.line.color.slice(0, 7)),
+                width: o.line.width,
             },
         );
     }
 
     static createMovingLine(_e: Edge, g: Graph, o: EdgeStyleConfig): GreasedLineBaseMesh {
-        const baseColor = Color3.FromHexString(o.movingLineOpts.baseColor.slice(0, 7));
-        const movingColor = Color3.FromHexString(o.color.slice(0, 7));
+        // const baseColor = Color3.FromHexString(o.movingLineOpts.baseColor.slice(0, 7));
+        const baseColor = Color3.FromHexString("#D3D3D3");
+
+        const movingColor = Color3.FromHexString(o.line.color.slice(0, 7));
         const r1 = Math.floor(baseColor.r * 255);
         const g1 = Math.floor(baseColor.g * 255);
         const b1 = Math.floor(baseColor.b * 255);
@@ -197,7 +196,7 @@ export class Edge {
             },
             {
                 // color: Color3.FromHexString(colorNameToHex(edgeColor))
-                width: o.width,
+                width: o.line.width,
                 colorMode: GreasedLineMeshColorMode.COLOR_MODE_MULTIPLY,
             },
         );
@@ -267,7 +266,7 @@ export class Edge {
         let dstPoint: Vector3 | null = null;
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
-            const len = getArrowCapLen(this.style.width);
+            const len = getArrowCapLen(this.style.line.width);
 
             dstPoint = dstHitInfo[0].pickedPoint!;
             srcPoint = srcHitInfo[0].pickedPoint!;

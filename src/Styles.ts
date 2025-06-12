@@ -1,10 +1,10 @@
 import {
-    EdgeStyleOpts,
-    EdgeStyleOptsType,
+    EdgeStyle,
+    EdgeStyleConfig,
     GraphKnownFields,
     GraphKnownFieldsType,
-    NodeStyleOpts,
-    NodeStyleOptsType,
+    NodeStyle,
+    NodeStyleConfig,
     StyleLayerType,
     StyleSchema,
     StyleSchemaType,
@@ -13,7 +13,7 @@ import {
 import defaultsDeep from "lodash.defaultsdeep";
 import jmespath from "jmespath";
 
-const defaultNodeStyle = NodeStyleOpts.parse({});
+const defaultNodeStyle = NodeStyle.parse({});
 
 export interface StylesOpts {
     layers?: object,
@@ -40,11 +40,11 @@ export class Styles {
             this.addLayer({
                 node: {
                     selector: "",
-                    style: NodeStyleOpts.parse({}),
+                    style: NodeStyle.parse({}),
                 },
                 edge: {
                     selector: "",
-                    style: EdgeStyleOpts.parse({}),
+                    style: EdgeStyle.parse({}),
                 },
             });
         }
@@ -121,8 +121,8 @@ export class Styles {
         // TODO: recalculate
     }
 
-    getStyleForNode(id: string | number): NodeStyleOptsType {
-        const styles: Array<NodeStyleOptsType> = [];
+    getStyleForNode(id: string | number): NodeStyleConfig {
+        const styles: Array<NodeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {node} = this.layers[i];
             if (this.layerSelectedNodes[i].has(id) && node) {
@@ -140,10 +140,10 @@ export class Styles {
         return ret;
     }
 
-    getStyleForEdge(srcId: string, dstId: string): EdgeStyleOptsType {
+    getStyleForEdge(srcId: string, dstId: string): EdgeStyleConfig {
         // XXX: this edgeId matches the output format of the jmespath query in addEdges
         const edgeId = `${srcId},${dstId}`;
-        const styles: Array<EdgeStyleOptsType> = [];
+        const styles: Array<EdgeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {edge} = this.layers[i];
             if (this.layerSelectedEdges[i].has(edgeId) && edge) {
@@ -153,7 +153,7 @@ export class Styles {
 
         // TODO: cache of previously calculated styles to save time?
 
-        const ret = defaultsDeep({}, ... styles, EdgeStyleOpts.parse({}));
+        const ret = defaultsDeep({}, ... styles, EdgeStyle.parse({}));
         if (styles.length === 0) {
             ret.enabled = false;
         }
@@ -163,10 +163,10 @@ export class Styles {
 }
 
 export class Style {
-    readonly nodeStyle: NodeStyleOptsType| null = null;
-    readonly edgeStyle: EdgeStyleOptsType | null = null;
+    readonly nodeStyle: NodeStyleConfig | null = null;
+    readonly edgeStyle: EdgeStyleConfig | null = null;
 
-    constructor(nodeStyle: NodeStyleOptsType | null, edgeStyle: EdgeStyleOptsType | null) {
+    constructor(nodeStyle: NodeStyleConfig | null, edgeStyle: EdgeStyleConfig | null) {
         if (!nodeStyle && !edgeStyle) {
             throw new Error("must specify one of nodeStyle or edgeStyle");
         }
