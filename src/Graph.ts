@@ -46,6 +46,7 @@ import {RandomLayout} from "./layout/RandomLayoutEngine";
 import {SpringLayout} from "./layout/SpringLayoutEngine";
 import {PlanarLayout} from "./layout/PlanarLayoutEngine";
 import {KamadaKawaiLayout} from "./layout/KamadaKawaiLayoutEngine";
+import {ForceAtlas2Layout} from "./layout/ForceAtlas2LayoutEngine";
 
 DataSource.register(JsonDataSource);
 LayoutEngine.register(D3GraphEngine);
@@ -57,6 +58,7 @@ LayoutEngine.register(RandomLayout);
 LayoutEngine.register(SpringLayout);
 LayoutEngine.register(PlanarLayout);
 LayoutEngine.register(KamadaKawaiLayout);
+LayoutEngine.register(ForceAtlas2Layout);
 
 export class Graph {
     config: GraphConfig;

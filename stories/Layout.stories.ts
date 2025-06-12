@@ -81,3 +81,9 @@ export const KamadaKawai: Story = {
         layout: "kamada-kawai",
     },
 };
+
+export const ForceAtlas2: Story = {
+    args: {
+        layout: "forceatlas2",
+    },
+};
