@@ -87,3 +87,18 @@ export const ForceAtlas2: Story = {
         layout: "forceatlas2",
     },
 };
+
+export const Arf: Story = {
+    args: {
+        layout: "arf",
+    },
+};
+
+export const Spectral: Story = {
+    args: {
+        layout: "spectral",
+        dataSource: undefined,
+        nodeData: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}, {id: 10}, {id: 11}, {id: 12}, {id: 13}, {id: 14}],
+        edgeData: [{src: 9, dst: 12}, {src: 9, dst: 4}, {src: 7, dst: 5}, {src: 7, dst: 9}, {src: 12, dst: 1}, {src: 0, dst: 10}, {src: 3, dst: 1}, {src: 2, dst: 1}, {src: 9, dst: 6}, {src: 2, dst: 9}, {src: 6, dst: 11}, {src: 14, dst: 10}, {src: 4, dst: 7}, {src: 10, dst: 4}, {src: 11, dst: 3}, {src: 3, dst: 2}, {src: 10, dst: 8}, {src: 7, dst: 11}, {src: 11, dst: 14}],
+    },
+};
