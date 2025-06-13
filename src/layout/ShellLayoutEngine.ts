@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {shellLayout} from "@graphty/layout";
 
-export const ShellLayoutConfig = SimpleLayoutConfig.extend({
+export const ShellLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     nlist: z.array(z.array(z.number())).or(z.null()).default(null),
     dim: z.number().default(2),
     center: z.array(z.number()).length(2).or(z.null()).default(null),

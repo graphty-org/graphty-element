@@ -3,14 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {arfLayout} from "@graphty/layout";
 
-export const ArfLayoutConfig = SimpleLayoutConfig.extend({
-//  * @param {Object} pos - Initial positions for nodes
-//  * @param {number} scaling - Scale factor for positions
-//  * @param {number} a - Strength of springs between connected nodes (should be > 1)
-//  * @param {number} maxIter - Maximum number of iterations
-//  * @param {number|null} seed - Random seed for initial positions
-// function arfLayout(G, pos = null, scaling = 1, a = 1.1, maxIter = 1000, seed = null) {
-
+export const ArfLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     pos: z.record(
         z.number(),
         z.array(z.number()),

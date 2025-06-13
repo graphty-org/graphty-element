@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {planarLayout} from "@graphty/layout";
 
-export const PlanarLayoutConfig = SimpleLayoutConfig.extend({
+export const PlanarLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     dim: z.number().default(2),

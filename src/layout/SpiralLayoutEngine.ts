@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {spiralLayout} from "@graphty/layout";
 
-export const SpiralLayoutConfig = SimpleLayoutConfig.extend({
+export const SpiralLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     dim: z.number().default(2),

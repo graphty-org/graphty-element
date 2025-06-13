@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {springLayout} from "@graphty/layout";
 
-export const SpringLayoutConfig = SimpleLayoutConfig.extend({
+export const SpringLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     k: z.number().or(z.null()).default(null),
     pos: z.record(
         z.number(),

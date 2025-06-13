@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {forceatlas2Layout} from "@graphty/layout";
 
-export const ForceAtlas2LayoutConfig = SimpleLayoutConfig.extend({
+export const ForceAtlas2LayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     pos: z.record(z.number(), z.array(z.number()).min(2).max(3)).or(z.null()).default(null),
     maxIter: z.number().positive().default(100),
     jitterTolerance: z.number().positive().default(1.0),

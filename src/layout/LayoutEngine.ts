@@ -68,7 +68,7 @@ export abstract class LayoutEngine {
     }
 }
 
-export const SimpleLayoutConfig = z.strictObject({
+export const SimpleLayoutConfig = z.looseObject({
     scalingFactor: z.number().default(100),
 });
 export type SimpleLayoutConfigType = z.infer<typeof SimpleLayoutConfig>;

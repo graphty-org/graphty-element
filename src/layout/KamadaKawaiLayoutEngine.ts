@@ -3,7 +3,8 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {kamadaKawaiLayout} from "@graphty/layout";
 
-export const KamadaKawaiLayoutConfig = SimpleLayoutConfig.extend({
+export const KamadaKawaiLayoutConfig = z.strictObject({
+    ... SimpleLayoutConfig.shape,
     dist: z.record(z.number(), z.record(z.number(), z.number())).or(z.null()).default(null),
     pos: z.record(z.number(), z.array(z.number()).min(1).max(3)).or(z.null()).default(null),
     weightProperty: z.string().or(z.null()).default(null),

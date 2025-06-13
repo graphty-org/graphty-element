@@ -1,40 +1,41 @@
 import {z} from "zod/v4";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
-import {spectralLayout} from "@graphty/layout";
+import {bfsLayout} from "@graphty/layout";
 
-export const SpectralLayoutConfig = z.strictObject({
+export const BfsLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
+    start: z.number().or(z.string()),
+    align: z.enum(["vertical", "horizontal"]).default("vertical"),
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
-    dim: z.number().default(2),
 });
-export type SpectralLayoutConfigType = z.infer<typeof SpectralLayoutConfig>
-export type SpectralLayoutOpts = Partial<SpectralLayoutConfigType>
+export type BfsLayoutConfigType = z.infer<typeof BfsLayoutConfig>
+export type BfsLayoutOpts = Partial<BfsLayoutConfigType>
 
-export class SpectralLayout extends SimpleLayoutEngine {
-    static type = "spectral";
+export class BfsLayout extends SimpleLayoutEngine {
+    static type = "bfs";
     scalingFactor = 100;
-    config: SpectralLayoutConfigType;
+    config: BfsLayoutConfigType;
 
-    constructor(opts: SpectralLayoutOpts) {
+    constructor(opts: BfsLayoutOpts) {
         super(opts);
-        this.config = SpectralLayoutConfig.parse(opts);
+        this.config = BfsLayoutConfig.parse(opts);
     }
 
     doLayout(): void {
         this.stale = false;
-
         const graph = {
             nodes: () => this._nodes.map((n) => n.id),
             edges: () => this._edges.map((e) => [e.srcId, e.dstId]),
         };
 
-        this.positions = spectralLayout(
+        this.positions = bfsLayout(
             graph,
+            this.config.start,
+            this.config.align,
             this.config.scale,
             this.config.center,
-            this.config.dim,
         );
     }
 }

@@ -102,3 +102,13 @@ export const Spectral: Story = {
         edgeData: [{src: 9, dst: 12}, {src: 9, dst: 4}, {src: 7, dst: 5}, {src: 7, dst: 9}, {src: 12, dst: 1}, {src: 0, dst: 10}, {src: 3, dst: 1}, {src: 2, dst: 1}, {src: 9, dst: 6}, {src: 2, dst: 9}, {src: 6, dst: 11}, {src: 14, dst: 10}, {src: 4, dst: 7}, {src: 10, dst: 4}, {src: 11, dst: 3}, {src: 3, dst: 2}, {src: 10, dst: 8}, {src: 7, dst: 11}, {src: 11, dst: 14}],
     },
 };
+
+export const Bfs: Story = {
+    args: {
+        layout: "bfs",
+        layoutConfig: {start: 0},
+        dataSource: undefined,
+        nodeData: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}, {id: 10}, {id: 11}, {id: 12}, {id: 13}, {id: 14}, {id: 15}, {id: 16}, {id: 17}, {id: 18}, {id: 19}],
+        edgeData: [{src: 0, dst: 1}, {src: 0, dst: 2}, {src: 0, dst: 3}, {src: 2, dst: 4}, {src: 0, dst: 5}, {src: 3, dst: 6}, {src: 5, dst: 7}, {src: 5, dst: 8}, {src: 4, dst: 9}, {src: 8, dst: 10}, {src: 3, dst: 11}, {src: 4, dst: 12}, {src: 8, dst: 13}, {src: 1, dst: 14}, {src: 13, dst: 15}, {src: 11, dst: 16}, {src: 3, dst: 17}, {src: 8, dst: 18}, {src: 0, dst: 19}],
+    },
+};
