@@ -32,7 +32,6 @@ describe("JsonDataSource", () => {
 
             assert.isArray(ret);
             assert.strictEqual(ret.length, 1);
-            console.log("ret", ret);
             assert.isObject(ret[0]);
             assert.hasAllKeys(ret[0], ["nodes", "edges"]);
             const chunk = ret[0] as DataSourceChunk;

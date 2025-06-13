@@ -1,5 +1,5 @@
 import {BasicDualStyle, BasicEdgeStyle, BasicNodeSelector, BasicNodeStyle, MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
-import {EdgeStyleOpts, NodeStyleOpts, colorToHex} from "../src/config.ts";
+import {EdgeStyle, NodeStyle, colorToHex} from "../src/config.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
 import {assert, describe, it} from "vitest";
 import {Styles} from "../src/Styles.ts";
@@ -7,8 +7,8 @@ import {ZodError} from "zod/v4";
 import data2Edges from "./helpers/data2-edges.json";
 import data2Nodes from "./helpers/data2-nodes.json";
 
-const ParsedMyNodeStyle = NodeStyleOpts.parse(MyNodeStyle);
-const ParsedMyEdgeStyle = EdgeStyleOpts.parse(MyEdgeStyle);
+const ParsedMyNodeStyle = NodeStyle.parse(MyNodeStyle);
+const ParsedMyEdgeStyle = EdgeStyle.parse(MyEdgeStyle);
 
 describe("Styles", () => {
     it("exists and is a class", () => {
@@ -20,12 +20,12 @@ describe("Styles", () => {
 
         assert.strictEqual(s.layers.length, 1);
         const nodeAppliedStyle = s.layers[0].node;
-        const expectedNodeStyle = NodeStyleOpts.parse({});
+        const expectedNodeStyle = NodeStyle.parse({});
         assert.isDefined(nodeAppliedStyle);
         assert.deepStrictEqual(nodeAppliedStyle.style, expectedNodeStyle);
         assert.strictEqual(nodeAppliedStyle.selector, "");
         const edgeAppliedStyle = s.layers[0].edge;
-        const expectedEdgeStyle = EdgeStyleOpts.parse({});
+        const expectedEdgeStyle = EdgeStyle.parse({});
         assert.isDefined(edgeAppliedStyle);
         assert.deepStrictEqual(edgeAppliedStyle.style, expectedEdgeStyle);
         assert.strictEqual(edgeAppliedStyle.selector, "");
@@ -163,7 +163,7 @@ describe("Styles", () => {
                 // ...and asks for the style of one of the nodes with no style
                 const style = s.getStyleForNode("CountessdeLo");
 
-                const expectedStyle = NodeStyleOpts.parse({});
+                const expectedStyle = NodeStyle.parse({});
                 expectedStyle.enabled = false;
                 assert.deepStrictEqual(style, expectedStyle);
             });
@@ -174,7 +174,7 @@ describe("Styles", () => {
 
                 const style = s.getStyleForNode("CountessdeLo");
 
-                const expectedStyle = NodeStyleOpts.parse({});
+                const expectedStyle = NodeStyle.parse({});
                 expectedStyle.enabled = false;
                 assert.deepStrictEqual(style, expectedStyle);
             });

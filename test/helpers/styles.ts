@@ -1,19 +1,21 @@
 export const MyNodeStyle = {
-    size: 3.14,
-    opacity: 0.5,
-    wireframe: true,
-    color: "#c0ffee",
-    label: true,
-    shape: "goldberg",
+    appearance: {
+        color: "#c0ffee",
+        size: 3.14,
+        opacity: 0.5,
+        type: "goldberg",
+        wireframe: true,
+    },
 };
 
 export const MyEdgeStyle = {
-    type: "plain",
-    arrowCap: true,
-    color: "#c0ffee",
-    width: 1,
-    movingLineOpts: {
-        baseColor: "#0badc0de",
+    arrowHead: {
+        type: "normal",
+    },
+    line: {
+        color: "#c0ffee",
+        width: 1,
+        animationSpeed: 0,
     },
 };
 
