@@ -50,6 +50,8 @@ import {ForceAtlas2Layout} from "./layout/ForceAtlas2LayoutEngine";
 import {ArfLayout} from "./layout/ArfLayoutEngine";
 import {SpectralLayout} from "./layout/SpectralLayoutEngine";
 import {BfsLayout} from "./layout/BfsLayoutEngine";
+import {BipartiteLayout} from "./layout/BipartiteLayoutEngine";
+import {MultipartiteLayout} from "./layout/MultipartiteLayoutEngine";
 
 DataSource.register(JsonDataSource);
 LayoutEngine.register(D3GraphEngine);
@@ -65,6 +67,8 @@ LayoutEngine.register(ForceAtlas2Layout);
 LayoutEngine.register(ArfLayout);
 LayoutEngine.register(SpectralLayout);
 LayoutEngine.register(BfsLayout);
+LayoutEngine.register(BipartiteLayout);
+LayoutEngine.register(MultipartiteLayout);
 
 export class Graph {
     config: GraphConfig;
