@@ -64,15 +64,27 @@ const TextLocation = z.enum([
 ]);
 
 const TextBlockStyle = z.strictObject({
+    // whether or not the text block gets rendered
     enabled: z.boolean().default(false),
+    // the font family / type to use for text
     font: z.string().default("Arial"),
+    // a jmespath pointing to the text to use for this block
     textPath: z.string().or(z.null()).default(null),
+    // underline, bold, italic, etc.
     style: z.string().or(z.null()).default(null),
+    // pixel height of the text
     size: z.number().default(12),
+    // special formatting processor (html, markdown, etc.)
     textType: TextType.default("markdown"),
+    // color of the text
     color: ColorStyle.default("#000000FF"),
+    // color of the background behind the text
     background: ColorStyle.default("white"),
+    // how much rounding for the background corners
+    backgroundCornerRadius: z.number().default(0),
+    // where to locate the text relative to it's parent
     location: TextLocation.default("center"),
+    // how much space to have between the text and the edge of the background
     margin: z.number().positive().default(5),
 });
 
@@ -117,7 +129,7 @@ export const NodeStyle = z.strictObject({
         }).prefault({}),
         flatShaded: z.boolean().default(false),
         image: z.url().or(z.null()).default(null),
-        logo: z.string().or(z.null()).default(null),
+        icon: z.string().or(z.null()).default(null),
         glow: z.strictObject({
             color: ColorStyle.or(z.null()).default(null),
             strength: z.number().positive().default(1),
@@ -130,11 +142,11 @@ export const NodeStyle = z.strictObject({
         size: z.number().min(0).default(1),
         type: NodeShapes.default("icosphere"),
         // advanced
-        pieChart: z.string().or(z.null()).default(null), // TODO
-        shader: z.url().or(z.null()).default(null), // https://doc.babylonjs.com/features/featuresDeepDive/materials/shaders/
-        bumpmap: z.url().or(z.null()).default(null),
-        // refraction
-        // reflection
+        // pieChart: z.string().or(z.null()).default(null), // https://manual.cytoscape.org/en/stable/Styles.html#using-graphics-in-styles
+        // shader: z.url().or(z.null()).default(null), // https://doc.babylonjs.com/features/featuresDeepDive/materials/shaders/
+        // bumpmap: z.url().or(z.null()).default(null), // https://doc.babylonjs.com/features/featuresDeepDive/materials/using/moreMaterials/#bump-map
+        // refraction // https://forum.babylonjs.com/t/how-to-make-a-semi-transparent-glass-ball-with-a-through-hole-with-albedotexture/27357/24
+        // reflection // https://doc.babylonjs.com/features/featuresDeepDive/materials/using/reflectionTexture/
         // custom mesh https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/custom/custom
         // import mesh https://doc.babylonjs.com/typedoc/functions/BABYLON.ImportMeshAsync
     }).prefault({}),
