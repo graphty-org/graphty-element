@@ -2,7 +2,6 @@ import {
     AbstractMesh,
     ActionManager,
     Color3,
-    Color4,
     DynamicTexture,
     ExecuteCodeAction,
     Mesh,
@@ -50,7 +49,7 @@ export class Node {
         this.mesh.metadata = {parentNode: this};
 
         // create label
-        if (this.style.label.enabled) {
+        if (this.style.label && this.style.label.enabled) {
             this.label = Node.createLabel(this.id.toString(), this, this.parentGraph);
             this.label.parent = this.mesh;
             this.label.position.y += 1;
@@ -166,8 +165,12 @@ export class Node {
         return g.meshCache.get("default-mesh", () => {
             let mesh: Mesh;
 
+            if (!o.shape) {
+                throw new TypeError("shape required to create mesh");
+            }
+
             // create mesh shape
-            switch (o.appearance.type) {
+            switch (o.shape.type) {
             case "box":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/set/box
                 mesh = Node.createBox(n, g, o);
@@ -273,24 +276,35 @@ export class Node {
                 //         depth: 10
                 //     });
             default:
-                throw new TypeError(`unknown shape: ${o.appearance.type}`);
+                throw new TypeError(`unknown shape: ${o.shape.type}`);
             }
 
             // create mesh texture
             const mat = new StandardMaterial("defaultMaterial");
-            const color = Color4.FromHexString(o.appearance.color);
-            const color3 = new Color3(color.r, color.g, color.b);
-            mat.wireframe = o.appearance.wireframe;
-            if (g.config.layout.dimensions === 3) {
+            let color3: Color3 | undefined;
+            if (o.texture && o.texture.color) {
+                if (typeof o.texture.color === "string"){
+                    // const color = Color4.FromHexString(o.texture.color);
+                    // const color3 = new Color3(color.r, color.g, color.b);
+                    color3 = Color3.FromHexString(o.texture.color);
+                }
+            }
+
+            mat.wireframe = o?.effect?.wireframe ?? false;
+            if (color3 && g.config.layout.dimensions === 3) {
                 mat.diffuseColor = color3;
-            } else {
+            } else if (color3) {
                 mat.disableLighting = true;
                 mat.emissiveColor = color3;
             }
 
             mat.freeze();
 
-            mesh.visibility = color.a;
+            // set opacity
+            if (o.texture && o.texture.color && typeof o.texture.color === "object" && typeof o.texture.color.opacity === "number") {
+                mesh.visibility = o.texture.color.opacity;
+            }
+
             mesh.visibility = 1;
             mesh.material = mat;
 
@@ -299,19 +313,19 @@ export class Node {
     }
 
     static createBox(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateBox("box", {size: o.appearance.size});
+        return MeshBuilder.CreateBox("box", {size: o.shape?.size ?? 1});
     }
 
     static createSphere(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateSphere("sphere", {diameter: o.appearance.size});
+        return MeshBuilder.CreateSphere("sphere", {diameter: o.shape?.size ?? 1});
     }
 
     static createCylinder(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateCylinder("cylinder", {height: o.appearance.size * GOLDEN_RATIO, diameter: o.appearance.size});
+        return MeshBuilder.CreateCylinder("cylinder", {height: o.shape?.size ?? 1 * GOLDEN_RATIO, diameter: o.shape?.size ?? 1});
     }
 
     static createCone(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateCylinder("cylinder", {height: o.appearance.size * GOLDEN_RATIO, diameterTop: 0, diameterBottom: o.appearance.size});
+        return MeshBuilder.CreateCylinder("cylinder", {height: o.shape?.size ?? 1 * GOLDEN_RATIO, diameterTop: 0, diameterBottom: o.shape?.size ?? 1});
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -325,23 +339,23 @@ export class Node {
     }
 
     static createTorusKnot(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateTorusKnot("tk", {radius: o.appearance.size * 0.3, tube: o.appearance.size * 0.2, radialSegments: 128});
+        return MeshBuilder.CreateTorusKnot("tk", {radius: o.shape?.size ?? 1 * 0.3, tube: o.shape?.size ?? 1 * 0.2, radialSegments: 128});
     }
 
     static createPolyhedron(type: number, _n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreatePolyhedron("polyhedron", {size: o.appearance.size, type});
+        return MeshBuilder.CreatePolyhedron("polyhedron", {size: o.shape?.size ?? 1, type});
     }
 
     static createGoldberg(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateGoldberg("goldberg", {size: o.appearance.size});
+        return MeshBuilder.CreateGoldberg("goldberg", {size: o.shape?.size ?? 1});
     }
 
     static createIcoSphere(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateIcoSphere("icosphere", {radius: o.appearance.size * 0.75});
+        return MeshBuilder.CreateIcoSphere("icosphere", {radius: o.shape?.size ?? 1 * 0.75});
     }
 
     static createGeodesic(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
-        return MeshBuilder.CreateGeodesic("geodesic", {size: o.appearance.size});
+        return MeshBuilder.CreateGeodesic("geodesic", {size: o.shape?.size ?? 1});
     }
 
     static createLabel(text: string, _n: Node, g: Graph): Mesh {

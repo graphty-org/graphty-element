@@ -1,9 +1,9 @@
 import {Edge} from "./Edge";
 import {Graph} from "./Graph";
 import {Node} from "./Node";
-import color from "color-string";
-import convert from "color-convert";
+import Color from "colorjs.io";
 import {z} from "zod/v4";
+// import * as z4 from "zod/v4/core";
 
 export type DeepPartial<T> = T extends object ? {
     [P in keyof T]?: DeepPartial<T[P]>;
@@ -14,35 +14,30 @@ export type PartiallyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<
 /** ******** COMMON STYLES ***********/
 
 export function colorToHex(s: string): string | undefined {
-    const c = color.get(s);
-    if (c === null) {
-        console.warn("invalid color:", s);
-        return undefined;
-    }
-
-    let hex: string;
-    switch (c.model) {
-    case "rgb":
-        hex = convert.rgb.hex(c.value[0], c.value[1], c.value[2]);
-        break;
-    case "hsl":
-        hex = convert.hsl.hex(c.value[0], c.value[1], c.value[2]);
-        break;
-    case "hwb":
-        hex = convert.hwb.hex(c.value[0], c.value[1], c.value[2]);
-        break;
-    default:
-        console.warn("unknown color model", c.model);
-        return undefined;
-    }
-    const alpha: number = c.value[3] ?? 1;
-    const alphaStr: string = Math.round(alpha * 255).toString(16).padStart(2, "0").toUpperCase();
-
-    return `#${hex}${alphaStr}`;
+    const color = new Color(s);
+    return color.to("srgb").toString({format: "hex"}).toUpperCase();
 }
 
-const ColorStyle = z.string().pipe(z.transform(colorToHex));
-// TODO ColorScheme
+const ColorStyle = z.string().transform(colorToHex);
+const AdvancedColorStyle = z.discriminatedUnion("colorType", [
+    z.strictObject({
+        colorType: z.literal("solid"),
+        value: ColorStyle,
+        opacity: z.number().min(0).max(1).optional(),
+    }),
+    z.strictObject({
+        colorType: z.literal("gradient"),
+        direction: z.number().min(0).max(360),
+        colors: z.array(ColorStyle),
+        opacity: z.number().min(0).max(1).optional(),
+    }),
+    z.strictObject({
+        colorType: z.literal("radial-gradient"),
+        colors: z.array(ColorStyle),
+        opacity: z.number().min(0).max(1).optional(),
+    }),
+]);
+// const ColorScheme = z.array(ColorStyle);
 
 const TextType = z.enum([
     "plain",
@@ -69,24 +64,35 @@ const TextBlockStyle = z.strictObject({
     // the font family / type to use for text
     font: z.string().default("Arial"),
     // a jmespath pointing to the text to use for this block
-    textPath: z.string().or(z.null()).default(null),
+    textPath: z.string().optional(),
     // underline, bold, italic, etc.
-    style: z.string().or(z.null()).default(null),
+    style: z.string().optional(),
     // pixel height of the text
     size: z.number().default(12),
     // special formatting processor (html, markdown, etc.)
-    textType: TextType.default("markdown"),
+    textType: TextType.optional(),
     // color of the text
-    color: ColorStyle.default("#000000FF"),
+    color: ColorStyle.optional(),
     // color of the background behind the text
-    background: ColorStyle.default("white"),
+    background: AdvancedColorStyle.or(ColorStyle).optional(),
     // how much rounding for the background corners
-    backgroundCornerRadius: z.number().default(0),
+    backgroundCornerRadius: z.number().optional(),
     // where to locate the text relative to it's parent
-    location: TextLocation.default("center"),
+    location: TextLocation,
     // how much space to have between the text and the edge of the background
     margin: z.number().positive().default(5),
 });
+
+const HttpUrl = z.url({
+    protocol: /^https?$/,
+    // @ts-expect-error it exists in the source, not sure why TS complains about .domain not existing
+    hostname: z.regexes.domain,
+});
+
+// "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+const EmbeddedBase64Image = z.string().startsWith("data:image/png;base64,");
+
+const ImageData = HttpUrl.or(EmbeddedBase64Image);
 
 /** ******** NODE STYLE ***********/
 
@@ -120,45 +126,53 @@ export const NodeShapes = z.enum([
 export type NodeMeshFactoryType = typeof Node.defaultNodeMeshFactory;
 
 export const NodeStyle = z.strictObject({
-    appearance: z.strictObject({
-        opacity: z.number().min(0).max(1).default(1),
-        color: ColorStyle.default("#D3D3D3FF"),
-        gradient: z.strictObject({
-            colors: z.array(ColorStyle.default("#000000FF")).default([]),
-            direction: z.number().min(0).max(360).default(180),
-        }).prefault({}),
-        flatShaded: z.boolean().default(false),
-        image: z.url().or(z.null()).default(null),
-        icon: z.string().or(z.null()).default(null),
-        glow: z.strictObject({
-            color: ColorStyle.or(z.null()).default(null),
-            strength: z.number().positive().default(1),
-        }).prefault({}),
-        outline: z.strictObject({
-            color: ColorStyle.or(z.null()).default(null),
-            width: z.number().positive().default(1),
-        }).prefault({}),
-        wireframe: z.boolean().default(false),
-        size: z.number().min(0).default(1),
-        type: NodeShapes.default("icosphere"),
-        // advanced
+    shape: z.strictObject({
+        size: z.number().positive().optional(),
+        type: NodeShapes.optional(),
+        // custom mesh https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/custom/custom
+        // import mesh https://doc.babylonjs.com/typedoc/functions/BABYLON.ImportMeshAsync
+    }).optional(),
+    texture: z.strictObject({
+        color: AdvancedColorStyle.or(ColorStyle).optional(),
+        image: z.url().optional(),
+        icon: z.string().optional(),
         // pieChart: z.string().or(z.null()).default(null), // https://manual.cytoscape.org/en/stable/Styles.html#using-graphics-in-styles
         // shader: z.url().or(z.null()).default(null), // https://doc.babylonjs.com/features/featuresDeepDive/materials/shaders/
         // bumpmap: z.url().or(z.null()).default(null), // https://doc.babylonjs.com/features/featuresDeepDive/materials/using/moreMaterials/#bump-map
         // refraction // https://forum.babylonjs.com/t/how-to-make-a-semi-transparent-glass-ball-with-a-through-hole-with-albedotexture/27357/24
         // reflection // https://doc.babylonjs.com/features/featuresDeepDive/materials/using/reflectionTexture/
-        // custom mesh https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/custom/custom
-        // import mesh https://doc.babylonjs.com/typedoc/functions/BABYLON.ImportMeshAsync
-    }).prefault({}),
-    label: TextBlockStyle.prefault({location: "top-left"}),
-    tooltip: TextBlockStyle.prefault({location: "top-right"}),
+    }).optional(),
+    effect: z.strictObject({
+        glow: z.strictObject({ // https://doc.babylonjs.com/features/featuresDeepDive/mesh/glowLayer
+            color: ColorStyle.optional(),
+            strength: z.number().positive().optional(),
+        }).optional(),
+        outline: z.strictObject({ // https://forum.babylonjs.com/t/how-to-get-the-perfect-outline/31711
+            color: ColorStyle.optional(),
+            width: z.number().positive().optional(),
+        }).optional(),
+        wireframe: z.boolean().optional(),
+        flatShaded: z.boolean().optional(),
+    }).optional(),
+    label: TextBlockStyle.prefault({location: "top-left", color: "black", background: "white"}).optional(),
+    tooltip: TextBlockStyle.prefault({location: "top-right", color: "black", background: "white"}).optional(),
     enabled: z.boolean().default(true),
     nodeMeshFactory: z.instanceof(Function).default(() => Node.defaultNodeMeshFactory),
     // nodeMeshFactory: z.custom<NodeMeshFactoryType>((val) => val instanceof Function).default(() => Node.defaultNodeMeshFactory),
-}).prefault({});
+});
 
 export type NodeStyleConfig = z.infer<typeof NodeStyle>;
-export type NodeStyleOpts = DeepPartial<NodeStyleConfig>;
+export const defaultNodeStyle = {
+    shape: {
+        type: "icosphere",
+        size: 1,
+    },
+    texture: {
+        color: "lightgrey",
+    },
+    enabled: true,
+    nodeMeshFactory: Node.defaultNodeMeshFactory,
+};
 
 /** ******** EDGE STYLES ***********/
 
@@ -217,11 +231,37 @@ export const EdgeStyle = z.strictObject({
     line: LineStyle,
     label: TextBlockStyle.prefault({location: "top"}),
     tooltip: TextBlockStyle.prefault({location: "bottom"}),
+    // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
     edgeMeshFactory: z.instanceof(Function).default(() => Edge.defaultEdgeMeshFactory),
 }).prefault({});
 
 export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;
 export type EdgeStyleOpts = DeepPartial<EdgeStyleConfig>;
+
+/** ******** GRAPH STYLES ***********/
+
+const GraphBackgroundColor = z.strictObject({
+    backgroundType: z.literal("color"),
+    color: ColorStyle,
+});
+
+const GraphBackgroundSkybox = z.strictObject({
+    backgroundType: z.literal("skybox"),
+    data: ImageData,
+});
+
+const GraphBackground = z.discriminatedUnion("backgroundType", [
+    GraphBackgroundColor,
+    GraphBackgroundSkybox,
+]);
+
+const GraphStyle = z.strictObject({
+    addDefaultStyle: z.boolean().default(true),
+    background: GraphBackground.prefault({backgroundType: "color", color: "skyblue"}),
+    startingCameraDistance: z.number().default(30),
+    layout: z.string().default("ngraph"),
+    layoutOptions: z.object().optional(),
+}).prefault({});
 
 /** ******** STYLE TEMPLATE ***********/
 
@@ -245,8 +285,42 @@ export const StyleLayer = z.strictObject({
         "StyleLayer requires either 'node' or 'edge'.",
     );
 
-export const StyleSchema = z.array(StyleLayer);
-export type StyleSchemaType = z.infer<typeof StyleSchema>
+export const GraphKnownFields = z.object({
+    nodeIdPath: z.string().default("id"),
+    nodeWeightPath: z.string().or(z.null()).default(null),
+    nodeTimePath: z.string().or(z.null()).default(null),
+    edgeSrcIdPath: z.string().default("src"),
+    edgeDstIdPath: z.string().default("dst"),
+    edgeWeightPath: z.string().or(z.null()).default(null),
+    edgeTimePath: z.string().or(z.null()).default(null),
+}).prefault({});
+
+const TemplateExpectedSchema = z.strictObject({
+    knownFields: GraphKnownFields,
+    // schema: z4.$ZodObject,
+});
+
+const TemplateMetadata = z.strictObject({
+    templateName: z.string().optional(),
+    templateCreator: z.string().optional(),
+    templateCreationTimestamp: z.iso.datetime().optional(),
+    templateModificationTimestamp: z.iso.datetime().optional(),
+});
+
+export const StyleTemplateV1 = z.strictObject({
+    graphtyTemplate: z.literal(true),
+    majorVersion: z.literal("1"),
+    metadata: TemplateMetadata.optional(),
+    graph: GraphStyle.prefault({}),
+    layers: z.array(StyleLayer).prefault([]),
+    expectedSchema: TemplateExpectedSchema.optional(),
+});
+
+export const StyleTemplate = z.discriminatedUnion("majorVersion", [
+    StyleTemplateV1,
+]);
+
+export type StyleSchemaV1 = z.infer<typeof StyleTemplateV1>
 export type StyleLayerType = z.infer<typeof StyleLayer>
 
 /** * BEHAVIOR ***/
@@ -269,28 +343,11 @@ export const EdgeObject = z.object({
     metadata: z.object(),
 });
 
-export const GraphKnownFields = z.object({
-    nodeIdPath: z.string().default("id"),
-    nodeWeightPath: z.string().or(z.null()).default(null),
-    nodeTimePath: z.string().or(z.null()).default(null),
-    edgeSrcIdPath: z.string().default("src"),
-    edgeDstIdPath: z.string().default("dst"),
-    edgeWeightPath: z.string().or(z.null()).default(null),
-    edgeTimePath: z.string().or(z.null()).default(null),
-}).prefault({});
-
 export type NodeObjectType = z.infer<typeof NodeObject>
 export type EdgeObjectType = z.infer<typeof EdgeObject>
 export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
 export type GraphConfig = z.infer<typeof GraphOpts>;
 export type GraphOptsType = DeepPartial<GraphConfig>
-
-export const GraphStyleOpts = z.strictObject({
-    skybox: z.string().default(""),
-    node: NodeStyle,
-    edge: EdgeStyle,
-    startingCameraDistance: z.number().default(30),
-}).prefault({});
 
 export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
 export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;
@@ -309,33 +366,8 @@ export const GraphLayoutOpts = z.strictObject({
     minDelta: z.number().default(0),
 }).prefault({});
 
-export const GraphStyleTemplateVersions = z.enum([
-    "1.0.0",
-]);
-
-export const GraphBackground = z.discriminatedUnion("backgroundType", [
-    z.strictObject({backgroundType: "color", color: z.string().pipe(z.transform(colorToHex)).default("#D3D3D3FF")}),
-    z.strictObject({backgroundType: "skybox", skyboxUrl: z.url({
-        protocol: /^https?$/,
-        // @ts-expect-error it exists in the source, not sure why TS complains about .domain not existing
-        hostname: z.regexes.domain,
-    })}),
-]);
-
-// export const GraphStyleTemplate = z.strictObject({
-//     version: GraphStyleTemplateVersions,
-//     graph: z.strictObject({
-//         layout: z.string(),
-//         // background: GraphBackground.default(GraphBackground.parse({})),
-//         knownFields: GraphKnownFields.default(GraphKnownFields.parse({})),
-//     }),
-//     layers: GraphStyleOpts,
-// }).prefault({});
-
 /** * CONFIG ***/
 export const GraphOpts = z.strictObject({
-    // data: GraphData.optional(),
-    style: GraphStyleOpts,
     behavior: GraphBehaviorOpts,
     layout: GraphLayoutOpts,
     knownFields: GraphKnownFields,

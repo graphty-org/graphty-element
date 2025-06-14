@@ -1,0 +1,24 @@
+{
+    "graphtyTemplate": true,
+    "majorVersion": "1",
+    "graph": {
+        "addDefaultStyle": false
+    },
+    "layers": [
+        {
+            "edge": {
+                "selector": "",
+                "style": {
+                    "arrowHead": {
+                        "type": "normal"
+                    },
+                    "line": {
+                        "color": "#c0ffee",
+                        "width": 1,
+                        "animationSpeed": 0
+                    }
+                }
+            }
+        }
+    ]
+}

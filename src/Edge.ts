@@ -92,23 +92,26 @@ export class Edge {
     }
 
     static updateRays(g: Graph): void {
-        if (g.config.style.edge.arrowHead.type !== "none") {
-            for (const e of g.layoutEngine.edges) {
-                const srcMesh = e.srcNode.mesh;
-                const dstMesh = e.dstNode.mesh;
+        for (const e of g.layoutEngine.edges) {
+            const srcMesh = e.srcNode.mesh;
+            const dstMesh = e.dstNode.mesh;
 
-                // RayHelper.CreateAndShow(ray, e.parentGraph.scene, Color3.Red());
-
-                // XXX: position is missing from Ray TypeScript definition
-                /* eslint-disable  @typescript-eslint/no-explicit-any */
-                (e.ray as any).position = dstMesh.position;
-                e.ray.direction = dstMesh.position.subtract(srcMesh.position);
+            if (e.style.arrowHead.type === "none") {
+                // TODO: this could be faster
+                continue;
             }
 
-            // this sucks for performance, but we have to do a full render pass
-            // to update rays and intersections
-            g.scene.render();
+            // RayHelper.CreateAndShow(ray, e.parentGraph.scene, Color3.Red());
+
+            // XXX: position is missing from Ray TypeScript definition
+            /* eslint-disable  @typescript-eslint/no-explicit-any */
+            (e.ray as any).position = dstMesh.position;
+            e.ray.direction = dstMesh.position.subtract(srcMesh.position);
         }
+
+        // this sucks for performance, but we have to do a full render pass
+        // to update rays and intersections
+        g.scene.render();
     }
 
     static defaultEdgeMeshFactory(e: Edge, g: Graph, o: EdgeStyleConfig): AbstractMesh {

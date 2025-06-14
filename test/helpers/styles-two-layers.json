@@ -1,0 +1,29 @@
+{
+    "graphtyTemplate": true,
+    "majorVersion": "1",
+    "graph": {
+        "addDefaultStyle": false
+    },
+    "layers": [
+        {
+            "node": {
+                "selector": "",
+                "style": {
+                    "texture": {
+                        "color": "#FF000000"
+                    }
+                }
+            }
+        },
+        {
+            "node": {
+                "selector": "",
+                "style": {
+                    "texture": {
+                        "color": "#0000FF00"
+                    }
+                }
+            }
+        }
+    ]
+}

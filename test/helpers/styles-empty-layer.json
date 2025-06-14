@@ -1,0 +1,11 @@
+{
+    "graphtyTemplate": true,
+    "majorVersion": "1",
+    "graph": {
+        "addDefaultStyle": false
+    },
+    "layers": [
+        {
+        }
+    ]
+}

@@ -1,9 +1,16 @@
 export const MyNodeStyle = {
-    appearance: {
-        color: "#c0ffee",
+    texture: {
+        color: {
+            colorType: "solid",
+            value: "#c0ffee",
+            opacity: 0.5,
+        },
+    },
+    shape: {
         size: 3.14,
-        opacity: 0.5,
         type: "goldberg",
+    },
+    effect: {
         wireframe: true,
     },
 };
@@ -53,6 +60,23 @@ export const BasicNodeSelector = [
         node: {
             selector: "starts_with(id, 'Mlle') == `true`",
             style: MyNodeStyle,
+        },
+    },
+];
+
+export const TwoLayersOfNodeColors = [
+    // layer 1: color red
+    {
+        node: {
+            selector: "",
+            style: {texture: {color: "#FF000000"}},
+        },
+    },
+    // layer 2: color blue
+    {
+        node: {
+            selector: "",
+            style: {texture: {color: "#0000FF00"}},
         },
     },
 ];

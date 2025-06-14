@@ -113,7 +113,8 @@ export class Graph {
         this.meshCache = new MeshCache();
 
         // configure graph
-        this.styles = new Styles({addDefaultStyle: true, knownFields: this.config.knownFields});
+        this.styles = Styles.default();
+
         if (this.config.behavior.fetchNodes) {
             this.fetchNodes = this.config.behavior.fetchNodes as FetchNodesFn;
         }
@@ -159,7 +160,7 @@ export class Graph {
                 "camera",
                 -Math.PI / 2,
                 Math.PI / 2.5,
-                this.config.style.startingCameraDistance,
+                this.styles.config.graph.startingCameraDistance,
                 new Vector3(0, 0, 0),
             );
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -190,10 +191,10 @@ export class Graph {
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
         // setup PhotoDome Skybox
-        if (this.config.style.skybox && this.config.style.skybox.length) {
+        if (this.styles.config.graph.background?.backgroundType === "skybox") {
             new PhotoDome(
                 "testdome",
-                this.config.style.skybox,
+                this.styles.config.graph.background.data,
                 {
                     resolution: 32,
                     size: 1000,
@@ -339,9 +340,6 @@ export class Graph {
     addNodes(nodes: Array<object>, idPath?: string) {
         // create path to node ids
         const query = idPath || this.config.knownFields.nodeIdPath;
-
-        // update styles
-        this.styles.addNodes(nodes);
 
         // create nodes
         for (const node of nodes) {

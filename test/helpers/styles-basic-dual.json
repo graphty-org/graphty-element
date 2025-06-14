@@ -1,0 +1,43 @@
+{
+    "graphtyTemplate": true,
+    "majorVersion": "1",
+    "graph": {
+        "addDefaultStyle": false
+    },
+    "layers": [
+        {
+            "node": {
+                "selector": "",
+                "style": {
+                    "texture": {
+                        "color": {
+                            "colorType": "solid",
+                            "value": "#c0ffee",
+                            "opacity": 0.5
+                        }
+                    },
+                    "shape": {
+                        "size": 3.14,
+                        "type": "goldberg"
+                    },
+                    "effect": {
+                        "wireframe": true
+                    }
+                }
+            },
+            "edge": {
+                "selector": "",
+                "style": {
+                    "arrowHead": {
+                        "type": "normal"
+                    },
+                    "line": {
+                        "color": "#c0ffee",
+                        "width": 1,
+                        "animationSpeed": 0
+                    }
+                }
+            }
+        }
+    ]
+}

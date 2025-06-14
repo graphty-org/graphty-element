@@ -6,14 +6,13 @@ import {
     NodeStyle,
     NodeStyleConfig,
     StyleLayerType,
-    StyleSchema,
-    StyleSchemaType,
+    StyleSchemaV1,
+    StyleTemplate,
+    defaultNodeStyle,
 } from "./config";
 
 import defaultsDeep from "lodash.defaultsdeep";
 import jmespath from "jmespath";
-
-const defaultNodeStyle = NodeStyle.parse({});
 
 export interface StylesOpts {
     layers?: object,
@@ -23,24 +22,20 @@ export interface StylesOpts {
 
 export class Styles {
     readonly knownFields: GraphKnownFieldsType;
-    readonly layers: StyleSchemaType = [];
-    readonly layerSelectedNodes: Array<Set<string | number>> = [];
+    readonly config: StyleSchemaV1;
+    readonly layers: StyleLayerType[];
     readonly layerSelectedEdges: Array<Set<string | number>> = [];
 
-    constructor(opts: StylesOpts = {}) {
-        this.knownFields = opts.knownFields || GraphKnownFields.parse({});
+    constructor(config: StyleSchemaV1) {
+        this.knownFields = config.expectedSchema?.knownFields || GraphKnownFields.parse({});
+        this.config = config;
+        this.layers = config.layers;
 
-        if (opts.layers) {
-            this.layers = StyleSchema.parse(opts.layers);
-        } else {
-            this.layers = [];
-        }
-
-        if (opts.addDefaultStyle) {
+        if (this.config.graph.addDefaultStyle) {
             this.addLayer({
                 node: {
                     selector: "",
-                    style: NodeStyle.parse({}),
+                    style: NodeStyle.parse(defaultNodeStyle),
                 },
                 edge: {
                     selector: "",
@@ -52,34 +47,38 @@ export class Styles {
 
     static fromJson(json: string): Styles {
         const o = JSON.parse(json);
-        // TODO: opts.knownFields
         return this.fromObject(o);
     }
 
     static fromObject(obj: object): Styles {
-        // TODO: opts.knownFields
-        return new Styles({layers: obj});
+        const config = StyleTemplate.parse(obj);
+        if (!config.graphtyTemplate) {
+            throw new TypeError("styles config does not appear to be a graphty template");
+        }
+
+        if (config.majorVersion !== "1") {
+            throw new TypeError(`unsupported graphty template version: ${config.majorVersion}`);
+        }
+
+        return new Styles(config);
     }
 
-    addNodes(nodeData: Array<object>, nodeIdPath?: string) {
-        const idQuery = nodeIdPath || this.knownFields.nodeIdPath;
-
-        const id0 = jmespath.search(nodeData, `[0].${idQuery}`);
-        if (id0 === null || id0 === undefined) {
-            throw new TypeError("couldn't find node ID in first node data element");
+    static async fromUrl(url: string): Promise<Styles> {
+        const response = await fetch(url);
+        if (!response.body) {
+            throw new Error("JSON response had no body");
         }
 
-        for (const layer of this.layers) {
-            let selectedNodes: Set<string | number> = new Set();
-            if (layer.node) {
-                const selector = layer.node.selector.length ? `?${layer.node.selector}` : "";
-                const query = `[${selector}].${idQuery}`;
-                const nodeIds = jmespath.search(nodeData, query);
-                selectedNodes = new Set(nodeIds);
-            }
+        const data = await response.json();
 
-            this.layerSelectedNodes.push(selectedNodes);
-        }
+        return Styles.fromObject(data);
+    }
+
+    static default(): Styles {
+        return Styles.fromObject({
+            graphtyTemplate: true,
+            majorVersion: "1",
+        });
     }
 
     addEdges(edgeData: Array<object>, edgeSrcIdPath?: string, edgeDstIdPath?: string) {
@@ -121,18 +120,21 @@ export class Styles {
         // TODO: recalculate
     }
 
-    getStyleForNode(id: string | number): NodeStyleConfig {
+    getStyleForNode(data: Record<string, unknown>): NodeStyleConfig {
         const styles: Array<NodeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {node} = this.layers[i];
-            if (this.layerSelectedNodes[i].has(id) && node) {
-                styles.push(node.style);
+            const nodeMatch = node &&
+                node.selector !== undefined &&
+                (node.selector.length === 0 || jmespath.search(data, `[${node.selector}] == true`));
+            if (nodeMatch) {
+                styles.unshift(node.style);
             }
         }
 
         // TODO: cache of previously calculated styles to save time?
 
-        const ret = defaultsDeep({}, ... styles, defaultNodeStyle);
+        const ret = defaultsDeep({}, ... styles);
         if (styles.length === 0) {
             ret.enabled = false;
         }
