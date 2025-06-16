@@ -6,3 +6,5 @@ export {Styles} from "./src/Styles";
 export type {GraphOptsType} from "./src/config";
 export {LayoutEngine} from "./src/layout/LayoutEngine";
 export {DataSource} from "./src/data/DataSource";
+export type {StyleSchema, StyleSchemaV1} from "./src/config";
+export {StyleTemplate} from "./src/config";

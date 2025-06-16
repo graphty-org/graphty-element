@@ -1,45 +1,47 @@
 import {
     EdgeStyle,
     EdgeStyleConfig,
-    GraphKnownFields,
-    GraphKnownFieldsType,
     NodeStyle,
     NodeStyleConfig,
     StyleLayerType,
     StyleSchemaV1,
     StyleTemplate,
+    defaultEdgeStyle,
     defaultNodeStyle,
 } from "./config";
 
-import defaultsDeep from "lodash.defaultsdeep";
+import {defaultsDeep, isEqual} from "lodash";
 import jmespath from "jmespath";
 
 export interface StylesOpts {
     layers?: object,
     addDefaultStyle?: boolean,
-    knownFields?: GraphKnownFieldsType,
 }
 
+export type NodeStyleId = number & { __brand: "NodeStyleId" };
+export type EdgeStyleId = number & { __brand: "EdgeStyleId" };
+
 export class Styles {
-    readonly knownFields: GraphKnownFieldsType;
     readonly config: StyleSchemaV1;
     readonly layers: StyleLayerType[];
-    readonly layerSelectedEdges: Array<Set<string | number>> = [];
+    #emptyNodeStyle: NodeStyleConfig;
+    #emptyEdgeStyle: EdgeStyleConfig;
 
     constructor(config: StyleSchemaV1) {
-        this.knownFields = config.expectedSchema?.knownFields || GraphKnownFields.parse({});
         this.config = config;
         this.layers = config.layers;
+        this.#emptyNodeStyle = NodeStyle.parse({});
+        this.#emptyEdgeStyle = EdgeStyle.parse({});
 
         if (this.config.graph.addDefaultStyle) {
-            this.addLayer({
+            this.layers.unshift({
                 node: {
                     selector: "",
                     style: NodeStyle.parse(defaultNodeStyle),
                 },
                 edge: {
                     selector: "",
-                    style: EdgeStyle.parse({}),
+                    style: EdgeStyle.parse(defaultEdgeStyle),
                 },
             });
         }
@@ -81,33 +83,6 @@ export class Styles {
         });
     }
 
-    addEdges(edgeData: Array<object>, edgeSrcIdPath?: string, edgeDstIdPath?: string) {
-        const srcQuery = edgeSrcIdPath || this.knownFields.edgeSrcIdPath;
-        const dstQuery = edgeDstIdPath || this.knownFields.edgeDstIdPath;
-
-        const srcRet0 = jmespath.search(edgeData, `[0].[to_string(${srcQuery})]`);
-        if (!srcRet0 || !Array.isArray(srcRet0) || srcRet0[0] === "null") {
-            throw new TypeError("couldn't find edge source ID in first edge data element");
-        }
-
-        const dstRet0 = jmespath.search(edgeData, `[0].[to_string(${dstQuery})]`);
-        if (!dstRet0 || !Array.isArray(dstRet0) || dstRet0[0] === "null") {
-            throw new TypeError("couldn't find edge destination ID in first edge data element");
-        }
-
-        for (const layer of this.layers) {
-            let selectedEdges: Set<string | number> = new Set();
-            if (layer.edge) {
-                const selector = layer.edge.selector.length ? `?${layer.edge.selector}` : "";
-                const query = `[${selector}].[to_string(${srcQuery}), to_string(${dstQuery})] | [*].join(',',@)`;
-                const edgeSrcDst = jmespath.search(edgeData, query);
-                selectedEdges = new Set(edgeSrcDst);
-            }
-
-            this.layerSelectedEdges.push(selectedEdges);
-        }
-    }
-
     addLayer(layer: StyleLayerType) {
         this.layers.push(layer);
 
@@ -120,7 +95,7 @@ export class Styles {
         // TODO: recalculate
     }
 
-    getStyleForNode(data: Record<string, unknown>): NodeStyleConfig {
+    getStyleForNode(data: Record<string | number | symbol, unknown>): NodeStyleId {
         const styles: Array<NodeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {node} = this.layers[i];
@@ -132,48 +107,68 @@ export class Styles {
             }
         }
 
-        // TODO: cache of previously calculated styles to save time?
-
-        const ret = defaultsDeep({}, ... styles);
+        const ret: NodeStyleConfig = defaultsDeep({}, ... styles, this.#emptyNodeStyle);
         if (styles.length === 0) {
             ret.enabled = false;
         }
 
-        return ret;
+        return Styles.getNodeIdForStyle(ret);
     }
 
-    getStyleForEdge(srcId: string, dstId: string): EdgeStyleConfig {
-        // XXX: this edgeId matches the output format of the jmespath query in addEdges
-        const edgeId = `${srcId},${dstId}`;
+    getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleConfig {
         const styles: Array<EdgeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {edge} = this.layers[i];
-            if (this.layerSelectedEdges[i].has(edgeId) && edge) {
-                styles.push(edge.style);
+            const edgeMatch = edge &&
+                edge.selector !== undefined &&
+                (edge.selector.length === 0 || jmespath.search(data, `[${edge.selector}] == true`));
+            if (edgeMatch) {
+                styles.unshift(edge.style);
             }
         }
 
-        // TODO: cache of previously calculated styles to save time?
-
-        const ret = defaultsDeep({}, ... styles, EdgeStyle.parse({}));
+        const ret: EdgeStyleConfig = defaultsDeep({}, ... styles, this.#emptyEdgeStyle);
         if (styles.length === 0) {
             ret.enabled = false;
         }
 
         return ret;
     }
-}
 
-export class Style {
-    readonly nodeStyle: NodeStyleConfig | null = null;
-    readonly edgeStyle: EdgeStyleConfig | null = null;
-
-    constructor(nodeStyle: NodeStyleConfig | null, edgeStyle: EdgeStyleConfig | null) {
-        if (!nodeStyle && !edgeStyle) {
-            throw new Error("must specify one of nodeStyle or edgeStyle");
+    static getStyleForNodeStyleId(id: NodeStyleId): NodeStyleConfig {
+        const ret = nodeStyleMap.get(id);
+        if (!ret) {
+            throw new TypeError(`couldn't find NodeStyleId: ${id}`);
         }
 
-        this.nodeStyle = nodeStyle;
-        this.edgeStyle = edgeStyle;
+        return ret;
     }
+
+    static getNodeIdForStyle(style: NodeStyleConfig): NodeStyleId {
+        return styleToId(nodeStyleMap, style);
+    }
+
+    static getEdgeIdForStyle(style: EdgeStyleConfig): EdgeStyleId {
+        return styleToId(edgeStyleMap, style);
+    }
+}
+
+const nodeStyleMap: Map<NodeStyleId, NodeStyleConfig> = new Map();
+const edgeStyleMap: Map<EdgeStyleId, EdgeStyleConfig> = new Map();
+
+function styleToId<IdT, StyleT>(map: Map<IdT, StyleT>, style: StyleT): IdT {
+    let ret: IdT | undefined;
+    for (const [k, v] of map.entries()) {
+        if (isEqual(v, style)) {
+            ret = k;
+            break;
+        }
+    }
+
+    if (ret === undefined) {
+        ret = map.size as IdT;
+        map.set(ret, style);
+    }
+
+    return ret;
 }

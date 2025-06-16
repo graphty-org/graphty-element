@@ -24,6 +24,7 @@ import {
     FetchNodesFn,
     GraphConfig,
     GraphOptsType,
+    StyleSchema,
     getConfig,
 } from "./config";
 
@@ -317,6 +318,28 @@ export class Graph {
         }
     }
 
+    async setStyleTemplate(t: StyleSchema) {
+        // TODO: stats start
+
+        // TODO: if t is a URL, fetch URL
+
+        this.styles = Styles.fromObject(t);
+
+        for (const n of this.nodes) {
+            const style = this.styles.getStyleForNode(n.data);
+            n.updateStyle(style);
+        }
+
+        for (const e of this.edges) {
+            const style = this.styles.getStyleForEdge(e.data);
+            e.updateStyle(style);
+        }
+
+        // TODO: stats end
+
+        // TODO: emit event
+    }
+
     async addDataFromSource(type: string, opts: object = {}) {
         this.stats.loadTime.beginMonitoring();
 
@@ -331,19 +354,20 @@ export class Graph {
         }
 
         this.stats.loadTime.endMonitoring();
+
+        // TODO: emit event
     }
 
-    addNode(node: object, idPath?: string) {
+    addNode(node: Record<string | number, unknown>, idPath?: string) {
         return this.addNodes([node], idPath);
     }
 
-    addNodes(nodes: Array<object>, idPath?: string) {
+    addNodes(nodes: Record<string | number, unknown>[], idPath?: string) {
         // create path to node ids
         const query = idPath || this.config.knownFields.nodeIdPath;
 
         // create nodes
         for (const node of nodes) {
-            const metadata = node;
             const nodeId = jmespath.search(node, query);
 
             if (this.nodeCache.get(nodeId)) {
@@ -351,31 +375,27 @@ export class Graph {
             }
 
             const style = this.styles.getStyleForNode(nodeId);
-            const n = new Node(this, nodeId, style, {
+            const n = new Node(this, nodeId, style, node, {
                 pinOnDrag: this.pinOnDrag,
-                metadata,
             });
             this.nodeCache.set(nodeId, n);
+            this.nodes.push(n);
         }
 
         this.running = true;
     }
 
-    addEdge(edge: object, srcIdPath?: string, dstIdPath?: string) {
+    addEdge(edge: Record<string | number, unknown>, srcIdPath?: string, dstIdPath?: string) {
         this.addEdges([edge], srcIdPath, dstIdPath);
     }
 
-    addEdges(edges: Array<object>, srcIdPath?: string, dstIdPath?: string) {
+    addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string) {
         // get paths
         const srcQuery = srcIdPath || this.config.knownFields.edgeSrcIdPath;
         const dstQuery = dstIdPath || this.config.knownFields.edgeDstIdPath;
 
-        // update styles
-        this.styles.addEdges(edges);
-
         // create nodes
         for (const edge of edges) {
-            const metadata = edge;
             const srcNodeId = jmespath.search(edge, srcQuery);
             const dstNodeId = jmespath.search(edge, dstQuery);
 
@@ -383,11 +403,11 @@ export class Graph {
                 continue;
             }
 
-            const style = this.styles.getStyleForEdge(srcNodeId, dstNodeId);
-            const e = new Edge(this, srcNodeId, dstNodeId, style, {
-                metadata,
-            });
+            const style = this.styles.getStyleForEdge(edge);
+            const opts = {};
+            const e = new Edge(this, srcNodeId, dstNodeId, style, edge, opts);
             this.edgeCache.set(srcNodeId, dstNodeId, e);
+            this.edges.push(e);
         }
 
         this.running = true;

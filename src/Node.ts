@@ -10,130 +10,43 @@ import {
     StandardMaterial,
 } from "@babylonjs/core";
 import type {Graph} from "./Graph";
-import type {NodeStyleConfig} from "./config";
+import {NodeStyleConfig} from "./config";
+import {NodeStyleId, Styles} from "./Styles";
 
 const GOLDEN_RATIO = 1.618;
 
 export type NodeIdType = string | number;
 
 interface NodeOpts {
-    metadata?: object;
     pinOnDrag?: boolean;
 }
 
 export class Node {
     parentGraph: Graph;
+    opts: NodeOpts;
     id: NodeIdType;
-    metadata: object;
+    data: Record<string | number, unknown>;
     mesh: AbstractMesh;
     label?: Mesh;
-    meshDragBehavior: SixDofDragBehavior;
+    meshDragBehavior!: SixDofDragBehavior;
     dragging = false;
-    style: NodeStyleConfig;
-    pinOnDrag: boolean;
+    styleId: NodeStyleId;
+    pinOnDrag!: boolean;
 
-    constructor(graph: Graph, nodeId: NodeIdType, style: NodeStyleConfig, opts: NodeOpts = {}) {
+    constructor(graph: Graph, nodeId: NodeIdType, styleId: NodeStyleId, data: Record<string | number, unknown>, opts: NodeOpts = {}) {
         this.parentGraph = graph;
         this.id = nodeId;
-        this.metadata = opts.metadata ?? {};
+        this.data = data;
+        this.opts = opts;
 
         // copy nodeMeshOpts
-        this.style = style;
+        this.styleId = styleId;
 
         // create graph node
         this.parentGraph.layoutEngine.addNode(this);
 
         // create mesh
-        this.mesh = this.style.nodeMeshFactory(this, this.parentGraph, this.style);
-        this.mesh.isPickable = true;
-        this.mesh.metadata = {parentNode: this};
-
-        // create label
-        if (this.style.label && this.style.label.enabled) {
-            this.label = Node.createLabel(this.id.toString(), this, this.parentGraph);
-            this.label.parent = this.mesh;
-            this.label.position.y += 1;
-        }
-
-        // drag behavior
-        this.pinOnDrag = opts.pinOnDrag ?? true;
-        this.meshDragBehavior = new SixDofDragBehavior();
-        this.mesh.addBehavior(this.meshDragBehavior);
-        // drag started
-        this.meshDragBehavior.onDragStartObservable.add(() => {
-            // make sure the graph is running
-            this.parentGraph.running = true;
-
-            // don't let the graph engine update the node -- we are controlling it
-            this.dragging = true;
-        });
-        // drag ended
-        this.meshDragBehavior.onDragEndObservable.add(() => {
-            // make sure the graph is running
-            this.parentGraph.running = true;
-
-            // pin after dragging is node
-            if (this.pinOnDrag) {
-                this.pin();
-            }
-
-            // the graph engine can have control of the node again
-            this.dragging = false;
-        });
-        // position changed
-        this.meshDragBehavior.onPositionChangedObservable.add((event) => {
-            // make sure the graph is running
-            this.parentGraph.running = true;
-
-            // update the node position
-            this.parentGraph.layoutEngine.setNodePosition(this, event.position);
-        });
-
-        // TODO: this apparently updates dragging objects faster and more fluidly
-        // https://playground.babylonjs.com/#YEZPVT%23840
-        // https://forum.babylonjs.com/t/expandable-lines/24681/12
-
-        // click behavior
-        this.mesh.actionManager = this.mesh.actionManager ?? new ActionManager(this.parentGraph.scene);
-        // ActionManager.OnDoublePickTrigger
-        // ActionManager.OnRightPickTrigger
-        // ActionManager.OnCenterPickTrigger
-        // ActionManager.OnLongPressTrigger
-        if (this.parentGraph.fetchNodes && this.parentGraph.fetchEdges) {
-            const {fetchNodes, fetchEdges} = this.parentGraph;
-            this.mesh.actionManager.registerAction(
-                new ExecuteCodeAction(
-                    {
-                        trigger: ActionManager.OnDoublePickTrigger,
-                        // trigger: ActionManager.OnLongPressTrigger,
-                    },
-                    () => {
-                        // make sure the graph is running
-                        this.parentGraph.running = true;
-
-                        // fetch all edges for current node
-                        const edges = fetchEdges(this, this.parentGraph);
-
-                        // create set of unique node ids
-                        const nodeIds: Set<NodeIdType> = new Set();
-                        edges.forEach((e) => {
-                            nodeIds.add(e.src);
-                            nodeIds.add(e.dst);
-                        });
-                        nodeIds.delete(this.id);
-
-                        // fetch all nodes from associated edges
-                        const nodes = fetchNodes(nodeIds, this.parentGraph);
-
-                        // add all the nodes and edges we collected
-                        this.parentGraph.addNodes([... nodes]);
-                        this.parentGraph.addEdges([... edges]);
-
-                        // TODO: fetch and add secondary edges
-                    },
-                ),
-            );
-        }
+        this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
     }
 
     update(): void {
@@ -153,6 +66,17 @@ export class Node {
         this.parentGraph.nodeObservable.notifyObservers({type: "node-update-after", node: this});
     }
 
+    updateStyle(styleId: NodeStyleId): void {
+        if (styleId === this.styleId) {
+            return;
+        }
+
+        const oldMesh = this.mesh;
+        this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
+        // TODO: copy over location?
+        oldMesh.dispose();
+    }
+
     pin(): void {
         this.parentGraph.layoutEngine.pin(this);
     }
@@ -161,8 +85,9 @@ export class Node {
         this.parentGraph.layoutEngine.unpin(this);
     }
 
-    static defaultNodeMeshFactory(n: Node, g: Graph, o: NodeStyleConfig): AbstractMesh {
-        return g.meshCache.get("default-mesh", () => {
+    static defaultNodeMeshFactory(n: Node, g: Graph, styleId: NodeStyleId): AbstractMesh {
+        return g.meshCache.get(styleId, () => {
+            const o: NodeStyleConfig = Styles.getStyleForNodeStyleId(styleId);
             let mesh: Mesh;
 
             if (!o.shape) {
@@ -308,6 +233,16 @@ export class Node {
             mesh.visibility = 1;
             mesh.material = mat;
 
+            // create label
+            if (o.label && o.label.enabled) {
+                n.label = Node.createLabel(n.id.toString(), n, n.parentGraph);
+                n.label.parent = n.mesh;
+                n.label.position.y += 1;
+            }
+
+            n.mesh = mesh;
+            Node.addDefaultBehaviors(n, n.opts);
+
             return mesh;
         });
     }
@@ -426,5 +361,92 @@ export class Node {
         plane.billboardMode = 7;
 
         return plane;
+    }
+
+    static addDefaultBehaviors(n: Node, opts: NodeOpts) {
+        n.mesh.isPickable = true;
+
+        // drag behavior
+        n.pinOnDrag = opts.pinOnDrag ?? true;
+        n.meshDragBehavior = new SixDofDragBehavior();
+        n.mesh.addBehavior(n.meshDragBehavior);
+
+        // drag started
+        n.meshDragBehavior.onDragStartObservable.add(() => {
+            // make sure the graph is running
+            n.parentGraph.running = true;
+
+            // don't let the graph engine update the node -- we are controlling it
+            n.dragging = true;
+        });
+
+        // drag ended
+        n.meshDragBehavior.onDragEndObservable.add(() => {
+            // make sure the graph is running
+            n.parentGraph.running = true;
+
+            // pin after dragging is node
+            if (n.pinOnDrag) {
+                n.pin();
+            }
+
+            // the graph engine can have control of the node again
+            n.dragging = false;
+        });
+
+        // position changed
+        n.meshDragBehavior.onPositionChangedObservable.add((event) => {
+            // make sure the graph is running
+            n.parentGraph.running = true;
+
+            // update the node position
+            n.parentGraph.layoutEngine.setNodePosition(n, event.position);
+        });
+
+        // TODO: this apparently updates dragging objects faster and more fluidly
+        // https://playground.babylonjs.com/#YEZPVT%23840
+        // https://forum.babylonjs.com/t/expandable-lines/24681/12
+
+        // click behavior
+        n.mesh.actionManager = n.mesh.actionManager ?? new ActionManager(n.parentGraph.scene);
+        // ActionManager.OnDoublePickTrigger
+        // ActionManager.OnRightPickTrigger
+        // ActionManager.OnCenterPickTrigger
+        // ActionManager.OnLongPressTrigger
+        if (n.parentGraph.fetchNodes && n.parentGraph.fetchEdges) {
+            const {fetchNodes, fetchEdges} = n.parentGraph;
+            n.mesh.actionManager.registerAction(
+                new ExecuteCodeAction(
+                    {
+                        trigger: ActionManager.OnDoublePickTrigger,
+                        // trigger: ActionManager.OnLongPressTrigger,
+                    },
+                    () => {
+                        // make sure the graph is running
+                        n.parentGraph.running = true;
+
+                        // fetch all edges for current node
+                        const edges = fetchEdges(n, n.parentGraph);
+
+                        // create set of unique node ids
+                        const nodeIds: Set<NodeIdType> = new Set();
+                        edges.forEach((e) => {
+                            nodeIds.add(e.src);
+                            nodeIds.add(e.dst);
+                        });
+                        nodeIds.delete(n.id);
+
+                        // fetch all nodes from associated edges
+                        const nodes = fetchNodes(nodeIds, n.parentGraph);
+
+                        // add all the nodes and edges we collected
+                        n.parentGraph.addNodes([... nodes]);
+                        n.parentGraph.addEdges([... edges]);
+
+                        // TODO: fetch and add secondary edges
+                    },
+                ),
+            );
+        }
     }
 }

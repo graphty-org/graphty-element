@@ -1,6 +1,6 @@
 import {customElement, property} from "lit/decorators.js";
 import {LitElement} from "lit";
-import {Graph, GraphOptsType} from "../index.ts";
+import {Graph, GraphOptsType, StyleSchema} from "../index.ts";
 
 /**
  * Graphty creates a graph
@@ -67,6 +67,10 @@ export class Graphty extends LitElement {
         if (changedProperties.has("dataSource") && this.dataSource) {
             const sourceOpts = this.dataSourceConfig || {};
             await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
+        }
+
+        if (changedProperties.has("styleTemplate") && this.styleTemplate) {
+            await this.#graph.setStyleTemplate(this.styleTemplate);
         }
 
         await this.#graph.init();
@@ -155,4 +159,11 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "layout-2d"})
     layout2d?: boolean;
+
+    /**
+     * Specifies that the layout should be rendered in two dimensions (as
+     * opposed to 3D)
+     */
+    @property({attribute: "style-template"})
+    styleTemplate?: StyleSchema;
 }

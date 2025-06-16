@@ -1,10 +1,9 @@
 import {MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
-import {EdgeStyle, NodeStyle, colorToHex} from "../src/config.ts";
+import {EdgeStyle, NodeStyle, colorToHex, defaultEdgeStyle, defaultNodeStyle} from "../src/config.ts";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
 import {assert, describe, it} from "vitest";
 import {Styles} from "../src/Styles.ts";
 import {ZodError} from "zod/v4";
-import data2Edges from "./helpers/data2-edges.json";
 import twoLayerTemplate from "./helpers/styles-two-layers.json";
 import basicNodeStyle from "./helpers/styles-basic-node.json";
 import basicEdgeStyle from "./helpers/styles-basic-edge.json";
@@ -13,6 +12,7 @@ import basicSelector from "./helpers/styles-basic-selector.json";
 import emptyStyle from "./helpers/styles-empty.json";
 import emptyLayer from "./helpers/styles-empty-layer.json";
 import badLayer from "./helpers/styles-bad-layer.json";
+import defaultStyle from "./helpers/styles-default.json";
 
 const ParsedMyNodeStyle = NodeStyle.parse(MyNodeStyle);
 const ParsedMyEdgeStyle = EdgeStyle.parse(MyEdgeStyle);
@@ -23,18 +23,18 @@ describe("Styles", () => {
     });
 
     it("adds default style", () => {
-        const s = Styles.default();
+        const s = Styles.fromObject(defaultStyle);
 
         assert.isTrue(s.config.graph.addDefaultStyle);
 
         assert.strictEqual(s.layers.length, 1);
         const nodeAppliedStyle = s.layers[0].node;
-        const expectedNodeStyle = NodeStyle.parse({});
+        const expectedNodeStyle = NodeStyle.parse(defaultNodeStyle);
         assert.isDefined(nodeAppliedStyle);
         assert.deepStrictEqual(nodeAppliedStyle.style, expectedNodeStyle);
         assert.strictEqual(nodeAppliedStyle.selector, "");
         const edgeAppliedStyle = s.layers[0].edge;
-        const expectedEdgeStyle = EdgeStyle.parse({});
+        const expectedEdgeStyle = EdgeStyle.parse(defaultEdgeStyle);
         assert.isDefined(edgeAppliedStyle);
         assert.deepStrictEqual(edgeAppliedStyle.style, expectedEdgeStyle);
         assert.strictEqual(edgeAppliedStyle.selector, "");
@@ -127,7 +127,8 @@ describe("Styles", () => {
             it("returns basic node style", () => {
                 const s = Styles.fromObject(basicNodeStyle);
 
-                const style = s.getStyleForNode({id: "Mlle.Baptistine"});
+                const styleId = s.getStyleForNode({id: "Mlle.Baptistine"});
+                const style = Styles.getStyleForNodeStyleId(styleId);
 
                 assert.deepStrictEqual(style, ParsedMyNodeStyle);
             });
@@ -137,7 +138,8 @@ describe("Styles", () => {
                 const s = Styles.fromObject(basicSelector);
 
                 // ...and asks for the style of one of the nodes with no style
-                const style = s.getStyleForNode({id: "CountessdeLo"});
+                const styleId = s.getStyleForNode({id: "CountessdeLo"});
+                const style = Styles.getStyleForNodeStyleId(styleId);
 
                 const expectedStyle = NodeStyle.parse({});
                 expectedStyle.enabled = false;
@@ -147,7 +149,8 @@ describe("Styles", () => {
             it("returns disabled style when no styles loaded", () => {
                 const s = Styles.fromObject(emptyStyle);
 
-                const style = s.getStyleForNode({id: "CountessdeLo"});
+                const styleId = s.getStyleForNode({id: "CountessdeLo"});
+                const style = Styles.getStyleForNodeStyleId(styleId);
 
                 const expectedStyle = NodeStyle.parse({});
                 expectedStyle.enabled = false;
@@ -158,37 +161,18 @@ describe("Styles", () => {
                 // const s = Styles.fromObject(TwoLayersOfNodeColors);
                 const s = Styles.fromObject(twoLayerTemplate);
 
-                const style = s.getStyleForNode({id: 1});
+                const styleId = s.getStyleForNode({id: 1});
+                const style = Styles.getStyleForNodeStyleId(styleId);
 
                 assert.strictEqual(style.texture?.color, "#00F0");
-            });
-        });
-
-        describe("addEdges", () => {
-            it("throws on bad src path", () => {
-                const s = Styles.fromObject(basicEdgeStyle);
-
-                assert.throws(() => {
-                    s.addEdges(data2Edges, "foo", "target"); // bad source path
-                }, TypeError, "couldn't find edge source ID in first edge data element");
-            });
-
-            it("throws on bad dst path", () => {
-                const s = Styles.fromObject(basicEdgeStyle);
-
-                assert.throws(() => {
-                    s.addEdges(data2Edges, "source", "foo"); // bad destination path
-                }, TypeError, "couldn't find edge destination ID in first edge data element");
             });
         });
 
         describe("getStyleForEdge", () => {
             it("returns basic edge style", () => {
                 const s = Styles.fromObject(basicEdgeStyle);
-                s.addEdges(data2Edges, "source", "target");
-                // s.addEdges(data2Edges);
 
-                const style = s.getStyleForEdge("Mme.Magloire", "Mlle.Baptistine");
+                const style = s.getStyleForEdge({src: "Mme.Magloire", dst: "Mlle.Baptistine"});
 
                 assert.deepStrictEqual(style, ParsedMyEdgeStyle);
             });

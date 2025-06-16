@@ -15,6 +15,7 @@ import {
 import {Node, NodeIdType} from "./Node";
 import type {EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
+import {isEqual} from "lodash";
 
 interface EdgeOpts {
     metadata?: object;
@@ -22,22 +23,24 @@ interface EdgeOpts {
 
 export class Edge {
     parentGraph: Graph;
+    opts: EdgeOpts;
     srcId: NodeIdType;
     dstId: NodeIdType;
     dstNode: Node;
     srcNode: Node;
-    metadata: object;
+    data: Record<string | number, unknown>;
     mesh: AbstractMesh;
     arrowMesh: AbstractMesh | null = null;
     style: EdgeStyleConfig;
     // XXX: performance impact when not needed?
     ray: Ray;
 
-    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, opts: EdgeOpts = {}) {
+    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, data: Record<string | number, unknown>, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
-        this.metadata = opts.metadata ?? {};
+        this.data = data;
+        this.opts = opts;
 
         // make sure both srcNode and dstNode already exist
         const srcNode = graph.nodeCache.get(srcNodeId);
@@ -64,9 +67,6 @@ export class Edge {
 
         // create mesh
         this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
-        this.mesh.isPickable = false;
-        this.mesh.metadata = {};
-        this.mesh.metadata.parentEdge = this;
     }
 
     update(): void {
@@ -91,12 +91,22 @@ export class Edge {
         this.parentGraph.edgeObservable.notifyObservers({type: "edge-update-after", edge: this});
     }
 
+    updateStyle(style: EdgeStyleConfig): void {
+        if (isEqual(style, this.style)) {
+            return;
+        }
+
+        this.mesh.dispose();
+        this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
+        // TODO: copy over location?
+    }
+
     static updateRays(g: Graph): void {
         for (const e of g.layoutEngine.edges) {
             const srcMesh = e.srcNode.mesh;
             const dstMesh = e.dstNode.mesh;
 
-            if (e.style.arrowHead.type === "none") {
+            if (e?.style?.arrowHead?.type === undefined || e.style.arrowHead.type === "none") {
                 // TODO: this could be faster
                 continue;
             }
@@ -115,10 +125,10 @@ export class Edge {
     }
 
     static defaultEdgeMeshFactory(e: Edge, g: Graph, o: EdgeStyleConfig): AbstractMesh {
-        if (o.arrowHead.type !== "none") {
+        if (o.arrowHead && o.arrowHead.type !== "none") {
             e.arrowMesh = g.meshCache.get("default-arrow-cap", () => {
-                const width = getArrowCapWidth(o.line.width);
-                const len = getArrowCapLen(o.line.width);
+                const width = getArrowCapWidth(o?.line?.width ?? 0.25);
+                const len = getArrowCapLen(o?.line?.width ?? 0.25);
                 const cap1 = GreasedLineTools.GetArrowCap(
                     new Vector3(0, 0, -len), // position
                     new Vector3(0, 0, 1), // direction
@@ -135,20 +145,26 @@ export class Edge {
                         // instance: line,
                     },
                     {
-                        color: Color3.FromHexString(o.line.color.slice(0, 7)),
+                        color: Color3.FromHexString(o?.line?.color ?? "#FFFFFF"),
                     },
                     // e.parentGraph.scene
                 );
             });
         }
 
-        return g.meshCache.get("default-edge", () => {
-            if (o.line.animationSpeed) {
+        const mesh = g.meshCache.get("default-edge", () => {
+            if (o?.line?.animationSpeed) {
                 return Edge.createMovingLine(e, g, o);
             }
 
             return Edge.createPlainLine(e, g, o);
         });
+
+        mesh.isPickable = false;
+        mesh.metadata = {};
+        mesh.metadata.parentEdge = this;
+
+        return mesh;
     }
 
     static createPlainLine(_e: Edge, _g: Graph, o: EdgeStyleConfig): GreasedLineBaseMesh {
@@ -157,8 +173,8 @@ export class Edge {
                 points: Edge.unitVectorPoints,
             },
             {
-                color: Color3.FromHexString(o.line.color.slice(0, 7)),
-                width: o.line.width,
+                color: Color3.FromHexString(o?.line?.color ?? "#FFFFFFF"),
+                width: o?.line?.width ?? 0.25,
             },
         );
     }
@@ -167,7 +183,7 @@ export class Edge {
         // const baseColor = Color3.FromHexString(o.movingLineOpts.baseColor.slice(0, 7));
         const baseColor = Color3.FromHexString("#D3D3D3");
 
-        const movingColor = Color3.FromHexString(o.line.color.slice(0, 7));
+        const movingColor = Color3.FromHexString(o?.line?.color ?? "#FF0000");
         const r1 = Math.floor(baseColor.r * 255);
         const g1 = Math.floor(baseColor.g * 255);
         const b1 = Math.floor(baseColor.b * 255);
@@ -199,7 +215,7 @@ export class Edge {
             },
             {
                 // color: Color3.FromHexString(colorNameToHex(edgeColor))
-                width: o.line.width,
+                width: o?.line?.width ?? 0.25,
                 colorMode: GreasedLineMeshColorMode.COLOR_MODE_MULTIPLY,
             },
         );
@@ -269,7 +285,7 @@ export class Edge {
         let dstPoint: Vector3 | null = null;
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
-            const len = getArrowCapLen(this.style.line.width);
+            const len = getArrowCapLen(this?.style?.line?.width ?? 0.25);
 
             dstPoint = dstHitInfo[0].pickedPoint!;
             srcPoint = srcHitInfo[0].pickedPoint!;

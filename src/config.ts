@@ -15,7 +15,13 @@ export type PartiallyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<
 
 export function colorToHex(s: string): string | undefined {
     const color = new Color(s);
-    return color.to("srgb").toString({format: "hex"}).toUpperCase();
+    let hex = color.to("srgb").toString({format: "hex"}).toUpperCase();
+    if (hex.length === 4) {
+        // XXX: BabylonJS only likes the long format of hex strings
+        hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+    }
+
+    return hex;
 }
 
 const ColorStyle = z.string().transform(colorToHex);
@@ -157,12 +163,10 @@ export const NodeStyle = z.strictObject({
     label: TextBlockStyle.prefault({location: "top-left", color: "black", background: "white"}).optional(),
     tooltip: TextBlockStyle.prefault({location: "top-right", color: "black", background: "white"}).optional(),
     enabled: z.boolean().default(true),
-    nodeMeshFactory: z.instanceof(Function).default(() => Node.defaultNodeMeshFactory),
-    // nodeMeshFactory: z.custom<NodeMeshFactoryType>((val) => val instanceof Function).default(() => Node.defaultNodeMeshFactory),
 });
 
 export type NodeStyleConfig = z.infer<typeof NodeStyle>;
-export const defaultNodeStyle = {
+export const defaultNodeStyle: NodeStyleConfig = {
     shape: {
         type: "icosphere",
         size: 1,
@@ -171,7 +175,6 @@ export const defaultNodeStyle = {
         color: "lightgrey",
     },
     enabled: true,
-    nodeMeshFactory: Node.defaultNodeMeshFactory,
 };
 
 /** ******** EDGE STYLES ***********/
@@ -215,28 +218,38 @@ const LineType = z.enum([
 ]);
 
 const LineStyle = z.strictObject({
-    type: LineType.default("solid"),
-    animationSpeed: z.number().min(0).default(0.1),
-    width: z.number().positive().default(0.25),
-    color: ColorStyle.default("#FFFFFFFF"),
-    opacity: z.number().min(0).max(1).default(1),
-    bezier: z.boolean().default(false),
-}).prefault({});
+    type: LineType.optional(),
+    animationSpeed: z.number().min(0).optional(),
+    width: z.number().positive().optional(),
+    color: ColorStyle.optional(),
+    opacity: z.number().min(0).max(1).optional(),
+    bezier: z.boolean().optional(),
+});
 
 export type EdgeMeshFactory = typeof Edge.defaultEdgeMeshFactory;
 
 export const EdgeStyle = z.strictObject({
-    arrowHead: ArrowStyle.prefault({type: "none"}),
-    arrowTail: ArrowStyle.prefault({type: "none"}),
-    line: LineStyle,
-    label: TextBlockStyle.prefault({location: "top"}),
-    tooltip: TextBlockStyle.prefault({location: "bottom"}),
+    arrowHead: ArrowStyle.optional(),
+    arrowTail: ArrowStyle.optional(),
+    line: LineStyle.optional(),
+    label: TextBlockStyle.prefault({location: "top"}).optional(),
+    tooltip: TextBlockStyle.prefault({location: "bottom"}).optional(),
     // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
+    enabled: z.boolean().default(true),
     edgeMeshFactory: z.instanceof(Function).default(() => Edge.defaultEdgeMeshFactory),
-}).prefault({});
+});
 
 export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;
-export type EdgeStyleOpts = DeepPartial<EdgeStyleConfig>;
+export const defaultEdgeStyle: EdgeStyleConfig = {
+    line: {
+        type: "solid",
+        animationSpeed: 0.1,
+        width: 0.25,
+        color: "white",
+    },
+    enabled: true,
+    edgeMeshFactory: Edge.defaultEdgeMeshFactory,
+};
 
 /** ******** GRAPH STYLES ***********/
 
@@ -320,6 +333,7 @@ export const StyleTemplate = z.discriminatedUnion("majorVersion", [
     StyleTemplateV1,
 ]);
 
+export type StyleSchema = z.infer<typeof StyleTemplate>
 export type StyleSchemaV1 = z.infer<typeof StyleTemplateV1>
 export type StyleLayerType = z.infer<typeof StyleLayer>
 

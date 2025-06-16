@@ -1,24 +1,25 @@
 import {InstancedMesh, Mesh} from "@babylonjs/core";
+import type {NodeStyleId} from "./Styles";
 
 type MeshCreatorFn = () => Mesh;
 
 export class MeshCache {
-    meshCacheMap: Map<string, Mesh> = new Map();
+    meshCacheMap: Map<string | NodeStyleId, Mesh> = new Map();
     hits = 0;
     misses = 0;
 
-    get(name: string, creator: MeshCreatorFn): InstancedMesh {
+    get(name: string | NodeStyleId, creator: MeshCreatorFn): InstancedMesh {
         let mesh = this.meshCacheMap.get(name);
         if (mesh) {
             this.hits++;
-            return mesh.createInstance(name);
+            return mesh.createInstance(`${name}`);
         }
 
         this.misses++;
         mesh = creator();
         mesh.isVisible = false;
         this.meshCacheMap.set(name, mesh);
-        return mesh.createInstance(name);
+        return mesh.createInstance(`${name}`);
     }
 
     reset(): void {
