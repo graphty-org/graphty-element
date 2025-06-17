@@ -54,16 +54,12 @@ export class Node {
             return;
         }
 
-        this.parentGraph.nodeObservable.notifyObservers({type: "node-update-before", node: this});
-
         const pos = this.parentGraph.layoutEngine.getNodePosition(this);
         this.mesh.position.x = pos.x;
         this.mesh.position.y = pos.y;
         if (pos.z) {
             this.mesh.position.z = pos.z;
         }
-
-        this.parentGraph.nodeObservable.notifyObservers({type: "node-update-after", node: this});
     }
 
     updateStyle(styleId: NodeStyleId): void {
@@ -71,10 +67,8 @@ export class Node {
             return;
         }
 
-        const oldMesh = this.mesh;
+        this.mesh.dispose();
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
-        // TODO: copy over location?
-        oldMesh.dispose();
     }
 
     pin(): void {
@@ -86,8 +80,8 @@ export class Node {
     }
 
     static defaultNodeMeshFactory(n: Node, g: Graph, styleId: NodeStyleId): AbstractMesh {
-        return g.meshCache.get(styleId, () => {
-            const o: NodeStyleConfig = Styles.getStyleForNodeStyleId(styleId);
+        return g.meshCache.get(`node-style-${styleId}`, () => {
+            const o = Styles.getStyleForNodeStyleId(styleId);
             let mesh: Mesh;
 
             if (!o.shape) {

@@ -33,10 +33,12 @@ export class Graphty extends LitElement {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
 
-        // XXX: order matters in how these attributes are initially set
-
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
-            this.#graph.config.layout.dimensions = 2;
+            if (this.layout2d) {
+                this.#graph.createCamera(2);
+            } else {
+                this.#graph.createCamera(3);
+            }
         }
 
         if (changedProperties.has("layout") && this.layout) {

@@ -107,15 +107,15 @@ export class Styles {
             }
         }
 
-        const ret: NodeStyleConfig = defaultsDeep({}, ... styles, this.#emptyNodeStyle);
+        const mergedStyle: NodeStyleConfig = defaultsDeep({}, ... styles, this.#emptyNodeStyle);
         if (styles.length === 0) {
-            ret.enabled = false;
+            mergedStyle.enabled = false;
         }
 
-        return Styles.getNodeIdForStyle(ret);
+        return Styles.getNodeIdForStyle(mergedStyle);
     }
 
-    getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleConfig {
+    getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleId {
         const styles: Array<EdgeStyleConfig> = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {edge} = this.layers[i];
@@ -127,16 +127,25 @@ export class Styles {
             }
         }
 
-        const ret: EdgeStyleConfig = defaultsDeep({}, ... styles, this.#emptyEdgeStyle);
+        const mergedStyle: EdgeStyleConfig = defaultsDeep({}, ... styles, this.#emptyEdgeStyle);
         if (styles.length === 0) {
-            ret.enabled = false;
+            mergedStyle.enabled = false;
+        }
+
+        return Styles.getEdgeIdForStyle(mergedStyle);
+    }
+
+    static getStyleForNodeStyleId(id: NodeStyleId): NodeStyleConfig {
+        const ret = nodeStyleMap.get(id);
+        if (!ret) {
+            throw new TypeError(`couldn't find NodeStyleId: ${id}`);
         }
 
         return ret;
     }
 
-    static getStyleForNodeStyleId(id: NodeStyleId): NodeStyleConfig {
-        const ret = nodeStyleMap.get(id);
+    static getStyleForEdgeStyleId(id: EdgeStyleId): EdgeStyleConfig {
+        const ret = edgeStyleMap.get(id);
         if (!ret) {
             throw new TypeError(`couldn't find NodeStyleId: ${id}`);
         }

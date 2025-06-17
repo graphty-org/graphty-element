@@ -1,6 +1,7 @@
 import {
     ArcRotateCamera,
     Camera,
+    // Color4,
     Engine,
     FlyCamera,
     HemisphericLight,
@@ -88,6 +89,7 @@ export class Graph {
     meshCache: MeshCache;
     edgeCache: EdgeMap = new EdgeMap();
     nodeCache: Map<NodeIdType, Node> = new Map();
+    needRays = true; // TODO: currently always true
     // graph engine
     layoutEngine!: LayoutEngine;
     running = false;
@@ -156,53 +158,9 @@ export class Graph {
         this.scene = new Scene(this.engine);
 
         // setup camera
-        if (this.config.layout.dimensions === 3) {
-            this.camera = new ArcRotateCamera(
-                "camera",
-                -Math.PI / 2,
-                Math.PI / 2.5,
-                this.styles.config.graph.startingCameraDistance,
-                new Vector3(0, 0, 0),
-            );
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete (this.camera as any).lowerBetaLimit;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete (this.camera as any).upperBetaLimit;
-        } else {
-            this.camera = new FlyCamera("FlyCamera", new Vector3(0, 0, -10), this.scene);
-            this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
-            this.camera.orthoLeft = -this.orthoSize;
-            this.camera.orthoRight = this.orthoSize;
-            this.camera.orthoTop = this.orthoSize;
-            this.camera.orthoBottom = -this.orthoSize;
+        this.camera = this.createCamera(3);
 
-            // Keyboard event listeners
-            window.addEventListener("keydown", (e) => {
-                this.keys[e.inputIndex] = true;
-                e.preventDefault();
-            });
-
-            window.addEventListener("keyup", (e) => {
-                this.keys[e.inputIndex] = false;
-                e.preventDefault();
-            });
-        }
-
-        this.camera.attachControl(this.canvas, true);
         new HemisphericLight("light", new Vector3(1, 1, 0));
-
-        // setup PhotoDome Skybox
-        if (this.styles.config.graph.background?.backgroundType === "skybox") {
-            new PhotoDome(
-                "testdome",
-                this.styles.config.graph.background.data,
-                {
-                    resolution: 32,
-                    size: 1000,
-                },
-                this.scene,
-            );
-        }
 
         // setup default layout
         this.setLayout(this.config.layout.type, {});
@@ -234,6 +192,55 @@ export class Graph {
         });
 
         this.initialized = true;
+    }
+
+    createCamera(numDimensions: number = 3) {
+        if (numDimensions !== 2 && numDimensions !== 3) {
+            throw new TypeError("number of dimensions can only be 2 or 3");
+        }
+
+        // discard old camera
+        if (this.camera !== undefined) {
+            console.log("discarding camera");
+            if (this.camera instanceof FlyCamera) {
+                window.removeEventListener("keydown", keydownListener.bind(this));
+                window.removeEventListener("keyup", keyupListener.bind(this));
+            }
+
+            this.camera.dispose();
+        }
+
+        if (numDimensions === 3) {
+            console.log("creating 3d camera");
+            this.camera = new ArcRotateCamera(
+                "camera",
+                -Math.PI / 2,
+                Math.PI / 2.5,
+                this.styles.config.graph.startingCameraDistance,
+                new Vector3(0, 0, 0),
+            );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (this.camera as any).lowerBetaLimit;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete (this.camera as any).upperBetaLimit;
+        } else {
+            console.log("creating 2d camera");
+            this.camera = new FlyCamera("FlyCamera", new Vector3(0, 0, -10), this.scene);
+            this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            this.camera.orthoLeft = -this.orthoSize;
+            this.camera.orthoRight = this.orthoSize;
+            this.camera.orthoTop = this.orthoSize;
+            this.camera.orthoBottom = -this.orthoSize;
+
+            // Keyboard event listeners
+            window.addEventListener("keydown", keydownListener.bind(this));
+            window.addEventListener("keyup", keyupListener.bind(this));
+        }
+
+        this.camera.attachControl(this.canvas, true);
+        console.log("active cameras", this.scene.activeCameras);
+
+        return this.camera;
     }
 
     // Update camera position and zoom
@@ -311,6 +318,20 @@ export class Graph {
         }
         this.stats.edgeUpdate.endMonitoring();
 
+        // fit camera to scene
+        if (this.camera instanceof ArcRotateCamera){
+            const {min, max} = this.scene.getWorldExtends();
+            const center = min.add(max).scale(0.5);
+            const size = max.subtract(min);
+            const fieldOfView = this.camera.fov;
+            const radius = (Math.max(size.x, size.y, size.z) / 2) / Math.tan(fieldOfView / 2);
+            this.camera.upVector = new Vector3(1, 0, 0);
+            this.camera.setTarget(center);
+            this.camera.alpha = Math.PI / 2;
+            this.camera.beta = Math.PI / 2;
+            this.camera.radius = radius;
+        }
+
         // check to see if we are done
         if (this.layoutEngine.isSettled) {
             this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
@@ -318,7 +339,7 @@ export class Graph {
         }
     }
 
-    async setStyleTemplate(t: StyleSchema) {
+    async setStyleTemplate(t: StyleSchema): Promise<Styles> {
         // TODO: stats start
 
         // TODO: if t is a URL, fetch URL
@@ -335,9 +356,34 @@ export class Graph {
             e.updateStyle(style);
         }
 
+        // setup PhotoDome Skybox
+        if (this.styles.config.graph.background?.backgroundType === "skybox") {
+            new PhotoDome(
+                "testdome",
+                this.styles.config.graph.background.data,
+                {
+                    resolution: 32,
+                    size: 1000,
+                },
+                this.scene,
+            );
+        }
+
+        // if (this.styles.config.graph.background?.backgroundType === "color") {
+        //     this.scene.clearColor = Color4.FromHexString("#1133FFFF");
+        // }
+
+        // TODO: graph styles - background, etc
+        // const mb = new MotionBlurPostProcess("mb", this.scene, 1.0, this.camera);
+        // mb.motionStrength = 1;
+        // default rendering pipeline?
+        // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
+
         // TODO: stats end
 
         // TODO: emit event
+
+        return this.styles;
     }
 
     async addDataFromSource(type: string, opts: object = {}) {
@@ -447,3 +493,15 @@ export class Graph {
         }
     }
 }
+
+function keydownListener(this: Graph, e: KeyboardEvent) {
+    console.log("this", this);
+    console.log("this.keys", this.keys);
+    this.keys[e.inputIndex] = true;
+    e.preventDefault();
+}
+
+function keyupListener(this: Graph, e: KeyboardEvent) {
+    this.keys[e.inputIndex] = false;
+    e.preventDefault();
+};

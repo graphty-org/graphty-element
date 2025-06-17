@@ -268,10 +268,20 @@ const GraphBackground = z.discriminatedUnion("backgroundType", [
     GraphBackgroundSkybox,
 ]);
 
+const GraphEffects = z.strictObject({
+    // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/motionBlurPostProcess/
+    motionBlur: z.number().optional(),
+    // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/dofLenseEffects/
+    depthOfField: z.number().optional(),
+    // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/SSRRenderingPipeline/
+    screenSpaceReflections: z.boolean().optional(),
+});
+
 const GraphStyle = z.strictObject({
     addDefaultStyle: z.boolean().default(true),
     background: GraphBackground.prefault({backgroundType: "color", color: "skyblue"}),
-    startingCameraDistance: z.number().default(30),
+    effects: GraphEffects.optional(),
+    startingCameraDistance: z.number().default(30), // TODO: replace with "zoomToFit: z.boolean()"
     layout: z.string().default("ngraph"),
     layoutOptions: z.object().optional(),
 }).prefault({});

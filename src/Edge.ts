@@ -15,7 +15,7 @@ import {
 import {Node, NodeIdType} from "./Node";
 import type {EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
-import {isEqual} from "lodash";
+import {EdgeStyleId, Styles} from "./Styles";
 
 interface EdgeOpts {
     metadata?: object;
@@ -31,11 +31,11 @@ export class Edge {
     data: Record<string | number, unknown>;
     mesh: AbstractMesh;
     arrowMesh: AbstractMesh | null = null;
-    style: EdgeStyleConfig;
+    styleId: EdgeStyleId;
     // XXX: performance impact when not needed?
     ray: Ray;
 
-    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, style: EdgeStyleConfig, data: Record<string | number, unknown>, opts: EdgeOpts = {}) {
+    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: Record<string | number, unknown>, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
@@ -60,19 +60,17 @@ export class Edge {
         this.ray = new Ray(this.srcNode.mesh.position, this.dstNode.mesh.position);
 
         // copy edgeMeshConfig
-        this.style = style;
+        this.styleId = styleId;
 
         // create ngraph link
         this.parentGraph.layoutEngine.addEdge(this);
 
         // create mesh
-        this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
+        this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, this.styleId);
     }
 
     update(): void {
         const lnk = this.parentGraph.layoutEngine.getEdgePosition(this);
-
-        this.parentGraph.edgeObservable.notifyObservers({type: "edge-update-before", edge: this});
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
@@ -87,26 +85,28 @@ export class Edge {
                 new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z),
             );
         }
-
-        this.parentGraph.edgeObservable.notifyObservers({type: "edge-update-after", edge: this});
     }
 
-    updateStyle(style: EdgeStyleConfig): void {
-        if (isEqual(style, this.style)) {
+    updateStyle(styleId: EdgeStyleId): void {
+        if (styleId === this.styleId) {
             return;
         }
 
         this.mesh.dispose();
-        this.mesh = this.style.edgeMeshFactory(this, this.parentGraph, this.style);
-        // TODO: copy over location?
+        this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, this.styleId);
     }
 
     static updateRays(g: Graph): void {
+        if (!g.needRays) {
+            return;
+        }
+
         for (const e of g.layoutEngine.edges) {
             const srcMesh = e.srcNode.mesh;
             const dstMesh = e.dstNode.mesh;
 
-            if (e?.style?.arrowHead?.type === undefined || e.style.arrowHead.type === "none") {
+            const style = Styles.getStyleForEdgeStyleId(e.styleId);
+            if (style?.arrowHead?.type === undefined || style.arrowHead.type === "none") {
                 // TODO: this could be faster
                 continue;
             }
@@ -124,9 +124,10 @@ export class Edge {
         g.scene.render();
     }
 
-    static defaultEdgeMeshFactory(e: Edge, g: Graph, o: EdgeStyleConfig): AbstractMesh {
+    static defaultEdgeMeshFactory(e: Edge, g: Graph, styleId: EdgeStyleId): AbstractMesh {
+        const o = Styles.getStyleForEdgeStyleId(styleId);
         if (o.arrowHead && o.arrowHead.type !== "none") {
-            e.arrowMesh = g.meshCache.get("default-arrow-cap", () => {
+            e.arrowMesh = g.meshCache.get(`edge-style-${styleId}`, () => {
                 const width = getArrowCapWidth(o?.line?.width ?? 0.25);
                 const len = getArrowCapLen(o?.line?.width ?? 0.25);
                 const cap1 = GreasedLineTools.GetArrowCap(
@@ -285,7 +286,8 @@ export class Edge {
         let dstPoint: Vector3 | null = null;
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
-            const len = getArrowCapLen(this?.style?.line?.width ?? 0.25);
+            const style = Styles.getStyleForEdgeStyleId(this.styleId);
+            const len = getArrowCapLen(style?.line?.width ?? 0.25);
 
             dstPoint = dstHitInfo[0].pickedPoint!;
             srcPoint = srcHitInfo[0].pickedPoint!;
