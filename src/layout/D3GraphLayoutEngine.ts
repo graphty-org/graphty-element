@@ -90,10 +90,13 @@ export class D3GraphEngine extends LayoutEngine {
         this.d3AlphaDecay = opts.alphaDecay;
         this.d3VelocityDecay = opts.velocityDecay;
 
+        // https://github.com/vasturiano/d3-force-3d?tab=readme-ov-file#links
+        const fl = forceLink();
+        fl.strength(0.9);
         this.d3ForceLayout = forceSimulation()
             .numDimensions(3)
             .alpha(1)
-            .force("link", forceLink())
+            .force("link", fl)
             .force("charge", forceManyBody())
             .force("center", forceCenter())
             .force("dagRadial", null)

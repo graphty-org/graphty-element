@@ -15,7 +15,7 @@ export type BfsLayoutOpts = Partial<BfsLayoutConfigType>
 
 export class BfsLayout extends SimpleLayoutEngine {
     static type = "bfs";
-    scalingFactor = 100;
+    scalingFactor = 20;
     config: BfsLayoutConfigType;
 
     constructor(opts: BfsLayoutOpts) {

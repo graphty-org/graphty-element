@@ -16,7 +16,7 @@ export type MultipartiteLayoutOpts = Partial<MultipartiteLayoutConfigType>
 
 export class MultipartiteLayout extends SimpleLayoutEngine {
     static type = "multipartite";
-    scalingFactor = 100;
+    scalingFactor = 40;
     config: MultipartiteLayoutConfigType;
 
     constructor(opts: MultipartiteLayoutOpts) {

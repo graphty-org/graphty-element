@@ -14,7 +14,7 @@ export type PlanarLayoutOpts = Partial<PlanarLayoutConfigType>
 
 export class PlanarLayout extends SimpleLayoutEngine {
     static type = "planar";
-    scalingFactor = 100;
+    scalingFactor = 70;
     config: PlanarLayoutConfigType;
 
     constructor(opts: PlanarLayoutOpts) {

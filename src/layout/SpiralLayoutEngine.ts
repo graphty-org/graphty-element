@@ -16,7 +16,7 @@ export type SpiralLayoutOpts = Partial<SpiralLayoutConfigType>
 
 export class SpiralLayout extends SimpleLayoutEngine {
     static type = "spiral";
-    scalingFactor = 100;
+    scalingFactor = 80;
     config: SpiralLayoutConfigType;
 
     constructor(opts: SpiralLayoutOpts) {
