@@ -1,7 +1,7 @@
 import * as z4 from "zod/v4/core";
 import {DataSource, DataSourceChunk} from "./DataSource";
 // import {JSONParser} from "@streamparser/json";
-import type {PartiallyOptional} from "../config";
+import type {PartiallyOptional} from "../config/common";
 import {z} from "zod/v4";
 import jmespath from "jmespath";
 

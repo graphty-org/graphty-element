@@ -420,6 +420,7 @@ export class Node {
                         n.parentGraph.running = true;
 
                         // fetch all edges for current node
+                        // @ts-expect-error for some reason this is confusing window.Node with our Node
                         const edges = fetchEdges(n, n.parentGraph);
 
                         // create set of unique node ids

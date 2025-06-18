@@ -2,7 +2,7 @@ import * as z4 from "zod/v4/core";
 import {z} from "zod/v4";
 
 type DataSourceClass = new (opts: object) => DataSource
-export const dataSourceRegistry: Map<string, DataSourceClass> = new Map();
+const dataSourceRegistry: Map<string, DataSourceClass> = new Map();
 export interface DataSourceChunk {
     nodes: Record<string | number, unknown>[],
     edges: Record<string | number, unknown>[]

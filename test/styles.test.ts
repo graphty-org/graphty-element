@@ -1,8 +1,8 @@
 import {MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
-import {EdgeStyle, NodeStyle, colorToHex, defaultEdgeStyle, defaultNodeStyle} from "../src/config.ts";
-import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages.ts";
+import {EdgeStyle, NodeStyle, colorToHex, defaultEdgeStyle, defaultNodeStyle} from "../src/config";
+import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages";
 import {assert, describe, it} from "vitest";
-import {Styles} from "../src/Styles.ts";
+import {Styles} from "../src/Styles";
 import {ZodError} from "zod/v4";
 import twoLayerTemplate from "./helpers/styles-two-layers.json";
 import basicNodeStyle from "./helpers/styles-basic-node.json";
@@ -172,7 +172,8 @@ describe("Styles", () => {
             it("returns basic edge style", () => {
                 const s = Styles.fromObject(basicEdgeStyle);
 
-                const style = s.getStyleForEdge({src: "Mme.Magloire", dst: "Mlle.Baptistine"});
+                const styleId = s.getStyleForEdge({src: "Mme.Magloire", dst: "Mlle.Baptistine"});
+                const style = Styles.getStyleForEdgeStyleId(styleId);
 
                 assert.deepStrictEqual(style, ParsedMyEdgeStyle);
             });

@@ -30,47 +30,16 @@ import {
 } from "./config";
 
 import {createXrButton} from "./xr-button";
-import {D3GraphEngine} from "./layout/D3GraphLayoutEngine";
 import {Edge, EdgeMap} from "./Edge";
 import {LayoutEngine} from "./layout/LayoutEngine";
 import {MeshCache} from "./MeshCache";
-import {NGraphEngine} from "./layout/NGraphLayoutEngine";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 import jmespath from "jmespath";
 import {DataSource} from "./data/DataSource";
-import {JsonDataSource} from "./data/JsonDataSource";
-import {SpiralLayout} from "./layout/SpiralLayoutEngine";
-import {CircularLayout} from "./layout/CircularLayoutEngine";
-import {ShellLayout} from "./layout/ShellLayoutEngine";
-import {RandomLayout} from "./layout/RandomLayoutEngine";
-import {SpringLayout} from "./layout/SpringLayoutEngine";
-import {PlanarLayout} from "./layout/PlanarLayoutEngine";
-import {KamadaKawaiLayout} from "./layout/KamadaKawaiLayoutEngine";
-import {ForceAtlas2Layout} from "./layout/ForceAtlas2LayoutEngine";
-import {ArfLayout} from "./layout/ArfLayoutEngine";
-import {SpectralLayout} from "./layout/SpectralLayoutEngine";
-import {BfsLayout} from "./layout/BfsLayoutEngine";
-import {BipartiteLayout} from "./layout/BipartiteLayoutEngine";
-import {MultipartiteLayout} from "./layout/MultipartiteLayoutEngine";
-
-DataSource.register(JsonDataSource);
-LayoutEngine.register(D3GraphEngine);
-LayoutEngine.register(NGraphEngine);
-LayoutEngine.register(SpiralLayout);
-LayoutEngine.register(CircularLayout);
-LayoutEngine.register(ShellLayout);
-LayoutEngine.register(RandomLayout);
-LayoutEngine.register(SpringLayout);
-LayoutEngine.register(PlanarLayout);
-LayoutEngine.register(KamadaKawaiLayout);
-LayoutEngine.register(ForceAtlas2Layout);
-LayoutEngine.register(ArfLayout);
-LayoutEngine.register(SpectralLayout);
-LayoutEngine.register(BfsLayout);
-LayoutEngine.register(BipartiteLayout);
-LayoutEngine.register(MultipartiteLayout);
+import "./data"; // register all internal data sources
+import "./layout"; // register all internal layouts
 
 export class Graph {
     config: GraphConfig;
@@ -357,7 +326,8 @@ export class Graph {
         }
 
         // setup PhotoDome Skybox
-        if (this.styles.config.graph.background?.backgroundType === "skybox") {
+        if (this.styles.config.graph.background?.backgroundType === "skybox" &&
+                typeof this.styles.config.graph.background.data === "string") {
             new PhotoDome(
                 "testdome",
                 this.styles.config.graph.background.data,
