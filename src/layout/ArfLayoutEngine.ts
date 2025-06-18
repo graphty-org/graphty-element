@@ -34,7 +34,6 @@ export class ArfLayout extends SimpleLayoutEngine {
             edges: () => this._edges.map((e) => [e.srcId, e.dstId]),
         };
 
-        console.log("rendering arf");
         this.positions = arfLayout(
             graph,
             this.config.pos,

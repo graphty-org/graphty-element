@@ -20,7 +20,6 @@ export class MultipartiteLayout extends SimpleLayoutEngine {
     config: MultipartiteLayoutConfigType;
 
     constructor(opts: MultipartiteLayoutOpts) {
-        console.log("multipartite opts", opts);
         super(opts);
         this.config = MultipartiteLayoutConfig.parse(opts);
     }

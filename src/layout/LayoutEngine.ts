@@ -14,7 +14,7 @@ export interface EdgePosition {
 }
 
 type LayoutEngineClass = new (opts: object) => LayoutEngine
-export const layoutEngineRegistry: Map<string, LayoutEngineClass> = new Map();
+const layoutEngineRegistry: Map<string, LayoutEngineClass> = new Map();
 
 export abstract class LayoutEngine {
     static type: string;
