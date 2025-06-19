@@ -41,6 +41,34 @@ const edgeData = [
     {src: 3, dst: 5},
 ];
 
+const nodeShapes = [
+    "box",
+    "sphere",
+    "cylinder",
+    "cone",
+    "capsule",
+    "torus-knot",
+    "tetrahedron",
+    "octahedron",
+    "dodecahedron",
+    "icosahedron",
+    "rhombicuboctahedron",
+    "triangular_prism",
+    "pentagonal_prism",
+    "hexagonal_prism",
+    "square_pyramid",
+    "pentagonal_pyramid",
+    "triangular_dipyramid",
+    "pentagonal_dipyramid",
+    "elongated_square_dypyramid",
+    "elongated_pentagonal_dipyramid",
+    "elongated_pentagonal_cupola",
+    "goldberg",
+    "icosphere",
+    "geodesic",
+
+];
+
 const meta: Meta = {
     title: "Styles/Node",
     component: "graphty-element",
@@ -60,7 +88,7 @@ const meta: Meta = {
             const nodeStyle = t.layers[0].node.style;
 
             // if the arg has a name, and the path of that name exists in our style...
-            if (name && deepGet(nodeStyle, name) !== undefined) {
+            if (name) {
                 const val = storyConfig?.args?.[arg];
                 // ...apply the value of the argument to our style
                 deepSet(nodeStyle, name, val);
@@ -70,14 +98,24 @@ const meta: Meta = {
         g.styleTemplate = t;
         return g;
     },
+    argTypes: {
+        nodeColor: {control: "color", table: {category: "Texture"}, name: "texture.color"},
+        // nodeOpacity: {control: "number", table: {category: "Texture"}, name: "texture.color.opacity"}
+        nodeShape: {control: "select", options: nodeShapes, table: {category: "Shape"}, name: "shape.type"},
+        nodeSize: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Shape"}, name: "shape.size"},
+    },
     parameters: {
         // controls: {exclude: /^(#|_)/},
         controls: {
-            include: ["texture.color"],
+            include: [
+                "texture.color",
+                "shape.type",
+                "shape.size",
+            ],
         },
     },
-    argTypes: {
-        nodeColor: {control: "color", table: {category: "Texture"}, name: "texture.color"},
+    args: {
+        styleTemplate: templateFromNodeStyle({}),
     },
 };
 export default meta;
@@ -89,5 +127,32 @@ export const Default: Story = {};
 export const Color: Story = {
     args: {
         styleTemplate: templateFromNodeStyle({texture: {color: "red"}}),
+    },
+    parameters: {
+        controls: {
+            include: ["texture.color"],
+        },
+    },
+};
+
+export const Shape: Story = {
+    args: {
+        styleTemplate: templateFromNodeStyle({shape: {type: "box"}}),
+    },
+    parameters: {
+        controls: {
+            include: ["shape.type"],
+        },
+    },
+};
+
+export const Size: Story = {
+    args: {
+        styleTemplate: templateFromNodeStyle({shape: {size: 3}}),
+    },
+    parameters: {
+        controls: {
+            include: ["shape.size"],
+        },
     },
 };
