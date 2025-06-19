@@ -10,8 +10,10 @@
     "README.md"
   ],
   "scripts": {
-    "test": "vitest",
-    "test:storybook": "vitest --project=storybook",
+    "test": "vitest --project=default",
+    "test:storybook": "vitest --project=storybook --coverage",
+    "test:all": "vitest --project=storybook --project=default",
+    "coverage": "vitest --project=storybook --project=default --coverage",
     "dev": "vite --force --mode development",
     "build": "tsc && vite build",
     "preview": "vite preview",

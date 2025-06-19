@@ -24,3 +24,5 @@ dist-ssr
 TODO
 *~
 *storybook.log
+storybook-static/
+coverage/
