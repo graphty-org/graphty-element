@@ -92,8 +92,9 @@ export class Edge {
             return;
         }
 
+        this.styleId = styleId;
         this.mesh.dispose();
-        this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, this.styleId);
+        this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, styleId);
     }
 
     static updateRays(g: Graph): void {
@@ -127,7 +128,9 @@ export class Edge {
     static defaultEdgeMeshFactory(e: Edge, g: Graph, styleId: EdgeStyleId): AbstractMesh {
         const o = Styles.getStyleForEdgeStyleId(styleId);
         if (o.arrowHead && o.arrowHead.type !== "none") {
-            e.arrowMesh = g.meshCache.get(`edge-style-${styleId}`, () => {
+            // TODO: this caches based on the overall style, even if the
+            // specific arrowhead style hasn't changed
+            e.arrowMesh = g.meshCache.get(`edge-arrowhead-style-${styleId}`, () => {
                 const width = getArrowCapWidth(o?.line?.width ?? 0.25);
                 const len = getArrowCapLen(o?.line?.width ?? 0.25);
                 const cap1 = GreasedLineTools.GetArrowCap(
@@ -153,7 +156,7 @@ export class Edge {
             });
         }
 
-        const mesh = g.meshCache.get("default-edge", () => {
+        const mesh = g.meshCache.get(`edge-style-${styleId}`, () => {
             if (o?.line?.animationSpeed) {
                 return Edge.createMovingLine(e, g, o);
             }
