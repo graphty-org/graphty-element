@@ -43,7 +43,7 @@ export class Graphty extends LitElement {
 
         if (changedProperties.has("layout") && this.layout) {
             const layoutConfig = this.layoutConfig || {};
-            this.#graph.setLayout(this.layout, layoutConfig);
+            await this.#graph.setLayout(this.layout, layoutConfig);
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
