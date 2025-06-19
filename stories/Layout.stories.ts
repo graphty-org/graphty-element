@@ -23,6 +23,9 @@ export const ngraph: Story = {
     args: {
         layout: "ngraph",
     },
+    parameters: {
+        chromatic: {delay: 1000},
+    },
 };
 
 export const D3: Story = {
@@ -34,6 +37,9 @@ export const D3: Story = {
             alphaDecay: 0.0228,
             velocityDecay: 0.4,
         },
+    },
+    parameters: {
+        chromatic: {delay: 1000},
     },
 };
 
