@@ -170,7 +170,6 @@ export class Graph {
 
         // discard old camera
         if (this.camera !== undefined) {
-            console.log("discarding camera");
             if (this.camera instanceof FlyCamera) {
                 window.removeEventListener("keydown", keydownListener.bind(this));
                 window.removeEventListener("keyup", keyupListener.bind(this));
@@ -180,7 +179,6 @@ export class Graph {
         }
 
         if (numDimensions === 3) {
-            console.log("creating 3d camera");
             this.camera = new ArcRotateCamera(
                 "camera",
                 -Math.PI / 2,
@@ -193,7 +191,6 @@ export class Graph {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             delete (this.camera as any).upperBetaLimit;
         } else {
-            console.log("creating 2d camera");
             this.camera = new FlyCamera("FlyCamera", new Vector3(0, 0, -10), this.scene);
             this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
             this.camera.orthoLeft = -this.orthoSize;
@@ -207,7 +204,6 @@ export class Graph {
         }
 
         this.camera.attachControl(this.canvas, true);
-        console.log("active cameras", this.scene.activeCameras);
 
         return this.camera;
     }
@@ -316,13 +312,13 @@ export class Graph {
         this.styles = Styles.fromObject(t);
 
         for (const n of this.nodes) {
-            const style = this.styles.getStyleForNode(n.data);
-            n.updateStyle(style);
+            const styleId = this.styles.getStyleForNode(n.data);
+            n.updateStyle(styleId);
         }
 
         for (const e of this.edges) {
-            const style = this.styles.getStyleForEdge(e.data);
-            e.updateStyle(style);
+            const styleId = this.styles.getStyleForEdge(e.data);
+            e.updateStyle(styleId);
         }
 
         // setup PhotoDome Skybox
@@ -465,8 +461,6 @@ export class Graph {
 }
 
 function keydownListener(this: Graph, e: KeyboardEvent) {
-    console.log("this", this);
-    console.log("this.keys", this.keys);
     this.keys[e.inputIndex] = true;
     e.preventDefault();
 }
