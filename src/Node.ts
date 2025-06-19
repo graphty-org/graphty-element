@@ -67,6 +67,7 @@ export class Node {
             return;
         }
 
+        this.styleId = styleId;
         this.mesh.dispose();
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
     }
@@ -226,6 +227,7 @@ export class Node {
 
             mesh.visibility = 1;
             mesh.material = mat;
+            n.mesh = mesh;
 
             // create label
             if (o.label && o.label.enabled) {
@@ -234,7 +236,6 @@ export class Node {
                 n.label.position.y += 1;
             }
 
-            n.mesh = mesh;
             Node.addDefaultBehaviors(n, n.opts);
 
             return mesh;
@@ -293,7 +294,7 @@ export class Node {
         // Set font
         const fontSize = 48;
         // var font = "bold " + font_size + "px Arial";
-        const font = `${fontSize}px Verdana`;
+        const font = `${fontSize}px Arial`;
 
         // Set height for plane
         const planeHeight = 0.5;
