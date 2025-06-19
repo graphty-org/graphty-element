@@ -14,6 +14,7 @@ export default tseslint.config({
         "custom-elements-manifest.config.mjs",
         "eslint.config.js",
         "vite.config.ts",
+        "*.ts",
     ],
     ignores: ["dist/**/*"],
     extends: [
