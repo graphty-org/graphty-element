@@ -47,56 +47,6 @@ export class Node {
 
         // create mesh
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
-
-        // // create label
-        // if (true) {
-        //     this.label = Node.createLabel(this.id.toString(), this, this.parentGraph);
-        //     this.label.parent = this.mesh;
-        //     this.label.position.y += 1;
-        // }
-
-        // // drag behavior
-        // this.pinOnDrag = opts.pinOnDrag ?? true;
-        // this.meshDragBehavior = new SixDofDragBehavior();
-        // this.mesh.addBehavior(this.meshDragBehavior);
-        // // drag started
-        // this.meshDragBehavior.onDragStartObservable.add(() => {
-        //     // make sure the graph is running
-        //     this.parentGraph.running = true;
-
-        //     // don't let the graph engine update the node -- we are controlling it
-        //     this.dragging = true;
-        // });
-        // // drag ended
-        // this.meshDragBehavior.onDragEndObservable.add(() => {
-        //     // make sure the graph is running
-        //     this.parentGraph.running = true;
-
-        //     // pin after dragging is node
-        //     if (this.pinOnDrag) {
-        //         this.pin();
-        //     }
-
-        //     // the graph engine can have control of the node again
-        //     this.dragging = false;
-        // });
-        // // position changed
-        // this.meshDragBehavior.onPositionChangedObservable.add((event) => {
-        //     // make sure the graph is running
-        //     this.parentGraph.running = true;
-
-        //     // update the node position
-        //     this.parentGraph.layoutEngine.setNodePosition(this, event.position);
-        // });
-
-        // // TODO: this apparently updates dragging objects faster and more fluidly
-        // // https://playground.babylonjs.com/#YEZPVT%23840
-        // // https://forum.babylonjs.com/t/expandable-lines/24681/12
-
-        // // click behavior
-        // this.mesh.actionManager = this.mesh.actionManager ?? new ActionManager(this.parentGraph.scene);
-
-        // Node.addDefaultBehaviors(this, this.opts);
     }
 
     update(): void {
@@ -253,11 +203,21 @@ export class Node {
             // create mesh texture
             const mat = new StandardMaterial("defaultMaterial");
             let color3: Color3 | undefined;
-            if (o.texture && o.texture.color) {
-                if (typeof o.texture.color === "string"){
-                    // const color = Color4.FromHexString(o.texture.color);
-                    // const color3 = new Color3(color.r, color.g, color.b);
-                    color3 = Color3.FromHexString(o.texture.color);
+            if (typeof o?.texture?.color === "string") {
+                // const color = Color4.FromHexString(o.texture.color);
+                // const color3 = new Color3(color.r, color.g, color.b);
+                color3 = Color3.FromHexString(o.texture.color);
+            } else if (typeof o?.texture?.color === "object") {
+                switch (o.texture.color.colorType) {
+                case "solid":
+                    color3 = Color3.FromHexString(o.texture.color.value ?? "##FFFFFF");
+                    mesh.visibility = o.texture.color.opacity ?? 1;
+                    break;
+                // TODO
+                // case "gradient":
+                // case "radial-gradient":
+                default:
+                    throw new TypeError(`unknown advanced colorType ${o.texture.color.colorType}`);
                 }
             }
 
@@ -271,12 +231,6 @@ export class Node {
 
             mat.freeze();
 
-            // set opacity
-            if (o.texture && o.texture.color && typeof o.texture.color === "object" && typeof o.texture.color.opacity === "number") {
-                mesh.visibility = o.texture.color.opacity;
-            }
-
-            mesh.visibility = 1;
             mesh.material = mat;
 
             return mesh;
