@@ -1,7 +1,7 @@
 import {StyleSchema, StyleTemplate} from "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import {Graphty} from "../src/graphty-element.ts";
-import {get as deepGet, set as deepSet} from "lodash";
+import {set as deepSet} from "lodash";
 
 function templateFromNodeStyle(style: Record<string, unknown>, selector: string = ""): StyleSchema {
     const template = StyleTemplate.parse({
@@ -66,7 +66,6 @@ const nodeShapes = [
     "goldberg",
     "icosphere",
     "geodesic",
-
 ];
 
 const meta: Meta = {
@@ -87,7 +86,7 @@ const meta: Meta = {
             const name = storyConfig?.argTypes?.[arg]?.name;
             const nodeStyle = t.layers[0].node.style;
 
-            // if the arg has a name, and the path of that name exists in our style...
+            // if the arg has a name...
             if (name) {
                 const val = storyConfig?.args?.[arg];
                 // ...apply the value of the argument to our style
@@ -103,6 +102,8 @@ const meta: Meta = {
         // nodeOpacity: {control: "number", table: {category: "Texture"}, name: "texture.color.opacity"}
         nodeShape: {control: "select", options: nodeShapes, table: {category: "Shape"}, name: "shape.type"},
         nodeSize: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Shape"}, name: "shape.size"},
+        nodeWireframe: {control: "boolean", table: {category: "Effect"}, name: "effect.wireframe"},
+        nodeLabelEnabled: {control: "boolean", table: {category: "Label"}, name: "label.enabled"},
     },
     parameters: {
         // controls: {exclude: /^(#|_)/},
@@ -111,6 +112,8 @@ const meta: Meta = {
                 "texture.color",
                 "shape.type",
                 "shape.size",
+                "effect.wireframe",
+                "label.enabled",
             ],
         },
     },
@@ -153,6 +156,28 @@ export const Size: Story = {
     parameters: {
         controls: {
             include: ["shape.size"],
+        },
+    },
+};
+
+export const Wireframe: Story = {
+    args: {
+        styleTemplate: templateFromNodeStyle({effect: {wireframe: true}}),
+    },
+    parameters: {
+        controls: {
+            include: ["effect.wireframe"],
+        },
+    },
+};
+
+export const Label: Story = {
+    args: {
+        styleTemplate: templateFromNodeStyle({label: {enabled: true}}),
+    },
+    parameters: {
+        controls: {
+            include: ["label.enabled"],
         },
     },
 };

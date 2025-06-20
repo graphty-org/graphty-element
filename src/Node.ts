@@ -47,6 +47,56 @@ export class Node {
 
         // create mesh
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
+
+        // // create label
+        // if (true) {
+        //     this.label = Node.createLabel(this.id.toString(), this, this.parentGraph);
+        //     this.label.parent = this.mesh;
+        //     this.label.position.y += 1;
+        // }
+
+        // // drag behavior
+        // this.pinOnDrag = opts.pinOnDrag ?? true;
+        // this.meshDragBehavior = new SixDofDragBehavior();
+        // this.mesh.addBehavior(this.meshDragBehavior);
+        // // drag started
+        // this.meshDragBehavior.onDragStartObservable.add(() => {
+        //     // make sure the graph is running
+        //     this.parentGraph.running = true;
+
+        //     // don't let the graph engine update the node -- we are controlling it
+        //     this.dragging = true;
+        // });
+        // // drag ended
+        // this.meshDragBehavior.onDragEndObservable.add(() => {
+        //     // make sure the graph is running
+        //     this.parentGraph.running = true;
+
+        //     // pin after dragging is node
+        //     if (this.pinOnDrag) {
+        //         this.pin();
+        //     }
+
+        //     // the graph engine can have control of the node again
+        //     this.dragging = false;
+        // });
+        // // position changed
+        // this.meshDragBehavior.onPositionChangedObservable.add((event) => {
+        //     // make sure the graph is running
+        //     this.parentGraph.running = true;
+
+        //     // update the node position
+        //     this.parentGraph.layoutEngine.setNodePosition(this, event.position);
+        // });
+
+        // // TODO: this apparently updates dragging objects faster and more fluidly
+        // // https://playground.babylonjs.com/#YEZPVT%23840
+        // // https://forum.babylonjs.com/t/expandable-lines/24681/12
+
+        // // click behavior
+        // this.mesh.actionManager = this.mesh.actionManager ?? new ActionManager(this.parentGraph.scene);
+
+        // Node.addDefaultBehaviors(this, this.opts);
     }
 
     update(): void {
@@ -81,8 +131,9 @@ export class Node {
     }
 
     static defaultNodeMeshFactory(n: Node, g: Graph, styleId: NodeStyleId): AbstractMesh {
-        return g.meshCache.get(`node-style-${styleId}`, () => {
-            const o = Styles.getStyleForNodeStyleId(styleId);
+        const o = Styles.getStyleForNodeStyleId(styleId);
+
+        n.mesh = g.meshCache.get(`node-style-${styleId}`, () => {
             let mesh: Mesh;
 
             if (!o.shape) {
@@ -227,19 +278,20 @@ export class Node {
 
             mesh.visibility = 1;
             mesh.material = mat;
-            n.mesh = mesh;
-
-            // create label
-            if (o.label && o.label.enabled) {
-                n.label = Node.createLabel(n.id.toString(), n, n.parentGraph);
-                n.label.parent = n.mesh;
-                n.label.position.y += 1;
-            }
-
-            Node.addDefaultBehaviors(n, n.opts);
 
             return mesh;
         });
+
+        // create label
+        if (o.label && o.label.enabled) {
+            n.label = Node.createLabel(n.id.toString(), n, n.parentGraph);
+            n.label.parent = n.mesh;
+            n.label.position.x += 1.25;
+        }
+
+        Node.addDefaultBehaviors(n, n.opts);
+
+        return n.mesh;
     }
 
     static createBox(_n: Node, _g: Graph, o: NodeStyleConfig): Mesh {
