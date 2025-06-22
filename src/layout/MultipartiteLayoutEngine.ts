@@ -11,8 +11,8 @@ export const MultipartiteLayoutConfig = z.strictObject({
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
 });
-export type MultipartiteLayoutConfigType = z.infer<typeof MultipartiteLayoutConfig>
-export type MultipartiteLayoutOpts = Partial<MultipartiteLayoutConfigType>
+export type MultipartiteLayoutConfigType = z.infer<typeof MultipartiteLayoutConfig>;
+export type MultipartiteLayoutOpts = Partial<MultipartiteLayoutConfigType>;
 
 export class MultipartiteLayout extends SimpleLayoutEngine {
     static type = "multipartite";

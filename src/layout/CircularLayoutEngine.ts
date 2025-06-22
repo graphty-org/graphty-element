@@ -9,8 +9,8 @@ export const CircularLayoutConfig = z.strictObject({
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     dim: z.number().default(2),
 });
-export type CircularLayoutConfigType = z.infer<typeof CircularLayoutConfig>
-export type CircularLayoutOpts = Partial<CircularLayoutConfigType>
+export type CircularLayoutConfigType = z.infer<typeof CircularLayoutConfig>;
+export type CircularLayoutOpts = Partial<CircularLayoutConfigType>;
 
 export class CircularLayout extends SimpleLayoutEngine {
     static type = "circular";

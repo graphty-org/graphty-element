@@ -45,8 +45,8 @@ export class Graph {
     config: GraphConfig;
     stats: Stats;
     styles: Styles;
-    nodes: Array<Node> = [];
-    edges: Array<Edge> = [];
+    nodes: Node[] = [];
+    edges: Edge[] = [];
     // babylon
     element: Element;
     canvas: HTMLCanvasElement;
@@ -57,7 +57,7 @@ export class Graph {
     xrHelper: WebXRDefaultExperience | null = null;
     meshCache: MeshCache;
     edgeCache: EdgeMap = new EdgeMap();
-    nodeCache: Map<NodeIdType, Node> = new Map();
+    nodeCache = new Map<NodeIdType, Node>();
     needRays = true; // TODO: currently always true
     // graph engine
     layoutEngine!: LayoutEngine;
@@ -68,9 +68,9 @@ export class Graph {
     fetchEdges?: FetchEdgesFn;
     initialized = false;
     // observeables
-    graphObservable: Observable<GraphEvent> = new Observable();
-    nodeObservable: Observable<NodeEvent> = new Observable();
-    edgeObservable: Observable<EdgeEvent> = new Observable();
+    graphObservable = new Observable<GraphEvent>();
+    nodeObservable = new Observable<NodeEvent>();
+    edgeObservable = new Observable<EdgeEvent>();
     // 2d camera
     orthoSize = 10;
     moveSpeed = 0.5;
@@ -163,7 +163,7 @@ export class Graph {
         this.initialized = true;
     }
 
-    createCamera(numDimensions: number = 3) {
+    createCamera(numDimensions = 3) {
         if (numDimensions !== 2 && numDimensions !== 3) {
             throw new TypeError("number of dimensions can only be 2 or 3");
         }
@@ -371,7 +371,7 @@ export class Graph {
     }
 
     addNode(node: Record<string | number, unknown>, idPath?: string) {
-        return this.addNodes([node], idPath);
+        this.addNodes([node], idPath);
     }
 
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string) {

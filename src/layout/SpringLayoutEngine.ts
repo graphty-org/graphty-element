@@ -17,8 +17,8 @@ export const SpringLayoutConfig = z.strictObject({
     dim: z.number().default(2),
     seed: z.number().positive().or(z.null()).default(null),
 });
-export type SpringLayoutConfigType = z.infer<typeof SpringLayoutConfig>
-export type SpringLayoutOpts = Partial<SpringLayoutConfigType>
+export type SpringLayoutConfigType = z.infer<typeof SpringLayoutConfig>;
+export type SpringLayoutOpts = Partial<SpringLayoutConfigType>;
 
 export class SpringLayout extends SimpleLayoutEngine {
     static type = "spring";

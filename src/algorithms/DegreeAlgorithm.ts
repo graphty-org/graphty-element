@@ -6,9 +6,9 @@ export class DegreeAlgorithm extends Algorithm {
     static type = "degree";
 
     async run(g: Graph) {
-        const inDegreeMap: Map<number | string, number> = new Map();
-        const outDegreeMap: Map<number | string, number> = new Map();
-        const degreeMap: Map<number | string, number> = new Map();
+        const inDegreeMap = new Map<number | string, number>();
+        const outDegreeMap = new Map<number | string, number>();
+        const degreeMap = new Map<number | string, number>();
 
         function incrementMap(m: Map<number | string, number>, idx: number | string) {
             let num = m.get(idx); ;

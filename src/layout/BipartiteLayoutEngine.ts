@@ -11,8 +11,8 @@ export const BipartiteLayoutConfig = z.strictObject({
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     aspectRatio: z.number().positive().default(4 / 3),
 });
-export type BipartiteLayoutConfigType = z.infer<typeof BipartiteLayoutConfig>
-export type BipartiteLayoutOpts = Partial<BipartiteLayoutConfigType>
+export type BipartiteLayoutConfigType = z.infer<typeof BipartiteLayoutConfig>;
+export type BipartiteLayoutOpts = Partial<BipartiteLayoutConfigType>;
 
 export class BipartiteLayout extends SimpleLayoutEngine {
     static type = "bipartite";

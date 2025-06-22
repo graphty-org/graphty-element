@@ -17,7 +17,7 @@ const meta: Meta = {
 };
 export default meta;
 
-type Story = StoryObj<Graphty>
+type Story = StoryObj<Graphty>;
 
 export const ngraph: Story = {
     args: {
@@ -64,6 +64,7 @@ export const Shell: Story = {
 export const Random: Story = {
     args: {
         layout: "random",
+        layoutConfig: {dim: 3},
     },
 };
 

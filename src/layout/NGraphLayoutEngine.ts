@@ -9,9 +9,9 @@ export class NGraphEngine extends LayoutEngine {
     static type = "ngraph";
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
-    nodeMapping: Map<Node, NGraphNode> = new Map();
-    edgeMapping: Map<Edge, NGraphLink> = new Map();
-    _settled: boolean = true;
+    nodeMapping = new Map<Node, NGraphNode>();
+    edgeMapping = new Map<Edge, NGraphLink>();
+    _settled = true;
 
     constructor() {
         super();

@@ -20,8 +20,8 @@ export const ForceAtlas2LayoutConfig = z.strictObject({
     seed: z.number().or(z.null()).default(null),
     dim: z.number().default(2),
 });
-export type ForceAtlas2LayoutConfigType = z.infer<typeof ForceAtlas2LayoutConfig>
-export type ForceAtlas2LayoutOpts = Partial<ForceAtlas2LayoutConfigType>
+export type ForceAtlas2LayoutConfigType = z.infer<typeof ForceAtlas2LayoutConfig>;
+export type ForceAtlas2LayoutOpts = Partial<ForceAtlas2LayoutConfigType>;
 
 export class ForceAtlas2Layout extends SimpleLayoutEngine {
     static type = "forceatlas2";

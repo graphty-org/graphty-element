@@ -71,10 +71,10 @@ export class D3GraphEngine extends LayoutEngine {
     d3AlphaTarget: number;
     d3AlphaDecay: number;
     d3VelocityDecay: number;
-    nodeMapping: Map<Node, D3Node> = new Map();
-    edgeMapping: Map<Edge, D3Edge> = new Map();
-    newNodeMap: Map<Node, D3InputNode> = new Map();
-    newEdgeMap: Map<Edge, D3InputEdge> = new Map();
+    nodeMapping = new Map<Node, D3Node>();
+    edgeMapping = new Map<Edge, D3Edge>();
+    newNodeMap = new Map<Node, D3InputNode>();
+    newEdgeMap = new Map<Edge, D3InputEdge>();
     reheat = false;
 
     get graphNeedsRefresh(): boolean {
@@ -109,7 +109,7 @@ export class D3GraphEngine extends LayoutEngine {
     refresh(): void {
         if (this.graphNeedsRefresh || this.reheat) {
             // update nodes
-            let nodeList: Array<D3Node | D3InputNode> = [... this.nodeMapping.values()];
+            let nodeList: (D3Node | D3InputNode)[] = [... this.nodeMapping.values()];
             nodeList = nodeList.concat([... this.newNodeMap.values()]);
             this.d3ForceLayout
                 .alpha(1) // re-heat the simulation
@@ -129,7 +129,7 @@ export class D3GraphEngine extends LayoutEngine {
             this.newNodeMap.clear();
 
             // update edges
-            let linkList: Array<D3Edge | D3InputEdge> = [... this.edgeMapping.values()];
+            let linkList: (D3Edge | D3InputEdge)[] = [... this.edgeMapping.values()];
             linkList = linkList.concat([... this.newEdgeMap.values()]);
             this.d3ForceLayout
                 .force("link")

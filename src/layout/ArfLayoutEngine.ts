@@ -14,8 +14,8 @@ export const ArfLayoutConfig = z.strictObject({
     maxIter: z.number().positive().default(1000),
     seed: z.number().positive().or(z.null()).default(null),
 });
-export type ArfLayoutConfigType = z.infer<typeof ArfLayoutConfig>
-export type ArfLayoutOpts = Partial<ArfLayoutConfigType>
+export type ArfLayoutConfigType = z.infer<typeof ArfLayoutConfig>;
+export type ArfLayoutOpts = Partial<ArfLayoutConfigType>;
 
 export class ArfLayout extends SimpleLayoutEngine {
     static type = "arf";

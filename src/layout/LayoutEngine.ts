@@ -13,8 +13,8 @@ export interface EdgePosition {
     dst: Position,
 }
 
-type LayoutEngineClass = new (opts: object) => LayoutEngine
-const layoutEngineRegistry: Map<string, LayoutEngineClass> = new Map();
+type LayoutEngineClass = new (opts: object) => LayoutEngine;
+const layoutEngineRegistry = new Map<string, LayoutEngineClass>();
 
 export abstract class LayoutEngine {
     static type: string;
@@ -35,13 +35,13 @@ export abstract class LayoutEngine {
     abstract get edges(): Iterable<Edge>;
     abstract get isSettled(): boolean;
 
-    addNodes(nodes: Array<Node>) {
+    addNodes(nodes: Node[]) {
         for (const n of nodes) {
             this.addNode(n);
         }
     }
 
-    addEdges(edges: Array<Edge>) {
+    addEdges(edges: Edge[]) {
         for (const e of edges) {
             this.addEdge(e);
         }
@@ -79,7 +79,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     protected _nodes: Node[] = [];
     protected _edges: Edge[] = [];
     stale = true;
-    positions: Record<string | number, Array<number>> = {};
+    positions: Record<string | number, number[]> = {};
     scalingFactor = 100;
 
     constructor(opts: SimpleLayoutOpts = {}) {

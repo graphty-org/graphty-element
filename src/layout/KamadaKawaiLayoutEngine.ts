@@ -13,8 +13,8 @@ export const KamadaKawaiLayoutConfig = z.strictObject({
     dim: z.number().default(2),
 
 });
-export type KamadaKawaiLayoutConfigType = z.infer<typeof KamadaKawaiLayoutConfig>
-export type KamadaKawaiLayoutOpts = Partial<KamadaKawaiLayoutConfigType>
+export type KamadaKawaiLayoutConfigType = z.infer<typeof KamadaKawaiLayoutConfig>;
+export type KamadaKawaiLayoutOpts = Partial<KamadaKawaiLayoutConfigType>;
 
 export class KamadaKawaiLayout extends SimpleLayoutEngine {
     static type = "kamada-kawai";

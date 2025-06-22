@@ -29,9 +29,20 @@ export class Graphty extends LitElement {
         // console.log(`update: ${[... changedProperties.keys()].join(", ")}`);
     }
 
-    async firstUpdated(changedProperties: Map<string, unknown>) {
+    firstUpdated(changedProperties: Map<string, unknown>): void {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
+        
+        this.asyncFirstUpdated(changedProperties)
+            .then(() => {
+                console.log("done");
+            })
+            .catch((e: unknown) => {
+                console.log("error", e);
+            });
+    }
+
+    async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
 
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
             if (this.layout2d) {
@@ -42,7 +53,7 @@ export class Graphty extends LitElement {
         }
 
         if (changedProperties.has("layout") && this.layout) {
-            const layoutConfig = this.layoutConfig || {};
+            const layoutConfig = this.layoutConfig ?? {};
             await this.#graph.setLayout(this.layout, layoutConfig);
         }
 
@@ -67,7 +78,7 @@ export class Graphty extends LitElement {
         }
 
         if (changedProperties.has("dataSource") && this.dataSource) {
-            const sourceOpts = this.dataSourceConfig || {};
+            const sourceOpts = this.dataSourceConfig ?? {};
             await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
         }
 
@@ -84,7 +95,7 @@ export class Graphty extends LitElement {
     }
 
     disconnectedCallback() {
-        this.#graph?.shutdown();
+        this.#graph.shutdown();
     }
 
     /**
@@ -93,7 +104,7 @@ export class Graphty extends LitElement {
      * otherwise specified in `known-properties`.
      */
     @property({attribute: "node-data"})
-    nodeData?: { [x: string]: unknown; }[];
+    nodeData?: Record<string, unknown>[];
 
     /**
      * An array of objects describing the edge data.
@@ -101,7 +112,7 @@ export class Graphty extends LitElement {
      * `dst` (respectively) unless otherwise specified in `known-properties`.
      */
     @property({attribute: "edge-data"})
-    edgeData?: { [x: string]: unknown; }[];
+    edgeData?: Record<string, unknown>[];
 
     /**
      * The type of data source (e.g. "json"). See documentation for
@@ -115,7 +126,7 @@ export class Graphty extends LitElement {
      * data sources for more information.
      */
     @property({attribute: "data-source-config"})
-    dataSourceConfig?: { [x: string]: unknown; };
+    dataSourceConfig?: Record<string, unknown>;
 
     /**
      * A jmespath string that can be used to select the unique node identifier
@@ -153,7 +164,7 @@ export class Graphty extends LitElement {
      * more information.
      */
     @property({attribute: "layout-config"})
-    layoutConfig?: { [x: string]: unknown; };
+    layoutConfig?: Record<string, unknown>;
 
     /**
      * Specifies that the layout should be rendered in two dimensions (as

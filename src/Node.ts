@@ -237,7 +237,7 @@ export class Node {
         });
 
         // create label
-        if (o.label && o.label.enabled) {
+        if (o.label?.enabled) {
             n.label = Node.createLabel(n.id.toString(), n, n.parentGraph);
             n.label.parent = n.mesh;
             n.label.position.x += 1.25;
@@ -431,7 +431,7 @@ export class Node {
                         const edges = fetchEdges(n, n.parentGraph);
 
                         // create set of unique node ids
-                        const nodeIds: Set<NodeIdType> = new Set();
+                        const nodeIds = new Set<NodeIdType>();
                         edges.forEach((e) => {
                             nodeIds.add(e.src);
                             nodeIds.add(e.dst);

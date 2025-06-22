@@ -3,7 +3,7 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import {Graphty} from "../src/graphty-element.ts";
 import {set as deepSet} from "lodash";
 
-function templateFromNodeStyle(style: Record<string, unknown>, selector: string = ""): StyleSchema {
+function templateFromNodeStyle(style: Record<string, unknown>, selector = ""): StyleSchema {
     const template = StyleTemplate.parse({
         graphtyTemplate: true,
         majorVersion: "1",
@@ -121,7 +121,7 @@ const meta: Meta = {
 };
 export default meta;
 
-type Story = StoryObj<Graphty>
+type Story = StoryObj<Graphty>;
 
 export const Default: Story = {};
 

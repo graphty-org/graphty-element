@@ -12,7 +12,7 @@ declare module "d3-force-3d" {
         fz?: number;
     }
 
-    type Nodes = Array<Node>;
+    type Nodes = Node[];
 
     interface InputEdge {
         source: unknown,
@@ -25,7 +25,7 @@ declare module "d3-force-3d" {
         index: number;
     }
 
-    type Edges = Array<Edge>
+    type Edges = Edge[];
 
     type IdAccessor = (n: Node) => string | number;
     export interface Force {
@@ -46,7 +46,7 @@ declare module "d3-force-3d" {
         stop(): Simulation,
         numDimensions(n: number): Simulation,
         numDimensions(): number,
-        nodes(nodes: Array<object>): Simulation,
+        nodes(nodes: object[]): Simulation,
         nodes(): Nodes,
         alpha(n: number): Simulation,
         alpha(): number,

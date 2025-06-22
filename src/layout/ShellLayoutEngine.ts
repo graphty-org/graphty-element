@@ -10,8 +10,8 @@ export const ShellLayoutConfig = z.strictObject({
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     scale: z.number().positive().default(1),
 });
-export type ShellLayoutConfigType = z.infer<typeof ShellLayoutConfig>
-export type ShellLayoutOpts = Partial<ShellLayoutConfigType>
+export type ShellLayoutConfigType = z.infer<typeof ShellLayoutConfig>;
+export type ShellLayoutOpts = Partial<ShellLayoutConfigType>;
 
 export class ShellLayout extends SimpleLayoutEngine {
     static type = "shell";

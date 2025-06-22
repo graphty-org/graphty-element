@@ -43,7 +43,7 @@ export const GraphOpts = z.strictObject({
 });
 
 export type GraphConfig = z.infer<typeof GraphOpts>;
-export type GraphOptsType = DeepPartial<GraphConfig>
+export type GraphOptsType = DeepPartial<GraphConfig>;
 
 export function getConfig(o: object = {}): GraphConfig {
     return GraphOpts.parse(o);

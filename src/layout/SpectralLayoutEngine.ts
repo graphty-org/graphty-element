@@ -9,8 +9,8 @@ export const SpectralLayoutConfig = z.strictObject({
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     dim: z.number().default(2),
 });
-export type SpectralLayoutConfigType = z.infer<typeof SpectralLayoutConfig>
-export type SpectralLayoutOpts = Partial<SpectralLayoutConfigType>
+export type SpectralLayoutConfigType = z.infer<typeof SpectralLayoutConfig>;
+export type SpectralLayoutOpts = Partial<SpectralLayoutConfigType>;
 
 export class SpectralLayout extends SimpleLayoutEngine {
     static type = "spectral";

@@ -2,6 +2,7 @@ import {UserConfig, defineConfig, loadEnv} from "vite";
 import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import {readFileSync} from "fs";
 import {resolve} from "path";
+// import eslint from "vite-plugin-eslint";
 
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
@@ -10,6 +11,7 @@ export default defineConfig(({mode}) => {
     const env = loadEnv(mode, process.cwd(), "");
     const config: UserConfig = {
         plugins: [
+            // eslint(),
             VitePluginCustomElementsManifest({
                 files: ["./src/graphty-element.ts"],
                 lit: true,

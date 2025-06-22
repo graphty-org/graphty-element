@@ -4,6 +4,7 @@
     "useDefineForClassFields": false,
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -11,13 +12,19 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
     /* Lit features */
     "experimentalDecorators": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "stories/**/*.ts",
+    "eslint.config.mjs",
+    ".storybook/**/*.ts",
+    "commitlint.config.mjs",
+    "*.mjs",
+    "*.js",
+    "*.ts"
+  ],
+  "exclude": ["storybook-static/**/*.js", "coverage"]
 }

@@ -2,8 +2,8 @@ import {Graph} from "../Graph";
 import {Edge} from "../Edge";
 import {set as deepSet} from "lodash";
 
-type AlgorithmClass = new (opts: object) => Algorithm
-const algorithmRegistry: Map<string, AlgorithmClass> = new Map();
+type AlgorithmClass = new (opts: object) => Algorithm;
+const algorithmRegistry = new Map<string, AlgorithmClass>();
 const algorithmResults: Record<string, object> = {}; // TODO: this global should live on the graph instance
 
 // algorithmResults layout:

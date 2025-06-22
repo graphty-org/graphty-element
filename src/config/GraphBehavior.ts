@@ -23,7 +23,7 @@ export const GraphLayoutOpts = z.strictObject({
 
 /* ******* REFACTOR EVERYTHING BELOW THIS LINE *********/
 export const NodeId = z.string().or(z.number());
-export type NodeIdType = z.infer<typeof NodeId>
+export type NodeIdType = z.infer<typeof NodeId>;
 
 export const NodeObject = z.object({
     id: NodeId,
@@ -36,10 +36,10 @@ export const EdgeObject = z.object({
     metadata: z.object(),
 });
 
-export type NodeObjectType = z.infer<typeof NodeObject>
-export type EdgeObjectType = z.infer<typeof EdgeObject>
+export type NodeObjectType = z.infer<typeof NodeObject>;
+export type EdgeObjectType = z.infer<typeof EdgeObject>;
 // export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
-export type GraphOptsType = DeepPartial<GraphConfig>
+export type GraphOptsType = DeepPartial<GraphConfig>;
 
 export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
 export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;

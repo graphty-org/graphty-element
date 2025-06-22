@@ -11,7 +11,7 @@ const meta: Meta = {
 };
 export default meta;
 
-type Story = StoryObj<Graphty>
+type Story = StoryObj<Graphty>;
 
 export const Basic: Story = {
     args: {

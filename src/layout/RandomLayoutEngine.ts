@@ -9,8 +9,8 @@ export const RandomLayoutConfig = z.strictObject({
     dim: z.number().default(2),
     seed: z.number().positive().or(z.null()).default(null),
 });
-export type RandomLayoutConfigType = z.infer<typeof RandomLayoutConfig>
-export type RandomLayoutOpts = Partial<RandomLayoutConfigType>
+export type RandomLayoutConfigType = z.infer<typeof RandomLayoutConfig>;
+export type RandomLayoutOpts = Partial<RandomLayoutConfigType>;
 
 export class RandomLayout extends SimpleLayoutEngine {
     static type = "random";

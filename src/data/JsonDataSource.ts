@@ -21,8 +21,8 @@ export const JsonDataSourceConfig = z.object({
     edge: JsonEdgeConfig,
 });
 
-export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>
-export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigType, "node" | "edge">
+export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>;
+export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigType, "node" | "edge">;
 
 // @DataSource.register
 export class JsonDataSource extends DataSource {

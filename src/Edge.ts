@@ -312,7 +312,7 @@ export class Edge {
         };
     }
 
-    static get unitVectorPoints(): Array<number> {
+    static get unitVectorPoints(): number[] {
         return [
             // start point
             0,
@@ -335,7 +335,7 @@ function getArrowCapLen(w: number): number {
 }
 
 export class EdgeMap {
-    map: Map<NodeIdType, Map<NodeIdType, Edge>> = new Map();
+    map = new Map<NodeIdType, Map<NodeIdType, Edge>>();
 
     has(srcId: NodeIdType, dstId: NodeIdType): boolean {
         const dstMap = this.map.get(srcId);

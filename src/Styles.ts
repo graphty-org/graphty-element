@@ -96,11 +96,10 @@ export class Styles {
     }
 
     getStyleForNode(data: Record<string | number | symbol, unknown>): NodeStyleId {
-        const styles: Array<NodeStyleConfig> = [];
+        const styles: NodeStyleConfig[] = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {node} = this.layers[i];
-            const nodeMatch = node &&
-                node.selector !== undefined &&
+            const nodeMatch = node?.selector !== undefined &&
                 (node.selector.length === 0 || jmespath.search(data, `[${node.selector}] == true`));
             if (nodeMatch) {
                 styles.unshift(node.style);
@@ -116,11 +115,10 @@ export class Styles {
     }
 
     getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleId {
-        const styles: Array<EdgeStyleConfig> = [];
+        const styles: EdgeStyleConfig[] = [];
         for (let i = 0; i < this.layers.length; i++) {
             const {edge} = this.layers[i];
-            const edgeMatch = edge &&
-                edge.selector !== undefined &&
+            const edgeMatch = edge?.selector !== undefined &&
                 (edge.selector.length === 0 || jmespath.search(data, `[${edge.selector}] == true`));
             if (edgeMatch) {
                 styles.unshift(edge.style);
@@ -162,8 +160,8 @@ export class Styles {
     }
 }
 
-const nodeStyleMap: Map<NodeStyleId, NodeStyleConfig> = new Map();
-const edgeStyleMap: Map<EdgeStyleId, EdgeStyleConfig> = new Map();
+const nodeStyleMap = new Map<NodeStyleId, NodeStyleConfig>();
+const edgeStyleMap = new Map<EdgeStyleId, EdgeStyleConfig>();
 
 function styleToId<IdT, StyleT>(map: Map<IdT, StyleT>, style: StyleT): IdT {
     let ret: IdT | undefined;

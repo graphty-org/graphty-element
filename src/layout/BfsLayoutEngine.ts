@@ -10,8 +10,8 @@ export const BfsLayoutConfig = z.strictObject({
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
 });
-export type BfsLayoutConfigType = z.infer<typeof BfsLayoutConfig>
-export type BfsLayoutOpts = Partial<BfsLayoutConfigType>
+export type BfsLayoutConfigType = z.infer<typeof BfsLayoutConfig>;
+export type BfsLayoutOpts = Partial<BfsLayoutConfigType>;
 
 export class BfsLayout extends SimpleLayoutEngine {
     static type = "bfs";

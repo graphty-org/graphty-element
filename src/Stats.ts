@@ -35,7 +35,7 @@ export class Stats {
 
     toString(): string {
         let statsStr = "";
-        function appendStat(name: string, stat: string | number, units: string = "") {
+        function appendStat(name: string, stat: string | number, units = "") {
             statsStr += `${name}: ${stat}${units}\n`;
         }
 

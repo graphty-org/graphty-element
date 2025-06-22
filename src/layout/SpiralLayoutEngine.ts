@@ -11,8 +11,8 @@ export const SpiralLayoutConfig = z.strictObject({
     resolution: z.number().positive().default(0.35),
     equidistant: z.boolean().default(false),
 });
-export type SpiralLayoutConfigType = z.infer<typeof SpiralLayoutConfig>
-export type SpiralLayoutOpts = Partial<SpiralLayoutConfigType>
+export type SpiralLayoutConfigType = z.infer<typeof SpiralLayoutConfig>;
+export type SpiralLayoutOpts = Partial<SpiralLayoutConfigType>;
 
 export class SpiralLayout extends SimpleLayoutEngine {
     static type = "spiral";

@@ -49,6 +49,6 @@ export const StyleTemplate = z.discriminatedUnion("majorVersion", [
     StyleTemplateV1,
 ]);
 
-export type StyleSchema = z.infer<typeof StyleTemplate>
-export type StyleSchemaV1 = z.infer<typeof StyleTemplateV1>
-export type StyleLayerType = z.infer<typeof StyleLayer>
+export type StyleSchema = z.infer<typeof StyleTemplate>;
+export type StyleSchemaV1 = z.infer<typeof StyleTemplateV1>;
+export type StyleLayerType = z.infer<typeof StyleLayer>;

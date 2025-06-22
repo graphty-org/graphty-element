@@ -4,7 +4,7 @@ import type {NodeStyleId} from "./Styles";
 type MeshCreatorFn = () => Mesh;
 
 export class MeshCache {
-    meshCacheMap: Map<string | NodeStyleId, Mesh> = new Map();
+    meshCacheMap = new Map<string | NodeStyleId, Mesh>();
     hits = 0;
     misses = 0;
 
