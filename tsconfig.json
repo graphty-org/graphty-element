@@ -15,5 +15,5 @@
     /* Lit features */
     "experimentalDecorators": true
   },
-  "include": ["**/*.ts", ".storybook/**/*.ts", "eslint.config.js"]
+  "include": ["**/*.ts", ".storybook/**/*.ts"]
 }

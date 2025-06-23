@@ -17,19 +17,16 @@ export default tseslint.config(
     {
         languageOptions: {
             parserOptions: {
-                project: true,
                 sourceType: "module",
                 globals: globals.browser,
                 tsconfigRootDir: import.meta.dirname,
+                projectService: {
+                    allowDefaultProject: ["*.js", "*.mjs"],
+                },
             },
         },
     },
     {
-        ignores: [
-            "dist",
-            "storybook-static",
-            "coverage",
-        ],
         plugins: {
             "@stylistic": stylistic,
         },

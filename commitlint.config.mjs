@@ -19,6 +19,8 @@ export default {
             "element",
             "readme",
             "storybook",
+            "eslint",
+            "commitlint",
         ],
         ],
         "subject-case": [
