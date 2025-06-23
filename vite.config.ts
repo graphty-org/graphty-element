@@ -1,7 +1,7 @@
-import {UserConfig, defineConfig, loadEnv} from "vite";
-import VitePluginCustomElementsManifest from "vite-plugin-cem";
 import {readFileSync} from "fs";
 import {resolve} from "path";
+import {defineConfig, loadEnv, UserConfig} from "vite";
+import VitePluginCustomElementsManifest from "vite-plugin-cem";
 // import eslint from "vite-plugin-eslint";
 
 // https://vitejs.dev/config/

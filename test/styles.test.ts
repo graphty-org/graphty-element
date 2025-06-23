@@ -1,18 +1,19 @@
-import {MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
-import {EdgeStyle, NodeStyle, colorToHex, defaultEdgeStyle, defaultNodeStyle} from "../src/config";
-import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages";
 import {assert, describe, it} from "vitest";
-import {Styles} from "../src/Styles";
 import {ZodError} from "zod/v4";
-import twoLayerTemplate from "./helpers/styles-two-layers.json";
-import basicNodeStyle from "./helpers/styles-basic-node.json";
-import basicEdgeStyle from "./helpers/styles-basic-edge.json";
+
+import {colorToHex, defaultEdgeStyle, defaultNodeStyle, EdgeStyle, NodeStyle} from "../src/config";
+import {Styles} from "../src/Styles";
+import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages";
+import {MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
+import badLayer from "./helpers/styles-bad-layer.json";
 import basicDualStyle from "./helpers/styles-basic-dual.json";
+import basicEdgeStyle from "./helpers/styles-basic-edge.json";
+import basicNodeStyle from "./helpers/styles-basic-node.json";
 import basicSelector from "./helpers/styles-basic-selector.json";
+import defaultStyle from "./helpers/styles-default.json";
 import emptyStyle from "./helpers/styles-empty.json";
 import emptyLayer from "./helpers/styles-empty-layer.json";
-import badLayer from "./helpers/styles-bad-layer.json";
-import defaultStyle from "./helpers/styles-default.json";
+import twoLayerTemplate from "./helpers/styles-two-layers.json";
 
 const ParsedMyNodeStyle = NodeStyle.parse(MyNodeStyle);
 const ParsedMyEdgeStyle = EdgeStyle.parse(MyEdgeStyle);

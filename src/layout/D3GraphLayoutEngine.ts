@@ -1,16 +1,17 @@
 import {
     Edge as D3Edge,
-    InputEdge as D3InputEdge,
-    Node as D3Node,
     forceCenter,
     forceLink,
     forceManyBody,
     forceSimulation,
+    InputEdge as D3InputEdge,
+    Node as D3Node,
 } from "d3-force-3d";
-import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
-import type {Node, NodeIdType} from "../Node";
-import type {Edge} from "../Edge";
 import {z} from "zod/v4";
+
+import type {Edge} from "../Edge";
+import type {Node, NodeIdType} from "../Node";
+import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 
 interface D3InputNode extends Partial<D3Node> {
     id: NodeIdType;

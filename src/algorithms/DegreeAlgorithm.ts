@@ -1,5 +1,5 @@
-import {Algorithm} from "./Algorithm";
 import {Graph} from "../Graph";
+import {Algorithm} from "./Algorithm";
 
 export class DegreeAlgorithm extends Algorithm {
     static namespace = "graphty";

@@ -1,4 +1,5 @@
 import {z} from "zod/v4";
+
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
@@ -148,7 +149,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         return this._edges;
     };
 
-    readonly isSettled = true;;
+    readonly isSettled = true; ;
 
     abstract doLayout(): void;
 }

@@ -1,7 +1,8 @@
-import {z} from "zod/v4";
-import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 // @ts-expect-error graphty layout doesn't currently have types
 import {kamadaKawaiLayout} from "@graphty/layout";
+import {z} from "zod/v4";
+
+import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 
 export const KamadaKawaiLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,

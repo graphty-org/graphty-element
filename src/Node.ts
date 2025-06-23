@@ -9,8 +9,9 @@ import {
     SixDofDragBehavior,
     StandardMaterial,
 } from "@babylonjs/core";
-import type {Graph} from "./Graph";
+
 import {NodeStyleConfig} from "./config";
+import type {Graph} from "./Graph";
 import {NodeStyleId, Styles} from "./Styles";
 
 const GOLDEN_RATIO = 1.618;

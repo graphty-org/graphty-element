@@ -12,9 +12,10 @@ import {
     StandardMaterial,
     Vector3,
 } from "@babylonjs/core";
-import {Node, NodeIdType} from "./Node";
+
 import type {EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
+import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
 
 interface EdgeOpts {

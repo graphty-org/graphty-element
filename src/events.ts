@@ -1,7 +1,7 @@
+import type {NodeIdType} from "./config";
 import type {Edge} from "./Edge";
 import type {Graph} from "./Graph";
 import type {Node} from "./Node";
-import type {NodeIdType} from "./config";
 
 export type EventType =
     GraphEventType |

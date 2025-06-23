@@ -1,6 +1,7 @@
-import {Graph} from "../Graph";
-import {Edge} from "../Edge";
 import {set as deepSet} from "lodash";
+
+import {Edge} from "../Edge";
+import {Graph} from "../Graph";
 
 type AlgorithmClass = new (opts: object) => Algorithm;
 const algorithmRegistry = new Map<string, AlgorithmClass>();

@@ -1,4 +1,5 @@
 import {InstancedMesh, Mesh} from "@babylonjs/core";
+
 import type {NodeStyleId} from "./Styles";
 
 type MeshCreatorFn = () => Mesh;

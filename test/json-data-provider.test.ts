@@ -1,7 +1,8 @@
 import {assert, describe, expect, it} from "vitest";
+import {z} from "zod/v4";
+
 import {DataSourceChunk} from "../src/data/DataSource";
 import {JsonDataSource, JsonDataSourceConfig} from "../src/data/JsonDataSource";
-import {z} from "zod/v4";
 
 describe("JsonDataSource", () => {
     it("exists", () => {

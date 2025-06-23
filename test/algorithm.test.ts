@@ -1,4 +1,5 @@
 import {assert, describe, it} from "vitest";
+
 import {DegreeAlgorithm} from "../src/algorithms/DegreeAlgorithm";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

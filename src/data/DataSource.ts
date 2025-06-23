@@ -1,5 +1,5 @@
-import * as z4 from "zod/v4/core";
 import {z} from "zod/v4";
+import * as z4 from "zod/v4/core";
 
 type DataSourceClass = new (opts: object) => DataSource;
 const dataSourceRegistry = new Map<string, DataSourceClass>();

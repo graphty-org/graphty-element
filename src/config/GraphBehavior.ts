@@ -1,6 +1,7 @@
 import {z} from "zod/v4";
-import {DeepPartial} from "./common";
+
 import type {Graph} from "../Graph";
+import {DeepPartial} from "./common";
 import type {GraphConfig} from "./GraphStyle";
 
 export const NodeBehaviorOpts = z.strictObject({

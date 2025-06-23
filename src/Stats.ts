@@ -3,6 +3,7 @@ import {
     PerfCounter,
     SceneInstrumentation,
 } from "@babylonjs/core";
+
 import type {Graph} from "./Graph";
 
 export class Stats {

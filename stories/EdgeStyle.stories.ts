@@ -1,7 +1,8 @@
-import {StyleSchema, StyleTemplate} from "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
-import {Graphty} from "../src/graphty-element.ts";
 import {set as deepSet} from "lodash";
+
+import {StyleSchema, StyleTemplate} from "../index.ts";
+import {Graphty} from "../src/graphty-element.ts";
 
 function templateFromEdgeStyle(style: Record<string, unknown>, selector = ""): StyleSchema {
     const template = StyleTemplate.parse({
@@ -53,7 +54,7 @@ const meta: Meta = {
 
         // if argTypes have a name like "texture.color", apply that value to the node style
         for (const arg of Object.getOwnPropertyNames(args)) {
-            const name = storyConfig.argTypes[arg].name;
+            const {name} = storyConfig.argTypes[arg];
             const edgeStyle = t.layers[0]?.edge?.style;
             const val = storyConfig.args[arg] as unknown;
 

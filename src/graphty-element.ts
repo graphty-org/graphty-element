@@ -1,5 +1,6 @@
-import {customElement, property} from "lit/decorators.js";
 import {LitElement} from "lit";
+import {customElement, property} from "lit/decorators.js";
+
 import {Graph, GraphOptsType, StyleSchema} from "../index.ts";
 
 /**
@@ -32,7 +33,7 @@ export class Graphty extends LitElement {
     firstUpdated(changedProperties: Map<string, unknown>): void {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
-        
+
         this.asyncFirstUpdated(changedProperties)
             .catch((e: unknown) => {
                 throw e;
@@ -40,7 +41,6 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
-
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
             if (this.layout2d) {
                 this.#graph.createCamera(2);

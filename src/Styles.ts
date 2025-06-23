@@ -1,4 +1,9 @@
+import jmespath from "jmespath";
+import {defaultsDeep, isEqual} from "lodash";
+
 import {
+    defaultEdgeStyle,
+    defaultNodeStyle,
     EdgeStyle,
     EdgeStyleConfig,
     NodeStyle,
@@ -6,20 +11,15 @@ import {
     StyleLayerType,
     StyleSchemaV1,
     StyleTemplate,
-    defaultEdgeStyle,
-    defaultNodeStyle,
 } from "./config";
-
-import {defaultsDeep, isEqual} from "lodash";
-import jmespath from "jmespath";
 
 export interface StylesOpts {
     layers?: object,
     addDefaultStyle?: boolean,
 }
 
-export type NodeStyleId = number & { __brand: "NodeStyleId" };
-export type EdgeStyleId = number & { __brand: "EdgeStyleId" };
+export type NodeStyleId = number & {__brand: "NodeStyleId"};
+export type EdgeStyleId = number & {__brand: "EdgeStyleId"};
 
 export class Styles {
     readonly config: StyleSchemaV1;

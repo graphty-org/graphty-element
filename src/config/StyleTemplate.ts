@@ -1,8 +1,9 @@
 import {z} from "zod/v4";
-import {NodeStyle} from "./NodeStyle";
+
+import {GraphKnownFields} from "./common";
 import {EdgeStyle} from "./EdgeStyle";
 import {GraphStyle} from "./GraphStyle";
-import {GraphKnownFields} from "./common";
+import {NodeStyle} from "./NodeStyle";
 
 export const AppliedNodeStyle = z.strictObject({
     selector: z.string(),

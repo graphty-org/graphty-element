@@ -1,3 +1,6 @@
+import "./data"; // register all internal data sources
+import "./layout"; // register all internal layouts
+
 import {
     ArcRotateCamera,
     Camera,
@@ -11,7 +14,18 @@ import {
     Vector3,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
+import jmespath from "jmespath";
 
+import {
+    FetchEdgesFn,
+    FetchNodesFn,
+    getConfig,
+    GraphConfig,
+    GraphOptsType,
+    StyleSchema,
+} from "./config";
+import {DataSource} from "./data/DataSource";
+import {Edge, EdgeMap} from "./Edge";
 import {
     EdgeEvent,
     EventCallbackType,
@@ -19,27 +33,12 @@ import {
     GraphEvent,
     NodeEvent,
 } from "./events";
-
-import {
-    FetchEdgesFn,
-    FetchNodesFn,
-    GraphConfig,
-    GraphOptsType,
-    StyleSchema,
-    getConfig,
-} from "./config";
-
-import {createXrButton} from "./xr-button";
-import {Edge, EdgeMap} from "./Edge";
 import {LayoutEngine} from "./layout/LayoutEngine";
 import {MeshCache} from "./MeshCache";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
-import jmespath from "jmespath";
-import {DataSource} from "./data/DataSource";
-import "./data"; // register all internal data sources
-import "./layout"; // register all internal layouts
+import {createXrButton} from "./xr-button";
 
 export class Graph {
     config: GraphConfig;

@@ -1,9 +1,9 @@
-import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
-import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
 import ngraphCreateLayout, {Layout as NGraphLayout} from "ngraph.forcelayout";
+import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
 
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
+import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 
 export class NGraphEngine extends LayoutEngine {
     static type = "ngraph";
@@ -19,7 +19,6 @@ export class NGraphEngine extends LayoutEngine {
         this.ngraphLayout = ngraphCreateLayout(this.ngraph, {dimensions: 3});
     }
 
-    
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     async init(): Promise<void> {}
 

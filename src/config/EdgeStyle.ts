@@ -1,5 +1,6 @@
-import {Edge} from "../Edge";
 import {z} from "zod/v4";
+
+import {Edge} from "../Edge";
 import {ColorStyle, TextBlockStyle} from "./common";
 
 const ArrowType = z.enum([
