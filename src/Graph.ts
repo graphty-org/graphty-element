@@ -132,7 +132,10 @@ export class Graph {
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
         // setup default layout
-        this.setLayout(this.config.layout.type, {});
+        this.setLayout(this.config.layout.type, {})
+            .catch((e: unknown) => {
+                throw e;
+            });
 
         // setup stats
         this.stats = new Stats(this);

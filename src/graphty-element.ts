@@ -34,11 +34,8 @@ export class Graphty extends LitElement {
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
         
         this.asyncFirstUpdated(changedProperties)
-            .then(() => {
-                console.log("done");
-            })
             .catch((e: unknown) => {
-                console.log("error", e);
+                throw e;
             });
     }
 
