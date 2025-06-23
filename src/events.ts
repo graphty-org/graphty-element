@@ -7,7 +7,7 @@ export type EventType =
     GraphEventType |
     NodeEventType |
     EdgeEventType;
-export type EventCallbackType = (evt: GraphEvent | NodeAddEvent | EdgeEvent) => void | EventType;
+export type EventCallbackType = (evt: GraphEvent | NodeAddEvent | EdgeEvent) => EventType;
 
 export type GraphEventType = GraphEvent["type"];
 export type NodeEventType = NodeEvent["type"];

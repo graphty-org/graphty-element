@@ -169,14 +169,12 @@ export class Graph {
         }
 
         // discard old camera
-        if (this.camera !== undefined) {
-            if (this.camera instanceof FlyCamera) {
-                window.removeEventListener("keydown", keydownListener.bind(this));
-                window.removeEventListener("keyup", keyupListener.bind(this));
-            }
-
-            this.camera.dispose();
+        if (this.camera instanceof FlyCamera) {
+            window.removeEventListener("keydown", keydownListener.bind(this));
+            window.removeEventListener("keyup", keyupListener.bind(this));
         }
+
+        this.camera.dispose();
 
         if (numDimensions === 3) {
             this.camera = new ArcRotateCamera(
@@ -244,7 +242,11 @@ export class Graph {
 
     #updateOrthographicSize() {
         const rect = this.engine.getRenderingCanvasClientRect();
-        const aspect = rect!.height / rect!.width;
+        if (!rect) {
+            throw new TypeError("error getting rendering canvas rectangle");
+        }
+
+        const aspect = rect.height / rect.width;
         const size = this.orthoSize / this.zoomLevel;
         this.camera.orthoLeft = -size;
         this.camera.orthoRight = size;
@@ -256,7 +258,7 @@ export class Graph {
         this.#updateCamera();
         this.#updateOrthographicSize();
 
-        if (!this.layoutEngine || !this.running) {
+        if (!this.running) {
             return;
         }
 
@@ -304,6 +306,7 @@ export class Graph {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async setStyleTemplate(t: StyleSchema): Promise<Styles> {
         // TODO: stats start
 
@@ -322,7 +325,7 @@ export class Graph {
         }
 
         // setup PhotoDome Skybox
-        if (this.styles.config.graph.background?.backgroundType === "skybox" &&
+        if (this.styles.config.graph.background.backgroundType === "skybox" &&
                 typeof this.styles.config.graph.background.data === "string") {
             new PhotoDome(
                 "testdome",
@@ -376,7 +379,7 @@ export class Graph {
 
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string) {
         // create path to node ids
-        const query = idPath || this.config.knownFields.nodeIdPath;
+        const query = idPath ?? this.config.knownFields.nodeIdPath;
 
         // create nodes
         for (const node of nodes) {
@@ -403,8 +406,8 @@ export class Graph {
 
     addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string) {
         // get paths
-        const srcQuery = srcIdPath || this.config.knownFields.edgeSrcIdPath;
-        const dstQuery = dstIdPath || this.config.knownFields.edgeDstIdPath;
+        const srcQuery = srcIdPath ?? this.config.knownFields.edgeSrcIdPath;
+        const dstQuery = dstIdPath ?? this.config.knownFields.edgeDstIdPath;
 
         // create nodes
         for (const edge of edges) {
@@ -449,9 +452,7 @@ export class Graph {
         switch (type) {
         case "graph-settled":
             this.graphObservable.add((e) => {
-                if (e.type === type) {
-                    cb(e);
-                }
+                cb(e);
             });
             break;
         default:

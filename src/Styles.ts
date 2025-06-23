@@ -54,13 +54,13 @@ export class Styles {
 
     static fromObject(obj: object): Styles {
         const config = StyleTemplate.parse(obj);
-        if (!config.graphtyTemplate) {
-            throw new TypeError("styles config does not appear to be a graphty template");
-        }
+        // if (!config.graphtyTemplate) {
+        //     throw new TypeError("styles config does not appear to be a graphty template");
+        // }
 
-        if (config.majorVersion !== "1") {
-            throw new TypeError(`unsupported graphty template version: ${config.majorVersion}`);
-        }
+        // if (config.majorVersion !== "1") {
+        //     throw new TypeError(`unsupported graphty template version: ${config.majorVersion}`);
+        // }
 
         return new Styles(config);
     }
@@ -97,8 +97,8 @@ export class Styles {
 
     getStyleForNode(data: Record<string | number | symbol, unknown>): NodeStyleId {
         const styles: NodeStyleConfig[] = [];
-        for (let i = 0; i < this.layers.length; i++) {
-            const {node} = this.layers[i];
+        for (const layer of this.layers) {
+            const {node} = layer;
             const nodeMatch = node?.selector !== undefined &&
                 (node.selector.length === 0 || jmespath.search(data, `[${node.selector}] == true`));
             if (nodeMatch) {
@@ -116,8 +116,8 @@ export class Styles {
 
     getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleId {
         const styles: EdgeStyleConfig[] = [];
-        for (let i = 0; i < this.layers.length; i++) {
-            const {edge} = this.layers[i];
+        for (const layer of this.layers) {
+            const {edge} = layer;
             const edgeMatch = edge?.selector !== undefined &&
                 (edge.selector.length === 0 || jmespath.search(data, `[${edge.selector}] == true`));
             if (edgeMatch) {

@@ -5,6 +5,7 @@ export class DegreeAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "degree";
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async run(g: Graph) {
         const inDegreeMap = new Map<number | string, number>();
         const outDegreeMap = new Map<number | string, number>();
@@ -12,9 +13,7 @@ export class DegreeAlgorithm extends Algorithm {
 
         function incrementMap(m: Map<number | string, number>, idx: number | string) {
             let num = m.get(idx); ;
-            if (num === undefined) {
-                num = 0;
-            }
+            num ??= 0;
 
             num++;
             m.set(idx, num);

@@ -49,16 +49,16 @@ const meta: Meta = {
         const g = document.createElement("graphty-element") as Graphty;
         g.nodeData = nodeData;
         g.edgeData = edgeData;
-        const t = args.styleTemplate;
+        const t = args.styleTemplate as StyleSchema;
 
         // if argTypes have a name like "texture.color", apply that value to the node style
         for (const arg of Object.getOwnPropertyNames(args)) {
-            const name = storyConfig?.argTypes?.[arg]?.name;
-            const edgeStyle = t.layers[0].edge.style;
+            const name = storyConfig.argTypes[arg].name;
+            const edgeStyle = t.layers[0]?.edge?.style;
+            const val = storyConfig.args[arg] as unknown;
 
             // if the arg has a name...
-            if (name) {
-                const val = storyConfig?.args?.[arg];
+            if (edgeStyle && name && val) {
                 // ...apply the value of the argument to our style
                 deepSet(edgeStyle, name, val);
             }

@@ -47,7 +47,7 @@ export abstract class Algorithm {
         return (this.constructor as typeof Algorithm).namespace;
     }
 
-    get results() {
+    get results(): Record<string, unknown> {
         return structuredClone(algorithmResults);
     }
 

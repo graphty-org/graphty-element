@@ -89,6 +89,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     }
 
     // basic functionality
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     async init() {}
 
     addNode(n: Node): void {
@@ -111,10 +112,8 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         return {x: positions[0] * this.scalingFactor, y: positions[1] * this.scalingFactor};
     };
 
-    setNodePosition(n: Node, p: Position): void {
-        n;
-        p;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setNodePosition(): void {};
 
     getEdgePosition(e: Edge): EdgePosition{
         if (this.stale) {
@@ -131,15 +130,14 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     };
 
     // for animated layouts
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     step(): void {};
 
-    pin(n: Node): void{
-        n;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    pin(): void{};
 
-    unpin(n: Node): void {
-        n;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    unpin(): void {};
 
     // properties
     get nodes(): Iterable<Node> {
@@ -150,9 +148,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         return this._edges;
     };
 
-    get isSettled(): boolean {
-        return true;
-    };
+    readonly isSettled = true;;
 
     abstract doLayout(): void;
 }

@@ -54,7 +54,7 @@ export async function createXrButton(scene: Scene, camera: Camera): Promise<WebX
     xrHelper.baseExperience.onInitialXRPoseSetObservable.add((cam) => {
         // initial VR position is fine; initial AR position appears to
         // be the origin
-        if (xrHelper?.baseExperience.sessionManager.sessionMode === "immersive-ar") {
+        if (xrHelper.baseExperience.sessionManager.sessionMode === "immersive-ar") {
             cam.setTransformationFromNonVRCamera(camera);
         }
     });
@@ -69,8 +69,8 @@ export async function createXrButton(scene: Scene, camera: Camera): Promise<WebX
 }
 
 function mkButton(text: string, sessionMode?: XRSessionMode, referenceSpaceType?: XRReferenceSpaceType): WebXREnterExitUIButton {
-    sessionMode = sessionMode || "immersive-vr";
-    referenceSpaceType = referenceSpaceType || "local-floor";
+    sessionMode = sessionMode ?? "immersive-vr";
+    referenceSpaceType = referenceSpaceType ?? "local-floor";
 
     // create html button
     const btnElement = document.createElement("button");
@@ -162,7 +162,7 @@ function addButtonOverlay(renderCanvas: Element): HTMLElement {
     overlay.classList.add("xr-button-overlay");
     overlay.style.cssText = "z-index:11;position: absolute; right: 20px;bottom: 50px;";
     // const renderCanvas = g.scene.getEngine().getInputElement();
-    if (renderCanvas && renderCanvas.parentNode) {
+    if (renderCanvas.parentNode) {
         renderCanvas.parentNode.appendChild(overlay);
     }
 

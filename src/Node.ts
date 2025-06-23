@@ -203,11 +203,11 @@ export class Node {
             // create mesh texture
             const mat = new StandardMaterial("defaultMaterial");
             let color3: Color3 | undefined;
-            if (typeof o?.texture?.color === "string") {
+            if (typeof o.texture?.color === "string") {
                 // const color = Color4.FromHexString(o.texture.color);
                 // const color3 = new Color3(color.r, color.g, color.b);
                 color3 = Color3.FromHexString(o.texture.color);
-            } else if (typeof o?.texture?.color === "object") {
+            } else if (typeof o.texture?.color === "object") {
                 switch (o.texture.color.colorType) {
                 case "solid":
                     color3 = Color3.FromHexString(o.texture.color.value ?? "##FFFFFF");
@@ -221,7 +221,7 @@ export class Node {
                 }
             }
 
-            mat.wireframe = o?.effect?.wireframe ?? false;
+            mat.wireframe = o.effect?.wireframe ?? false;
             if (color3 && g.config.layout.dimensions === 3) {
                 mat.diffuseColor = color3;
             } else if (color3) {

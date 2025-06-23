@@ -74,7 +74,7 @@ export class Edge {
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
-        if (srcPoint && dstPoint) {
+        if (srcPoint) {
             this.transformEdgeMesh(
                 srcPoint,
                 dstPoint,
@@ -107,7 +107,7 @@ export class Edge {
             const dstMesh = e.dstNode.mesh;
 
             const style = Styles.getStyleForEdgeStyleId(e.styleId);
-            if (style?.arrowHead?.type === undefined || style.arrowHead.type === "none") {
+            if (style.arrowHead?.type === undefined || style.arrowHead.type === "none") {
                 // TODO: this could be faster
                 continue;
             }
@@ -131,8 +131,8 @@ export class Edge {
             // TODO: this caches based on the overall style, even if the
             // specific arrowhead style hasn't changed
             e.arrowMesh = g.meshCache.get(`edge-arrowhead-style-${styleId}`, () => {
-                const width = getArrowCapWidth(o?.line?.width ?? 0.25);
-                const len = getArrowCapLen(o?.line?.width ?? 0.25);
+                const width = getArrowCapWidth(o.line?.width ?? 0.25);
+                const len = getArrowCapLen(o.line?.width ?? 0.25);
                 const cap1 = GreasedLineTools.GetArrowCap(
                     new Vector3(0, 0, -len), // position
                     new Vector3(0, 0, 1), // direction
@@ -149,7 +149,7 @@ export class Edge {
                         // instance: line,
                     },
                     {
-                        color: Color3.FromHexString(o?.line?.color ?? "#FFFFFF"),
+                        color: Color3.FromHexString(o.line?.color ?? "#FFFFFF"),
                     },
                     // e.parentGraph.scene
                 );
@@ -157,7 +157,7 @@ export class Edge {
         }
 
         const mesh = g.meshCache.get(`edge-style-${styleId}`, () => {
-            if (o?.line?.animationSpeed) {
+            if (o.line?.animationSpeed) {
                 return Edge.createMovingLine(e, g, o);
             }
 
@@ -177,8 +177,8 @@ export class Edge {
                 points: Edge.unitVectorPoints,
             },
             {
-                color: Color3.FromHexString(o?.line?.color ?? "#FFFFFFF"),
-                width: o?.line?.width ?? 0.25,
+                color: Color3.FromHexString(o.line?.color ?? "#FFFFFFF"),
+                width: o.line?.width ?? 0.25,
             },
         );
     }
@@ -187,7 +187,7 @@ export class Edge {
         // const baseColor = Color3.FromHexString(o.movingLineOpts.baseColor.slice(0, 7));
         const baseColor = Color3.FromHexString("#D3D3D3");
 
-        const movingColor = Color3.FromHexString(o?.line?.color ?? "#FF0000");
+        const movingColor = Color3.FromHexString(o.line?.color ?? "#FF0000");
         const r1 = Math.floor(baseColor.r * 255);
         const g1 = Math.floor(baseColor.g * 255);
         const b1 = Math.floor(baseColor.b * 255);
@@ -219,7 +219,7 @@ export class Edge {
             },
             {
                 // color: Color3.FromHexString(colorNameToHex(edgeColor))
-                width: o?.line?.width ?? 0.25,
+                width: o.line?.width ?? 0.25,
                 colorMode: GreasedLineMeshColorMode.COLOR_MODE_MULTIPLY,
             },
         );
@@ -290,10 +290,14 @@ export class Edge {
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
             const style = Styles.getStyleForEdgeStyleId(this.styleId);
-            const len = getArrowCapLen(style?.line?.width ?? 0.25);
+            const len = getArrowCapLen(style.line?.width ?? 0.25);
 
-            dstPoint = dstHitInfo[0].pickedPoint!;
-            srcPoint = srcHitInfo[0].pickedPoint!;
+            dstPoint = dstHitInfo[0].pickedPoint;
+            srcPoint = srcHitInfo[0].pickedPoint;
+            if (!srcPoint || !dstPoint) {
+                throw new TypeError("error picking points");
+            }
+
             const distance = srcPoint.subtract(dstPoint).length();
             const adjDistance = distance - len;
             const {x: x1, y: y1, z: z1} = srcPoint;

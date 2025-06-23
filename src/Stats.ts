@@ -41,6 +41,7 @@ export class Stats {
 
         function statsSection(name: string) {
             statsStr += `\n${name}\n`;
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < name.length; i++) {
                 statsStr += "-";
             }

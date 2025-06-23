@@ -19,7 +19,9 @@ export class NGraphEngine extends LayoutEngine {
         this.ngraphLayout = ngraphCreateLayout(this.ngraph, {dimensions: 3});
     }
 
-    async init(): Promise<void> { }
+    
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    async init(): Promise<void> {}
 
     step() {
         this._settled = this.ngraphLayout.step();

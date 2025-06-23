@@ -59,7 +59,6 @@ export const EdgeStyle = z.strictObject({
     tooltip: TextBlockStyle.prefault({location: "bottom"}).optional(),
     // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
     enabled: z.boolean().default(true),
-    edgeMeshFactory: z.instanceof(Function).default(() => Edge.defaultEdgeMeshFactory),
 });
 
 export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;
@@ -71,5 +70,4 @@ export const defaultEdgeStyle: EdgeStyleConfig = {
         color: "white",
     },
     enabled: true,
-    edgeMeshFactory: Edge.defaultEdgeMeshFactory,
 };

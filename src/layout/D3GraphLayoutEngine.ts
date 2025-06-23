@@ -104,7 +104,8 @@ export class D3GraphEngine extends LayoutEngine {
         this.d3ForceLayout.force("link").id((d) => (d as D3InputNode).id);
     }
 
-    async init(): Promise<void> { }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    async init(): Promise<void> {}
 
     refresh(): void {
         if (this.graphNeedsRefresh || this.reheat) {
@@ -180,9 +181,9 @@ export class D3GraphEngine extends LayoutEngine {
 
     getNodePosition(n: Node): Position {
         const d3node = this._getMappedNode(n);
-        if (d3node.x === undefined || d3node.y === undefined || d3node.z === undefined) {
-            throw new Error("Internal error: Node not initialized in D3GraphEngine");
-        }
+        // if (d3node.x === undefined || d3node.y === undefined || d3node.z === undefined) {
+        //     throw new Error("Internal error: Node not initialized in D3GraphEngine");
+        // }
 
         return {
             x: d3node.x,
