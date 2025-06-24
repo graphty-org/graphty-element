@@ -8,6 +8,7 @@ import {
     Engine,
     FlyCamera,
     HemisphericLight,
+    Logger,
     Observable,
     PhotoDome,
     Scene,
@@ -122,6 +123,7 @@ export class Graph {
         this.element.appendChild(this.canvas);
 
         // setup babylonjs
+        Logger.LogLevels = Logger.ErrorLogLevel;
         this.engine = new Engine(this.canvas, true); // Generate the BABYLON 3D engine
         this.scene = new Scene(this.engine);
 
