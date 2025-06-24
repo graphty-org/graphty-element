@@ -32,7 +32,7 @@ jobs:
         run: npm install
 
       - name: Run tests
-        run: npm test:all
+        run: npm run test:all
 
   deploy:
     needs: build
@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      #👇 Add Storybook build and deploy to GitHub Pages as a step in the workflow
+      # Add Storybook build and deploy to GitHub Pages as a step in the workflow
       - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
         with:
           build_command: npm run build:storybook
