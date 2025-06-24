@@ -171,12 +171,15 @@ export class Graph {
         }
 
         // discard old camera
-        if (this.camera instanceof FlyCamera) {
-            window.removeEventListener("keydown", keydownListener.bind(this));
-            window.removeEventListener("keyup", keyupListener.bind(this));
-        }
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (this.camera) {
+            if (this.camera instanceof FlyCamera) {
+                window.removeEventListener("keydown", keydownListener.bind(this));
+                window.removeEventListener("keyup", keyupListener.bind(this));
+            }
 
-        this.camera.dispose();
+            this.camera.dispose();
+        }
 
         if (numDimensions === 3) {
             this.camera = new ArcRotateCamera(

@@ -54,12 +54,13 @@ const meta: Meta = {
 
         // if argTypes have a name like "texture.color", apply that value to the node style
         for (const arg of Object.getOwnPropertyNames(args)) {
-            const {name} = storyConfig.argTypes[arg];
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const name = storyConfig.argTypes[arg]?.name;
             const edgeStyle = t.layers[0]?.edge?.style;
-            const val = storyConfig.args[arg] as unknown;
 
             // if the arg has a name...
-            if (edgeStyle && name && val) {
+            if (edgeStyle && name) {
+                const val = storyConfig.args[arg];
                 // ...apply the value of the argument to our style
                 deepSet(edgeStyle, name, val);
             }

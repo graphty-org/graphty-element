@@ -81,7 +81,8 @@ const meta: Meta = {
 
         // if argTypes have a name like "texture.color", apply that value to the node style
         for (const arg of Object.getOwnPropertyNames(args)) {
-            const {name} = storyConfig.argTypes[arg];
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const name = storyConfig.argTypes[arg]?.name;
             const nodeStyle = t.layers[0].node.style;
 
             // if the arg has a name...
