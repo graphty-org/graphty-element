@@ -33,6 +33,7 @@ export class Node {
     dragging = false;
     styleId: NodeStyleId;
     pinOnDrag!: boolean;
+    size!: number;
 
     constructor(graph: Graph, nodeId: NodeIdType, styleId: NodeStyleId, data: Record<string | number, unknown>, opts: NodeOpts = {}) {
         this.parentGraph = graph;
@@ -83,6 +84,7 @@ export class Node {
 
     static defaultNodeMeshFactory(n: Node, g: Graph, styleId: NodeStyleId): AbstractMesh {
         const o = Styles.getStyleForNodeStyleId(styleId);
+        n.size = o.shape?.size ?? 0;
 
         n.mesh = g.meshCache.get(`node-style-${styleId}`, () => {
             let mesh: Mesh;

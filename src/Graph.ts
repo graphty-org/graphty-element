@@ -4,7 +4,7 @@ import "./layout"; // register all internal layouts
 import {
     ArcRotateCamera,
     Camera,
-    // Color4,
+    Color4,
     Engine,
     FlyCamera,
     HemisphericLight,
@@ -277,10 +277,31 @@ export class Graph {
         }
         this.stats.graphStep.endMonitoring();
 
+        // calculate the global bounding box of all nodes
+        let boundingBoxMin: Vector3 | undefined;
+        let boundingBoxMax: Vector3 | undefined;
+        function updateBoundingBox(n: Node) {
+            const pos = n.mesh.getAbsolutePosition();
+            const sz = n.size;
+            if (!boundingBoxMin || !boundingBoxMax) {
+                boundingBoxMin = pos.clone();
+                boundingBoxMax = pos.clone();
+                return;
+            }
+
+            setMin(pos, boundingBoxMin, sz, "x");
+            setMin(pos, boundingBoxMin, sz, "y");
+            setMin(pos, boundingBoxMin, sz, "z");
+            setMax(pos, boundingBoxMax, sz, "x");
+            setMax(pos, boundingBoxMax, sz, "y");
+            setMax(pos, boundingBoxMax, sz, "z");
+        }
+
         // update nodes
         this.stats.nodeUpdate.beginMonitoring();
         for (const n of this.layoutEngine.nodes) {
             n.update();
+            updateBoundingBox(n);
         }
         this.stats.nodeUpdate.endMonitoring();
 
@@ -294,7 +315,8 @@ export class Graph {
 
         // fit camera to scene
         if (this.camera instanceof ArcRotateCamera){
-            const {min, max} = this.scene.getWorldExtends();
+            const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
+            const max = boundingBoxMax ?? new Vector3(20, 20, 20);
             const center = min.add(max).scale(0.5);
             const size = max.subtract(min);
             const fieldOfView = this.camera.fov;
@@ -334,20 +356,25 @@ export class Graph {
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
                 typeof this.styles.config.graph.background.data === "string") {
-            new PhotoDome(
+            const dome = new PhotoDome(
                 "testdome",
                 this.styles.config.graph.background.data,
                 {
                     resolution: 32,
-                    size: 1000,
+                    size: 500,
                 },
                 this.scene,
             );
+
+            dome.rotation.z = -Math.PI / 2;
+            dome.rotation.x = Math.PI;
         }
 
-        // if (this.styles.config.graph.background?.backgroundType === "color") {
-        //     this.scene.clearColor = Color4.FromHexString("#1133FFFF");
-        // }
+        if (this.styles.config.graph.background.backgroundType === "color" &&
+            this.styles.config.graph.background.color
+        ) {
+            this.scene.clearColor = Color4.FromHexString(this.styles.config.graph.background.color);
+        }
 
         // TODO: graph styles - background, etc
         // const mb = new MotionBlurPostProcess("mb", this.scene, 1.0, this.camera);
@@ -477,3 +504,17 @@ function keyupListener(this: Graph, e: KeyboardEvent) {
     this.keys[e.inputIndex] = false;
     e.preventDefault();
 };
+
+function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z") {
+    const adjPos = pos[ord] - scale;
+    if (adjPos < v[ord]) {
+        v[ord] = adjPos;
+    }
+}
+
+function setMax(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z") {
+    const adjPos = pos[ord] + scale;
+    if (adjPos > v[ord]) {
+        v[ord] = adjPos;
+    }
+}

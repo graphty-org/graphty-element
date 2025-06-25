@@ -176,4 +176,17 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "style-template"})
     styleTemplate?: StyleSchema;
+
+    /**
+     * The color to use for the background. Accepts any CSS 4 color specifier.
+     */
+    // @property({attribute: "background"})
+    // background?: string;
+
+    /**
+     * Use a skybox image for the background. This can be a URL or base64
+     * encoded data for the image.
+     */
+    // @property({attribute: "skybox"})
+    // skybox?: string;
 }
