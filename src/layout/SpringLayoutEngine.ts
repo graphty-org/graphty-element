@@ -15,7 +15,7 @@ export const SpringLayoutConfig = z.strictObject({
     iterations: z.number().positive().default(50),
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
-    dim: z.number().default(2),
+    dim: z.number().default(3),
     seed: z.number().positive().or(z.null()).default(null),
 });
 export type SpringLayoutConfigType = z.infer<typeof SpringLayoutConfig>;

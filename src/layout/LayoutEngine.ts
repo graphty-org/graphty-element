@@ -108,9 +108,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
             this.doLayout();
         }
 
-        const positions = this.positions[n.id];
-
-        return {x: positions[0] * this.scalingFactor, y: positions[1] * this.scalingFactor};
+        return posToCoords(this.positions[n.id], this.scalingFactor);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -121,12 +119,9 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
             this.doLayout();
         }
 
-        const srcPos = this.positions[e.srcId];
-        const dstPos = this.positions[e.dstId];
-
         return {
-            src: {x: srcPos[0] * this.scalingFactor, y: srcPos[1] * this.scalingFactor},
-            dst: {x: dstPos[0] * this.scalingFactor, y: dstPos[1] * this.scalingFactor},
+            src: posToCoords(this.positions[e.srcId], this.scalingFactor),
+            dst: posToCoords(this.positions[e.dstId], this.scalingFactor),
         };
     };
 
@@ -152,4 +147,14 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     readonly isSettled = true; ;
 
     abstract doLayout(): void;
+}
+
+function posToCoords(pos: number[], scale: number) {
+    const x = pos[0] * scale;
+    const y = pos[1] * scale;
+    const z = (pos[2] ?? 0) * scale;
+    // const z = pos[0] * scale;
+    // const x = (pos[2] ?? 0) * scale;
+
+    return {x, y, z};
 }

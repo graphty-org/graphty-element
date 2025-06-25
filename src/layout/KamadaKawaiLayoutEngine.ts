@@ -11,7 +11,7 @@ export const KamadaKawaiLayoutConfig = z.strictObject({
     weightProperty: z.string().or(z.null()).default(null),
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
-    dim: z.number().default(2),
+    dim: z.number().default(3),
 
 });
 export type KamadaKawaiLayoutConfigType = z.infer<typeof KamadaKawaiLayoutConfig>;
