@@ -53,6 +53,7 @@ export default tseslint.config(
             "sort-vars": "error", // put variable declarations in alphabetical order
             "prefer-template": "error", // use template literals instead of string concatenation
             "no-var": "error", // use 'let' or 'const' instead of 'var
+            "no-console": ["warn"], // warn on console junk in files
             "@stylistic/array-bracket-newline": ["error", "consistent"], // when to add newlines to long arrays
             "@stylistic/array-element-newline": ["error", "consistent"], // array members are either on the same line, or all on separate lines
             "@stylistic/brace-style": ["error", "1tbs"], // how the braces line up around code blocks
