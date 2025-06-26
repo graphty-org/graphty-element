@@ -23,7 +23,21 @@ jobs:
 
     # Job steps
     steps:
-      - uses: ./.github/workflows/build.yml
+      # - uses: ./.github/workflows/build.yml
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright
+        run: npx playwright install
 
       # # Manual Checkout
       # - uses: actions/checkout@v4
