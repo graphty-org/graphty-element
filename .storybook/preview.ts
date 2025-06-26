@@ -1,4 +1,4 @@
-import "@storybook/addon-console";
+// import "@storybook/addon-console";
 
 import {Preview, setCustomElementsManifest} from "@storybook/web-components-vite";
 // @ts-expect-error TS doesn't recognize virtual imports?

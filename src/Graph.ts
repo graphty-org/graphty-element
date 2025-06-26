@@ -151,6 +151,8 @@ export class Graph {
             return;
         }
 
+        await this.scene.whenReadyAsync();
+
         // Register a render loop to repeatedly render the scene
         this.engine.runRenderLoop(() => {
             this.update();

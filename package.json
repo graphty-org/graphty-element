@@ -21,7 +21,8 @@
     "build:storybook": "storybook build",
     "storybook": "storybook dev -p 9025 --no-open",
     "chromatic": "npx chromatic --project-token=chpt_1dbd83f7d3e84f6",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "playwright install"
   },
   "devDependencies": {
     "@babylonjs/inspector": "^8.11.0",
