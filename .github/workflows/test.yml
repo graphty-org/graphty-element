@@ -12,10 +12,8 @@ permissions:
 
 jobs:
   test:
-    call-workflow:
-      uses: ./.github/workflows/build.yml
-
     runs-on: ubuntu-latest
+    uses: ./.github/workflows/build.yml
 
     strategy:
       matrix:
