@@ -3,8 +3,8 @@ name: Storybook
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ['Test']
-    branches: [main]
+    workflows: [Test]
+    branches: [master]
     types:
       - completed
 
