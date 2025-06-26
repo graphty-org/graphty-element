@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: 24.x
+        node-version: [24.x]
 
     steps:
       # - uses: ./.github/workflows/build.yml
