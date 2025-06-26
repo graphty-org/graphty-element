@@ -13,12 +13,13 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    uses: ./.github/workflows/build.yml
 
     strategy:
       matrix:
         node-version: [22.x, 24.x]
 
     steps:
+      - uses: ./.github/workflows/build.yml
+
       - name: Run tests
         run: npm run test

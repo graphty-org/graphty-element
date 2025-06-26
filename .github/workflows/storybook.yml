@@ -16,7 +16,6 @@ jobs:
   storybook:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    uses: ./.github/workflows/build.yml
 
     strategy:
       matrix:
@@ -24,6 +23,8 @@ jobs:
 
     # Job steps
     steps:
+      - uses: ./.github/workflows/build.yml
+
       # # Manual Checkout
       # - uses: actions/checkout@v4
       #   with:
