@@ -1,6 +1,5 @@
-name: CI
-
 name: Storybook
+
 workflow_run:
   workflows: ['Test']
   branches: [main]

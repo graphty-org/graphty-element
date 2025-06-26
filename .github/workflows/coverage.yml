@@ -1,6 +1,5 @@
-name: CI
-
 name: Coverage
+
 workflow_run:
   workflows: ['Test']
   branches: [main]
@@ -13,6 +12,9 @@ permissions:
   id-token: write
 
 jobs:
+  call-workflow:
+    uses: ./.github/workflows/build.yml
+
   coverage:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -22,21 +24,6 @@ jobs:
         node-version: 24.x
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install Playwright
-        run: npx playwright install
-
       - name: Build coverage
         run: |
           npm run coverage
