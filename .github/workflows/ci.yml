@@ -37,15 +37,15 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      # - name: Build coverage
-      #   run: |
-      #     npm run coverage
+      - name: Build coverage
+        run: |
+          npm run coverage
 
-      # - name: Publish Coverage
-      #   uses: coverallsapp/github-action@v2
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     file: coverage.lcov
+      - name: Publish Coverage
+        uses: coverallsapp/github-action@v2
+        with:
+          # github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage/lcov-report
 
   deploy:
     needs: build
