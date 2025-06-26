@@ -1,10 +1,11 @@
 name: Storybook
 
-workflow_run:
-  workflows: ['Test']
-  branches: [main]
-  types:
-    - completed
+on:
+  workflow_run:
+    workflows: ['Test']
+    branches: [main]
+    types:
+      - completed
 
 permissions:
   contents: read
