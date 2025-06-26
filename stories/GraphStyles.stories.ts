@@ -105,7 +105,7 @@ export const Skybox: Story = {
 
 export const BackgroundColor: Story = {
     args: {
-        styleTemplate: templateFromGraphStyle({graph: {background: {backgroundType: "color", color: "lightblue"}}}),
+        styleTemplate: templateFromGraphStyle({graph: {background: {backgroundType: "color", color: "hotpink"}}}),
     },
     parameters: {
         controls: {
@@ -122,8 +122,9 @@ export const Layers: Story = {
         },
         styleTemplate: templateFromGraphStyle({
             layers: [
-                {node: {selector: "starts_with(id, 'Mme') == `true`", style: {enabled: true, texture: {color: "lightgreen"}}}},
-                {node: {selector: "starts_with(id, 'Mlle') == `true`", style: {enabled: true, texture: {color: "lightpink"}}}},
+                {node: {selector: "starts_with(id, 'Lt.') == `true`", style: {enabled: true, texture: {color: "black"}}}},
+                {node: {selector: "starts_with(id, 'Mme') == `true`", style: {enabled: true, texture: {color: "yellow"}}}},
+                {node: {selector: "starts_with(id, 'Mlle') == `true`", style: {enabled: true, texture: {color: "red"}}}},
             ],
         }),
     },

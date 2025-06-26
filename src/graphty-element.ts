@@ -20,15 +20,15 @@ export class Graphty extends LitElement {
         this.#graph = new Graph(this.#element, opts);
     }
 
-    connectedCallback() {
-        super.connectedCallback();
-        this.renderRoot.appendChild(this.#element);
-    }
+    // connectedCallback() {
+    //     super.connectedCallback();
+    //     this.renderRoot.appendChild(this.#element);
+    // }
 
-    update(changedProperties: Map<string, unknown>) {
-        super.update(changedProperties);
-        // console.log(`update: ${[... changedProperties.keys()].join(", ")}`);
-    }
+    // update(changedProperties: Map<string, unknown>) {
+    //     super.update(changedProperties);
+    //     // console.log(`update: ${[... changedProperties.keys()].join(", ")}`);
+    // }
 
     firstUpdated(changedProperties: Map<string, unknown>): void {
         super.firstUpdated(changedProperties);

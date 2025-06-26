@@ -99,9 +99,16 @@ export class Styles {
         const styles: NodeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {node} = layer;
-            const nodeMatch = node?.selector !== undefined &&
-                (node.selector.length === 0 || jmespath.search(data, `[${node.selector}] == true`));
-            if (nodeMatch) {
+            let nodeMatch = node?.selector !== undefined && node.selector.length === 0;
+            if (!nodeMatch) {
+                // try JMES match
+                const searchResult = jmespath.search(data, `[${node?.selector}]`);
+                if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
+                    nodeMatch = searchResult[0];
+                }
+            }
+
+            if (nodeMatch && node?.style) {
                 styles.unshift(node.style);
             }
         }
@@ -118,8 +125,15 @@ export class Styles {
         const styles: EdgeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {edge} = layer;
-            const edgeMatch = edge?.selector !== undefined &&
-                (edge.selector.length === 0 || jmespath.search(data, `[${edge.selector}] == true`));
+            let edgeMatch = edge?.selector !== undefined && edge.selector.length === 0;
+            if (!edgeMatch) {
+                // try JMES match
+                const searchResult = jmespath.search(data, `[${edge?.selector}]`);
+                if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
+                    edgeMatch = searchResult[0];
+                }
+            }
+
             if (edgeMatch) {
                 styles.unshift(edge.style);
             }

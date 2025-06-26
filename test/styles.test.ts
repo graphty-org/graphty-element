@@ -147,6 +147,19 @@ describe("Styles", () => {
                 assert.deepStrictEqual(style, expectedStyle);
             });
 
+            it("styles selected node", () => {
+                // picks out three nodes to style...
+                const s = Styles.fromObject(basicSelector);
+
+                // ...and get one of the nodes with the new style
+                const styledId = s.getStyleForNode({id: "Mlle.Baptistine"});
+                const styled = Styles.getStyleForNodeStyleId(styledId);
+
+                const expectedStyled = NodeStyle.parse({});
+                expectedStyled.enabled = true;
+                assert.deepStrictEqual(styled, ParsedMyNodeStyle);
+            });
+
             it("returns disabled style when no styles loaded", () => {
                 const s = Styles.fromObject(emptyStyle);
 
