@@ -1,5 +1,4 @@
-// @ts-expect-error graphty layout doesn't currently have types
-import {randomLayout} from "@graphty/layout";
+import {Edge as LayoutEdge, Node as LayoutNode, randomLayout} from "@graphty/layout";
 import {z} from "zod/v4";
 
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
@@ -25,13 +24,11 @@ export class RandomLayout extends SimpleLayoutEngine {
 
     doLayout(): void {
         this.stale = false;
-        const graph = {
-            nodes: () => this._nodes.map((n) => n.id),
-            edges: () => this._edges.map((e) => [e.srcId, e.dstId]),
-        };
+        const nodes = () => this._nodes.map((n) => n.id as LayoutNode);
+        const edges = () => this._edges.map((e) => [e.srcId, e.dstId] as LayoutEdge);
 
         this.positions = randomLayout(
-            graph,
+            {nodes, edges},
             this.config.center,
             this.config.dim,
             this.config.seed,

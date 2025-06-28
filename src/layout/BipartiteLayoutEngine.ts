@@ -1,5 +1,4 @@
-// @ts-expect-error graphty layout doesn't currently have types
-import {bipartiteLayout} from "@graphty/layout";
+import {bipartiteLayout, Edge as LayoutEdge, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
@@ -27,13 +26,11 @@ export class BipartiteLayout extends SimpleLayoutEngine {
 
     doLayout(): void {
         this.stale = false;
-        const graph = {
-            nodes: () => this._nodes.map((n) => n.id),
-            edges: () => this._edges.map((e) => [e.srcId, e.dstId]),
-        };
+        const nodes = () => this._nodes.map((n) => n.id as LayoutNode);
+        const edges = () => this._edges.map((e) => [e.srcId, e.dstId] as LayoutEdge);
 
         this.positions = bipartiteLayout(
-            graph,
+            {nodes, edges},
             this.config.nodes,
             this.config.align,
             this.config.scale,

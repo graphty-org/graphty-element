@@ -1,5 +1,4 @@
-// @ts-expect-error graphty layout doesn't currently have types
-import {shellLayout} from "@graphty/layout";
+import {Edge as LayoutEdge, Node as LayoutNode, shellLayout} from "@graphty/layout";
 import {z} from "zod/v4";
 
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
@@ -26,13 +25,11 @@ export class ShellLayout extends SimpleLayoutEngine {
 
     doLayout(): void {
         this.stale = false;
-        const graph = {
-            nodes: () => this._nodes.map((n) => n.id),
-            edges: () => this._edges.map((e) => [e.srcId, e.dstId]),
-        };
+        const nodes = () => this._nodes.map((n) => n.id as LayoutNode);
+        const edges = () => this._edges.map((e) => [e.srcId, e.dstId] as LayoutEdge);
 
         this.positions = shellLayout(
-            graph,
+            {nodes, edges},
             this.config.nlist,
             this.config.scale,
             this.config.center,
