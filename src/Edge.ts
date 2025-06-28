@@ -27,6 +27,7 @@ export class Edge {
     opts: EdgeOpts;
     srcId: NodeIdType;
     dstId: NodeIdType;
+    id: string;
     dstNode: Node;
     srcNode: Node;
     data: Record<string | number, unknown>;
@@ -40,6 +41,7 @@ export class Edge {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
+        this.id = `${srcNodeId}:${dstNodeId}`;
         this.data = data;
         this.opts = opts;
 
