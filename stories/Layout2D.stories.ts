@@ -27,3 +27,58 @@ export const Spiral: Story = {
         layout2d: true,
     },
 };
+
+export const Circular: Story = {
+    args: {
+        layout: "circular",
+        layoutConfig: {dim: 2},
+    },
+};
+
+export const Shell: Story = {
+    args: {
+        layout: "shell",
+    },
+};
+
+export const Random: Story = {
+    args: {
+        layout: "random",
+        layoutConfig: {dim: 2},
+    },
+};
+
+export const Spring: Story = {
+    args: {
+        layout: "spring",
+        layoutConfig: {dim: 2},
+    },
+};
+
+export const Planar: Story = {
+    args: {
+        dataSource: undefined,
+        nodeData: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}],
+        edgeData: [{src: 0, dst: 1}, {src: 1, dst: 2}, {src: 2, dst: 0}, {src: 3, dst: 2}, {src: 3, dst: 1}, {src: 3, dst: 0}, {src: 4, dst: 3}, {src: 4, dst: 2}, {src: 4, dst: 1}, {src: 5, dst: 4}, {src: 5, dst: 3}, {src: 5, dst: 2}, {src: 6, dst: 5}, {src: 6, dst: 4}, {src: 6, dst: 3}, {src: 7, dst: 6}, {src: 7, dst: 5}, {src: 7, dst: 4}, {src: 8, dst: 7}, {src: 8, dst: 6}, {src: 8, dst: 5}, {src: 9, dst: 8}, {src: 9, dst: 7}, {src: 9, dst: 6}],
+        layout: "planar",
+    },
+};
+
+export const KamadaKawai: Story = {
+    args: {
+        layout: "kamada-kawai",
+        layoutConfig: {dim: 2},
+    },
+};
+
+export const ForceAtlas2: Story = {
+    args: {
+        layout: "forceatlas2",
+    },
+};
+
+export const Arf: Story = {
+    args: {
+        layout: "arf",
+    },
+};
