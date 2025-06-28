@@ -78,9 +78,7 @@ export class Stats {
 
         statsSection("BabylonJS Performance");
         appendStat("Draw Calls", this.sceneInstrumentation.drawCallsCounter.count);
-        if (this.babylonInstrumentation.gpuFrameTimeCounter) {
-            appendPerf("GPU Time", this.babylonInstrumentation.gpuFrameTimeCounter, 0.000001);
-        }
+        appendPerf("GPU Time", this.babylonInstrumentation.gpuFrameTimeCounter, 0.000001);
 
         appendPerf("Shader Time", this.babylonInstrumentation.shaderCompilationTimeCounter);
         appendPerf("Mesh Evaluation Time", this.sceneInstrumentation.activeMeshesEvaluationTimeCounter);
