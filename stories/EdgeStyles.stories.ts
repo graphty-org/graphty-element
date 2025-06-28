@@ -106,9 +106,3 @@ export const NormalArrowHead: Story = {
         styleTemplate: templateFromEdgeStyle({arrowHead: {type: "normal"}}),
     },
 };
-
-export const CircleArrowHead: Story = {
-    args: {
-        styleTemplate: templateFromEdgeStyle({arrowHead: {type: "dot"}}),
-    },
-};
