@@ -15,6 +15,8 @@
     "test:all": "vitest --project=storybook --project=default",
     "coverage": "vitest --project=storybook --project=default --coverage",
     "lint": "eslint",
+    "lint:pkg": "knip",
+    "lint:all": "npm run lint && npm run lint:pkg",
     "dev": "vite --force --mode development",
     "build": "tsc && vite build",
     "preview": "vite preview",
@@ -25,7 +27,6 @@
     "postinstall": "playwright install"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "^8.11.0",
     "@chromatic-com/storybook": "^4.0.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
@@ -36,8 +37,8 @@
     "@storybook/web-components-vite": "^9.0.11",
     "@stylistic/eslint-plugin": "^4.4.1",
     "@types/jmespath": "^0.15.2",
-    "@types/lodash.defaultsdeep": "^4.6.9",
-    "@types/node": "^20.11.25",
+    "@types/lodash": "^4.17.19",
+    "@types/node": "^20.19.2",
     "@vitest/browser": "^3.1.4",
     "@vitest/coverage-v8": "^3.1.4",
     "chromatic": "^11.28.2",
@@ -46,6 +47,7 @@
     "eslint": "^9.29.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.1.7",
+    "knip": "^5.61.3",
     "playwright": "^1.53.0",
     "storybook": "^9.0.11",
     "typescript": "^5.8.3",
@@ -57,14 +59,14 @@
   },
   "dependencies": {
     "@babylonjs/core": "^8.11.0",
-    "@babylonjs/gui": "^8.11.0",
-    "@graphty/layout": "^1.0.1",
+    "@graphty/layout": "^1.1.0",
     "colorjs.io": "^0.5.2",
     "jmespath": "^0.16.0",
     "lit": "^3.3.0",
     "lodash": "^4.17.21",
     "ngraph.forcelayout": "^3.3.1",
     "ngraph.graph": "^20.0.1",
+    "on-change": "^5.0.1",
     "zod": "^3.25.28"
   },
   "overrides": {
