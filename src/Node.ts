@@ -10,7 +10,8 @@ import {
     StandardMaterial,
 } from "@babylonjs/core";
 
-import {NodeStyleConfig} from "./config";
+import {ChangeManager} from "./ChangeManager";
+import {AdHocData, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import {NodeStyleId, Styles} from "./Styles";
 
@@ -26,7 +27,9 @@ export class Node {
     parentGraph: Graph;
     opts: NodeOpts;
     id: NodeIdType;
-    data: Record<string | number, unknown>;
+    data: AdHocData<string | number>;
+    algorithmResults: AdHocData;
+    styleUpdates: AdHocData;
     mesh: AbstractMesh;
     label?: Mesh;
     meshDragBehavior!: SixDofDragBehavior;
@@ -34,12 +37,16 @@ export class Node {
     styleId: NodeStyleId;
     pinOnDrag!: boolean;
     size!: number;
+    changeManager: ChangeManager;
 
-    constructor(graph: Graph, nodeId: NodeIdType, styleId: NodeStyleId, data: Record<string | number, unknown>, opts: NodeOpts = {}) {
+    constructor(graph: Graph, nodeId: NodeIdType, styleId: NodeStyleId, data: AdHocData<string | number>, opts: NodeOpts = {}) {
         this.parentGraph = graph;
         this.id = nodeId;
-        this.data = data;
         this.opts = opts;
+        this.changeManager = new ChangeManager();
+        this.data = this.changeManager.watch("data", data);
+        this.algorithmResults = this.changeManager.watch("algorithmData", {} as unknown as AdHocData);
+        this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData);
 
         // copy nodeMeshOpts
         this.styleId = styleId;

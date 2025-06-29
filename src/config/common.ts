@@ -8,6 +8,11 @@ export type DeepPartial<T> = T extends object ? {
 
 export type PartiallyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
+export type Brand<T, B extends string> = T & {readonly __brand: B};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AdHocData<KeyType extends string | number = string> = Brand<Record<KeyType, any>, "AdHocData">;
+
 export function colorToHex(s: string): string | undefined {
     const color = new Color(s);
     let hex = color.to("srgb").toString({format: "hex"}).toUpperCase();
@@ -86,7 +91,6 @@ export const TextBlockStyle = z.strictObject({
 
 export const HttpUrl = z.url({
     protocol: /^https?$/,
-    // @ts-expect-error it exists in the source, not sure why TS complains about .domain not existing
     hostname: z.regexes.domain,
 });
 

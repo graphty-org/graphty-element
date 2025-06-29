@@ -1,11 +1,12 @@
 import {set as deepSet} from "lodash";
 
+import {AdHocData} from "../config";
 import {Edge} from "../Edge";
 import {Graph} from "../Graph";
 
 type AlgorithmClass = new (opts: object) => Algorithm;
 const algorithmRegistry = new Map<string, AlgorithmClass>();
-const algorithmResults: Record<string, object> = {}; // TODO: this global should live on the graph instance
+const algorithmResults: Record<string, AdHocData> = {}; // TODO: this global should live on the graph instance
 
 // algorithmResults layout:
 // {
@@ -48,8 +49,8 @@ export abstract class Algorithm {
         return (this.constructor as typeof Algorithm).namespace;
     }
 
-    get results(): Record<string, unknown> {
-        return structuredClone(algorithmResults);
+    get results(): AdHocData {
+        return structuredClone(algorithmResults) as AdHocData;
     }
 
     abstract run(g: Graph): Promise<void>;

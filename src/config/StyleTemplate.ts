@@ -1,6 +1,6 @@
 import {z} from "zod/v4";
 
-import {GraphKnownFields} from "./common";
+import {DataConfig} from "./DataConfig";
 import {EdgeStyle} from "./EdgeStyle";
 import {GraphStyle} from "./GraphStyle";
 import {NodeStyle} from "./NodeStyle";
@@ -15,6 +15,17 @@ export const AppliedEdgeStyle = z.strictObject({
     style: EdgeStyle,
 });
 
+const AllowedInputPaths = z.string().regex(/^data\.|algorithmData\./);
+const AllowedOuputPaths = z.string().startsWith("style.");
+
+export const CalculatedStyle = z.strictObject({
+    inputs: z.array(AllowedInputPaths),
+    output: AllowedOuputPaths,
+    expr: z.string(),
+});
+
+export type CalculatedStyleConfig = z.infer<typeof CalculatedStyle>;
+
 export const StyleLayer = z.strictObject({
     node: AppliedNodeStyle,
     edge: AppliedEdgeStyle,
@@ -24,11 +35,6 @@ export const StyleLayer = z.strictObject({
         (data) => !!data.node || !!data.edge,
         "StyleLayer requires either 'node' or 'edge'.",
     );
-
-const TemplateExpectedSchema = z.strictObject({
-    knownFields: GraphKnownFields,
-    // schema: z4.$ZodObject,
-});
 
 const TemplateMetadata = z.strictObject({
     templateName: z.string().optional(),
@@ -43,7 +49,7 @@ export const StyleTemplateV1 = z.strictObject({
     metadata: TemplateMetadata.optional(),
     graph: GraphStyle.prefault({}),
     layers: z.array(StyleLayer).prefault([]),
-    expectedSchema: TemplateExpectedSchema.optional(),
+    data: DataConfig.optional(),
 });
 
 export const StyleTemplate = z.discriminatedUnion("majorVersion", [

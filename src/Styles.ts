@@ -134,7 +134,7 @@ export class Styles {
                 }
             }
 
-            if (edgeMatch) {
+            if (edgeMatch && edge?.style) {
                 styles.unshift(edge.style);
             }
         }

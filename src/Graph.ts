@@ -1,5 +1,6 @@
 import "./data"; // register all internal data sources
 import "./layout"; // register all internal layouts
+import "./algorithms"; // register all internal algorithms
 
 import {
     ArcRotateCamera,
@@ -18,6 +19,7 @@ import {
 import jmespath from "jmespath";
 
 import {
+    AdHocData,
     FetchEdgesFn,
     FetchNodesFn,
     getConfig,
@@ -45,8 +47,8 @@ export class Graph {
     config: GraphConfig;
     stats: Stats;
     styles: Styles;
-    nodes: Node[] = [];
-    edges: Edge[] = [];
+    nodes = new Map<string | number, Node>();
+    edges = new Map<string | number, Edge>();
     // babylon
     element: Element;
     canvas: HTMLCanvasElement;
@@ -345,12 +347,12 @@ export class Graph {
 
         this.styles = Styles.fromObject(t);
 
-        for (const n of this.nodes) {
+        for (const n of this.nodes.values()) {
             const styleId = this.styles.getStyleForNode(n.data);
             n.updateStyle(styleId);
         }
 
-        for (const e of this.edges) {
+        for (const e of this.edges.values()) {
             const styleId = this.styles.getStyleForEdge(e.data);
             e.updateStyle(styleId);
         }
@@ -426,11 +428,11 @@ export class Graph {
             }
 
             const style = this.styles.getStyleForNode(nodeId);
-            const n = new Node(this, nodeId, style, node, {
+            const n = new Node(this, nodeId, style, node as AdHocData, {
                 pinOnDrag: this.pinOnDrag,
             });
             this.nodeCache.set(nodeId, n);
-            this.nodes.push(n);
+            this.nodes.set(nodeId, n);
         }
 
         this.running = true;
@@ -457,8 +459,8 @@ export class Graph {
             const style = this.styles.getStyleForEdge(edge);
             const opts = {};
             const e = new Edge(this, srcNodeId, dstNodeId, style, edge, opts);
-            this.edgeCache.set(srcNodeId, dstNodeId, e);
-            this.edges.push(e);
+            this.edgeCache.set(srcNodeId, dstNodeId, e); // TODO: replace with normal map and "e.id"
+            this.edges.set(e.id, e);
         }
 
         this.running = true;
@@ -470,8 +472,8 @@ export class Graph {
             throw new TypeError(`No layout named: ${type}`);
         }
 
-        engine.addNodes(this.nodes);
-        engine.addEdges(this.edges);
+        engine.addNodes([... this.nodes.values()]);
+        engine.addEdges([... this.edges.values()]);
 
         this.layoutEngine = engine;
         await engine.init();

@@ -19,14 +19,14 @@ export class DegreeAlgorithm extends Algorithm {
             m.set(idx, num);
         }
 
-        for (const e of g.edges) {
+        for (const e of g.edges.values()) {
             incrementMap(inDegreeMap, e.srcId);
             incrementMap(outDegreeMap, e.dstId);
             incrementMap(degreeMap, e.srcId);
             incrementMap(degreeMap, e.dstId);
         }
 
-        for (const n of g.nodes) {
+        for (const n of g.nodes.values()) {
             this.addNodeResult(n.id, {
                 inDegree: inDegreeMap.get(n.id) ?? 0,
                 outDegree: outDegreeMap.get(n.id) ?? 0,

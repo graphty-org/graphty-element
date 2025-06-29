@@ -1,4 +1,4 @@
-export type {ImageData} from "./common";
+export type {AdHocData, ImageData} from "./common";
 export {colorToHex} from "./common";
 export type {EdgeStyleConfig} from "./EdgeStyle";
 export {defaultEdgeStyle, EdgeStyle} from "./EdgeStyle";
@@ -8,5 +8,5 @@ export type {GraphConfig, GraphOpts, GraphOptsType} from "./GraphStyle";
 export {getConfig} from "./GraphStyle";
 export type {NodeStyleConfig} from "./NodeStyle";
 export {defaultNodeStyle, NodeStyle} from "./NodeStyle";
-export type {StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
-export {StyleTemplate} from "./StyleTemplate";
+export type {CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
+export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";
