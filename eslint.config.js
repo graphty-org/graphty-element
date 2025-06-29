@@ -70,6 +70,10 @@ export default tseslint.config(
             "@stylistic/padded-blocks": ["error", "never"], // don't add extra spacing inside code blocks
             "@stylistic/quotes": ["error", "double"], // always use ""
             "@stylistic/semi": ["error", "always"], // always use ;
+            "@stylistic/member-delimiter-style": ["error", {
+                multiline: {delimiter: "semi", requireLast: true},
+                singleline: {delimiter: "comma", requireLast: false},
+            }],
 
             /* *********************
              * SPACING STYLE
