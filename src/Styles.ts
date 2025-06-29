@@ -14,8 +14,8 @@ import {
 } from "./config";
 
 export interface StylesOpts {
-    layers?: object,
-    addDefaultStyle?: boolean,
+    layers?: object;
+    addDefaultStyle?: boolean;
 }
 
 export type NodeStyleId = number & {__brand: "NodeStyleId"};

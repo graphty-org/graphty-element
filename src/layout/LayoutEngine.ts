@@ -4,14 +4,14 @@ import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
 export interface Position {
-    x: number,
-    y: number,
-    z?: number,
+    x: number;
+    y: number;
+    z?: number;
 }
 
 export interface EdgePosition {
-    src: Position,
-    dst: Position,
+    src: Position;
+    dst: Position;
 }
 
 type LayoutEngineClass = new (opts: object) => LayoutEngine;

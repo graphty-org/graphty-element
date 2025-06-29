@@ -28,9 +28,9 @@ export interface NodeGenericEvent {
 }
 
 export interface NodeAddEvent {
-    type: "node-add-before",
-    nodeId: NodeIdType,
-    metadata: object,
+    type: "node-add-before";
+    nodeId: NodeIdType;
+    metadata: object;
 }
 
 // edge events
@@ -42,8 +42,8 @@ export interface EdgeGenericEvent {
 }
 
 export interface EdgeAddEvent {
-    type: "edge-add-before",
-    srcNodeId: NodeIdType,
-    dstNodeId: NodeIdType,
-    metadata: object,
+    type: "edge-add-before";
+    srcNodeId: NodeIdType;
+    dstNodeId: NodeIdType;
+    metadata: object;
 }

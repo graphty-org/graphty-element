@@ -4,8 +4,8 @@ import * as z4 from "zod/v4/core";
 type DataSourceClass = new (opts: object) => DataSource;
 const dataSourceRegistry = new Map<string, DataSourceClass>();
 export interface DataSourceChunk {
-    nodes: Record<string | number, unknown>[],
-    edges: Record<string | number, unknown>[]
+    nodes: Record<string | number, unknown>[];
+    edges: Record<string | number, unknown>[];
 }
 
 export abstract class DataSource {

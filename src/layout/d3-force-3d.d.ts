@@ -15,8 +15,8 @@ declare module "d3-force-3d" {
     type Nodes = Node[];
 
     interface InputEdge {
-        source: unknown,
-        target: unknown,
+        source: unknown;
+        target: unknown;
     }
 
     interface Edge {
@@ -29,41 +29,41 @@ declare module "d3-force-3d" {
 
     type IdAccessor = (n: Node) => string | number;
     export interface Force {
-        (alpha?: number): void,
-        initialize(nodes: Nodes, ... args: unknown): unknown,
-        links(links: Links): Force,
-        links(): Links,
-        id(forceAccessor: IdAccessor): Force,
-        id(): IdAccessor,
-        iterations(x: unknown): unknown,
-        strength(x: unknown): unknown,
-        distance(x: unknown): unknown,
+        (alpha?: number): void;
+        initialize(nodes: Nodes, ... args: unknown[]): unknown;
+        links(links: Links): Force;
+        links(): Links;
+        id(forceAccessor: IdAccessor): Force;
+        id(): IdAccessor;
+        iterations(x: unknown): unknown;
+        strength(x: unknown): unknown;
+        distance(x: unknown): unknown;
     }
 
     export interface Simulation {
-        tick(n?: number): Simulation,
-        restart(): void,
-        stop(): Simulation,
-        numDimensions(n: number): Simulation,
-        numDimensions(): number,
-        nodes(nodes: object[]): Simulation,
-        nodes(): Nodes,
-        alpha(n: number): Simulation,
-        alpha(): number,
-        alphaMin(n: number): Simulation,
-        alphaMin(): number,
-        alphaDecay(n: number): Simulation,
-        alphaDecay(): number,
-        alphaTarget(n: number): Simulation,
-        alphaTarget(): number,
-        velocityDecay(n: number): Simulation,
-        velocityDecay(): number,
-        randomSource(fn: () => number): Simulation,
-        randomSource(): number,
-        force(name: string, force: Force | null): Simulation,
-        force(name: string): Force,
-        find(): Node,
-        on(name: string, args: unknown): unknown,
+        tick(n?: number): Simulation;
+        restart(): void;
+        stop(): Simulation;
+        numDimensions(n: number): Simulation;
+        numDimensions(): number;
+        nodes(nodes: object[]): Simulation;
+        nodes(): Nodes;
+        alpha(n: number): Simulation;
+        alpha(): number;
+        alphaMin(n: number): Simulation;
+        alphaMin(): number;
+        alphaDecay(n: number): Simulation;
+        alphaDecay(): number;
+        alphaTarget(n: number): Simulation;
+        alphaTarget(): number;
+        velocityDecay(n: number): Simulation;
+        velocityDecay(): number;
+        randomSource(fn: () => number): Simulation;
+        randomSource(): number;
+        force(name: string, force: Force | null): Simulation;
+        force(name: string): Force;
+        find(): Node;
+        on(name: string, args: unknown): unknown;
     };
 
     export function forceSimulation(nodes?: Nodes, numDimensions?: number): Simulation;
