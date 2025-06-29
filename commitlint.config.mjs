@@ -21,6 +21,7 @@ export default {
             "storybook",
             "eslint",
             "commitlint",
+            "test",
         ]],
         "subject-case": [
             2,
