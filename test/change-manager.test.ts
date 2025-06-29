@@ -20,7 +20,7 @@ describe("ChangeManager", () => {
         deepSet(obj, path, "someval");
     });
 
-    it.only("runs calculated value", () => {
+    it("runs calculated value", () => {
         // setup test
         const inputPath = "graphty.degree.total";
         const outputPath = "style.shape.size";
