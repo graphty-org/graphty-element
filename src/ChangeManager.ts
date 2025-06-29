@@ -26,7 +26,22 @@ export class ChangeManager {
             // and run the calculated value if it does
             const cv = this.watchedInputs.get(`${dataType}.${path}`);
             if (cv) {
-                cv.run(this.dataObjects as unknown as AdHocData);
+                // validate schema if it exists
+                const outputPath = cv.output.split(".");
+                const outputDataType = outputPath.shift();
+                if (!outputDataType) {
+                    throw new Error("error getting data type of output for calculated value");
+                }
+
+                const topSchema = this.schemas[outputDataType];
+                let schema: z4.$ZodType | undefined = undefined;
+                if (topSchema) {
+                    // console.log("schema.def.shape", schema.def.shape);
+                    // console.log("outputPath", outputPath);
+                    schema = getSchemaItemFromPath(topSchema, outputPath);
+                }
+
+                cv.run(this.dataObjects as unknown as AdHocData, schema);
             }
         });
 
@@ -39,7 +54,9 @@ export class ChangeManager {
         }
 
         this.dataObjects[dataType] = data;
-        this.schemas[dataType] = schema;
+        if (schema) {
+            this.schemas[dataType] = schema;
+        }
 
         return data;
     }
@@ -49,4 +66,24 @@ export class ChangeManager {
 
         cv.inputs.forEach((i) => this.watchedInputs.set(i, cv));
     }
+}
+
+function getSchemaItemFromPath(schema: z4.$ZodType, path: string[]) {
+    if (schema instanceof z4.$ZodOptional) {
+        // @ts-expect-error unwrap exists on optional, not sure why it doesn't show up here
+        schema = schema.unwrap();
+    }
+
+    const currentItem = path.shift();
+    if (!currentItem) {
+        return schema;
+    }
+
+    if (schema instanceof z4.$ZodObject) {
+        // @ts-expect-error shape exists on object, not sure why it doesn't show up here
+        const schemaItem = schema.shape[currentItem];
+        return getSchemaItemFromPath(schemaItem, path);
+    }
+
+    throw new Error(`don't know how to retreive path for: ${currentItem}.${path.join(".")}`);
 }

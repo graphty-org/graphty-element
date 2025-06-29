@@ -1,4 +1,5 @@
 import {get as deepGet, set as deepSet} from "lodash";
+import * as z4 from "zod/v4/core";
 
 import {AdHocData} from "./config";
 
@@ -37,7 +38,6 @@ export class CalculatedValue {
             }
 
             expr = fnBodyMatch[1];
-            console.log("function body expr:", expr);
         }
 
         this.expr = expr;
@@ -45,12 +45,15 @@ export class CalculatedValue {
         this.exprFn = Function(expr);
     }
 
-    run(data: AdHocData) {
+    run(data: AdHocData, schema?: z4.$ZodType) {
         // TODO: inputs can be: style.*, data.*, algorithm.*
         const args = this.inputs.map((i) => deepGet(data, i));
-        console.log("args", args);
-        const ret = this.exprFn(... args);
-        console.log("data", JSON.stringify(data, null, 4));
+        let ret = this.exprFn(... args);
+        if (schema) {
+            // @ts-expect-error parse exists on schema, not sure why it isn't found here
+            ret = schema.parse(ret);
+        }
+
         deepSet(data, this.output, ret);
     }
 }

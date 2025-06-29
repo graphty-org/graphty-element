@@ -11,7 +11,6 @@ describe("CalculatedValue", () => {
 
     it("does a simple calculation", () => {
         const expr = `{
-            console.log("args", arguments);
             const a = arguments[0];
             const b = arguments[1];
             return a + b * b;
