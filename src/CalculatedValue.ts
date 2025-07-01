@@ -49,7 +49,6 @@ export class CalculatedValue {
         // TODO: inputs can be: style.*, data.*, algorithm.*
         const args = this.inputs.map((i) => deepGet(data, i));
         let ret = this.exprFn(... args);
-        console.log("pre ret", ret);
         if (schema) {
             // @ts-expect-error parse exists on schema, not sure why it isn't found here
             ret = schema.parse(ret);
