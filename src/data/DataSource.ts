@@ -36,7 +36,7 @@ export abstract class DataSource {
         }
     }
 
-    async dataValidator(schema: z4.$ZodObject, obj: object) {
+    async dataValidator(schema: z4.$ZodObject, obj: object): Promise<void> {
         const res = await z4.safeParseAsync(schema, obj);
         if (!res.success) {
             const errMsg = z.prettifyError(res.error);
@@ -44,11 +44,11 @@ export abstract class DataSource {
         }
     }
 
-    get type() {
+    get type(): string {
         return (this.constructor as typeof DataSource).type;
     }
 
-    static register<T extends DataSourceClass>(cls: T) {
+    static register<T extends DataSourceClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
         dataSourceRegistry.set(t, cls);

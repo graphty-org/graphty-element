@@ -36,23 +36,23 @@ export abstract class LayoutEngine {
     abstract get edges(): Iterable<Edge>;
     abstract get isSettled(): boolean;
 
-    addNodes(nodes: Node[]) {
+    addNodes(nodes: Node[]): void {
         for (const n of nodes) {
             this.addNode(n);
         }
     }
 
-    addEdges(edges: Edge[]) {
+    addEdges(edges: Edge[]): void {
         for (const e of edges) {
             this.addEdge(e);
         }
     }
 
-    get type() {
+    get type(): string {
         return (this.constructor as typeof LayoutEngine).type;
     }
 
-    static register<T extends LayoutEngineClass>(cls: T) {
+    static register<T extends LayoutEngineClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
         layoutEngineRegistry.set(t, cls);
@@ -91,7 +91,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
 
     // basic functionality
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async init() {}
+    async init(): Promise<void> {}
 
     addNode(n: Node): void {
         this._nodes.push(n);
@@ -149,7 +149,13 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     abstract doLayout(): void;
 }
 
-function posToCoords(pos: number[], scale: number) {
+interface Coords {
+    x: number;
+    y: number;
+    z: number;
+}
+
+function posToCoords(pos: number[], scale: number): Coords {
     const x = pos[0] * scale;
     const y = pos[1] * scale;
     const z = (pos[2] ?? 0) * scale;

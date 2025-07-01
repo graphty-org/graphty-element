@@ -22,7 +22,7 @@ export class NGraphEngine extends LayoutEngine {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     async init(): Promise<void> {}
 
-    step() {
+    step(): void {
         this._settled = this.ngraphLayout.step();
         // console.log(`this.ngraphLayout.lastMove ${this.ngraphLayout.lastMove}`);
         // console.log(`this.nodeMapping.size ${this.nodeMapping.size}`);
@@ -33,13 +33,13 @@ export class NGraphEngine extends LayoutEngine {
         return this._settled;
     }
 
-    addNode(n: Node) {
+    addNode(n: Node): void {
         const ngraphNode: NGraphNode = this.ngraph.addNode(n.id, {parentNode: n});
         this.nodeMapping.set(n, ngraphNode);
         this._settled = false;
     }
 
-    addEdge(e: Edge) {
+    addEdge(e: Edge): void {
         const ngraphEdge = this.ngraph.addLink(e.srcId, e.dstId, {parentEdge: this});
         this.edgeMapping.set(e, ngraphEdge);
         this._settled = false;

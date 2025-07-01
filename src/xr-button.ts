@@ -98,7 +98,7 @@ function mkButton(text: string, sessionMode?: XRSessionMode, referenceSpaceType?
     return xrBtn;
 }
 
-function addCss() {
+function addCss(): void {
     const css = `
     .webxr-button {
         font-family: 'Verdana', sans-serif;

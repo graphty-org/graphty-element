@@ -18,6 +18,18 @@ import type {Graph} from "./Graph";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
 
+interface InterceptPoint {
+    srcPoint: Vector3 | null;
+    dstPoint: Vector3 | null;
+    newEndPoint: Vector3 | null;
+}
+
+interface EdgeLine {
+    srcPoint: Vector3 | null;
+    dstPoint: Vector3 | null;
+
+}
+
 interface EdgeOpts {
     metadata?: object;
 }
@@ -77,7 +89,7 @@ export class Edge {
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
-        if (srcPoint) {
+        if (srcPoint && dstPoint) {
             this.transformEdgeMesh(
                 srcPoint,
                 dstPoint,
@@ -239,7 +251,7 @@ export class Edge {
         return mesh;
     }
 
-    transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3) {
+    transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
         const delta = dstPoint.subtract(srcPoint);
         const midPoint = new Vector3(
             srcPoint.x + (delta.x / 2),
@@ -253,7 +265,7 @@ export class Edge {
         this.mesh.scaling.z = len;
     }
 
-    transformArrowCap() {
+    transformArrowCap(): EdgeLine {
         if (this.arrowMesh) {
             this.parentGraph.stats.arrowCapUpdate.beginMonitoring();
             const {srcPoint, dstPoint, newEndPoint} = this.getInterceptPoints();
@@ -278,7 +290,7 @@ export class Edge {
         };
     }
 
-    getInterceptPoints() {
+    getInterceptPoints(): InterceptPoint {
         const srcMesh = this.srcNode.mesh;
         const dstMesh = this.dstNode.mesh;
 

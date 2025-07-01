@@ -10,7 +10,7 @@ export class ChangeManager {
     readonly calculatedValues = new Set<CalculatedValue>();
     readonly schemas: Record<string, z4.$ZodType | undefined> = {};
 
-    watch(dataType: string, data: AdHocData, schema?: z4.$ZodType) {
+    watch(dataType: string, data: AdHocData, schema?: z4.$ZodType): AdHocData {
         const watchedData = onChange(data, (path, value, prevVal /* applyData */) => {
             // ignore all the intermediate steps of setting a new deep path on
             // an object
@@ -37,7 +37,7 @@ export class ChangeManager {
         return this.addData(dataType, watchedData, schema);
     }
 
-    addData(dataType: string, data: AdHocData, schema?: z4.$ZodType) {
+    addData(dataType: string, data: AdHocData, schema?: z4.$ZodType): AdHocData {
         if (this.dataObjects[dataType] !== undefined) {
             throw new TypeError(`data type: ${dataType} already exists in change manager`);
         }
@@ -50,19 +50,19 @@ export class ChangeManager {
         return data;
     }
 
-    addCalculatedValue(cv: CalculatedValue) {
+    addCalculatedValue(cv: CalculatedValue): void {
         this.calculatedValues.add(cv);
 
         cv.inputs.forEach((i) => this.watchedInputs.set(i, cv));
     }
 
-    addCalculatedValues(cvs: CalculatedValue[]) {
+    addCalculatedValues(cvs: CalculatedValue[]): void {
         cvs.forEach((cv) => {
             this.addCalculatedValue(cv);
         });
     }
 
-    loadCalculatedValues(cvs: CalculatedValue[]) {
+    loadCalculatedValues(cvs: CalculatedValue[]): void {
         this.watchedInputs.clear();
         this.addCalculatedValues(cvs);
     }

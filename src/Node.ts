@@ -61,7 +61,7 @@ export class Node {
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
     }
 
-    addCalculatedStyle(cv: CalculatedValue) {
+    addCalculatedStyle(cv: CalculatedValue): void {
         this.changeManager.addCalculatedValue(cv);
     }
 
@@ -393,7 +393,7 @@ export class Node {
         return plane;
     }
 
-    static addDefaultBehaviors(n: Node, opts: NodeOpts) {
+    static addDefaultBehaviors(n: Node, opts: NodeOpts): void {
         n.mesh.isPickable = true;
 
         // drag behavior

@@ -45,11 +45,11 @@ export abstract class Algorithm {
         this.graph = g;
     }
 
-    get type() {
+    get type(): string {
         return (this.constructor as typeof Algorithm).type;
     }
 
-    get namespace() {
+    get namespace(): string {
         return (this.constructor as typeof Algorithm).namespace;
     }
 
@@ -97,7 +97,7 @@ export abstract class Algorithm {
         console.log("adding graph result", g, result);
     }
 
-    static register<T extends AlgorithmClass>(cls: T) {
+    static register<T extends AlgorithmClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

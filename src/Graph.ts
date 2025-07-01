@@ -146,11 +146,11 @@ export class Graph {
         this.stats = new Stats(this);
     }
 
-    shutdown() {
+    shutdown(): void {
         this.engine.dispose();
     }
 
-    async init() {
+    async init(): Promise<void> {
         if (this.initialized) {
             return;
         }
@@ -173,7 +173,7 @@ export class Graph {
         this.initialized = true;
     }
 
-    createCamera(numDimensions = 3) {
+    createCamera(numDimensions = 3): Camera {
         if (numDimensions !== 2 && numDimensions !== 3) {
             throw new TypeError("number of dimensions can only be 2 or 3");
         }
@@ -220,7 +220,7 @@ export class Graph {
     }
 
     // Update camera position and zoom
-    #updateCamera() {
+    #updateCamera(): void {
         // Arrow key movement
         if (this.keys[37]) {
             this.camera.position.x -= this.moveSpeed / this.zoomLevel;
@@ -253,7 +253,7 @@ export class Graph {
         // this.camera.setTarget(Vector3.Zero());
     };
 
-    #updateOrthographicSize() {
+    #updateOrthographicSize(): void {
         const rect = this.engine.getRenderingCanvasClientRect();
         if (!rect) {
             throw new TypeError("error getting rendering canvas rectangle");
@@ -267,7 +267,7 @@ export class Graph {
         this.camera.orthoBottom = -size * aspect;
     };
 
-    update() {
+    update(): void {
         this.#updateCamera();
         this.#updateOrthographicSize();
 
@@ -286,7 +286,7 @@ export class Graph {
         // calculate the global bounding box of all nodes
         let boundingBoxMin: Vector3 | undefined;
         let boundingBoxMax: Vector3 | undefined;
-        function updateBoundingBox(n: Node) {
+        function updateBoundingBox(n: Node): void {
             const pos = n.mesh.getAbsolutePosition();
             const sz = n.size;
             if (!boundingBoxMin || !boundingBoxMax) {
@@ -403,7 +403,7 @@ export class Graph {
         return this.styles;
     }
 
-    async addDataFromSource(type: string, opts: object = {}) {
+    async addDataFromSource(type: string, opts: object = {}): Promise<void> {
         this.stats.loadTime.beginMonitoring();
 
         const source = DataSource.get(type, opts);
@@ -421,11 +421,11 @@ export class Graph {
         // TODO: emit event
     }
 
-    addNode(node: AdHocData, idPath?: string) {
+    addNode(node: AdHocData, idPath?: string): void {
         this.addNodes([node], idPath);
     }
 
-    addNodes(nodes: AdHocData[], idPath?: string) {
+    addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
         // create path to node ids
         const query = idPath ?? this.config.knownFields.nodeIdPath;
 
@@ -437,8 +437,8 @@ export class Graph {
                 continue;
             }
 
-            const styleId = this.styles.getStyleForNode(node);
-            const n = new Node(this, nodeId, styleId, node, {
+            const styleId = this.styles.getStyleForNode(node as AdHocData);
+            const n = new Node(this, nodeId, styleId, node as AdHocData, {
                 pinOnDrag: this.pinOnDrag,
             });
             this.nodeCache.set(nodeId, n);
@@ -448,11 +448,11 @@ export class Graph {
         this.running = true;
     }
 
-    addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string) {
+    addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string): void {
         this.addEdges([edge], srcIdPath, dstIdPath);
     }
 
-    addEdges(edges: AdHocData[], srcIdPath?: string, dstIdPath?: string) {
+    addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
         // get paths
         const srcQuery = srcIdPath ?? this.config.knownFields.edgeSrcIdPath;
         const dstQuery = dstIdPath ?? this.config.knownFields.edgeDstIdPath;
@@ -466,9 +466,9 @@ export class Graph {
                 continue;
             }
 
-            const style = this.styles.getStyleForEdge(edge);
+            const style = this.styles.getStyleForEdge(edge as AdHocData);
             const opts = {};
-            const e = new Edge(this, srcNodeId, dstNodeId, style, edge, opts);
+            const e = new Edge(this, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
             this.edgeCache.set(srcNodeId, dstNodeId, e); // TODO: replace with normal map and "e.id"
             this.edges.set(e.id, e);
         }
@@ -476,7 +476,7 @@ export class Graph {
         this.running = true;
     }
 
-    async setLayout(type: string, opts: object = {}) {
+    async setLayout(type: string, opts: object = {}): Promise<void> {
         const engine = LayoutEngine.get(type, opts);
         if (!engine) {
             throw new TypeError(`No layout named: ${type}`);
@@ -496,7 +496,7 @@ export class Graph {
         this.running = true;
     }
 
-    async runAlgorithm(namespace: string, type: string) {
+    async runAlgorithm(namespace: string, type: string): Promise<void> {
         const alg = Algorithm.get(this, namespace, type);
         if (!alg) {
             throw new Error(`algorithm not found: ${namespace}:${type}`);
@@ -518,24 +518,24 @@ export class Graph {
     }
 }
 
-function keydownListener(this: Graph, e: KeyboardEvent) {
+function keydownListener(this: Graph, e: KeyboardEvent): void {
     this.keys[e.inputIndex] = true;
     e.preventDefault();
 }
 
-function keyupListener(this: Graph, e: KeyboardEvent) {
+function keyupListener(this: Graph, e: KeyboardEvent): void {
     this.keys[e.inputIndex] = false;
     e.preventDefault();
 };
 
-function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z") {
+function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
     const adjPos = pos[ord] - scale;
     if (adjPos < v[ord]) {
         v[ord] = adjPos;
     }
 }
 
-function setMax(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z") {
+function setMax(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
     const adjPos = pos[ord] + scale;
     if (adjPos > v[ord]) {
         v[ord] = adjPos;

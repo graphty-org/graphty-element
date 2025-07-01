@@ -27,8 +27,8 @@ export class KamadaKawaiLayout extends SimpleLayoutEngine {
 
     doLayout(): void {
         this.stale = false;
-        const nodes = () => this._nodes.map((n) => n.id as LayoutNode);
-        const edges = () => this._edges.map((e) => [e.srcId, e.dstId] as LayoutEdge);
+        const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);
+        const edges = (): LayoutEdge[] => this._edges.map((e) => [e.srcId, e.dstId] as LayoutEdge);
 
         this.positions = kamadaKawaiLayout(
             {nodes, edges},

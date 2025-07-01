@@ -5,13 +5,13 @@ export class DegreeAlgorithm extends Algorithm {
     static type = "degree";
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    async run() {
+    async run(): Promise<void> {
         const g = this.graph;
         const inDegreeMap = new Map<number | string, number>();
         const outDegreeMap = new Map<number | string, number>();
         const degreeMap = new Map<number | string, number>();
 
-        function incrementMap(m: Map<number | string, number>, idx: number | string) {
+        function incrementMap(m: Map<number | string, number>, idx: number | string): void {
             let num = m.get(idx); ;
             num ??= 0;
 

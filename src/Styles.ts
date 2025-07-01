@@ -86,13 +86,13 @@ export class Styles {
         });
     }
 
-    addLayer(layer: StyleLayerType) {
+    addLayer(layer: StyleLayerType): void {
         this.layers.push(layer);
 
         // TODO: recalculate
     }
 
-    insertLayer(position: number, layer: StyleLayerType) {
+    insertLayer(position: number, layer: StyleLayerType): void {
         this.layers.splice(position, 0, layer);
 
         // TODO: recalculate
@@ -211,7 +211,7 @@ function styleToId<IdT, StyleT>(map: Map<IdT, StyleT>, style: StyleT): IdT {
     return ret;
 }
 
-function selectorMatchesNode(node: AppliedNodeStyleConfig | undefined, data: AdHocData) {
+function selectorMatchesNode(node: AppliedNodeStyleConfig | undefined, data: AdHocData): boolean {
     if (!node) {
         return false;
     }

@@ -45,7 +45,7 @@ export class CalculatedValue {
         this.exprFn = Function(expr);
     }
 
-    run(data: AdHocData, schema?: z4.$ZodType) {
+    run(data: AdHocData, schema?: z4.$ZodType): void {
         // TODO: inputs can be: style.*, data.*, algorithm.*
         const args = this.inputs.map((i) => deepGet(data, i));
         let ret = this.exprFn(... args);

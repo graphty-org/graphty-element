@@ -70,10 +70,11 @@ export default tseslint.config(
             "@stylistic/padded-blocks": ["error", "never"], // don't add extra spacing inside code blocks
             "@stylistic/quotes": ["error", "double"], // always use ""
             "@stylistic/semi": ["error", "always"], // always use ;
-            "@stylistic/member-delimiter-style": ["error", {
+            "@stylistic/member-delimiter-style": ["error", { // use ; after members of an interface definition
                 multiline: {delimiter: "semi", requireLast: true},
                 singleline: {delimiter: "comma", requireLast: false},
             }],
+            "@typescript-eslint/explicit-function-return-type": ["error", {allowIIFEs: true, allowExpressions: true}],
 
             /* *********************
              * SPACING STYLE

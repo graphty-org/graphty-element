@@ -91,11 +91,11 @@ export class Graphty extends LitElement {
         this.#graph.engine.resize();
     }
 
-    render() {
+    render(): Element {
         return this.#element;
     }
 
-    disconnectedCallback() {
+    disconnectedCallback(): void {
         this.#graph.shutdown();
     }
 

@@ -36,11 +36,11 @@ export class Stats {
 
     toString(): string {
         let statsStr = "";
-        function appendStat(name: string, stat: string | number, units = "") {
+        function appendStat(name: string, stat: string | number, units = ""): void {
             statsStr += `${name}: ${stat}${units}\n`;
         }
 
-        function statsSection(name: string) {
+        function statsSection(name: string): void {
             statsStr += `\n${name}\n`;
             // eslint-disable-next-line @typescript-eslint/prefer-for-of
             for (let i = 0; i < name.length; i++) {
@@ -49,7 +49,7 @@ export class Stats {
             statsStr += "\n";
         }
 
-        function appendPerf(name: string, stat: PerfCounter, multiplier = 1) {
+        function appendPerf(name: string, stat: PerfCounter, multiplier = 1): void {
             statsStr += `${name} (min/avg/last sec/max [total]): `;
             statsStr += `${(stat.min * multiplier).toFixed(2)} / `;
             statsStr += `${(stat.average * multiplier).toFixed(2)} / `;
@@ -92,13 +92,13 @@ export class Stats {
         return statsStr;
     }
 
-    step() {
+    step(): void {
         this.totalUpdates++;
         // console.log(`Iteration: ${this.totalUpdates}`);
         // console.log(this.toString());
     }
 
-    reset() {
+    reset(): void {
         this.totalUpdates = 0;
     }
 
