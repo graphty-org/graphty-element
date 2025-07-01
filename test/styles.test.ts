@@ -1,7 +1,7 @@
 import {assert, describe, it} from "vitest";
 import {ZodError} from "zod/v4";
 
-import {colorToHex, defaultEdgeStyle, defaultNodeStyle, EdgeStyle, NodeStyle} from "../src/config";
+import {AdHocData, colorToHex, defaultEdgeStyle, defaultNodeStyle, EdgeStyle, NodeStyle} from "../src/config";
 import {Styles} from "../src/Styles";
 import {ErrorExtraFields, ErrorNodeOrEdge} from "./helpers/error-messages";
 import {MyEdgeStyle, MyNodeStyle} from "./helpers/styles.ts";
@@ -128,7 +128,7 @@ describe("Styles", () => {
             it("returns basic node style", () => {
                 const s = Styles.fromObject(basicNodeStyle);
 
-                const styleId = s.getStyleForNode({id: "Mlle.Baptistine"});
+                const styleId = s.getStyleForNode({id: "Mlle.Baptistine"} as unknown as AdHocData);
                 const style = Styles.getStyleForNodeStyleId(styleId);
 
                 assert.deepStrictEqual(style, ParsedMyNodeStyle);
@@ -139,7 +139,7 @@ describe("Styles", () => {
                 const s = Styles.fromObject(basicSelector);
 
                 // ...and asks for the style of one of the nodes with no style
-                const styleId = s.getStyleForNode({id: "CountessdeLo"});
+                const styleId = s.getStyleForNode({id: "CountessdeLo"} as unknown as AdHocData);
                 const style = Styles.getStyleForNodeStyleId(styleId);
 
                 const expectedStyle = NodeStyle.parse({});
@@ -152,7 +152,7 @@ describe("Styles", () => {
                 const s = Styles.fromObject(basicSelector);
 
                 // ...and get one of the nodes with the new style
-                const styledId = s.getStyleForNode({id: "Mlle.Baptistine"});
+                const styledId = s.getStyleForNode({id: "Mlle.Baptistine"} as unknown as AdHocData);
                 const styled = Styles.getStyleForNodeStyleId(styledId);
 
                 const expectedStyled = NodeStyle.parse({});
@@ -163,7 +163,7 @@ describe("Styles", () => {
             it("returns disabled style when no styles loaded", () => {
                 const s = Styles.fromObject(emptyStyle);
 
-                const styleId = s.getStyleForNode({id: "CountessdeLo"});
+                const styleId = s.getStyleForNode({id: "CountessdeLo"} as unknown as AdHocData);
                 const style = Styles.getStyleForNodeStyleId(styleId);
 
                 const expectedStyle = NodeStyle.parse({});
@@ -175,7 +175,7 @@ describe("Styles", () => {
                 // const s = Styles.fromObject(TwoLayersOfNodeColors);
                 const s = Styles.fromObject(twoLayerTemplate);
 
-                const styleId = s.getStyleForNode({id: 1});
+                const styleId = s.getStyleForNode({id: 1} as unknown as AdHocData);
                 const style = Styles.getStyleForNodeStyleId(styleId);
 
                 assert.strictEqual(style.texture?.color, "#00F0");
@@ -186,7 +186,7 @@ describe("Styles", () => {
             it("returns basic edge style", () => {
                 const s = Styles.fromObject(basicEdgeStyle);
 
-                const styleId = s.getStyleForEdge({src: "Mme.Magloire", dst: "Mlle.Baptistine"});
+                const styleId = s.getStyleForEdge({src: "Mme.Magloire", dst: "Mlle.Baptistine"} as unknown as AdHocData);
                 const style = Styles.getStyleForEdgeStyleId(styleId);
 
                 assert.deepStrictEqual(style, ParsedMyEdgeStyle);

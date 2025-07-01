@@ -70,6 +70,7 @@ export abstract class Algorithm {
     #createPath(resultName: string): string[] {
         const ret: string[] = [];
 
+        ret.push("algorithmResults");
         ret.push(this.namespace);
         ret.push(this.type);
         ret.push(resultName);
@@ -84,7 +85,7 @@ export abstract class Algorithm {
             throw new Error(`couldn't find nodeId '${nodeId}' while trying to run algorithm '${this.type}'`);
         }
 
-        deepSet(n.algorithmResults, p, result);
+        deepSet(n, p, result);
         // XXX: THIS IS WHERE I LEFT OFF
         // replace algorithmResults with graph.nodes; set result on each node.algorithmResult
     }
