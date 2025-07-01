@@ -59,3 +59,21 @@ export const NodeSize: Story = {
         runAlgorithmsOnLoad: true,
     },
 };
+
+export const NodeColor: Story = {
+    args: {
+        styleTemplate: templateFromNodeStyle(
+            {
+                inputs: ["algorithmResults.graphty.degree.inDegreePct"],
+                output: "style.texture.color",
+                expr: `{
+                    let r = Math.round(255 * arguments[0]);
+                    let b = Math.round(255 * (1 - arguments[0]));
+                    return "rgb(" + r + ", 0," + b +")"; }
+                `,
+            },
+            ["graphty:degree"],
+        ),
+        runAlgorithmsOnLoad: true,
+    },
+};

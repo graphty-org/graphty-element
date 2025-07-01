@@ -13,7 +13,7 @@ import _ from "lodash";
 
 import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
-import {AdHocData, NodeStyleConfig} from "./config";
+import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import {NodeStyleId, Styles} from "./Styles";
 
@@ -49,7 +49,7 @@ export class Node {
         this.changeManager.loadCalculatedValues(this.parentGraph.styles.getCalculatedStylesForNode(data));
         this.data = this.changeManager.watch("data", data);
         this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
-        this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData);
+        this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData, NodeStyle);
 
         // copy nodeMeshOpts
         this.styleId = styleId;
