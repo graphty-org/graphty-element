@@ -2,6 +2,7 @@ import {z} from "zod/v4";
 
 import {DataConfig} from "./DataConfig";
 import {EdgeStyle} from "./EdgeStyle";
+import {GraphBehaviorOpts} from "./GraphBehavior";
 import {GraphStyle} from "./GraphStyle";
 import {NodeStyle} from "./NodeStyle";
 
@@ -54,7 +55,8 @@ export const StyleTemplateV1 = z.strictObject({
     metadata: TemplateMetadata.optional(),
     graph: GraphStyle.prefault({}),
     layers: z.array(StyleLayer).prefault([]),
-    data: DataConfig.optional(),
+    data: DataConfig.prefault({}),
+    behavior: GraphBehaviorOpts.prefault({}),
 });
 
 export const StyleTemplate = z.discriminatedUnion("majorVersion", [

@@ -1,7 +1,6 @@
 import {z} from "zod/v4";
 
-import {ColorStyle, DeepPartial, GraphKnownFields, ImageData} from "./common";
-import {GraphBehaviorOpts, GraphLayoutOpts} from "./GraphBehavior";
+import {ColorStyle, ImageData} from "./common";
 
 const GraphBackgroundColor = z.strictObject({
     backgroundType: z.literal("color"),
@@ -35,18 +34,3 @@ export const GraphStyle = z.strictObject({
     layout: z.string().default("ngraph"),
     layoutOptions: z.object().optional(),
 }).prefault({});
-
-/* ******* REFACTOR EVERYTHING BELOW THIS LINE *********/
-export const GraphOpts = z.strictObject({
-    behavior: GraphBehaviorOpts,
-    layout: GraphLayoutOpts,
-    knownFields: GraphKnownFields,
-});
-
-export type GraphConfig = z.infer<typeof GraphOpts>;
-export type GraphOptsType = DeepPartial<GraphConfig>;
-
-export function getConfig(o: object = {}): GraphConfig {
-    return GraphOpts.parse(o);
-}
-

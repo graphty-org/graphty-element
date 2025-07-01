@@ -251,7 +251,7 @@ export class Node {
             }
 
             mat.wireframe = o.effect?.wireframe ?? false;
-            if (color3 && g.config.layout.dimensions === 3) {
+            if (color3 && g.styles.config.behavior.layout.dimensions === 3) {
                 mat.diffuseColor = color3;
             } else if (color3) {
                 mat.disableLighting = true;

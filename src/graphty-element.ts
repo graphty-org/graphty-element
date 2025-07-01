@@ -1,7 +1,8 @@
 import {LitElement} from "lit";
 import {customElement, property} from "lit/decorators.js";
+import {set as setDeep} from "lodash";
 
-import {Graph, GraphOptsType, StyleSchema} from "../index.ts";
+import {Graph, StyleSchema} from "../index.ts";
 
 /**
  * Graphty creates a graph
@@ -15,9 +16,7 @@ export class Graphty extends LitElement {
         super();
 
         this.#element = document.createElement("div");
-        const opts: GraphOptsType = {};
-
-        this.#graph = new Graph(this.#element, opts);
+        this.#graph = new Graph(this.#element);
     }
 
     // connectedCallback() {
@@ -59,15 +58,15 @@ export class Graphty extends LitElement {
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
-            this.#graph.config.knownFields.nodeIdPath = this.nodeIdPath;
+            setDeep(this.#graph.styles.config, "data.knownFields.nodeIdPath", this.nodeIdPath);
         }
 
         if (changedProperties.has("edgeSrcIdPath") && this.edgeSrcIdPath) {
-            this.#graph.config.knownFields.edgeSrcIdPath = this.edgeSrcIdPath;
+            setDeep(this.#graph.styles.config, "data.knownFields.edgeSrcIdPath", this.edgeSrcIdPath);
         }
 
         if (changedProperties.has("edgeDstIdPath") && this.edgeDstIdPath) {
-            this.#graph.config.knownFields.edgeDstIdPath = this.edgeDstIdPath;
+            setDeep(this.#graph.styles.config, "data.knownFields.edgeDstIdPath", this.edgeDstIdPath);
         }
 
         if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {

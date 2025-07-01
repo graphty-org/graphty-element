@@ -23,9 +23,6 @@ import {
     AdHocData,
     FetchEdgesFn,
     FetchNodesFn,
-    getConfig,
-    GraphConfig,
-    GraphOptsType,
     StyleSchema,
 } from "./config";
 import {DataSource} from "./data/DataSource";
@@ -45,7 +42,6 @@ import {Styles} from "./Styles";
 import {createXrButton} from "./xr-button";
 
 export class Graph {
-    config: GraphConfig;
     stats: Stats;
     styles: Styles;
     nodes = new Map<string | number, Node>();
@@ -84,20 +80,11 @@ export class Graph {
     zoomSpeed = 0.1;
     keys: Record<string, boolean> = {};
 
-    constructor(element: Element | string, opts?: GraphOptsType) {
-        this.config = getConfig(opts);
+    constructor(element: Element | string) {
         this.meshCache = new MeshCache();
 
         // configure graph
         this.styles = Styles.default();
-
-        if (this.config.behavior.fetchNodes) {
-            this.fetchNodes = this.config.behavior.fetchNodes as FetchNodesFn;
-        }
-
-        if (this.config.behavior.fetchEdges) {
-            this.fetchEdges = this.config.behavior.fetchEdges as FetchEdgesFn;
-        }
 
         // get the element that we are going to use for placing our canvas
         if (typeof (element) === "string") {
@@ -137,8 +124,10 @@ export class Graph {
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
         // setup default layout
-        this.setLayout(this.config.layout.type, {})
+        this.setLayout("ngraph")
             .catch((e: unknown) => {
+                // eslint-disable-next-line no-console
+                console.log("ERROR", e);
                 throw e;
             });
 
@@ -278,7 +267,7 @@ export class Graph {
         // update graph engine
         this.stats.step();
         this.stats.graphStep.beginMonitoring();
-        for (let i = 0; i < this.config.layout.stepMultiplier; i++) {
+        for (let i = 0; i < this.styles.config.behavior.layout.stepMultiplier; i++) {
             this.layoutEngine.step();
         }
         this.stats.graphStep.endMonitoring();
@@ -348,12 +337,14 @@ export class Graph {
 
         this.styles = Styles.fromObject(t);
 
+        // style nodes
         for (const n of this.nodes.values()) {
             const styleId = this.styles.getStyleForNode(n.data);
             n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
             n.updateStyle(styleId);
         }
 
+        // style edges
         for (const e of this.edges.values()) {
             const styleId = this.styles.getStyleForEdge(e.data);
             e.updateStyle(styleId);
@@ -376,6 +367,7 @@ export class Graph {
             dome.rotation.x = Math.PI;
         }
 
+        // background color
         if (this.styles.config.graph.background.backgroundType === "color" &&
             this.styles.config.graph.background.color
         ) {
@@ -388,8 +380,11 @@ export class Graph {
         // default rendering pipeline?
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
 
+        // setup camera
+        this.createCamera(this.styles.config.behavior.layout.dimensions);
+
         // run algorithms
-        if (this.runAlgorithmsOnLoad && this.styles.config.data?.algorithms) {
+        if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
             for (const algName of this.styles.config.data.algorithms) {
                 const [namespace, type] = algName.split(":");
                 await this.runAlgorithm(namespace, type);
@@ -427,7 +422,7 @@ export class Graph {
 
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
         // create path to node ids
-        const query = idPath ?? this.config.knownFields.nodeIdPath;
+        const query = idPath ?? this.styles.config.data.knownFields.nodeIdPath;
 
         // create nodes
         for (const node of nodes) {
@@ -454,8 +449,8 @@ export class Graph {
 
     addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
         // get paths
-        const srcQuery = srcIdPath ?? this.config.knownFields.edgeSrcIdPath;
-        const dstQuery = dstIdPath ?? this.config.knownFields.edgeDstIdPath;
+        const srcQuery = srcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath;
+        const dstQuery = dstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath;
 
         // create edges
         for (const edge of edges) {
@@ -489,7 +484,7 @@ export class Graph {
         await engine.init();
 
         // run layout presteps
-        for (let i = 0; i < this.config.layout.preSteps; i++) {
+        for (let i = 0; i < this.styles.config.behavior.layout.preSteps; i++) {
             this.layoutEngine.step();
         }
 

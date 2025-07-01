@@ -4,8 +4,6 @@ export type {EdgeStyleConfig} from "./EdgeStyle";
 export {defaultEdgeStyle, EdgeStyle} from "./EdgeStyle";
 export type {FetchEdgesFn, FetchNodesFn} from "./GraphBehavior";
 export type {NodeIdType} from "./GraphBehavior";
-export type {GraphConfig, GraphOpts, GraphOptsType} from "./GraphStyle";
-export {getConfig} from "./GraphStyle";
 export type {NodeStyleConfig} from "./NodeStyle";
 export {defaultNodeStyle, NodeStyle} from "./NodeStyle";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";

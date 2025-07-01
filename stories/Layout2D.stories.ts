@@ -2,7 +2,8 @@ import "../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../src/graphty-element.ts";
+import {Graphty} from "../src/graphty-element";
+import {templateFromNodeStyle} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/2D",
@@ -25,6 +26,7 @@ export const Spiral: Story = {
     args: {
         layout: "spiral",
         layout2d: true,
+        styleTemplate: templateFromNodeStyle({texture: {color: "red"}}),
     },
 };
 

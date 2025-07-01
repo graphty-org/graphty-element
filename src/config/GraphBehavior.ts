@@ -1,26 +1,25 @@
 import {z} from "zod/v4";
 
 import type {Graph} from "../Graph";
-import {DeepPartial} from "./common";
-import type {GraphConfig} from "./GraphStyle";
 
 export const NodeBehaviorOpts = z.strictObject({
     pinOnDrag: z.boolean().default(true),
 }).prefault({});
 
-export const GraphBehaviorOpts = z.strictObject({
-    node: NodeBehaviorOpts,
-    fetchNodes: z.optional(z.instanceof(Function)),
-    fetchEdges: z.optional(z.instanceof(Function)),
-}).prefault({});
-
 export const GraphLayoutOpts = z.strictObject({
-    dimensions: z.number().min(2).max(3).default(3),
+    dimensions: z.int().min(2).max(3).default(3),
     type: z.string().default("ngraph"),
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),
     minDelta: z.number().default(0),
-}).prefault({});
+});
+
+export const GraphBehaviorOpts = z.strictObject({
+    layout: GraphLayoutOpts.prefault({}),
+    node: NodeBehaviorOpts,
+    fetchNodes: z.optional(z.instanceof(Function)),
+    fetchEdges: z.optional(z.instanceof(Function)),
+});
 
 /* ******* REFACTOR EVERYTHING BELOW THIS LINE *********/
 export const NodeId = z.string().or(z.number());
@@ -40,7 +39,6 @@ export const EdgeObject = z.object({
 export type NodeObjectType = z.infer<typeof NodeObject>;
 export type EdgeObjectType = z.infer<typeof EdgeObject>;
 // export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
-export type GraphOptsType = DeepPartial<GraphConfig>;
 
 export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
 export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;
