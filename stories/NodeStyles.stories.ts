@@ -1,101 +1,13 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
-import {set as deepSet} from "lodash";
 
-import {StyleSchema, StyleTemplate} from "../index.ts";
 import {Graphty} from "../src/graphty-element.ts";
-
-function templateFromNodeStyle(style: Record<string, unknown>, selector = ""): StyleSchema {
-    const template = StyleTemplate.parse({
-        graphtyTemplate: true,
-        majorVersion: "1",
-        graph: {
-            addDefaultStyle: true,
-        },
-        layers: [
-            {
-                node: {
-                    selector,
-                    style,
-                },
-            },
-        ],
-    });
-
-    return template;
-}
-
-const nodeData = [
-    {id: 0},
-    {id: 1},
-    {id: 2},
-    {id: 3},
-    {id: 4},
-    {id: 5},
-];
-
-const edgeData = [
-    {src: 0, dst: 1},
-    {src: 0, dst: 2},
-    {src: 2, dst: 3},
-    {src: 3, dst: 0},
-    {src: 3, dst: 4},
-    {src: 3, dst: 5},
-];
-
-const nodeShapes = [
-    "box",
-    "sphere",
-    "cylinder",
-    "cone",
-    "capsule",
-    "torus-knot",
-    "tetrahedron",
-    "octahedron",
-    "dodecahedron",
-    "icosahedron",
-    "rhombicuboctahedron",
-    "triangular_prism",
-    "pentagonal_prism",
-    "hexagonal_prism",
-    "square_pyramid",
-    "pentagonal_pyramid",
-    "triangular_dipyramid",
-    "pentagonal_dipyramid",
-    "elongated_square_dypyramid",
-    "elongated_pentagonal_dipyramid",
-    "elongated_pentagonal_cupola",
-    "goldberg",
-    "icosphere",
-    "geodesic",
-];
+import {nodeShapes, renderFn, templateFromNodeStyle} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Node",
     component: "graphty-element",
     // XXX: https://github.com/storybookjs/storybook/issues/23343
-    render: (args, storyConfig) => {
-        const g = document.createElement("graphty-element") as Graphty;
-        g.nodeData = nodeData;
-        g.edgeData = edgeData;
-        const t = args.styleTemplate;
-
-        // if argTypes have a name like "texture.color", apply that value to the node style
-        for (const arg of Object.getOwnPropertyNames(args)) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            const name = storyConfig.argTypes[arg]?.name;
-            const nodeStyle = t.layers[0].node.style;
-
-            // if the arg has a name...
-            if (name) {
-                const val = storyConfig.args[arg];
-                // ...apply the value of the argument to our style
-                deepSet(nodeStyle, name, val);
-            }
-        }
-
-        g.styleTemplate = t;
-        return g;
-    },
+    render: renderFn,
     argTypes: {
         nodeColor: {control: "color", table: {category: "Texture"}, name: "texture.color"},
         nodeShape: {control: "select", options: nodeShapes, table: {category: "Shape"}, name: "shape.type"},

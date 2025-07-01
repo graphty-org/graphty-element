@@ -1,32 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {StyleSchema, StyleTemplate} from "../index.ts";
-import {CalculatedStyleConfig} from "../src/config/StyleTemplate.ts";
 import {Graphty} from "../src/graphty-element";
-
-function templateFromNodeStyle(calculatedStyle: CalculatedStyleConfig, algorithms: string[] = []): StyleSchema {
-    const template = StyleTemplate.parse({
-        graphtyTemplate: true,
-        majorVersion: "1",
-        data: {
-            algorithms,
-        },
-        graph: {
-            addDefaultStyle: true,
-        },
-        layers: [
-            {
-                node: {
-                    selector: "",
-                    style: {},
-                    calculatedStyle,
-                },
-            },
-        ],
-    });
-
-    return template;
-}
+import {templateFromCalculatedNodeStyle} from "./helpers";
 
 const meta: Meta = {
     title: "Calculated",
@@ -47,7 +22,7 @@ type Story = StoryObj<Graphty>;
 
 export const NodeSize: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle(
+        styleTemplate: templateFromCalculatedNodeStyle(
             {
                 inputs: ["algorithmResults.graphty.degree.degreePct"],
                 output: "style.shape.size",
@@ -62,7 +37,7 @@ export const NodeSize: Story = {
 
 export const NodeColor: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle(
+        styleTemplate: templateFromCalculatedNodeStyle(
             {
                 inputs: ["algorithmResults.graphty.degree.inDegreePct"],
                 output: "style.texture.color",
