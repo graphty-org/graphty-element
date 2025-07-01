@@ -5,17 +5,7 @@ import {EdgeStyle} from "./EdgeStyle";
 import {GraphStyle} from "./GraphStyle";
 import {NodeStyle} from "./NodeStyle";
 
-export const AppliedNodeStyle = z.strictObject({
-    selector: z.string(),
-    style: NodeStyle,
-});
-
-export const AppliedEdgeStyle = z.strictObject({
-    selector: z.string(),
-    style: EdgeStyle,
-});
-
-const AllowedInputPaths = z.string().regex(/^data\.|algorithmData\./);
+const AllowedInputPaths = z.string().regex(/^data\.|algorithmResults\./);
 const AllowedOuputPaths = z.string().startsWith("style.");
 
 export const CalculatedStyle = z.strictObject({
@@ -25,6 +15,21 @@ export const CalculatedStyle = z.strictObject({
 });
 
 export type CalculatedStyleConfig = z.infer<typeof CalculatedStyle>;
+
+export const AppliedNodeStyle = z.strictObject({
+    selector: z.string(),
+    style: NodeStyle,
+    calculatedStyle: CalculatedStyle.optional(),
+});
+
+export const AppliedEdgeStyle = z.strictObject({
+    selector: z.string(),
+    style: EdgeStyle,
+    calculatedStyle: CalculatedStyle.optional(),
+});
+
+export type AppliedNodeStyleConfig = z.infer<typeof AppliedNodeStyle>;
+export type AppliedEdgeStyleConfig = z.infer<typeof AppliedEdgeStyle>;
 
 export const StyleLayer = z.strictObject({
     node: AppliedNodeStyle,

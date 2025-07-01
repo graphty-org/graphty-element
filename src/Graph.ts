@@ -18,6 +18,7 @@ import {
 } from "@babylonjs/core";
 import jmespath from "jmespath";
 
+import {Algorithm} from "./algorithms/Algorithm";
 import {
     AdHocData,
     FetchEdgesFn,
@@ -69,6 +70,7 @@ export class Graph {
     fetchNodes?: FetchNodesFn;
     fetchEdges?: FetchEdgesFn;
     initialized = false;
+    runAlgorithmsOnLoad = false;
     // observeables
     graphObservable = new Observable<GraphEvent>();
     nodeObservable = new Observable<NodeEvent>();
@@ -339,7 +341,6 @@ export class Graph {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
     async setStyleTemplate(t: StyleSchema): Promise<Styles> {
         // TODO: stats start
 
@@ -349,6 +350,7 @@ export class Graph {
 
         for (const n of this.nodes.values()) {
             const styleId = this.styles.getStyleForNode(n.data);
+            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
             n.updateStyle(styleId);
         }
 
@@ -386,6 +388,14 @@ export class Graph {
         // default rendering pipeline?
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
 
+        // run algorithms
+        if (this.runAlgorithmsOnLoad && this.styles.config.data?.algorithms) {
+            for (const algName of this.styles.config.data.algorithms) {
+                const [namespace, type] = algName.split(":");
+                await this.runAlgorithm(namespace, type);
+            }
+        }
+
         // TODO: stats end
 
         // TODO: emit event
@@ -411,24 +421,24 @@ export class Graph {
         // TODO: emit event
     }
 
-    addNode(node: Record<string | number, unknown>, idPath?: string) {
+    addNode(node: AdHocData, idPath?: string) {
         this.addNodes([node], idPath);
     }
 
-    addNodes(nodes: Record<string | number, unknown>[], idPath?: string) {
+    addNodes(nodes: AdHocData[], idPath?: string) {
         // create path to node ids
         const query = idPath ?? this.config.knownFields.nodeIdPath;
 
         // create nodes
         for (const node of nodes) {
-            const nodeId = jmespath.search(node, query);
+            const nodeId = jmespath.search(node, query) as NodeIdType;
 
             if (this.nodeCache.get(nodeId)) {
                 continue;
             }
 
-            const style = this.styles.getStyleForNode(nodeId);
-            const n = new Node(this, nodeId, style, node as AdHocData, {
+            const styleId = this.styles.getStyleForNode(node);
+            const n = new Node(this, nodeId, styleId, node, {
                 pinOnDrag: this.pinOnDrag,
             });
             this.nodeCache.set(nodeId, n);
@@ -438,19 +448,19 @@ export class Graph {
         this.running = true;
     }
 
-    addEdge(edge: Record<string | number, unknown>, srcIdPath?: string, dstIdPath?: string) {
+    addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string) {
         this.addEdges([edge], srcIdPath, dstIdPath);
     }
 
-    addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string) {
+    addEdges(edges: AdHocData[], srcIdPath?: string, dstIdPath?: string) {
         // get paths
         const srcQuery = srcIdPath ?? this.config.knownFields.edgeSrcIdPath;
         const dstQuery = dstIdPath ?? this.config.knownFields.edgeDstIdPath;
 
-        // create nodes
+        // create edges
         for (const edge of edges) {
-            const srcNodeId = jmespath.search(edge, srcQuery);
-            const dstNodeId = jmespath.search(edge, dstQuery);
+            const srcNodeId = jmespath.search(edge, srcQuery) as NodeIdType;
+            const dstNodeId = jmespath.search(edge, dstQuery) as NodeIdType;
 
             if (this.edgeCache.get(srcNodeId, dstNodeId)) {
                 continue;
@@ -484,6 +494,15 @@ export class Graph {
         }
 
         this.running = true;
+    }
+
+    async runAlgorithm(namespace: string, type: string) {
+        const alg = Algorithm.get(this, namespace, type);
+        if (!alg) {
+            throw new Error(`algorithm not found: ${namespace}:${type}`);
+        }
+
+        await alg.run(this);
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {

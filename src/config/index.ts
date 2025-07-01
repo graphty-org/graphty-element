@@ -8,5 +8,5 @@ export type {GraphConfig, GraphOpts, GraphOptsType} from "./GraphStyle";
 export {getConfig} from "./GraphStyle";
 export type {NodeStyleConfig} from "./NodeStyle";
 export {defaultNodeStyle, NodeStyle} from "./NodeStyle";
-export type {CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
+export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";

@@ -1,7 +1,10 @@
 import jmespath from "jmespath";
 import {defaultsDeep, isEqual} from "lodash";
 
+import {CalculatedValue} from "./CalculatedValue";
 import {
+    AdHocData,
+    AppliedNodeStyleConfig,
     defaultEdgeStyle,
     defaultNodeStyle,
     EdgeStyle,
@@ -95,18 +98,12 @@ export class Styles {
         // TODO: recalculate
     }
 
-    getStyleForNode(data: Record<string | number | symbol, unknown>): NodeStyleId {
+    getStyleForNode(data: AdHocData): NodeStyleId {
         const styles: NodeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {node} = layer;
-            let nodeMatch = node?.selector !== undefined && node.selector.length === 0;
-            if (!nodeMatch) {
-                // try JMES match
-                const searchResult = jmespath.search(data, `[${node?.selector}]`);
-                if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
-                    nodeMatch = searchResult[0];
-                }
-            }
+
+            const nodeMatch = selectorMatchesNode(node, data);
 
             if (nodeMatch && node?.style) {
                 styles.unshift(node.style);
@@ -121,7 +118,24 @@ export class Styles {
         return Styles.getNodeIdForStyle(mergedStyle);
     }
 
-    getStyleForEdge(data: Record<string | number | symbol, unknown>): EdgeStyleId {
+    getCalculatedStylesForNode(data: AdHocData): CalculatedValue[] {
+        const ret: CalculatedValue[] = [];
+        for (const layer of this.layers) {
+            const {node} = layer;
+
+            const nodeMatch = selectorMatchesNode(node, data);
+
+            if (nodeMatch && node?.calculatedStyle) {
+                const {inputs, output, expr} = node.calculatedStyle;
+                const cv = new CalculatedValue(inputs, output, expr);
+                ret.unshift(cv);
+            }
+        }
+
+        return ret;
+    }
+
+    getStyleForEdge(data: AdHocData): EdgeStyleId {
         const styles: EdgeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {edge} = layer;
@@ -179,6 +193,8 @@ const edgeStyleMap = new Map<EdgeStyleId, EdgeStyleConfig>();
 
 function styleToId<IdT, StyleT>(map: Map<IdT, StyleT>, style: StyleT): IdT {
     let ret: IdT | undefined;
+
+    // iterate through all defined styles to find a match
     for (const [k, v] of map.entries()) {
         if (isEqual(v, style)) {
             ret = k;
@@ -186,10 +202,28 @@ function styleToId<IdT, StyleT>(map: Map<IdT, StyleT>, style: StyleT): IdT {
         }
     }
 
+    // no matching style found, create a new one
     if (ret === undefined) {
         ret = map.size as IdT;
         map.set(ret, style);
     }
 
     return ret;
+}
+
+function selectorMatchesNode(node: AppliedNodeStyleConfig | undefined, data: AdHocData) {
+    if (!node) {
+        return false;
+    }
+
+    let nodeMatch = node.selector.length === 0;
+    if (!nodeMatch) {
+        // try JMES match
+        const searchResult = jmespath.search(data, `[${node.selector}]`);
+        if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
+            nodeMatch = searchResult[0];
+        }
+    }
+
+    return nodeMatch;
 }

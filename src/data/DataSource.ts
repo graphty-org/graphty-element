@@ -1,11 +1,13 @@
 import {z} from "zod/v4";
 import * as z4 from "zod/v4/core";
 
+import {AdHocData} from "../config";
+
 type DataSourceClass = new (opts: object) => DataSource;
 const dataSourceRegistry = new Map<string, DataSourceClass>();
 export interface DataSourceChunk {
-    nodes: Record<string | number, unknown>[];
-    edges: Record<string | number, unknown>[];
+    nodes: AdHocData[];
+    edges: AdHocData[];
 }
 
 export abstract class DataSource {

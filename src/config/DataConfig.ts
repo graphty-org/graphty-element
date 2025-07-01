@@ -8,6 +8,7 @@ export const TemplateExpectedSchema = z.strictObject({
 });
 
 export const DataConfig = z.strictObject({
+    algorithms: z.array(z.string()).optional(),
     knownFields: GraphKnownFields,
     // schema: z4.$ZodObject,
 });

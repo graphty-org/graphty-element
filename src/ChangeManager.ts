@@ -8,9 +8,9 @@ export class ChangeManager {
     readonly watchedInputs = new Map<string, CalculatedValue>();
     readonly dataObjects: Record<string, AdHocData | undefined> = {};
     readonly calculatedValues = new Set<CalculatedValue>();
-    readonly schemas: Record<string, z4.$ZodObject | undefined> = {};
+    readonly schemas: Record<string, z4.$ZodType | undefined> = {};
 
-    watch(dataType: string, data: AdHocData, schema?: z4.$ZodObject) {
+    watch(dataType: string, data: AdHocData, schema?: z4.$ZodType) {
         const watchedData = onChange(data, (path, value, prevVal /* applyData */) => {
             // ignore all the intermediate steps of setting a new deep path on
             // an object
@@ -25,30 +25,19 @@ export class ChangeManager {
             // see if this data change triggers a calculated value,
             // and run the calculated value if it does
             const cv = this.watchedInputs.get(`${dataType}.${path}`);
+            // console.log("onChange:", this.watchedInputs, `${dataType}.${path}`, cv);
             if (cv) {
-                // validate schema if it exists
-                const outputPath = cv.output.split(".");
-                const outputDataType = outputPath.shift();
-                if (!outputDataType) {
-                    throw new Error("error getting data type of output for calculated value");
-                }
-
-                const topSchema = this.schemas[outputDataType];
-                let schema: z4.$ZodType | undefined = undefined;
-                if (topSchema) {
-                    // console.log("schema.def.shape", schema.def.shape);
-                    // console.log("outputPath", outputPath);
-                    schema = getSchemaItemFromPath(topSchema, outputPath);
-                }
-
-                cv.run(this.dataObjects as unknown as AdHocData, schema);
+                // find schema for validation, if it exists
+                const s = getSchema(this.schemas, cv.output);
+                cv.run(this.dataObjects as unknown as AdHocData, s);
             }
         });
 
+        // TODO: do we need to pass schema here, or can we just use it from local context
         return this.addData(dataType, watchedData, schema);
     }
 
-    addData(dataType: string, data: AdHocData, schema?: z4.$ZodObject) {
+    addData(dataType: string, data: AdHocData, schema?: z4.$ZodType) {
         if (this.dataObjects[dataType] !== undefined) {
             throw new TypeError(`data type: ${dataType} already exists in change manager`);
         }
@@ -66,9 +55,37 @@ export class ChangeManager {
 
         cv.inputs.forEach((i) => this.watchedInputs.set(i, cv));
     }
+
+    addCalculatedValues(cvs: CalculatedValue[]) {
+        cvs.forEach((cv) => {
+            this.addCalculatedValue(cv);
+        });
+    }
+
+    loadCalculatedValues(cvs: CalculatedValue[]) {
+        this.watchedInputs.clear();
+        this.addCalculatedValues(cvs);
+    }
 }
 
-function getSchemaItemFromPath(schema: z4.$ZodType, path: string[]) {
+function getSchema(schemas: Record<string, z4.$ZodType | undefined>, output: string): z4.$ZodType | undefined {
+    const outputPath = output.split(".");
+    const outputDataType = outputPath.shift();
+    if (!outputDataType) {
+        throw new Error("error getting data type of output for calculated value");
+    }
+
+    const topSchema = schemas[outputDataType];
+    if (!topSchema) {
+        // console.log("schema.def.shape", schema.def.shape);
+        // console.log("outputPath", outputPath);
+        return undefined;
+    }
+
+    return getSchemaItemFromPath(topSchema, outputPath);
+}
+
+function getSchemaItemFromPath(schema: z4.$ZodType, path: string[]): z4.$ZodType | undefined {
     if (schema instanceof z4.$ZodOptional) {
         // @ts-expect-error unwrap exists on optional, not sure why it doesn't show up here
         schema = schema.unwrap();

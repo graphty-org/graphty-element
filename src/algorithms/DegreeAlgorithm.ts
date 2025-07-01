@@ -1,4 +1,3 @@
-import {Graph} from "../Graph";
 import {Algorithm} from "./Algorithm";
 
 export class DegreeAlgorithm extends Algorithm {
@@ -6,7 +5,8 @@ export class DegreeAlgorithm extends Algorithm {
     static type = "degree";
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    async run(g: Graph) {
+    async run() {
+        const g = this.graph;
         const inDegreeMap = new Map<number | string, number>();
         const outDegreeMap = new Map<number | string, number>();
         const degreeMap = new Map<number | string, number>();
@@ -26,12 +26,20 @@ export class DegreeAlgorithm extends Algorithm {
             incrementMap(degreeMap, e.dstId);
         }
 
+        const maxInDegree = Math.max(... inDegreeMap.values());
+        const maxOutDegree = Math.max(... outDegreeMap.values());
+        const maxDegree = Math.max(... degreeMap.values());
+
         for (const n of g.nodes.values()) {
-            this.addNodeResult(n.id, {
-                inDegree: inDegreeMap.get(n.id) ?? 0,
-                outDegree: outDegreeMap.get(n.id) ?? 0,
-                total: degreeMap.get(n.id) ?? 0,
-            });
+            const inDegree = inDegreeMap.get(n.id) ?? 0;
+            const outDegree = outDegreeMap.get(n.id) ?? 0;
+            const degree = degreeMap.get(n.id) ?? 0;
+            this.addNodeResult(n.id, "inDegree", inDegree);
+            this.addNodeResult(n.id, "outDegree", outDegree);
+            this.addNodeResult(n.id, "degree", degree);
+            this.addNodeResult(n.id, "inDegreePct", inDegree / maxInDegree);
+            this.addNodeResult(n.id, "outDegreePct", outDegree / maxOutDegree);
+            this.addNodeResult(n.id, "degreePct", degree / maxDegree);
         }
     }
 }

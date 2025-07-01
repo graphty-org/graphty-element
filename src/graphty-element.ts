@@ -49,6 +49,10 @@ export class Graphty extends LitElement {
             }
         }
 
+        if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
+            this.#graph.runAlgorithmsOnLoad = true;
+        }
+
         if (changedProperties.has("layout") && this.layout) {
             const layoutConfig = this.layoutConfig ?? {};
             await this.#graph.setLayout(this.layout, layoutConfig);
@@ -176,6 +180,13 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "style-template"})
     styleTemplate?: StyleSchema;
+
+    /**
+     * Whether or not to run all algorithims in a style template when the
+     * template is loaded
+     */
+    @property({attribute: "run-algorithms-on-load"})
+    runAlgorithmsOnLoad?: boolean;
 
     /**
      * The color to use for the background. Accepts any CSS 4 color specifier.

@@ -9,7 +9,9 @@ import {
     SixDofDragBehavior,
     StandardMaterial,
 } from "@babylonjs/core";
+import _ from "lodash";
 
+import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
@@ -44,8 +46,9 @@ export class Node {
         this.id = nodeId;
         this.opts = opts;
         this.changeManager = new ChangeManager();
+        this.changeManager.loadCalculatedValues(this.parentGraph.styles.getCalculatedStylesForNode(data));
         this.data = this.changeManager.watch("data", data);
-        this.algorithmResults = this.changeManager.watch("algorithmData", {} as unknown as AdHocData);
+        this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
         this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData);
 
         // copy nodeMeshOpts
@@ -58,7 +61,23 @@ export class Node {
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
     }
 
+    addCalculatedStyle(cv: CalculatedValue) {
+        this.changeManager.addCalculatedValue(cv);
+    }
+
     update(): void {
+        const newStyleKeys = Object.keys(this.styleUpdates);
+        if (newStyleKeys.length > 0) {
+            let style = Styles.getStyleForNodeStyleId(this.styleId);
+            style = _.defaultsDeep(this.styleUpdates, style);
+            const styleId = Styles.getNodeIdForStyle(style);
+            this.updateStyle(styleId);
+            for (const key of newStyleKeys) {
+                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                delete this.styleUpdates[key];
+            }
+        }
+
         if (this.dragging) {
             return;
         }

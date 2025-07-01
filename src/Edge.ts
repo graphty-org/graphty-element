@@ -13,7 +13,7 @@ import {
     Vector3,
 } from "@babylonjs/core";
 
-import type {EdgeStyleConfig} from "./config";
+import type {AdHocData, EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
@@ -30,14 +30,14 @@ export class Edge {
     id: string;
     dstNode: Node;
     srcNode: Node;
-    data: Record<string | number, unknown>;
+    data: AdHocData;
     mesh: AbstractMesh;
     arrowMesh: AbstractMesh | null = null;
     styleId: EdgeStyleId;
     // XXX: performance impact when not needed?
     ray: Ray;
 
-    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: Record<string | number, unknown>, opts: EdgeOpts = {}) {
+    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
