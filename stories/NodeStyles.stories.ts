@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element.ts";
-import {nodeShapes, renderFn, templateFromNodeStyle} from "./helpers";
+import {nodeShapes, renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Node",
@@ -30,7 +30,7 @@ const meta: Meta = {
         },
     },
     args: {
-        styleTemplate: templateFromNodeStyle({}),
+        styleTemplate: templateCreator({}),
     },
 };
 export default meta;
@@ -41,7 +41,7 @@ export const Default: Story = {};
 
 export const Color: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({texture: {color: "red"}}),
+        styleTemplate: templateCreator({nodeStyle: {texture: {color: "red"}}}),
     },
     parameters: {
         controls: {
@@ -52,7 +52,7 @@ export const Color: Story = {
 
 export const Shape: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({shape: {type: "box"}}),
+        styleTemplate: templateCreator({nodeStyle: {shape: {type: "box"}}}),
     },
     parameters: {
         controls: {
@@ -63,7 +63,7 @@ export const Shape: Story = {
 
 export const Size: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({shape: {size: 3}}),
+        styleTemplate: templateCreator({nodeStyle: {shape: {size: 3}}}),
     },
     parameters: {
         controls: {
@@ -74,7 +74,7 @@ export const Size: Story = {
 
 export const Wireframe: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({effect: {wireframe: true}}),
+        styleTemplate: templateCreator({nodeStyle: {effect: {wireframe: true}}}),
     },
     parameters: {
         controls: {
@@ -85,7 +85,7 @@ export const Wireframe: Story = {
 
 export const Label: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({label: {enabled: true}}),
+        styleTemplate: templateCreator({nodeStyle: {label: {enabled: true}}}),
     },
     parameters: {
         controls: {
@@ -96,11 +96,11 @@ export const Label: Story = {
 
 export const Opacity: Story = {
     args: {
-        styleTemplate: templateFromNodeStyle({texture: {color: {
+        styleTemplate: templateCreator({nodeStyle: {texture: {color: {
             colorType: "solid",
             value: "#0000FF",
             opacity: 0.5,
-        }}}),
+        }}}}),
     },
     parameters: {
         controls: {

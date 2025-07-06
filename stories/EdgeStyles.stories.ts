@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element.ts";
-import {renderFn, templateFromEdgeStyle} from "./helpers";
+import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Edge",
@@ -20,7 +20,7 @@ const meta: Meta = {
         },
     },
     args: {
-        styleTemplate: templateFromEdgeStyle({}),
+        styleTemplate: templateCreator({}),
     },
 };
 export default meta;
@@ -31,7 +31,7 @@ export const Default: Story = {};
 
 export const Width: Story = {
     args: {
-        styleTemplate: templateFromEdgeStyle({line: {width: 2}}),
+        styleTemplate: templateCreator({edgeStyle: {line: {width: 2}}}),
     },
     parameters: {
         controls: {
@@ -42,6 +42,6 @@ export const Width: Story = {
 
 export const NormalArrowHead: Story = {
     args: {
-        styleTemplate: templateFromEdgeStyle({arrowHead: {type: "normal"}}),
+        styleTemplate: templateCreator({edgeStyle: {arrowHead: {type: "normal"}}}),
     },
 };

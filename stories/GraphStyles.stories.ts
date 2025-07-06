@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateFromGraphStyle} from "./helpers";
+import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Graph",
@@ -30,7 +30,7 @@ export const Default: Story = {
 
 export const Skybox: Story = {
     args: {
-        styleTemplate: templateFromGraphStyle({graph: {background: {backgroundType: "skybox", data: "https://raw.githubusercontent.com/graphty-org/graphty-element/master/examples/assets/rolling_hills_equirectangular_skybox.png"}}}),
+        styleTemplate: templateCreator({graph: {background: {backgroundType: "skybox", data: "https://raw.githubusercontent.com/graphty-org/graphty-element/master/examples/assets/rolling_hills_equirectangular_skybox.png"}}}),
     },
     parameters: {
         controls: {
@@ -41,7 +41,7 @@ export const Skybox: Story = {
 
 export const BackgroundColor: Story = {
     args: {
-        styleTemplate: templateFromGraphStyle({graph: {background: {backgroundType: "color", color: "hotpink"}}}),
+        styleTemplate: templateCreator({graph: {background: {backgroundType: "color", color: "hotpink"}}}),
     },
     parameters: {
         controls: {
@@ -56,7 +56,7 @@ export const Layers: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
-        styleTemplate: templateFromGraphStyle({
+        styleTemplate: templateCreator({
             layers: [
                 {node: {selector: "starts_with(id, 'Lt.') == `true`", style: {enabled: true, texture: {color: "black"}}}},
                 {node: {selector: "starts_with(id, 'Mme') == `true`", style: {enabled: true, texture: {color: "yellow"}}}},
