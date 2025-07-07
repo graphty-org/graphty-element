@@ -1,3 +1,4 @@
+// TwoDInputController.ts
 import {PointerEventTypes} from "@babylonjs/core";
 import Hammer from "hammerjs";
 
@@ -19,54 +20,76 @@ interface GestureSession {
     startRotDeg: number;
 }
 
-// === Input Controller Class ===
 export class InputController {
     private keyState: Record<string, boolean> = {};
     private gestureSession: GestureSession | null = null;
+    private hammer: HammerManager | null = null;
+    private enabled = false;
+
+    private pointerDownHandler = (): void => {
+        this.cam.canvas.focus();
+    };
+
+    private keyDownHandler = (e: KeyboardEvent): void => {
+        this.keyState[e.key] = true;
+    };
+
+    private keyUpHandler = (e: KeyboardEvent): void => {
+        this.keyState[e.key] = false;
+    };
 
     constructor(
         private cam: TwoDCameraController,
         private canvas: HTMLCanvasElement,
         private config: TwoDCameraControlsConfigType,
     ) {
+        this.canvas.setAttribute("tabindex", "0"); // Make focusable
         this.setupMouse();
-        this.setupKeyboard();
         this.setupTouch();
     }
 
     private setupMouse(): void {
         let isPanning = false;
-        let lastX = 0; let lastY = 0;
+        let lastX = 0;
+        let lastY = 0;
 
         this.cam.scene.onPointerObservable.add((pi) => {
             const e = pi.event as PointerEvent;
+
             switch (pi.type) {
-            case PointerEventTypes.POINTERDOWN:
-                isPanning = true;
-                lastX = e.clientX;
-                lastY = e.clientY;
-                break;
-            case PointerEventTypes.POINTERUP:
-                isPanning = false;
-                break;
-            case PointerEventTypes.POINTERMOVE:
-                if (isPanning && e.buttons === 1) {
-                    const dx = e.clientX - lastX;
-                    const dy = e.clientY - lastY;
-                    const orthoRight = this.cam.camera.orthoRight ?? 1;
-                    const orthoLeft = this.cam.camera.orthoLeft ?? 1;
-                    const orthoTop = this.cam.camera.orthoTop ?? 1;
-                    const orthoBottom = this.cam.camera.orthoBottom ?? 1;
-                    const scaleX = (orthoRight - orthoLeft) / this.cam.engine.getRenderWidth();
-                    const scaleY = (orthoTop - orthoBottom) / this.cam.engine.getRenderHeight();
-                    this.cam.pan(-dx * scaleX * this.config.mousePanScale, dy * scaleY * this.config.mousePanScale);
+                case PointerEventTypes.POINTERDOWN:
+                    isPanning = true;
                     lastX = e.clientX;
                     lastY = e.clientY;
-                }
+                    this.pointerDownHandler();
+                    break;
 
-                break;
-            default:
-                break; // ignore
+                case PointerEventTypes.POINTERUP:
+                    isPanning = false;
+                    break;
+
+                case PointerEventTypes.POINTERMOVE:
+                    if (isPanning && e.buttons === 1) {
+                        const orthoRight = this.cam.camera.orthoRight ?? 1;
+                        const orthoLeft = this.cam.camera.orthoLeft ?? 1;
+                        const orthoTop = this.cam.camera.orthoTop ?? 1;
+                        const orthoBottom = this.cam.camera.orthoBottom ?? 1;
+                        const scaleX = (orthoRight - orthoLeft) / this.cam.engine.getRenderWidth();
+                        const scaleY = (orthoTop - orthoBottom) / this.cam.engine.getRenderHeight();
+
+                        const dx = e.clientX - lastX;
+                        const dy = e.clientY - lastY;
+
+                        this.cam.pan(-dx * scaleX * this.config.mousePanScale, dy * scaleY * this.config.mousePanScale);
+
+                        lastX = e.clientX;
+                        lastY = e.clientY;
+                    }
+
+                    break;
+
+                default:
+                    break;
             }
         });
 
@@ -80,39 +103,35 @@ export class InputController {
         }, PointerEventTypes.POINTERWHEEL);
     }
 
-    private setupKeyboard(): void {
-        window.addEventListener("keydown", (e) => {
-            this.keyState[e.key] = true;
-        });
-        window.addEventListener("keyup", (e) => {
-            this.keyState[e.key] = false;
-        });
-    }
-
     private setupTouch(): void {
-        const hammer = new Hammer.Manager(this.canvas);
+        this.hammer = new Hammer.Manager(this.canvas);
         const pan = new Hammer.Pan({threshold: 0, pointers: 0});
         const pinch = new Hammer.Pinch();
         const rotate = new Hammer.Rotate();
 
-        hammer.add([pan, pinch, rotate]);
-        hammer.get("pinch").recognizeWith(hammer.get("rotate"));
-        hammer.get("pan").requireFailure(hammer.get("pinch"));
+        this.hammer.add([pan, pinch, rotate]);
+        this.hammer.get("pinch").recognizeWith(this.hammer.get("rotate"));
+        this.hammer.get("pan").requireFailure(this.hammer.get("pinch"));
 
-        hammer.on("panstart pinchstart rotatestart", (ev) => {
-            this.gestureSession = this.gestureSession ?? {
+        this.hammer.on("panstart pinchstart rotatestart", (ev) => {
+            this.gestureSession = {
                 panX: ev.center.x,
                 panY: ev.center.y,
                 panStartX: this.cam.camera.position.x,
                 panStartY: this.cam.camera.position.y,
-                ortho: {left: this.cam.camera.orthoLeft, right: this.cam.camera.orthoRight, top: this.cam.camera.orthoTop, bottom: this.cam.camera.orthoBottom},
+                ortho: {
+                    left: this.cam.camera.orthoLeft ?? 1,
+                    right: this.cam.camera.orthoRight ?? 1,
+                    top: this.cam.camera.orthoTop ?? 1,
+                    bottom: this.cam.camera.orthoBottom ?? 1,
+                },
                 scale: ev.scale || 1,
                 rotation: this.cam.parent.rotation.z,
                 startRotDeg: ev.rotation || 0,
-            } as GestureSession;
+            };
         });
 
-        hammer.on("panmove pinchmove rotatemove", (ev) => {
+        this.hammer.on("panmove pinchmove rotatemove", (ev) => {
             if (!this.gestureSession) {
                 return;
             }
@@ -140,12 +159,38 @@ export class InputController {
             this.cam.parent.rotation.z = this.gestureSession.rotation + rotRad;
         });
 
-        hammer.on("panend pinchend rotateend", () => {
+        this.hammer.on("panend pinchend rotateend", () => {
             this.gestureSession = null;
         });
     }
 
+    public enable(): void {
+        if (this.enabled) {
+            return;
+        }
+
+        this.enabled = true;
+
+        this.canvas.addEventListener("keydown", this.keyDownHandler);
+        this.canvas.addEventListener("keyup", this.keyUpHandler);
+    }
+
+    public disable(): void {
+        if (!this.enabled) {
+            return;
+        }
+
+        this.enabled = false;
+
+        this.canvas.removeEventListener("keydown", this.keyDownHandler);
+        this.canvas.removeEventListener("keyup", this.keyUpHandler);
+    }
+
     public applyKeyboardInertia(): void {
+        if (!this.enabled) {
+            return;
+        }
+
         const v = this.cam.velocity;
         const c = this.config;
 
@@ -181,7 +226,9 @@ export class InputController {
             v.rotate -= c.rotateSpeedPerFrame;
         }
     }
-    update(): void {
-        // ignore
+
+    public update(): void {
+        this.applyKeyboardInertia();
+        this.cam.applyInertia();
     }
 }

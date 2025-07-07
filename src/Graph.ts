@@ -3,22 +3,25 @@ import "./layout"; // register all internal layouts
 import "./algorithms"; // register all internal algorithms
 
 import {
-    ArcRotateCamera,
-    Camera,
     Color4,
     Engine,
-    FlyCamera,
     HemisphericLight,
     Logger,
     Observable,
     PhotoDome,
     Scene,
     Vector3,
+    WebGPUEngine,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 import jmespath from "jmespath";
 
 import {Algorithm} from "./algorithms/Algorithm";
+import {CameraManager} from "./camera/CameraManager";
+import {OrbitCameraController} from "./camera/OrbitCameraController";
+import {OrbitInputController} from "./camera/OrbitInputController";
+import {TwoDCameraController} from "./camera/TwoDCameraController";
+import {InputController} from "./camera/TwoDInputController";
 import {
     AdHocData,
     FetchEdgesFn,
@@ -39,7 +42,7 @@ import {MeshCache} from "./MeshCache";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
-import {createXrButton} from "./xr-button";
+// import {createXrButton} from "./xr-button";
 
 export class Graph {
     stats: Stats;
@@ -49,15 +52,15 @@ export class Graph {
     // babylon
     element: Element;
     canvas: HTMLCanvasElement;
-    engine: Engine;
+    engine: WebGPUEngine | Engine;
     scene: Scene;
-    camera: Camera;
+    camera: CameraManager;
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
     meshCache: MeshCache;
     edgeCache: EdgeMap = new EdgeMap();
     nodeCache = new Map<NodeIdType, Node>();
-    needRays = true; // TODO: currently always true
+    needRays = false; // TODO: currently always true
     // graph engine
     layoutEngine!: LayoutEngine;
     running = false;
@@ -115,11 +118,67 @@ export class Graph {
 
         // setup babylonjs
         Logger.LogLevels = Logger.ErrorLogLevel;
+        // this.engine = new WebGPUEngine(this.canvas);
         this.engine = new Engine(this.canvas, true); // Generate the BABYLON 3D engine
         this.scene = new Scene(this.engine);
 
         // setup camera
-        this.camera = this.createCamera(3);
+        this.camera = new CameraManager(this.scene);
+        const orbitCamera = new OrbitCameraController(this.canvas, this.scene, {
+            trackballRotationSpeed: 0.005,
+            keyboardRotationSpeed: 0.03,
+            keyboardZoomSpeed: 0.2,
+            keyboardYawSpeed: 0.02,
+            pinchZoomSensitivity: 10,
+            twistYawSensitivity: 1.5,
+            minZoomDistance: 2,
+            maxZoomDistance: 50,
+            inertiaDamping: 0.9,
+        });
+        const orbitInput = new OrbitInputController(this.canvas, orbitCamera);
+        this.camera.registerCamera("orbit", orbitCamera, orbitInput);
+        const twoDCamera = new TwoDCameraController(this.scene, this.engine, this.canvas, {
+            panAcceleration: 0.02,
+            panDamping: 0.85,
+            zoomFactorPerFrame: 0.02,
+            zoomDamping: 0.85,
+            zoomMin: 0.1,
+            zoomMax: 100,
+            rotateSpeedPerFrame: 0.02,
+            rotateDamping: 0.85,
+            rotateMin: null,
+            rotateMax: null,
+            mousePanScale: 1.0,
+            mouseWheelZoomSpeed: 1.1,
+            touchPanScale: 1.0,
+            touchPinchMin: 0.1,
+            touchPinchMax: 100,
+            initialOrthoSize: 5,
+            rotationEnabled: true,
+            inertiaEnabled: true,
+        });
+        const twoDInput = new InputController(twoDCamera, this.canvas, {
+            panAcceleration: 0.02,
+            panDamping: 0.85,
+            zoomFactorPerFrame: 0.02,
+            zoomDamping: 0.85,
+            zoomMin: 0.1,
+            zoomMax: 100,
+            rotateSpeedPerFrame: 0.02,
+            rotateDamping: 0.85,
+            rotateMin: null,
+            rotateMax: null,
+            mousePanScale: 1.0,
+            mouseWheelZoomSpeed: 1.1,
+            touchPanScale: 1.0,
+            touchPinchMin: 0.1,
+            touchPinchMax: 100,
+            initialOrthoSize: 5,
+            rotationEnabled: true,
+            inertiaEnabled: true,
+        });
+        this.camera.registerCamera("2d", twoDCamera, twoDInput);
+        this.camera.activateCamera("orbit");
 
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
@@ -145,6 +204,7 @@ export class Graph {
         }
 
         await this.scene.whenReadyAsync();
+        console.log("engine WebGPU", this.engine.isWebGPU);
 
         // Register a render loop to repeatedly render the scene
         this.engine.runRenderLoop(() => {
@@ -152,7 +212,7 @@ export class Graph {
             this.scene.render();
         });
 
-        this.xrHelper = await createXrButton(this.scene, this.camera);
+        // this.xrHelper = await createXrButton(this.scene, this.camera);
 
         // Watch for browser/canvas resize events
         window.addEventListener("resize", () => {
@@ -162,103 +222,126 @@ export class Graph {
         this.initialized = true;
     }
 
-    createCamera(numDimensions = 3): Camera {
-        if (numDimensions !== 2 && numDimensions !== 3) {
-            throw new TypeError("number of dimensions can only be 2 or 3");
-        }
+    // createCamera(numDimensions = 3): TwoDCameraController | OrbitCameraController {
+    //     if (numDimensions !== 2 && numDimensions !== 3) {
+    //         throw new TypeError("number of dimensions can only be 2 or 3");
+    //     }
 
-        // discard old camera
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        if (this.camera) {
-            if (this.camera instanceof FlyCamera) {
-                window.removeEventListener("keydown", keydownListener.bind(this));
-                window.removeEventListener("keyup", keyupListener.bind(this));
-            }
+    //     if (this.camera instanceof OrbitCameraController) {
+    //         return this.camera;
+    //     }
 
-            this.camera.dispose();
-        }
+    //     // discard old camera
+    //     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    //     if (this.camera) {
+    //         if (this.camera instanceof FlyCamera) {
+    //             window.removeEventListener("keydown", keydownListener.bind(this));
+    //             window.removeEventListener("keyup", keyupListener.bind(this));
+    //             this.camera.dispose();
+    //         }
+    //     }
 
-        if (numDimensions === 3) {
-            this.camera = new ArcRotateCamera(
-                "camera",
-                -Math.PI / 2,
-                Math.PI / 2.5,
-                this.styles.config.graph.startingCameraDistance,
-                new Vector3(0, 0, 0),
-            );
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete (this.camera as any).lowerBetaLimit;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            delete (this.camera as any).upperBetaLimit;
-        } else {
-            this.camera = new FlyCamera("FlyCamera", new Vector3(0, 0, -10), this.scene);
-            this.camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
-            this.camera.orthoLeft = -this.orthoSize;
-            this.camera.orthoRight = this.orthoSize;
-            this.camera.orthoTop = this.orthoSize;
-            this.camera.orthoBottom = -this.orthoSize;
+    //     if (numDimensions === 3) {
+    //         console.log("creating 3d camera");
 
-            // Keyboard event listeners
-            window.addEventListener("keydown", keydownListener.bind(this));
-            window.addEventListener("keyup", keyupListener.bind(this));
-        }
+    //         /* ***** ORBIT CAMERA ******/
+    //         const cameraController = new OrbitCameraController(this.canvas, this.scene, {
+    //             trackballRotationSpeed: 0.005,
+    //             keyboardRotationSpeed: 0.03,
+    //             keyboardZoomSpeed: 0.2,
+    //             keyboardYawSpeed: 0.02,
+    //             pinchZoomSensitivity: 10,
+    //             twistYawSensitivity: 1.5,
+    //             minZoomDistance: 2,
+    //             maxZoomDistance: 50,
+    //             inertiaDamping: 0.9,
+    //         });
+    //         this.inputControl = new OrbitInputController(this.canvas, cameraController);
 
-        this.camera.attachControl(this.canvas, true);
+    //         cameraController.scene.onBeforeRenderObservable.add(() => {
+    //             this.inputControl?.update();
+    //         });
+    //     } else {
+    //         const CameraControlsConfig: TwoDCameraControlsConfigType = {
+    //             panAcceleration: 0.02,
+    //             panDamping: 0.85,
+    //             zoomFactorPerFrame: 0.02,
+    //             zoomDamping: 0.85,
+    //             zoomMin: 0.1,
+    //             zoomMax: 100,
+    //             rotateSpeedPerFrame: 0.02,
+    //             rotateDamping: 0.85,
+    //             rotateMin: null,
+    //             rotateMax: null,
+    //             mousePanScale: 1.0,
+    //             mouseWheelZoomSpeed: 1.1,
+    //             touchPanScale: 1.0,
+    //             touchPinchMin: 0.1,
+    //             touchPinchMax: 100,
+    //             initialOrthoSize: 5,
+    //             rotationEnabled: true,
+    //             inertiaEnabled: true,
+    //         };
 
-        return this.camera;
-    }
+    //         this.camera = new TwoDCameraController(this.scene, this.engine, this.canvas, CameraControlsConfig);
+    //         this.inputControl = new InputController(this.camera, this.canvas, CameraControlsConfig);
+    //     }
+
+    //     return this.camera;
+    // }
 
     // Update camera position and zoom
-    #updateCamera(): void {
-        // Arrow key movement
-        if (this.keys[37]) {
-            this.camera.position.x -= this.moveSpeed / this.zoomLevel;
-        }
+    // #updateCamera(): void {
+    //     // Arrow key movement
+    //     if (this.keys[37]) {
+    //         this.camera.position.x -= this.moveSpeed / this.zoomLevel;
+    //     }
 
-        if (this.keys[39]) {
-            this.camera.position.x += this.moveSpeed / this.zoomLevel;
-        }
+    //     if (this.keys[39]) {
+    //         this.camera.position.x += this.moveSpeed / this.zoomLevel;
+    //     }
 
-        if (this.keys[38]) {
-            this.camera.position.y += this.moveSpeed / this.zoomLevel;
-        }
+    //     if (this.keys[38]) {
+    //         this.camera.position.y += this.moveSpeed / this.zoomLevel;
+    //     }
 
-        if (this.keys[40]) {
-            this.camera.position.y -= this.moveSpeed / this.zoomLevel;
-        }
+    //     if (this.keys[40]) {
+    //         this.camera.position.y -= this.moveSpeed / this.zoomLevel;
+    //     }
 
-        // Zoom controls (+ and - keys)
-        if (this.keys[187]) { // + key
-            this.zoomLevel = Math.min(this.zoomLevel + this.zoomSpeed, this.maxZoom);
-            this.#updateOrthographicSize();
-        }
+    //     // Zoom controls (+ and - keys)
+    //     if (this.keys[187]) { // + key
+    //         this.zoomLevel = Math.min(this.zoomLevel + this.zoomSpeed, this.maxZoom);
+    //         this.#updateOrthographicSize();
+    //     }
 
-        if (this.keys[189]) { // - key
-            this.zoomLevel = Math.max(this.zoomLevel - this.zoomSpeed, this.minZoom);
-            this.#updateOrthographicSize();
-        }
+    //     if (this.keys[189]) { // - key
+    //         this.zoomLevel = Math.max(this.zoomLevel - this.zoomSpeed, this.minZoom);
+    //         this.#updateOrthographicSize();
+    //     }
 
-        // Always keep camera looking at origin
-        // this.camera.setTarget(Vector3.Zero());
-    };
+    //     // Always keep camera looking at origin
+    //     // this.camera.setTarget(Vector3.Zero());
+    // };
 
-    #updateOrthographicSize(): void {
-        const rect = this.engine.getRenderingCanvasClientRect();
-        if (!rect) {
-            throw new TypeError("error getting rendering canvas rectangle");
-        }
+    // #updateOrthographicSize(): void {
+    //     const rect = this.engine.getRenderingCanvasClientRect();
+    //     if (!rect) {
+    //         throw new TypeError("error getting rendering canvas rectangle");
+    //     }
 
-        const aspect = rect.height / rect.width;
-        const size = this.orthoSize / this.zoomLevel;
-        this.camera.orthoLeft = -size;
-        this.camera.orthoRight = size;
-        this.camera.orthoTop = size * aspect;
-        this.camera.orthoBottom = -size * aspect;
-    };
+    //     const aspect = rect.height / rect.width;
+    //     const size = this.orthoSize / this.zoomLevel;
+    //     this.camera.orthoLeft = -size;
+    //     this.camera.orthoRight = size;
+    //     this.camera.orthoTop = size * aspect;
+    //     this.camera.orthoBottom = -size * aspect;
+    // };
 
     update(): void {
-        this.#updateCamera();
-        this.#updateOrthographicSize();
+        // this.#updateCamera();
+        // this.#updateOrthographicSize();
+        this.camera.update();
 
         if (!this.running) {
             return;
@@ -309,19 +392,19 @@ export class Graph {
         this.stats.edgeUpdate.endMonitoring();
 
         // fit camera to scene
-        if (this.camera instanceof ArcRotateCamera){
-            const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
-            const max = boundingBoxMax ?? new Vector3(20, 20, 20);
-            const center = min.add(max).scale(0.5);
-            const size = max.subtract(min);
-            const fieldOfView = this.camera.fov;
-            const radius = (Math.max(size.x, size.y, size.z) / 2) / Math.tan(fieldOfView / 2);
-            this.camera.upVector = new Vector3(1, 0, 0);
-            this.camera.setTarget(center);
-            this.camera.alpha = Math.PI / 2;
-            this.camera.beta = Math.PI / 2;
-            this.camera.radius = radius;
-        }
+        // if (this.camera instanceof ArcRotateCamera){
+        //     const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
+        //     const max = boundingBoxMax ?? new Vector3(20, 20, 20);
+        //     const center = min.add(max).scale(0.5);
+        //     const size = max.subtract(min);
+        //     const fieldOfView = this.camera.fov;
+        //     const radius = (Math.max(size.x, size.y, size.z) / 2) / Math.tan(fieldOfView / 2);
+        //     this.camera.upVector = new Vector3(1, 0, 0);
+        //     this.camera.setTarget(center);
+        //     this.camera.alpha = Math.PI / 2;
+        //     this.camera.beta = Math.PI / 2;
+        //     this.camera.radius = radius;
+        // }
 
         // check to see if we are done
         if (this.layoutEngine.isSettled) {
@@ -339,7 +422,7 @@ export class Graph {
 
         // style nodes
         for (const n of this.nodes.values()) {
-            const styleId = this.styles.getStyleForNode(n.data);
+            const styleId = this.styles.getStyleForNode(n.data, this.styles.config.graph.twoD);
             n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
             n.updateStyle(styleId);
         }
@@ -381,7 +464,9 @@ export class Graph {
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
 
         // setup camera
-        this.createCamera(this.styles.config.behavior.layout.dimensions);
+        console.log("creating camera 2d", this.styles.config.graph.twoD);
+        const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
+        this.camera.activateCamera(cameraType);
 
         // run algorithms
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
@@ -502,26 +587,26 @@ export class Graph {
 
     addListener(type: EventType, cb: EventCallbackType): void {
         switch (type) {
-        case "graph-settled":
-            this.graphObservable.add((e) => {
-                cb(e);
-            });
-            break;
-        default:
-            throw new TypeError(`Unknown listener type in addListener: ${type}`);
+            case "graph-settled":
+                this.graphObservable.add((e) => {
+                    cb(e);
+                });
+                break;
+            default:
+                throw new TypeError(`Unknown listener type in addListener: ${type}`);
         }
     }
 }
 
-function keydownListener(this: Graph, e: KeyboardEvent): void {
-    this.keys[e.inputIndex] = true;
-    e.preventDefault();
-}
+// function keydownListener(this: Graph, e: KeyboardEvent): void {
+//     this.keys[e.inputIndex] = true;
+//     e.preventDefault();
+// }
 
-function keyupListener(this: Graph, e: KeyboardEvent): void {
-    this.keys[e.inputIndex] = false;
-    e.preventDefault();
-};
+// function keyupListener(this: Graph, e: KeyboardEvent): void {
+//     this.keys[e.inputIndex] = false;
+//     e.preventDefault();
+// };
 
 function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
     const adjPos = pos[ord] - scale;

@@ -3,12 +3,12 @@ import {Camera, Scene} from "@babylonjs/core";
 
 export interface CameraController {
     camera: Camera;
-    update(): void;
 }
 
 export interface InputHandler {
     enable(): void;
     disable(): void;
+    update(): void;
 }
 
 export type CameraKey = "orbit" | "2d";
@@ -52,6 +52,6 @@ export class CameraManager {
     }
 
     public update(): void {
-        this.activeCameraController?.update();
+        this.activeInputHandler?.update();
     }
 }

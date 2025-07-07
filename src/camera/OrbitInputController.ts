@@ -1,3 +1,4 @@
+// OrbitInputController.ts
 import Hammer from "hammerjs";
 
 import {OrbitCameraController, OrbitConfig} from "./OrbitCameraController";
@@ -13,59 +14,74 @@ export class OrbitInputController {
     private rotationVelocityY = 0;
     private keysDown: Record<string, boolean> = {};
     private config: OrbitConfig;
+    private hammer: HammerManager | null = null;
+    private enabled = false;
+
+    // Store handlers for attach/detach
+    private pointerDownHandler = (evt: PointerEvent): void => {
+        if (evt.button === 0 && !this.isMultiTouch) {
+            this.isPointerDown = true;
+            this.lastX = evt.clientX;
+            this.lastY = evt.clientY;
+            this.canvas.focus(); // Ensure canvas gets focus for keyboard
+        }
+    };
+
+    private pointerUpHandler = (): void => {
+        this.isPointerDown = false;
+    };
+
+    private pointerMoveHandler = (evt: PointerEvent): void => {
+        if (!this.isPointerDown || this.isMultiTouch) {
+            return;
+        }
+
+        const dx = evt.clientX - this.lastX;
+        const dy = evt.clientY - this.lastY;
+        this.lastX = evt.clientX;
+        this.lastY = evt.clientY;
+        this.controller.rotate(dx, dy);
+    };
+
+    private keyDownHandler = (evt: KeyboardEvent): void => {
+        console.log("orbit keydown handler");
+        this.keysDown[evt.key.toLowerCase()] = true;
+    };
+
+    private keyUpHandler = (evt: KeyboardEvent): void => {
+        this.keysDown[evt.key.toLowerCase()] = false;
+    };
 
     constructor(canvas: HTMLCanvasElement, controller: OrbitCameraController) {
         this.canvas = canvas;
         this.controller = controller;
         this.config = controller.config;
 
+        // Ensure canvas is focusable
+        this.canvas.setAttribute("tabindex", "0");
+
         this.attachMouseTouch();
-        this.attachKeyboard();
     }
 
     private attachMouseTouch(): void {
-        this.canvas.addEventListener("pointerdown", (evt: PointerEvent) => {
-            if (evt.button === 0 && !this.isMultiTouch) {
-                this.isPointerDown = true;
-                this.lastX = evt.clientX;
-                this.lastY = evt.clientY;
-            }
-        });
-
-        this.canvas.addEventListener("pointerup", () => {
-            this.isPointerDown = false;
-        });
-
-        this.canvas.addEventListener("pointermove", (evt: PointerEvent) => {
-            if (!this.isPointerDown || this.isMultiTouch) {
-                return;
-            }
-
-            const dx = evt.clientX - this.lastX;
-            const dy = evt.clientY - this.lastY;
-            this.lastX = evt.clientX;
-            this.lastY = evt.clientY;
-            this.controller.rotate(dx, dy);
-        });
-
-        const hammer = new Hammer.Manager(this.canvas);
-        hammer.add(new Hammer.Pinch());
-        hammer.add(new Hammer.Rotate());
+        this.hammer = new Hammer.Manager(this.canvas);
+        this.hammer.add(new Hammer.Pinch());
+        this.hammer.add(new Hammer.Rotate());
 
         let lastRotation = 0;
         let lastScale = 1;
 
-        hammer.on("pinchstart rotatestart", () => {
+        this.hammer.on("pinchstart rotatestart", () => {
             this.isMultiTouch = true;
             lastRotation = 0;
             lastScale = 1;
         });
 
-        hammer.on("pinchend rotateend", () => {
+        this.hammer.on("pinchend rotateend", () => {
             this.isMultiTouch = false;
         });
 
-        hammer.on("pinchmove rotatemove", (ev: HammerInput) => {
+        this.hammer.on("pinchmove rotatemove", (ev: HammerInput) => {
             const scaleDelta = ev.scale - lastScale;
             this.controller.zoom(-scaleDelta * this.config.pinchZoomSensitivity);
             lastScale = ev.scale;
@@ -76,16 +92,52 @@ export class OrbitInputController {
         });
     }
 
-    private attachKeyboard(): void {
-        window.addEventListener("keydown", (evt: KeyboardEvent) => {
-            this.keysDown[evt.key.toLowerCase()] = true;
-        });
-        window.addEventListener("keyup", (evt: KeyboardEvent) => {
-            this.keysDown[evt.key.toLowerCase()] = false;
-        });
+    public enable(): void {
+        if (this.enabled) {
+            return;
+        }
+
+        this.enabled = true;
+
+        this.canvas.addEventListener("pointerdown", this.pointerDownHandler);
+        this.canvas.addEventListener("pointerup", this.pointerUpHandler);
+        this.canvas.addEventListener("pointermove", this.pointerMoveHandler);
+
+        this.canvas.addEventListener("keydown", this.keyDownHandler);
+        this.canvas.addEventListener("keyup", this.keyUpHandler);
+
+        this.canvas.focus();
+
+        if (!this.hammer) {
+            this.attachMouseTouch();
+        }
+    }
+
+    public disable(): void {
+        if (!this.enabled) {
+            return;
+        }
+
+        this.enabled = false;
+
+        this.canvas.removeEventListener("pointerdown", this.pointerDownHandler);
+        this.canvas.removeEventListener("pointerup", this.pointerUpHandler);
+        this.canvas.removeEventListener("pointermove", this.pointerMoveHandler);
+
+        this.canvas.removeEventListener("keydown", this.keyDownHandler);
+        this.canvas.removeEventListener("keyup", this.keyUpHandler);
+
+        if (this.hammer) {
+            this.hammer.destroy();
+            this.hammer = null;
+        }
     }
 
     public update(): void {
+        if (!this.enabled) {
+            return;
+        }
+
         const keys = this.keysDown;
         const cam = this.controller;
 
