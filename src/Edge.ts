@@ -192,7 +192,7 @@ export class Edge {
                 points: Edge.unitVectorPoints,
             },
             {
-                color: Color3.FromHexString(o.line?.color ?? "#FFFFFFF"),
+                color: Color3.FromHexString(o.line?.color ?? "#FFFFFF"),
                 width: o.line?.width ?? 0.25,
             },
         );
