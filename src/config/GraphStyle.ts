@@ -28,9 +28,10 @@ const GraphEffects = z.strictObject({
 
 export const GraphStyle = z.strictObject({
     addDefaultStyle: z.boolean().default(true),
-    background: GraphBackground.prefault({backgroundType: "color", color: "skyblue"}),
+    background: GraphBackground.prefault({backgroundType: "color", color: "whitesmoke"}),
     effects: GraphEffects.optional(),
     startingCameraDistance: z.number().default(30), // TODO: replace with "zoomToFit: z.boolean()"
     layout: z.string().default("ngraph"),
     layoutOptions: z.object().optional(),
-}).prefault({});
+    twoD: z.boolean().optional(),
+});

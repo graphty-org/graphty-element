@@ -7,7 +7,6 @@ export const NodeBehaviorOpts = z.strictObject({
 }).prefault({});
 
 export const GraphLayoutOpts = z.strictObject({
-    dimensions: z.int().min(2).max(3).default(3),
     type: z.string().default("ngraph"),
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),
@@ -15,6 +14,7 @@ export const GraphLayoutOpts = z.strictObject({
 });
 
 export const GraphBehaviorOpts = z.strictObject({
+    // dimensions: z.int().min(2).max(3).default(3),
     layout: GraphLayoutOpts.prefault({}),
     node: NodeBehaviorOpts,
     fetchNodes: z.optional(z.instanceof(Function)),

@@ -68,7 +68,7 @@ export const defaultEdgeStyle: EdgeStyleConfig = {
         type: "solid",
         animationSpeed: 0.1,
         width: 0.25,
-        color: "white",
+        color: "darkgrey",
     },
     enabled: true,
 };
