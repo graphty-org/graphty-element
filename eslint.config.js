@@ -61,7 +61,7 @@ export default tseslint.config(
             "@stylistic/comma-dangle": ["error", "always-multiline"], // always use comma on final line to help with diff
             "@stylistic/eol-last": ["error", "always"], // end every file with an end-of-line ("\n")
             "@stylistic/function-call-argument-newline": ["error", "consistent"], // all function arguments on newlines or sameline
-            "@stylistic/indent": ["error", 4, {ignoredNodes: ["PropertyDefinition"]}], // indent 4 spaces
+            "@stylistic/indent": ["error", 4], // indent 4 spaces
             "@stylistic/linebreak-style": ["error", "unix"], // always use \n
             "@stylistic/no-multiple-empty-lines": ["error", {max: 1, maxBOF: 0, maxEOF: 1}], // don't allow multiple empty lines in a row
             "@stylistic/no-tabs": "error", // always spaces, never tabs
