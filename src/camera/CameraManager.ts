@@ -1,8 +1,9 @@
 // CameraManager.ts
-import {Camera, Scene} from "@babylonjs/core";
+import {Camera, Scene, Vector3} from "@babylonjs/core";
 
 export interface CameraController {
     camera: Camera;
+    zoomToBoundingBox(min: Vector3, max: Vector3): void;
 }
 
 export interface InputHandler {
@@ -49,6 +50,10 @@ export class CameraManager {
 
         this.activeCameraController = controller;
         this.activeInputHandler = inputHandler;
+    }
+
+    public zoomToBoundingBox(min: Vector3, max: Vector3): void {
+        this.activeCameraController?.zoomToBoundingBox(min, max);
     }
 
     public update(): void {

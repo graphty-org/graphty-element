@@ -53,4 +53,15 @@ export class OrbitCameraController {
     public updateCameraPosition(): void {
         this.camera.position.copyFrom(Vector3.Forward().scale(-this.cameraDistance));
     }
+
+    public zoomToBoundingBox(min: Vector3, max: Vector3): void {
+        const center = min.add(max).scale(0.5);
+        const size = max.subtract(min);
+
+        this.pivot.position.copyFrom(center);
+
+        const largestDimension = size.length();
+        this.cameraDistance = Scalar.Clamp(largestDimension * 0.7, this.config.minZoomDistance, this.config.maxZoomDistance);
+        this.updateCameraPosition();
+    }
 }

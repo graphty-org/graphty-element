@@ -88,4 +88,17 @@ export class TwoDCameraController {
         v.zoom *= c.zoomDamping;
         v.rotate *= c.rotateDamping;
     }
+
+    public zoomToBoundingBox(min: Vector3, max: Vector3): void {
+        const centerX = (min.x + max.x) / 2;
+        const centerY = (min.y + max.y) / 2;
+
+        const sizeX = max.x - min.x;
+        const sizeY = max.y - min.y;
+        const largest = Math.max(sizeX, sizeY);
+
+        this.camera.position.x = centerX;
+        this.camera.position.y = centerY;
+        this.updateOrtho(largest * 0.6); // Padding factor as needed
+    }
 }

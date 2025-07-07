@@ -74,14 +74,6 @@ export class Graph {
     graphObservable = new Observable<GraphEvent>();
     nodeObservable = new Observable<NodeEvent>();
     edgeObservable = new Observable<EdgeEvent>();
-    // 2d camera
-    orthoSize = 10;
-    moveSpeed = 0.5;
-    zoomLevel = 1.0;
-    minZoom = 0.1;
-    maxZoom = 10.0;
-    zoomSpeed = 0.1;
-    keys: Record<string, boolean> = {};
 
     constructor(element: Element | string) {
         this.meshCache = new MeshCache();
@@ -132,7 +124,7 @@ export class Graph {
             pinchZoomSensitivity: 10,
             twistYawSensitivity: 1.5,
             minZoomDistance: 2,
-            maxZoomDistance: 50,
+            maxZoomDistance: 500,
             inertiaDamping: 0.9,
         });
         const orbitInput = new OrbitInputController(this.canvas, orbitCamera);
@@ -143,7 +135,7 @@ export class Graph {
             zoomFactorPerFrame: 0.02,
             zoomDamping: 0.85,
             zoomMin: 0.1,
-            zoomMax: 100,
+            zoomMax: 500,
             rotateSpeedPerFrame: 0.02,
             rotateDamping: 0.85,
             rotateMin: null,
@@ -222,125 +214,7 @@ export class Graph {
         this.initialized = true;
     }
 
-    // createCamera(numDimensions = 3): TwoDCameraController | OrbitCameraController {
-    //     if (numDimensions !== 2 && numDimensions !== 3) {
-    //         throw new TypeError("number of dimensions can only be 2 or 3");
-    //     }
-
-    //     if (this.camera instanceof OrbitCameraController) {
-    //         return this.camera;
-    //     }
-
-    //     // discard old camera
-    //     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    //     if (this.camera) {
-    //         if (this.camera instanceof FlyCamera) {
-    //             window.removeEventListener("keydown", keydownListener.bind(this));
-    //             window.removeEventListener("keyup", keyupListener.bind(this));
-    //             this.camera.dispose();
-    //         }
-    //     }
-
-    //     if (numDimensions === 3) {
-    //         console.log("creating 3d camera");
-
-    //         /* ***** ORBIT CAMERA ******/
-    //         const cameraController = new OrbitCameraController(this.canvas, this.scene, {
-    //             trackballRotationSpeed: 0.005,
-    //             keyboardRotationSpeed: 0.03,
-    //             keyboardZoomSpeed: 0.2,
-    //             keyboardYawSpeed: 0.02,
-    //             pinchZoomSensitivity: 10,
-    //             twistYawSensitivity: 1.5,
-    //             minZoomDistance: 2,
-    //             maxZoomDistance: 50,
-    //             inertiaDamping: 0.9,
-    //         });
-    //         this.inputControl = new OrbitInputController(this.canvas, cameraController);
-
-    //         cameraController.scene.onBeforeRenderObservable.add(() => {
-    //             this.inputControl?.update();
-    //         });
-    //     } else {
-    //         const CameraControlsConfig: TwoDCameraControlsConfigType = {
-    //             panAcceleration: 0.02,
-    //             panDamping: 0.85,
-    //             zoomFactorPerFrame: 0.02,
-    //             zoomDamping: 0.85,
-    //             zoomMin: 0.1,
-    //             zoomMax: 100,
-    //             rotateSpeedPerFrame: 0.02,
-    //             rotateDamping: 0.85,
-    //             rotateMin: null,
-    //             rotateMax: null,
-    //             mousePanScale: 1.0,
-    //             mouseWheelZoomSpeed: 1.1,
-    //             touchPanScale: 1.0,
-    //             touchPinchMin: 0.1,
-    //             touchPinchMax: 100,
-    //             initialOrthoSize: 5,
-    //             rotationEnabled: true,
-    //             inertiaEnabled: true,
-    //         };
-
-    //         this.camera = new TwoDCameraController(this.scene, this.engine, this.canvas, CameraControlsConfig);
-    //         this.inputControl = new InputController(this.camera, this.canvas, CameraControlsConfig);
-    //     }
-
-    //     return this.camera;
-    // }
-
-    // Update camera position and zoom
-    // #updateCamera(): void {
-    //     // Arrow key movement
-    //     if (this.keys[37]) {
-    //         this.camera.position.x -= this.moveSpeed / this.zoomLevel;
-    //     }
-
-    //     if (this.keys[39]) {
-    //         this.camera.position.x += this.moveSpeed / this.zoomLevel;
-    //     }
-
-    //     if (this.keys[38]) {
-    //         this.camera.position.y += this.moveSpeed / this.zoomLevel;
-    //     }
-
-    //     if (this.keys[40]) {
-    //         this.camera.position.y -= this.moveSpeed / this.zoomLevel;
-    //     }
-
-    //     // Zoom controls (+ and - keys)
-    //     if (this.keys[187]) { // + key
-    //         this.zoomLevel = Math.min(this.zoomLevel + this.zoomSpeed, this.maxZoom);
-    //         this.#updateOrthographicSize();
-    //     }
-
-    //     if (this.keys[189]) { // - key
-    //         this.zoomLevel = Math.max(this.zoomLevel - this.zoomSpeed, this.minZoom);
-    //         this.#updateOrthographicSize();
-    //     }
-
-    //     // Always keep camera looking at origin
-    //     // this.camera.setTarget(Vector3.Zero());
-    // };
-
-    // #updateOrthographicSize(): void {
-    //     const rect = this.engine.getRenderingCanvasClientRect();
-    //     if (!rect) {
-    //         throw new TypeError("error getting rendering canvas rectangle");
-    //     }
-
-    //     const aspect = rect.height / rect.width;
-    //     const size = this.orthoSize / this.zoomLevel;
-    //     this.camera.orthoLeft = -size;
-    //     this.camera.orthoRight = size;
-    //     this.camera.orthoTop = size * aspect;
-    //     this.camera.orthoBottom = -size * aspect;
-    // };
-
     update(): void {
-        // this.#updateCamera();
-        // this.#updateOrthographicSize();
         this.camera.update();
 
         if (!this.running) {
@@ -391,20 +265,10 @@ export class Graph {
         }
         this.stats.edgeUpdate.endMonitoring();
 
-        // fit camera to scene
-        // if (this.camera instanceof ArcRotateCamera){
-        //     const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
-        //     const max = boundingBoxMax ?? new Vector3(20, 20, 20);
-        //     const center = min.add(max).scale(0.5);
-        //     const size = max.subtract(min);
-        //     const fieldOfView = this.camera.fov;
-        //     const radius = (Math.max(size.x, size.y, size.z) / 2) / Math.tan(fieldOfView / 2);
-        //     this.camera.upVector = new Vector3(1, 0, 0);
-        //     this.camera.setTarget(center);
-        //     this.camera.alpha = Math.PI / 2;
-        //     this.camera.beta = Math.PI / 2;
-        //     this.camera.radius = radius;
-        // }
+        const scale = 1.3;
+        const min = boundingBoxMin?.multiplyByFloats(scale, scale, scale) ?? new Vector3(-20, -20, -20);
+        const max = boundingBoxMax?.multiplyByFloats(scale, scale, scale) ?? new Vector3(20, 20, 20);
+        this.camera.zoomToBoundingBox(min, max);
 
         // check to see if we are done
         if (this.layoutEngine.isSettled) {
@@ -597,16 +461,6 @@ export class Graph {
         }
     }
 }
-
-// function keydownListener(this: Graph, e: KeyboardEvent): void {
-//     this.keys[e.inputIndex] = true;
-//     e.preventDefault();
-// }
-
-// function keyupListener(this: Graph, e: KeyboardEvent): void {
-//     this.keys[e.inputIndex] = false;
-//     e.preventDefault();
-// };
 
 function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
     const adjPos = pos[ord] - scale;
