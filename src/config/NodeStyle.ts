@@ -1,7 +1,8 @@
 import {z} from "zod/v4";
 
 import {Node} from "../Node";
-import {AdvancedColorStyle, ColorStyle, TextBlockStyle} from "./common";
+import {AdvancedColorStyle, ColorStyle} from "./common";
+import {RichTextStyle} from "./RichTextStyle";
 
 export const NodeShapes = z.enum([
     "box",
@@ -62,8 +63,8 @@ export const NodeStyle = z.strictObject({
         wireframe: z.boolean().optional(),
         flatShaded: z.boolean().optional(),
     }).optional(),
-    label: TextBlockStyle.prefault({location: "top-left", color: "black", background: "white"}).optional(),
-    tooltip: TextBlockStyle.prefault({location: "top-right", color: "black", background: "white"}).optional(),
+    label: RichTextStyle.prefault({location: "top", textColor: "#000000"}).optional(),
+    tooltip: RichTextStyle.prefault({location: "top-right", textColor: "#000000", backgroundColor: "#FFFFFF"}).optional(),
     enabled: z.boolean().default(true),
 });
 

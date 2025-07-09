@@ -2,20 +2,28 @@ import {
     AbstractMesh,
     ActionManager,
     Color3,
-    DynamicTexture,
     ExecuteCodeAction,
     Mesh,
     MeshBuilder,
     SixDofDragBehavior,
     StandardMaterial,
 } from "@babylonjs/core";
+import jmespath from "jmespath";
 import _ from "lodash";
 
 import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
+import {transformLegacyProperties} from "./config/RichTextStyle";
 import type {Graph} from "./Graph";
+import {RichTextLabel, RichTextLabelOptions} from "./RichTextLabel";
 import {NodeStyleId, Styles} from "./Styles";
+
+interface BorderConfig {
+    width: number;
+    color: string;
+    spacing: number;
+}
 
 const GOLDEN_RATIO = 1.618;
 
@@ -33,7 +41,7 @@ export class Node {
     algorithmResults: AdHocData;
     styleUpdates: AdHocData;
     mesh: AbstractMesh;
-    label?: Mesh;
+    label?: RichTextLabel;
     meshDragBehavior!: SixDofDragBehavior;
     dragging = false;
     styleId: NodeStyleId;
@@ -267,9 +275,7 @@ export class Node {
 
         // create label
         if (o.label?.enabled) {
-            n.label = Node.createLabel(n.id.toString(), n, n.parentGraph);
-            n.label.parent = n.mesh;
-            n.label.position.x += 1.25;
+            n.label = Node.createLabel(n, o);
         }
 
         Node.addDefaultBehaviors(n, n.opts);
@@ -323,74 +329,302 @@ export class Node {
         return MeshBuilder.CreateGeodesic("geodesic", {size: o.shape?.size ?? 1});
     }
 
-    static createLabel(text: string, _n: Node, g: Graph): Mesh {
-        // adapted from: https://playground.babylonjs.com/#TMHF80
+    static createLabel(n: Node, o: NodeStyleConfig): RichTextLabel {
+        // Extract label text
+        let labelText = n.id.toString();
+        
+        // Check if text is directly provided
+        // Access the text property from the label style object
+        const labelConfig = o.label as any;
+        if (labelConfig?.text) {
+            labelText = labelConfig.text;
+        } else if (labelConfig?.textPath) {
+            try {
+                const result = jmespath.search(n.data, o.label.textPath);
+                if (result !== null && result !== undefined) {
+                    labelText = String(result);
+                }
+            } catch (e) {
+                console.warn(`Failed to extract label text using textPath "${o.label.textPath}":`, e);
+            }
+        }
 
-        // Set font
-        const fontSize = 48;
-        // var font = "bold " + font_size + "px Arial";
-        const font = `${fontSize}px Arial`;
+        // Transform legacy properties to new RichTextLabel properties
+        const labelStyle = o.label ? transformLegacyProperties(o.label as Record<string, unknown>) : {};
 
-        // Set height for plane
-        const planeHeight = 0.5;
+        // Create RichTextLabelOptions from the style configuration
+        // Start with basic required options
+        const labelOptions: RichTextLabelOptions = {
+            text: labelText,
+            attachTo: n.mesh,
+            attachPosition: Node.getAttachPosition(labelStyle.location ?? "top"),
+            attachOffset: labelStyle.attachOffset ?? Node.getDefaultAttachOffset(labelStyle.location ?? "top"),
+        };
 
-        // Set height for dynamic texture
-        const DTHeight = 1.5 * fontSize; // or set as wished
+        // Add defined properties from the label style
+        if (labelStyle.font !== undefined) {
+            labelOptions.font = labelStyle.font;
+        }
 
-        // Calcultae ratio
-        const ratio = planeHeight / DTHeight;
+        if (labelStyle.fontSize !== undefined) {
+            labelOptions.fontSize = labelStyle.fontSize;
+        }
 
-        // Use a temporay dynamic texture to calculate the length of the text on the dynamic texture canvas
-        const temp = new DynamicTexture("DynamicTexture", 64, g.scene);
-        const tmpctx = temp.getContext();
-        tmpctx.font = font;
-        const DTWidth = tmpctx.measureText(text).width + 8;
+        if (labelStyle.fontWeight !== undefined) {
+            labelOptions.fontWeight = labelStyle.fontWeight;
+        }
 
-        // Calculate width the plane has to be
-        const planeWidth = DTWidth * ratio;
+        if (labelStyle.lineHeight !== undefined) {
+            labelOptions.lineHeight = labelStyle.lineHeight;
+        }
 
-        // Create dynamic texture and write the text
-        const dynamicTexture = new DynamicTexture("DynamicTexture", {width: DTWidth, height: DTHeight}, g.scene, false);
-        const mat = new StandardMaterial("mat", g.scene);
-        mat.specularColor = Color3.Black();
-        dynamicTexture.hasAlpha = true;
+        if (labelStyle.textColor !== undefined) {
+            labelOptions.textColor = labelStyle.textColor;
+        }
 
-        // draw rounded rectangle for background
-        // borrowed from https://github.com/BabylonJS/Babylon.js/blob/2a7bd37ec899846b7a02c0507b1b9e27e4293180/packages/dev/gui/src/2D/controls/rectangle.ts#L209
-        const context = dynamicTexture.getContext();
-        context.fillStyle = "white";
-        context.beginPath();
-        const x = 0;
-        const y = 0;
-        const radiusList = [20, 20, 20, 20];
-        const width = DTWidth;
-        const height = DTHeight;
-        context.moveTo(x + radiusList[0], y);
-        context.lineTo(x + width - radiusList[1], y);
-        context.arc(x + width - radiusList[1], y + radiusList[1], radiusList[1], (3 * Math.PI) / 2, Math.PI * 2);
-        context.lineTo(x + width, y + height - radiusList[2]);
-        context.arc(x + width - radiusList[2], y + height - radiusList[2], radiusList[2], 0, Math.PI / 2);
-        context.lineTo(x + radiusList[3], y + height);
-        context.arc(x + radiusList[3], y + height - radiusList[3], radiusList[3], Math.PI / 2, Math.PI);
-        context.lineTo(x, y + radiusList[0]);
-        context.arc(x + radiusList[0], y + radiusList[0], radiusList[0], Math.PI, (3 * Math.PI) / 2);
-        context.closePath();
-        context.fill();
+        if (labelStyle.backgroundColor !== undefined) {
+            labelOptions.backgroundColor = Node.getBackgroundColor(labelStyle.backgroundColor);
+        }
 
-        // draw label text
-        dynamicTexture.drawText(text, null, null, font, "#000000", "transparent", true);
-        mat.opacityTexture = dynamicTexture; // TODO: might be able to just use a rounded rectangle as the opacity layer rather than a colored background?
-        mat.emissiveTexture = dynamicTexture;
-        mat.disableLighting = true;
+        if (labelStyle.borderWidth !== undefined) {
+            labelOptions.borderWidth = labelStyle.borderWidth;
+        }
 
-        // Create plane and set dynamic texture as material
-        const plane = MeshBuilder.CreatePlane("plane", {width: planeWidth, height: planeHeight}, g.scene);
-        plane.material = mat;
+        if (labelStyle.borderColor !== undefined) {
+            labelOptions.borderColor = labelStyle.borderColor;
+        }
 
-        // make text always face the camera
-        plane.billboardMode = 7;
+        if (labelStyle.borders !== undefined) {
+            labelOptions.borders = labelStyle.borders as BorderConfig[];
+        }
 
-        return plane;
+        if (labelStyle.marginTop !== undefined) {
+            labelOptions.marginTop = labelStyle.marginTop;
+        }
+
+        if (labelStyle.marginBottom !== undefined) {
+            labelOptions.marginBottom = labelStyle.marginBottom;
+        }
+
+        if (labelStyle.marginLeft !== undefined) {
+            labelOptions.marginLeft = labelStyle.marginLeft;
+        }
+
+        if (labelStyle.marginRight !== undefined) {
+            labelOptions.marginRight = labelStyle.marginRight;
+        }
+
+        if (labelStyle.textAlign !== undefined) {
+            labelOptions.textAlign = labelStyle.textAlign;
+        }
+
+        if (labelStyle.cornerRadius !== undefined) {
+            labelOptions.cornerRadius = labelStyle.cornerRadius;
+        }
+
+        if (labelStyle.autoSize !== undefined) {
+            labelOptions.autoSize = labelStyle.autoSize;
+        }
+
+        if (labelStyle.resolution !== undefined) {
+            labelOptions.resolution = labelStyle.resolution;
+        }
+
+        if (labelStyle.billboardMode !== undefined) {
+            labelOptions.billboardMode = labelStyle.billboardMode;
+        }
+
+        if (labelStyle.position !== undefined) {
+            labelOptions.position = labelStyle.position;
+        }
+
+        if (labelStyle.attachOffset !== undefined) {
+            labelOptions.attachOffset = labelStyle.attachOffset;
+        }
+
+        if (labelStyle.depthFadeEnabled !== undefined) {
+            labelOptions.depthFadeEnabled = labelStyle.depthFadeEnabled;
+        }
+
+        if (labelStyle.depthFadeNear !== undefined) {
+            labelOptions.depthFadeNear = labelStyle.depthFadeNear;
+        }
+
+        if (labelStyle.depthFadeFar !== undefined) {
+            labelOptions.depthFadeFar = labelStyle.depthFadeFar;
+        }
+
+        if (labelStyle.textOutline !== undefined) {
+            labelOptions.textOutline = labelStyle.textOutline;
+        }
+
+        if (labelStyle.textOutlineWidth !== undefined) {
+            labelOptions.textOutlineWidth = labelStyle.textOutlineWidth;
+        }
+
+        if (labelStyle.textOutlineColor !== undefined) {
+            labelOptions.textOutlineColor = labelStyle.textOutlineColor;
+        }
+
+        if (labelStyle.textOutlineJoin !== undefined) {
+            labelOptions.textOutlineJoin = labelStyle.textOutlineJoin;
+        }
+
+        if (labelStyle.textShadow !== undefined) {
+            labelOptions.textShadow = labelStyle.textShadow;
+        }
+
+        if (labelStyle.textShadowColor !== undefined) {
+            labelOptions.textShadowColor = labelStyle.textShadowColor;
+        }
+
+        if (labelStyle.textShadowBlur !== undefined) {
+            labelOptions.textShadowBlur = labelStyle.textShadowBlur;
+        }
+
+        if (labelStyle.textShadowOffsetX !== undefined) {
+            labelOptions.textShadowOffsetX = labelStyle.textShadowOffsetX;
+        }
+
+        if (labelStyle.textShadowOffsetY !== undefined) {
+            labelOptions.textShadowOffsetY = labelStyle.textShadowOffsetY;
+        }
+
+        if (labelStyle.backgroundPadding !== undefined) {
+            labelOptions.backgroundPadding = labelStyle.backgroundPadding;
+        }
+
+        if (labelStyle.backgroundGradient !== undefined) {
+            labelOptions.backgroundGradient = labelStyle.backgroundGradient;
+        }
+
+        if (labelStyle.backgroundGradientType !== undefined) {
+            labelOptions.backgroundGradientType = labelStyle.backgroundGradientType;
+        }
+
+        if (labelStyle.backgroundGradientColors !== undefined) {
+            labelOptions.backgroundGradientColors = labelStyle.backgroundGradientColors as string[];
+        }
+
+        if (labelStyle.backgroundGradientDirection !== undefined) {
+            labelOptions.backgroundGradientDirection = labelStyle.backgroundGradientDirection;
+        }
+
+        if (labelStyle.pointer !== undefined) {
+            labelOptions.pointer = labelStyle.pointer;
+        }
+
+        if (labelStyle.pointerDirection !== undefined) {
+            labelOptions.pointerDirection = labelStyle.pointerDirection;
+        }
+
+        if (labelStyle.pointerWidth !== undefined) {
+            labelOptions.pointerWidth = labelStyle.pointerWidth;
+        }
+
+        if (labelStyle.pointerHeight !== undefined) {
+            labelOptions.pointerHeight = labelStyle.pointerHeight;
+        }
+
+        if (labelStyle.pointerOffset !== undefined) {
+            labelOptions.pointerOffset = labelStyle.pointerOffset;
+        }
+
+        if (labelStyle.pointerCurve !== undefined) {
+            labelOptions.pointerCurve = labelStyle.pointerCurve;
+        }
+
+        if (labelStyle.animation !== undefined) {
+            labelOptions.animation = labelStyle.animation;
+        }
+
+        if (labelStyle.animationSpeed !== undefined) {
+            labelOptions.animationSpeed = labelStyle.animationSpeed;
+        }
+
+        if (labelStyle.badge !== undefined) {
+            labelOptions.badge = labelStyle.badge;
+        }
+
+        if (labelStyle.icon !== undefined) {
+            labelOptions.icon = labelStyle.icon;
+        }
+
+        if (labelStyle.iconPosition !== undefined) {
+            labelOptions.iconPosition = labelStyle.iconPosition;
+        }
+
+        if (labelStyle.progress !== undefined) {
+            labelOptions.progress = labelStyle.progress;
+        }
+
+        if (labelStyle.smartOverflow !== undefined) {
+            labelOptions.smartOverflow = labelStyle.smartOverflow;
+        }
+
+        if (labelStyle.maxNumber !== undefined) {
+            labelOptions.maxNumber = labelStyle.maxNumber;
+        }
+
+        if (labelStyle.overflowSuffix !== undefined) {
+            labelOptions.overflowSuffix = labelStyle.overflowSuffix;
+        }
+        
+        if (labelStyle.attachOffset !== undefined) {
+            labelOptions.attachOffset = labelStyle.attachOffset;
+        }
+
+        // Create and return the RichTextLabel
+        const label = new RichTextLabel(n.parentGraph.scene, labelOptions);
+        return label;
+    }
+
+    static getBackgroundColor(backgroundColor: unknown): string {
+        if (typeof backgroundColor === "string") {
+            return backgroundColor;
+        }
+
+        if (backgroundColor && typeof backgroundColor === "object" && "colorType" in backgroundColor) {
+            const colorObj = backgroundColor as {colorType: string, value?: string};
+            if (colorObj.colorType === "solid" && colorObj.value) {
+                return colorObj.value;
+            }
+        }
+
+        return "transparent";
+    }
+
+    static getAttachPosition(location: string): "top" | "top-left" | "top-right" | "left" | "center" | "right" | "bottom" | "bottom-left" | "bottom-right" {
+        // Map TextLocation values to AttachPosition values
+        switch (location) {
+            case "automatic":
+                return "top";
+            case "top":
+            case "top-left":
+            case "top-right":
+            case "left":
+            case "center":
+            case "right":
+            case "bottom":
+            case "bottom-left":
+            case "bottom-right":
+                return location;
+            default:
+                return "top";
+        }
+    }
+    
+    static getDefaultAttachOffset(location: string): number {
+        // Return larger offsets for left/right positions to prevent overlap
+        switch (location) {
+            case "left":
+            case "right":
+                return 1.0; // Larger offset for horizontal positions
+            case "center":
+                return 0; // No offset for center
+            default:
+                return 0.5; // Standard offset for top/bottom positions
+        }
     }
 
     static addDefaultBehaviors(n: Node, opts: NodeOpts): void {

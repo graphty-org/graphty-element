@@ -17,6 +17,8 @@ import type {AdHocData, EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
+import {RichTextLabel} from "./RichTextLabel";
+import * as jmespath from "jmespath";
 
 interface InterceptPoint {
     srcPoint: Vector3 | null;
@@ -48,6 +50,7 @@ export class Edge {
     styleId: EdgeStyleId;
     // XXX: performance impact when not needed?
     ray: Ray;
+    label: RichTextLabel | null = null;
 
     constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
@@ -82,6 +85,12 @@ export class Edge {
 
         // create mesh
         this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, this.styleId);
+        
+        // create label if configured
+        const style = Styles.getStyleForEdgeStyleId(this.styleId);
+        if (style.label?.enabled) {
+            this.label = Edge.createLabel(this, style);
+        }
     }
 
     update(): void {
@@ -100,6 +109,16 @@ export class Edge {
                 new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z),
             );
         }
+        
+        // Update label position if exists
+        if (this.label) {
+            const midPoint = new Vector3(
+                (lnk.src.x + lnk.dst.x) / 2,
+                (lnk.src.y + lnk.dst.y) / 2,
+                ((lnk.src.z ?? 0) + (lnk.dst.z ?? 0)) / 2,
+            );
+            this.label.attachTo(midPoint, "center", 0);
+        }
     }
 
     updateStyle(styleId: EdgeStyleId): void {
@@ -110,6 +129,18 @@ export class Edge {
         this.styleId = styleId;
         this.mesh.dispose();
         this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, styleId);
+        
+        // Update label if needed
+        const style = Styles.getStyleForEdgeStyleId(styleId);
+        if (style.label?.enabled) {
+            if (this.label) {
+                this.label.dispose();
+            }
+            this.label = Edge.createLabel(this, style);
+        } else if (this.label) {
+            this.label.dispose();
+            this.label = null;
+        }
     }
 
     static updateRays(g: Graph): void {
@@ -342,6 +373,90 @@ export class Edge {
             0,
             0.5,
         ];
+    }
+    
+    static createLabel(e: Edge, o: EdgeStyleConfig): RichTextLabel {
+        let labelText = e.id;
+        
+        // Check if text is directly provided
+        // Access the text property from the label style object
+        const labelConfig = o.label as any;
+        if (labelConfig?.text) {
+            labelText = labelConfig.text;
+        } else if (labelConfig?.textPath) {
+            try {
+                const result = jmespath.search(e.data, o.label.textPath);
+                if (result !== null && result !== undefined) {
+                    labelText = String(result);
+                }
+            } catch (err) {
+                console.warn(`Failed to extract label text using textPath "${o.label.textPath}":`, err);
+            }
+        }
+        
+        // Map EdgeStyleConfig label properties to RichTextLabelOptions
+        const labelOptions: any = {
+            text: labelText,
+        };
+        
+        // Only pass defined properties to avoid overriding RichTextLabel defaults
+        if (o.label?.font !== undefined) labelOptions.font = o.label.font;
+        if (o.label?.fontSize !== undefined) labelOptions.fontSize = o.label.fontSize;
+        if (o.label?.fontWeight !== undefined) labelOptions.fontWeight = o.label.fontWeight;
+        if (o.label?.lineHeight !== undefined) labelOptions.lineHeight = o.label.lineHeight;
+        if (o.label?.textColor !== undefined) labelOptions.textColor = o.label.textColor;
+        if (o.label?.backgroundColor !== undefined) labelOptions.backgroundColor = o.label.backgroundColor;
+        if (o.label?.borderWidth !== undefined) labelOptions.borderWidth = o.label.borderWidth;
+        if (o.label?.borderColor !== undefined) labelOptions.borderColor = o.label.borderColor;
+        if (o.label?.borders !== undefined) labelOptions.borders = o.label.borders;
+        if (o.label?.marginTop !== undefined) labelOptions.marginTop = o.label.marginTop;
+        if (o.label?.marginBottom !== undefined) labelOptions.marginBottom = o.label.marginBottom;
+        if (o.label?.marginLeft !== undefined) labelOptions.marginLeft = o.label.marginLeft;
+        if (o.label?.marginRight !== undefined) labelOptions.marginRight = o.label.marginRight;
+        if (o.label?.textAlign !== undefined) labelOptions.textAlign = o.label.textAlign;
+        if (o.label?.cornerRadius !== undefined) labelOptions.cornerRadius = o.label.cornerRadius;
+        if (o.label?.autoSize !== undefined) labelOptions.autoSize = o.label.autoSize;
+        if (o.label?.resolution !== undefined) labelOptions.resolution = o.label.resolution;
+        if (o.label?.billboardMode !== undefined) labelOptions.billboardMode = o.label.billboardMode;
+        if (o.label?.depthFadeEnabled !== undefined) labelOptions.depthFadeEnabled = o.label.depthFadeEnabled;
+        if (o.label?.depthFadeNear !== undefined) labelOptions.depthFadeNear = o.label.depthFadeNear;
+        if (o.label?.depthFadeFar !== undefined) labelOptions.depthFadeFar = o.label.depthFadeFar;
+        if (o.label?.textOutline !== undefined) labelOptions.textOutline = o.label.textOutline;
+        if (o.label?.textOutlineWidth !== undefined) labelOptions.textOutlineWidth = o.label.textOutlineWidth;
+        if (o.label?.textOutlineColor !== undefined) labelOptions.textOutlineColor = o.label.textOutlineColor;
+        if (o.label?.textOutlineJoin !== undefined) labelOptions.textOutlineJoin = o.label.textOutlineJoin;
+        if (o.label?.textShadow !== undefined) labelOptions.textShadow = o.label.textShadow;
+        if (o.label?.textShadowColor !== undefined) labelOptions.textShadowColor = o.label.textShadowColor;
+        if (o.label?.textShadowBlur !== undefined) labelOptions.textShadowBlur = o.label.textShadowBlur;
+        if (o.label?.textShadowOffsetX !== undefined) labelOptions.textShadowOffsetX = o.label.textShadowOffsetX;
+        if (o.label?.textShadowOffsetY !== undefined) labelOptions.textShadowOffsetY = o.label.textShadowOffsetY;
+        if (o.label?.backgroundPadding !== undefined) labelOptions.backgroundPadding = o.label.backgroundPadding;
+        if (o.label?.backgroundGradient !== undefined) labelOptions.backgroundGradient = o.label.backgroundGradient;
+        if (o.label?.backgroundGradientType !== undefined) labelOptions.backgroundGradientType = o.label.backgroundGradientType;
+        if (o.label?.backgroundGradientColors !== undefined) labelOptions.backgroundGradientColors = o.label.backgroundGradientColors;
+        if (o.label?.backgroundGradientDirection !== undefined) labelOptions.backgroundGradientDirection = o.label.backgroundGradientDirection;
+        if (o.label?.pointer !== undefined) labelOptions.pointer = o.label.pointer;
+        if (o.label?.pointerDirection !== undefined) labelOptions.pointerDirection = o.label.pointerDirection;
+        if (o.label?.pointerWidth !== undefined) labelOptions.pointerWidth = o.label.pointerWidth;
+        if (o.label?.pointerHeight !== undefined) labelOptions.pointerHeight = o.label.pointerHeight;
+        if (o.label?.pointerOffset !== undefined) labelOptions.pointerOffset = o.label.pointerOffset;
+        if (o.label?.pointerCurve !== undefined) labelOptions.pointerCurve = o.label.pointerCurve;
+        if (o.label?.animation !== undefined) labelOptions.animation = o.label.animation;
+        if (o.label?.animationSpeed !== undefined) labelOptions.animationSpeed = o.label.animationSpeed;
+        if (o.label?.badge !== undefined) labelOptions.badge = o.label.badge;
+        if (o.label?.icon !== undefined) labelOptions.icon = o.label.icon;
+        if (o.label?.iconPosition !== undefined) labelOptions.iconPosition = o.label.iconPosition;
+        if (o.label?.progress !== undefined) labelOptions.progress = o.label.progress;
+        if (o.label?.smartOverflow !== undefined) labelOptions.smartOverflow = o.label.smartOverflow;
+        if (o.label?.maxNumber !== undefined) labelOptions.maxNumber = o.label.maxNumber;
+        if (o.label?.overflowSuffix !== undefined) labelOptions.overflowSuffix = o.label.overflowSuffix;
+        
+        // Set attachment options for edges
+        labelOptions.attachPosition = o.label?.location || "center";
+        labelOptions.attachOffset = o.label?.attachOffset || 0;
+        
+        const label = new RichTextLabel(e.parentGraph.scene, labelOptions);
+        return label;
     }
 }
 

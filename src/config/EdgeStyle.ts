@@ -1,7 +1,8 @@
 import {z} from "zod/v4";
 
 import {Edge} from "../Edge";
-import {ColorStyle, TextBlockStyle} from "./common";
+import {ColorStyle} from "./common";
+import {RichTextStyle} from "./RichTextStyle";
 
 const ArrowType = z.enum([
     // https://graphviz.org/docs/attr-types/arrowType/
@@ -27,7 +28,7 @@ const ArrowStyle = z.strictObject({
     size: z.number().positive().default(1),
     color: ColorStyle.default("white"),
     opacity: z.number().min(0).max(1).default(1),
-    text: TextBlockStyle.prefault({location: "top"}),
+    text: RichTextStyle.prefault({location: "top"}),
 });
 
 const LineType = z.enum([
@@ -56,8 +57,8 @@ export const EdgeStyle = z.strictObject({
     arrowHead: ArrowStyle.optional(),
     arrowTail: ArrowStyle.optional(),
     line: LineStyle.optional(),
-    label: TextBlockStyle.prefault({location: "top"}).optional(),
-    tooltip: TextBlockStyle.prefault({location: "bottom"}).optional(),
+    label: RichTextStyle.prefault({location: "top"}).optional(),
+    tooltip: RichTextStyle.prefault({location: "bottom"}).optional(),
     // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
     enabled: z.boolean().default(true),
 });

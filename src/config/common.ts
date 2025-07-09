@@ -64,31 +64,6 @@ export const TextLocation = z.enum([
     "automatic",
 ]);
 
-export const TextBlockStyle = z.strictObject({
-    // whether or not the text block gets rendered
-    enabled: z.boolean().default(false),
-    // the font family / type to use for text
-    font: z.string().default("Arial"),
-    // a jmespath pointing to the text to use for this block
-    textPath: z.string().optional(),
-    // underline, bold, italic, etc.
-    style: z.string().optional(),
-    // pixel height of the text
-    size: z.number().default(48),
-    // special formatting processor (html, markdown, etc.)
-    textType: TextType.optional(),
-    // color of the text
-    color: ColorStyle.prefault("black"),
-    // color of the background behind the text
-    background: AdvancedColorStyle.or(ColorStyle).prefault("white"),
-    // how much rounding for the background corners
-    backgroundCornerRadius: z.number().optional(),
-    // where to locate the text relative to it's parent
-    location: TextLocation.default("top"),
-    // how much space to have between the text and the edge of the background
-    margin: z.number().positive().default(5),
-});
-
 export const HttpUrl = z.url({
     protocol: /^https?$/,
     hostname: z.regexes.domain,

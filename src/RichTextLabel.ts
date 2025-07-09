@@ -185,6 +185,7 @@ export class RichTextLabel {
     private animationTime = 0;
     private _progressValue = 0;
     private id: string;
+    private originalPosition: Vector3 | null = null;
 
     // Badge style presets
     private static readonly BADGE_STYLES: Record<Exclude<BadgeType, undefined>, Partial<RichTextLabelOptions>> = {
@@ -312,21 +313,21 @@ export class RichTextLabel {
         // Default options - using a custom type that allows undefined for optional badge-related fields
         const defaultOptions: ResolvedRichTextLabelOptions = {
             text: "Label",
-            font: "Arial",
+            font: "Verdana",
             fontSize: 48,
             fontWeight: "normal",
             lineHeight: 1.2,
-            textColor: "white",
-            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            textColor: "black",
+            backgroundColor: "transparent",
             borderWidth: 0,
             borderColor: "rgba(255, 255, 255, 0.8)",
             borders: [],
-            marginTop: 20,
-            marginBottom: 20,
-            marginLeft: 30,
-            marginRight: 30,
+            marginTop: 5,
+            marginBottom: 5,
+            marginLeft: 5,
+            marginRight: 5,
             textAlign: "center",
-            cornerRadius: 10,
+            cornerRadius: 0,
             autoSize: true,
             resolution: 1024,
             billboardMode: Mesh.BILLBOARDMODE_ALL,
@@ -483,6 +484,10 @@ export class RichTextLabel {
                 this.options.position.y,
                 this.options.position.z,
             );
+            // Store original position for animations
+            if (!this.originalPosition) {
+                this.originalPosition = this.mesh.position.clone();
+            }
         }
 
         if (this.options.depthFadeEnabled) {
@@ -1403,8 +1408,10 @@ export class RichTextLabel {
             return;
         }
 
-        const labelWidth = this.mesh.scaling.x;
-        const labelHeight = this.mesh.scaling.y;
+        // Get the actual dimensions of the label mesh
+        // The mesh is created with width=aspectRatio and height=1
+        const labelWidth = this.actualDimensions.width / this.actualDimensions.height; // This is the aspect ratio
+        const labelHeight = 1; // The mesh height is always 1
 
         const newPos = targetPos.clone();
 
@@ -1451,6 +1458,7 @@ export class RichTextLabel {
                 newPos.y = bounds.max.y + (labelHeight / 2) + offset;
                 break;
             case "left":
+                // Position the label so its right edge is offset distance from the node's left edge
                 newPos.x = bounds.min.x - (labelWidth / 2) - offset;
                 newPos.y = (bounds.min.y + bounds.max.y) / 2;
                 break;
@@ -1459,6 +1467,7 @@ export class RichTextLabel {
                 newPos.y = (bounds.min.y + bounds.max.y) / 2;
                 break;
             case "right":
+                // Position the label so its left edge is offset distance from the node's right edge
                 newPos.x = bounds.max.x + (labelWidth / 2) + offset;
                 newPos.y = (bounds.min.y + bounds.max.y) / 2;
                 break;
@@ -1480,6 +1489,11 @@ export class RichTextLabel {
         }
 
         this.mesh.position = newPos;
+        
+        // Store original position for animations
+        if (!this.originalPosition) {
+            this.originalPosition = newPos.clone();
+        }
     }
 
     private _setupDepthFading(): void {
@@ -1522,15 +1536,19 @@ export class RichTextLabel {
                     break;
                 }
                 case "bounce": {
-                    const bounce = Math.abs(Math.sin(this.animationTime * 2)) * 0.3;
-                    this.mesh.position.y = this.mesh.position.y + bounce;
+                    if (this.originalPosition) {
+                        const bounce = Math.abs(Math.sin(this.animationTime * 2)) * 0.3;
+                        this.mesh.position.y = this.originalPosition.y + bounce;
+                    }
                     break;
                 }
                 case "shake": {
-                    const shakeX = Math.sin(this.animationTime * 20) * 0.02;
-                    const shakeY = Math.cos(this.animationTime * 25) * 0.02;
-                    this.mesh.position.x = this.mesh.position.x + shakeX;
-                    this.mesh.position.y = this.mesh.position.y + shakeY;
+                    if (this.originalPosition) {
+                        const shakeX = Math.sin(this.animationTime * 20) * 0.02;
+                        const shakeY = Math.cos(this.animationTime * 25) * 0.02;
+                        this.mesh.position.x = this.originalPosition.x + shakeX;
+                        this.mesh.position.y = this.originalPosition.y + shakeY;
+                    }
                     break;
                 }
                 case "glow": {

@@ -114,7 +114,7 @@ export class Styles {
         if (styles.length === 0) {
             mergedStyle.enabled = false;
         } else {
-            // TODO: use calculated style?  
+            // TODO: use calculated style?
             setDeep(mergedStyle, "shape.twoD", twoD);
         }
 
