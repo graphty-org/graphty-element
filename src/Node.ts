@@ -121,103 +121,103 @@ export class Node {
 
             // create mesh shape
             switch (o.shape.type) {
-            case "box":
+                case "box":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/set/box
-                mesh = Node.createBox(n, g, o);
-                break;
-            case "sphere":
-                mesh = Node.createSphere(n, g, o);
-                break;
-            case "cylinder":
-                mesh = Node.createCylinder(n, g, o);
-                break;
-            case "cone":
-                mesh = Node.createCone(n, g, o);
-                break;
-            case "capsule":
-                mesh = Node.createCapsule(n, g, o);
-                break;
-            // Torus disabled because it breaks ray finding with arrowcaps whe
-            // the ray shoots right through the hole in the center of the torus
-            // case "torus":
-            //     mesh = Node.createTorus(n, g, o);
-            //     break;
-            case "torus-knot":
+                    mesh = Node.createBox(n, g, o);
+                    break;
+                case "sphere":
+                    mesh = Node.createSphere(n, g, o);
+                    break;
+                case "cylinder":
+                    mesh = Node.createCylinder(n, g, o);
+                    break;
+                case "cone":
+                    mesh = Node.createCone(n, g, o);
+                    break;
+                case "capsule":
+                    mesh = Node.createCapsule(n, g, o);
+                    break;
+                    // Torus disabled because it breaks ray finding with arrowcaps whe
+                    // the ray shoots right through the hole in the center of the torus
+                    // case "torus":
+                    //     mesh = Node.createTorus(n, g, o);
+                    //     break;
+                case "torus-knot":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/set/torus_knot
-                mesh = Node.createTorusKnot(n, g, o);
-                break;
-            case "tetrahedron":
+                    mesh = Node.createTorusKnot(n, g, o);
+                    break;
+                case "tetrahedron":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(0, n, g, o);
-                break;
-            case "octahedron":
+                    mesh = Node.createPolyhedron(0, n, g, o);
+                    break;
+                case "octahedron":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(1, n, g, o);
-                break;
-            case "dodecahedron":
+                    mesh = Node.createPolyhedron(1, n, g, o);
+                    break;
+                case "dodecahedron":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(2, n, g, o);
-                break;
-            case "icosahedron":
+                    mesh = Node.createPolyhedron(2, n, g, o);
+                    break;
+                case "icosahedron":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(3, n, g, o);
-                break;
-            case "rhombicuboctahedron":
+                    mesh = Node.createPolyhedron(3, n, g, o);
+                    break;
+                case "rhombicuboctahedron":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(4, n, g, o);
-                break;
-            case "triangular_prism":
+                    mesh = Node.createPolyhedron(4, n, g, o);
+                    break;
+                case "triangular_prism":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(5, n, g, o);
-                break;
-            case "pentagonal_prism":
+                    mesh = Node.createPolyhedron(5, n, g, o);
+                    break;
+                case "pentagonal_prism":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(6, n, g, o);
-                break;
-            case "hexagonal_prism":
+                    mesh = Node.createPolyhedron(6, n, g, o);
+                    break;
+                case "hexagonal_prism":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(7, n, g, o);
-                break;
-            case "square_pyramid":
+                    mesh = Node.createPolyhedron(7, n, g, o);
+                    break;
+                case "square_pyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(8, n, g, o);
-                break;
-            case "pentagonal_pyramid":
+                    mesh = Node.createPolyhedron(8, n, g, o);
+                    break;
+                case "pentagonal_pyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(9, n, g, o);
-                break;
-            case "triangular_dipyramid":
+                    mesh = Node.createPolyhedron(9, n, g, o);
+                    break;
+                case "triangular_dipyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(10, n, g, o);
-                break;
-            case "pentagonal_dipyramid":
+                    mesh = Node.createPolyhedron(10, n, g, o);
+                    break;
+                case "pentagonal_dipyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(11, n, g, o);
-                break;
-            case "elongated_square_dypyramid":
+                    mesh = Node.createPolyhedron(11, n, g, o);
+                    break;
+                case "elongated_square_dypyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(12, n, g, o);
-                break;
-            case "elongated_pentagonal_dipyramid":
+                    mesh = Node.createPolyhedron(12, n, g, o);
+                    break;
+                case "elongated_pentagonal_dipyramid":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(13, n, g, o);
-                break;
-            case "elongated_pentagonal_cupola":
+                    mesh = Node.createPolyhedron(13, n, g, o);
+                    break;
+                case "elongated_pentagonal_cupola":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/polyhedra_by_numbers
-                mesh = Node.createPolyhedron(14, n, g, o);
-                break;
-            case "goldberg":
+                    mesh = Node.createPolyhedron(14, n, g, o);
+                    break;
+                case "goldberg":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/goldberg_poly
-                mesh = Node.createGoldberg(n, g, o);
-                break;
-            case "icosphere":
+                    mesh = Node.createGoldberg(n, g, o);
+                    break;
+                case "icosphere":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/icosphere
-                mesh = Node.createIcoSphere(n, g, o);
-                break;
-            case "geodesic":
+                    mesh = Node.createIcoSphere(n, g, o);
+                    break;
+                case "geodesic":
                 // https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/polyhedra/geodesic_poly
-                mesh = Node.createGeodesic(n, g, o);
-                break;
+                    mesh = Node.createGeodesic(n, g, o);
+                    break;
                 // case "text":
                 //     var fontData = await (await fetch("https://assets.babylonjs.com/fonts/Droid Sans_Regular.json")).json();
                 //     mesh = MeshBuilder.CreateText("text", n.id, fontData, {
@@ -225,8 +225,8 @@ export class Node {
                 //         resolution: 64,
                 //         depth: 10
                 //     });
-            default:
-                throw new TypeError(`unknown shape: ${o.shape.type}`);
+                default:
+                    throw new TypeError(`unknown shape: ${o.shape.type}`);
             }
 
             // create mesh texture
@@ -238,15 +238,15 @@ export class Node {
                 color3 = Color3.FromHexString(o.texture.color);
             } else if (typeof o.texture?.color === "object") {
                 switch (o.texture.color.colorType) {
-                case "solid":
-                    color3 = Color3.FromHexString(o.texture.color.value ?? "##FFFFFF");
-                    mesh.visibility = o.texture.color.opacity ?? 1;
-                    break;
-                // TODO
-                // case "gradient":
-                // case "radial-gradient":
-                default:
-                    throw new TypeError(`unknown advanced colorType ${o.texture.color.colorType}`);
+                    case "solid":
+                        color3 = Color3.FromHexString(o.texture.color.value ?? "##FFFFFF");
+                        mesh.visibility = o.texture.color.opacity ?? 1;
+                        break;
+                        // TODO
+                        // case "gradient":
+                        // case "radial-gradient":
+                    default:
+                        throw new TypeError(`unknown advanced colorType ${o.texture.color.colorType}`);
                 }
             }
 
