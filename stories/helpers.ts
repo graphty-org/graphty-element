@@ -113,16 +113,24 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
 
         // if the arg has a name...
         if (name) {
-            const val = storyConfig.args[arg];
-            
+            const val = args[arg];
+
             // Map control names to the correct template paths
             if (name.startsWith("label.")) {
-                // For label properties, map to the correct layer structure
+                // For label properties, check if we're using nodeStyle or layers
                 const labelProp = name.substring(6); // Remove "label." prefix
-                deepSet(t, `layers[0].node.style.label.${labelProp}`, val);
+                if (t.nodeStyle) {
+                    deepSet(t, `nodeStyle.label.${labelProp}`, val);
+                } else if (t.layers) {
+                    deepSet(t, `layers[0].node.style.label.${labelProp}`, val);
+                }
             } else if (name.startsWith("texture.") || name.startsWith("shape.") || name.startsWith("effect.")) {
                 // For other node properties
-                deepSet(t, `layers[0].node.style.${name}`, val);
+                if (t.nodeStyle) {
+                    deepSet(t, `nodeStyle.${name}`, val);
+                } else if (t.layers) {
+                    deepSet(t, `layers[0].node.style.${name}`, val);
+                }
             } else {
                 // For other properties, apply directly
                 deepSet(t, name, val);

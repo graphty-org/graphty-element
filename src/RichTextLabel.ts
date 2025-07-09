@@ -310,6 +310,12 @@ export class RichTextLabel {
     constructor(scene: Scene, options: RichTextLabelOptions = {}) {
         this.scene = scene;
 
+        // Validate fontSize to prevent crashes with large values
+        if (options.fontSize !== undefined && options.fontSize > 500) {
+            console.warn(`RichTextLabel: fontSize ${options.fontSize} exceeds maximum of 500, clamping to 500`);
+            options.fontSize = 500;
+        }
+
         // Default options - using a custom type that allows undefined for optional badge-related fields
         const defaultOptions: ResolvedRichTextLabelOptions = {
             text: "Label",
@@ -485,9 +491,7 @@ export class RichTextLabel {
                 this.options.position.z,
             );
             // Store original position for animations
-            if (!this.originalPosition) {
-                this.originalPosition = this.mesh.position.clone();
-            }
+            this.originalPosition ??= this.mesh.position.clone();
         }
 
         if (this.options.depthFadeEnabled) {
@@ -705,14 +709,25 @@ export class RichTextLabel {
     }
 
     private _createTexture(): void {
-        const textureWidth = this.options.autoSize ?
+        // Maximum texture size to prevent GPU memory issues
+        const MAX_TEXTURE_SIZE = 4096;
+
+        let textureWidth = this.options.autoSize ?
             Math.pow(2, Math.ceil(Math.log2(this.actualDimensions.width))) :
             this.options.resolution;
 
         const aspectRatio = this.actualDimensions.width / this.actualDimensions.height;
-        const textureHeight = this.options.autoSize ?
+        let textureHeight = this.options.autoSize ?
             Math.pow(2, Math.ceil(Math.log2(this.actualDimensions.height))) :
             Math.floor(textureWidth / aspectRatio);
+
+        // Clamp texture dimensions to prevent crashes
+        if (textureWidth > MAX_TEXTURE_SIZE || textureHeight > MAX_TEXTURE_SIZE) {
+            const scale = MAX_TEXTURE_SIZE / Math.max(textureWidth, textureHeight);
+            textureWidth = Math.floor(textureWidth * scale);
+            textureHeight = Math.floor(textureHeight * scale);
+            console.warn(`RichTextLabel: Texture size clamped to ${textureWidth}x${textureHeight} (max: ${MAX_TEXTURE_SIZE})`);
+        }
 
         this.texture = new DynamicTexture(`richTextTexture_${this.id}`, {
             width: textureWidth,
@@ -1358,9 +1373,13 @@ export class RichTextLabel {
     }
 
     private _createMesh(): void {
+        // Scale plane size based on fontSize to make it proportional
+        // Use a base fontSize of 48 (the default) as reference
+        const sizeScale = this.options.fontSize / 48;
+
         const aspectRatio = this.actualDimensions.width / this.actualDimensions.height;
-        const planeHeight = 1;
-        const planeWidth = aspectRatio;
+        const planeHeight = sizeScale;
+        const planeWidth = aspectRatio * sizeScale;
 
         this.mesh = MeshBuilder.CreatePlane(`richTextPlane_${this.id}`, {
             width: planeWidth,
@@ -1409,9 +1428,10 @@ export class RichTextLabel {
         }
 
         // Get the actual dimensions of the label mesh
-        // The mesh is created with width=aspectRatio and height=1
-        const labelWidth = this.actualDimensions.width / this.actualDimensions.height; // This is the aspect ratio
-        const labelHeight = 1; // The mesh height is always 1
+        // The mesh is created with scaled dimensions based on fontSize
+        const sizeScale = this.options.fontSize / 48;
+        const labelWidth = (this.actualDimensions.width / this.actualDimensions.height) * sizeScale;
+        const labelHeight = sizeScale;
 
         const newPos = targetPos.clone();
 
@@ -1489,11 +1509,9 @@ export class RichTextLabel {
         }
 
         this.mesh.position = newPos;
-        
+
         // Store original position for animations
-        if (!this.originalPosition) {
-            this.originalPosition = newPos.clone();
-        }
+        this.originalPosition ??= newPos.clone();
     }
 
     private _setupDepthFading(): void {
@@ -1540,6 +1558,7 @@ export class RichTextLabel {
                         const bounce = Math.abs(Math.sin(this.animationTime * 2)) * 0.3;
                         this.mesh.position.y = this.originalPosition.y + bounce;
                     }
+
                     break;
                 }
                 case "shake": {
@@ -1549,6 +1568,7 @@ export class RichTextLabel {
                         this.mesh.position.x = this.originalPosition.x + shakeX;
                         this.mesh.position.y = this.originalPosition.y + shakeY;
                     }
+
                     break;
                 }
                 case "glow": {

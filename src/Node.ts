@@ -332,20 +332,23 @@ export class Node {
     static createLabel(n: Node, o: NodeStyleConfig): RichTextLabel {
         // Extract label text
         let labelText = n.id.toString();
-        
+
         // Check if text is directly provided
         // Access the text property from the label style object
-        const labelConfig = o.label as any;
-        if (labelConfig?.text) {
-            labelText = labelConfig.text;
-        } else if (labelConfig?.textPath) {
+        const labelConfig = o.label as Record<string, unknown>;
+        if (labelConfig.text !== undefined && labelConfig.text !== null) {
+            // Only convert to string if it's a primitive type
+            if (typeof labelConfig.text === "string" || typeof labelConfig.text === "number" || typeof labelConfig.text === "boolean") {
+                labelText = String(labelConfig.text);
+            }
+        } else if (labelConfig.textPath && typeof labelConfig.textPath === "string") {
             try {
-                const result = jmespath.search(n.data, o.label.textPath);
+                const result = jmespath.search(n.data, labelConfig.textPath);
                 if (result !== null && result !== undefined) {
                     labelText = String(result);
                 }
-            } catch (e) {
-                console.warn(`Failed to extract label text using textPath "${o.label.textPath}":`, e);
+            } catch {
+                // Ignore jmespath errors
             }
         }
 
@@ -569,7 +572,7 @@ export class Node {
         if (labelStyle.overflowSuffix !== undefined) {
             labelOptions.overflowSuffix = labelStyle.overflowSuffix;
         }
-        
+
         if (labelStyle.attachOffset !== undefined) {
             labelOptions.attachOffset = labelStyle.attachOffset;
         }
@@ -613,7 +616,7 @@ export class Node {
                 return "top";
         }
     }
-    
+
     static getDefaultAttachOffset(location: string): number {
         // Return larger offsets for left/right positions to prevent overlap
         switch (location) {

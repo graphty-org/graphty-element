@@ -8,21 +8,78 @@ const meta: Meta = {
     component: "graphty-element",
     render: renderFn,
     argTypes: {
+        // Basic
         labelEnabled: {control: "boolean", table: {category: "Basic"}, name: "label.enabled"},
+        labelText: {control: "text", table: {category: "Basic"}, name: "label.text"},
+        labelTextPath: {control: "text", table: {category: "Basic"}, name: "label.textPath"},
+
+        // Font
         labelFont: {control: "text", table: {category: "Font"}, name: "label.font"},
-        labelFontSize: {control: {type: "range", min: 12, max: 96, step: 4}, table: {category: "Font"}, name: "label.fontSize"},
+        labelFontSize: {control: {type: "range", min: 12, max: 400, step: 4}, table: {category: "Font"}, name: "label.fontSize"},
+        labelFontWeight: {control: "text", table: {category: "Font"}, name: "label.fontWeight"},
+        labelLineHeight: {control: {type: "range", min: 0.5, max: 3, step: 0.1}, table: {category: "Font"}, name: "label.lineHeight"},
+
+        // Colors
         labelTextColor: {control: "color", table: {category: "Colors"}, name: "label.textColor"},
         labelBackgroundColor: {control: "color", table: {category: "Colors"}, name: "label.backgroundColor"},
+        labelBorderColor: {control: "color", table: {category: "Colors"}, name: "label.borderColor"},
+
+        // Position
         labelLocation: {
             control: "select",
             options: ["top", "top-right", "top-left", "left", "center", "right", "bottom", "bottom-left", "bottom-right", "automatic"],
             table: {category: "Position"},
             name: "label.location",
         },
-        labelMargin: {control: {type: "range", min: 0, max: 20, step: 1}, table: {category: "Position"}, name: "label.margin"},
+        labelMargin: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.margin"},
         labelAttachOffset: {control: {type: "range", min: 0, max: 5, step: 0.1}, table: {category: "Position"}, name: "label.attachOffset"},
-        labelCornerRadius: {control: {type: "range", min: 0, max: 20, step: 1}, table: {category: "Style"}, name: "label.cornerRadius"},
-        labelFontWeight: {control: "text", table: {category: "Font"}, name: "label.fontWeight"},
+
+        // Style
+        labelCornerRadius: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Style"}, name: "label.cornerRadius"},
+        labelBorderWidth: {control: {type: "range", min: 0, max: 10, step: 1}, table: {category: "Style"}, name: "label.borderWidth"},
+
+        // Text Outline
+        labelTextOutline: {control: "boolean", table: {category: "Text Outline"}, name: "label.textOutline"},
+        labelTextOutlineWidth: {control: {type: "range", min: 0, max: 10, step: 1}, table: {category: "Text Outline"}, name: "label.textOutlineWidth"},
+        labelTextOutlineColor: {control: "color", table: {category: "Text Outline"}, name: "label.textOutlineColor"},
+
+        // Text Shadow
+        labelTextShadow: {control: "boolean", table: {category: "Text Shadow"}, name: "label.textShadow"},
+        labelTextShadowColor: {control: "color", table: {category: "Text Shadow"}, name: "label.textShadowColor"},
+        labelTextShadowBlur: {control: {type: "range", min: 0, max: 20, step: 1}, table: {category: "Text Shadow"}, name: "label.textShadowBlur"},
+        labelTextShadowOffsetX: {control: {type: "range", min: -20, max: 20, step: 1}, table: {category: "Text Shadow"}, name: "label.textShadowOffsetX"},
+        labelTextShadowOffsetY: {control: {type: "range", min: -20, max: 20, step: 1}, table: {category: "Text Shadow"}, name: "label.textShadowOffsetY"},
+
+        // Gradient
+        labelBackgroundGradient: {control: "boolean", table: {category: "Gradient"}, name: "label.backgroundGradient"},
+        labelBackgroundGradientType: {control: "select", options: ["linear", "radial"], table: {category: "Gradient"}, name: "label.backgroundGradientType"},
+        labelBackgroundGradientDirection: {control: "select", options: ["horizontal", "vertical", "diagonal"], table: {category: "Gradient"}, name: "label.backgroundGradientDirection"},
+
+        // Pointer
+        labelPointer: {control: "boolean", table: {category: "Pointer"}, name: "label.pointer"},
+        labelPointerDirection: {control: "select", options: ["top", "bottom", "left", "right"], table: {category: "Pointer"}, name: "label.pointerDirection"},
+        labelPointerWidth: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Pointer"}, name: "label.pointerWidth"},
+        labelPointerHeight: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Pointer"}, name: "label.pointerHeight"},
+
+        // Animation
+        labelAnimation: {control: "select", options: ["none", "pulse", "bounce", "fade"], table: {category: "Animation"}, name: "label.animation"},
+        labelAnimationSpeed: {control: {type: "range", min: 0.1, max: 5, step: 0.1}, table: {category: "Animation"}, name: "label.animationSpeed"},
+
+        // Badge
+        labelBadge: {control: "select", options: ["none", "notification", "number", "dot"], table: {category: "Badge"}, name: "label.badge"},
+
+        // Smart Overflow
+        labelSmartOverflow: {control: "boolean", table: {category: "Smart Overflow"}, name: "label.smartOverflow"},
+        labelMaxNumber: {control: {type: "number", min: 0, max: 99999}, table: {category: "Smart Overflow"}, name: "label.maxNumber"},
+        labelOverflowSuffix: {control: "text", table: {category: "Smart Overflow"}, name: "label.overflowSuffix"},
+
+        // Text Align
+        labelTextAlign: {control: "select", options: ["left", "center", "right"], table: {category: "Text"}, name: "label.textAlign"},
+
+        // Depth Fade
+        labelDepthFadeEnabled: {control: "boolean", table: {category: "Depth Fade"}, name: "label.depthFadeEnabled"},
+        labelDepthFadeNear: {control: {type: "range", min: 0, max: 500, step: 10}, table: {category: "Depth Fade"}, name: "label.depthFadeNear"},
+        labelDepthFadeFar: {control: {type: "range", min: 0, max: 1000, step: 10}, table: {category: "Depth Fade"}, name: "label.depthFadeFar"},
     },
     parameters: {
         controls: {
@@ -61,21 +118,13 @@ type Story = StoryObj<Graphty>;
 
 export const Default: Story = {};
 
-export const BasicLabel: Story = {
+export const LabelEnabled: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    font: "Arial",
-                    size: 48,
-                    textColor: "black",
-                    backgroundColor: "white",
                 },
             },
         }),
@@ -87,19 +136,87 @@ export const BasicLabel: Story = {
     },
 };
 
-export const CustomFont: Story = {
+export const LabelTextPath: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "group",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textPath"],
         },
+    },
+};
+
+export const LabelText: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "Static Label",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.text"],
+        },
+    },
+};
+
+export const LabelFont: Story = {
+    args: {
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    font: "Courier New",
-                    fontSize: 36,
+                    font: "'JetBrains Mono', monospace",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.font"],
+        },
+    },
+};
+
+export const LabelFontSize: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    fontSize: 96,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.fontSize"],
+        },
+    },
+};
+
+export const LabelFontWeight: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     fontWeight: "bold",
                 },
             },
@@ -107,48 +224,94 @@ export const CustomFont: Story = {
     },
     parameters: {
         controls: {
-            include: ["label.font", "label.fontSize", "label.fontWeight"],
+            include: ["label.fontWeight"],
         },
     },
 };
 
-export const ColorScheme: Story = {
+export const LabelTextColor: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    textColor: "white",
-                    backgroundColor: "rgba(0, 0, 0, 0.8)",
-                    cornerRadius: 10,
+                    textColor: "#6366F1",
                 },
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["label.textColor", "label.backgroundColor", "label.cornerRadius"],
+            include: ["label.textColor"],
         },
     },
 };
 
-export const LabelPositions: Story = {
+export const LabelBackgroundColor: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    backgroundColor: "#10B981",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.backgroundColor"],
         },
+    },
+};
+
+export const LabelCornerRadius: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    cornerRadius: 12,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.cornerRadius"],
+        },
+    },
+};
+
+export const LabelLocation: Story = {
+    args: {
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
                     location: "top",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.location"],
+        },
+    },
+};
+
+export const LabelMargin: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     margin: 10,
                 },
             },
@@ -156,509 +319,508 @@ export const LabelPositions: Story = {
     },
     parameters: {
         controls: {
-            include: ["label.location", "label.margin", "label.attachOffset"],
+            include: ["label.margin"],
         },
     },
 };
 
-export const TransparentBackground: Story = {
+export const LabelAttachOffset: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    textColor: "blue",
-                    backgroundColor: "rgba(255, 255, 255, 0.7)",
-                    cornerRadius: 5,
-                    fontSize: 24,
+                    attachOffset: 2,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.attachOffset"],
+        },
+    },
 };
 
-export const NoBackground: Story = {
+export const LabelLineHeight: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
-                    textPath: "id",
-                    textColor: "red",
-                    backgroundColor: "transparent",
-                    fontSize: 60,
-                    fontWeight: "bold",
-                },
-            },
-        }),
-    },
-};
-
-export const DifferentLabelsPerNode: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            layers: [
-                {
-                    node: {
-                        selector: "group == `1`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                textColor: "white",
-                                backgroundColor: "red",
-                                location: "top",
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `2`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                textColor: "black",
-                                backgroundColor: "yellow",
-                                location: "bottom",
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `3`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                textColor: "white",
-                                backgroundColor: "blue",
-                                location: "right",
-                                fontWeight: "italic",
-                            },
-                        },
-                    },
-                },
-            ],
-        }),
-    },
-};
-
-export const EdgeLabels: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            edgeStyle: {
-                label: {
-                    enabled: true,
-                    text: "→",
-                    textColor: "purple",
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
-                    fontSize: 24,
-                    location: "center",
-                    cornerRadius: 12,
-                },
-            },
-        }),
-    },
-};
-
-export const LargeLabels: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    fontSize: 72,
-                    textColor: "darkgreen",
-                    backgroundColor: "lightgreen",
-                    cornerRadius: 15,
-                    margin: 15,
-                },
-            },
-        }),
-    },
-};
-
-export const MinimalLabels: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                shape: {
-                    size: 0.5,
-                },
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    fontSize: 16,
-                    textColor: "gray",
-                    backgroundColor: "white",
-                    cornerRadius: 3,
-                    margin: 2,
-                },
-            },
-        }),
-    },
-};
-
-export const CustomTextPath: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    font: "Georgia",
-                    fontSize: 32,
-                    textColor: "navy",
-                    backgroundColor: "lightyellow",
-                    cornerRadius: 8,
-                },
-            },
-        }),
-    },
-};
-
-export const ComplexLabels: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                enabled: true,
-                label: {
-                    enabled: true,
-                    text: "<bold>Rich</bold> <italic>Text</italic> <color='red'>Label</color>\n<bg='yellow'><color='black'>Highlighted</color></bg> <font='monospace'>Code</font>\n<size='20'>Mix <bold><color='green'>nested</color></bold> tags!</size>",
-                    fontSize: 28,
-                    fontWeight: "normal",
-                    textColor: "darkblue",
-                    backgroundColor: "lightblue",
-                    location: "top",
-                    cornerRadius: 12,
+                    text: "Line 1\nLine 2\nLine 3",
                     lineHeight: 1.5,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.lineHeight"],
+        },
+    },
 };
 
-export const TextOutline: Story = {
+export const LabelTextOutline: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 32,
-                    textColor: "white",
-                    backgroundColor: "transparent",
                     textOutline: true,
-                    textOutlineWidth: 3,
-                    textOutlineColor: "black",
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.textOutline"],
+        },
+    },
 };
 
-export const TextShadow: Story = {
+export const LabelTextOutlineWidth: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 36,
-                    textColor: "darkgreen",
-                    backgroundColor: "transparent",
+                    textOutline: true,
+                    textOutlineWidth: 3,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textOutlineWidth"],
+        },
+    },
+};
+
+export const LabelTextOutlineColor: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textOutline: true,
+                    textOutlineColor: "#1E293B",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textOutlineColor"],
+        },
+    },
+};
+
+export const LabelTextShadow: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textShadow: true,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textShadow"],
+        },
+    },
+};
+
+export const LabelTextShadowColor: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     textShadow: true,
                     textShadowColor: "rgba(0, 0, 0, 0.5)",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textShadowColor"],
+        },
+    },
+};
+
+export const LabelTextShadowBlur: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textShadow: true,
                     textShadowBlur: 4,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textShadowBlur"],
+        },
+    },
+};
+
+export const LabelTextShadowOffsetX: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textShadow: true,
                     textShadowOffsetX: 3,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textShadowOffsetX"],
+        },
+    },
+};
+
+export const LabelTextShadowOffsetY: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textShadow: true,
                     textShadowOffsetY: 3,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.textShadowOffsetY"],
+        },
+    },
 };
 
-export const MultipleBorders: Story = {
+export const LabelBorderWidth: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 24,
-                    textColor: "white",
-                    backgroundColor: "#2196F3",
-                    cornerRadius: 8,
-                    borders: [
-                        {width: 2, color: "#1976D2", spacing: 0},
-                        {width: 2, color: "#0D47A1", spacing: 2},
-                        {width: 3, color: "#BBDEFB", spacing: 2},
-                    ],
+                    borderWidth: 2,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.borderWidth"],
+        },
+    },
 };
 
-export const GradientBackground: Story = {
+export const LabelBorderColor: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 28,
-                    textColor: "white",
+                    borderWidth: 2,
+                    borderColor: "#6366F1",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.borderColor"],
+        },
+    },
+};
+
+export const LabelBackgroundGradient: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     backgroundGradient: true,
-                    backgroundGradientType: "linear",
-                    backgroundGradientDirection: "vertical",
-                    backgroundGradientColors: ["#FF6B6B", "#4ECDC4"],
-                    cornerRadius: 12,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.backgroundGradient"],
+        },
+    },
 };
 
-export const RadialGradient: Story = {
+export const LabelBackgroundGradientType: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 32,
-                    textColor: "black",
                     backgroundGradient: true,
                     backgroundGradientType: "radial",
-                    backgroundGradientColors: ["#FFFFFF", "#FFD93D", "#F6B73C"],
-                    cornerRadius: 999,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.backgroundGradientType"],
+        },
+    },
 };
 
-export const Pointer: Story = {
+export const LabelBackgroundGradientDirection: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 20,
-                    textColor: "black",
-                    backgroundColor: "white",
-                    borderWidth: 2,
-                    borderColor: "black",
-                    cornerRadius: 8,
+                    backgroundGradient: true,
+                    backgroundGradientDirection: "horizontal",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.backgroundGradientDirection"],
+        },
+    },
+};
+
+export const LabelBackgroundGradientColors: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    backgroundGradient: true,
+                    backgroundGradientColors: ["#6366F1", "#10B981"],
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.backgroundGradient"],
+        },
+    },
+};
+
+export const LabelPointer: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    pointer: true,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.pointer"],
+        },
+    },
+};
+
+export const LabelPointerDirection: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     pointer: true,
                     pointerDirection: "bottom",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.pointerDirection"],
+        },
+    },
+};
+
+export const LabelPointerWidth: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    pointer: true,
                     pointerWidth: 20,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.pointerWidth"],
+        },
+    },
+};
+
+export const LabelPointerHeight: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    pointer: true,
                     pointerHeight: 15,
-                    location: "top",
-                    attachOffset: 0.8,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.pointerHeight"],
+        },
+    },
 };
 
-export const PulseAnimation: Story = {
+export const LabelAnimation: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 24,
-                    textColor: "white",
-                    backgroundColor: "#E91E63",
-                    cornerRadius: 20,
                     animation: "pulse",
-                    animationSpeed: 1.5,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.animation"],
+        },
+    },
 };
 
-export const BounceAnimation: Story = {
+export const LabelAnimationSpeed: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 20,
-                    textColor: "white",
-                    backgroundColor: "#4CAF50",
-                    cornerRadius: 16,
-                    animation: "bounce",
+                    animation: "pulse",
                     animationSpeed: 2,
                 },
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["label.animationSpeed"],
+        },
+    },
 };
 
-export const NotificationBadge: Story = {
+export const LabelBadge: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
-                    textPath: "group",
+                    textPath: "id",
                     badge: "notification",
                 },
             },
         }),
     },
-};
-
-export const LabelBadges: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+    parameters: {
+        controls: {
+            include: ["label.badge"],
         },
-        styleTemplate: templateCreator({
-            layers: [
-                {
-                    node: {
-                        selector: "group == `1`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                badge: "label-success",
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `2`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                badge: "label-warning",
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `3`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                badge: "label-danger",
-                            },
-                        },
-                    },
-                },
-            ],
-        }),
     },
 };
 
-export const SmartOverflow: Story = {
+export const LabelSmartOverflow: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     text: "999999",
-                    fontSize: 20,
-                    textColor: "white",
-                    backgroundColor: "#FF5722",
-                    cornerRadius: 12,
+                    smartOverflow: true,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.smartOverflow"],
+        },
+    },
+};
+
+export const LabelMaxNumber: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "999999",
+                    smartOverflow: true,
+                    maxNumber: 999,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.maxNumber"],
+        },
+    },
+};
+
+export const LabelOverflowSuffix: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "999999",
                     smartOverflow: true,
                     maxNumber: 999,
                     overflowSuffix: "+",
@@ -666,92 +828,87 @@ export const SmartOverflow: Story = {
             },
         }),
     },
-};
-
-export const TextAlignment: Story = {
-    args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+    parameters: {
+        controls: {
+            include: ["label.overflowSuffix"],
         },
-        styleTemplate: templateCreator({
-            layers: [
-                {
-                    node: {
-                        selector: "group == `1`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                fontSize: 16,
-                                textAlign: "left",
-                                backgroundColor: "lightgray",
-                                marginLeft: 20,
-                                marginRight: 20,
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `2`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                fontSize: 16,
-                                textAlign: "center",
-                                backgroundColor: "lightblue",
-                                marginLeft: 20,
-                                marginRight: 20,
-                            },
-                        },
-                    },
-                },
-                {
-                    node: {
-                        selector: "group == `3`",
-                        style: {
-                            enabled: true,
-                            label: {
-                                enabled: true,
-                                textPath: "id",
-                                fontSize: 16,
-                                textAlign: "right",
-                                backgroundColor: "lightgreen",
-                                marginLeft: 20,
-                                marginRight: 20,
-                            },
-                        },
-                    },
-                },
-            ],
-        }),
     },
 };
 
-export const DepthFading: Story = {
+export const LabelTextAlign: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "Aligned Text",
+                    textAlign: "center",
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.textAlign"],
         },
+    },
+};
+
+export const LabelDepthFadeEnabled: Story = {
+    args: {
         styleTemplate: templateCreator({
             nodeStyle: {
                 label: {
                     enabled: true,
                     textPath: "id",
-                    fontSize: 24,
-                    textColor: "white",
-                    backgroundColor: "#673AB7",
-                    cornerRadius: 8,
+                    depthFadeEnabled: true,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.depthFadeEnabled"],
+        },
+    },
+};
+
+export const LabelDepthFadeNear: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
                     depthFadeEnabled: true,
                     depthFadeNear: 50,
+                },
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.depthFadeNear"],
+        },
+    },
+};
+
+export const LabelDepthFadeFar: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    depthFadeEnabled: true,
                     depthFadeFar: 200,
                 },
             },
         }),
+    },
+    parameters: {
+        controls: {
+            include: ["label.depthFadeFar"],
+        },
     },
 };
