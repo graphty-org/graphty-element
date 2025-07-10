@@ -71,10 +71,10 @@ export class OrbitInputController {
         let lastRotation = 0;
         let lastScale = 1;
 
-        this.hammer.on("pinchstart rotatestart", () => {
+        this.hammer.on("pinchstart rotatestart", (ev: HammerInput) => {
             this.isMultiTouch = true;
-            lastRotation = 0;
-            lastScale = 1;
+            lastRotation = ev.rotation || 0;
+            lastScale = ev.scale || 1;
         });
 
         this.hammer.on("pinchend rotateend", () => {
