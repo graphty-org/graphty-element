@@ -74,7 +74,7 @@ export const defaultNodeStyle: NodeStyleConfig = {
         size: 1,
     },
     texture: {
-        color: "grey",
+        color: "#6366F1",
     },
     enabled: true,
 };

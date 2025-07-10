@@ -28,7 +28,7 @@ const ArrowStyle = z.strictObject({
     size: z.number().positive().default(1),
     color: ColorStyle.default("white"),
     opacity: z.number().min(0).max(1).default(1),
-    text: RichTextStyle.prefault({location: "top"}),
+    text: RichTextStyle.optional(),
 });
 
 const LineType = z.enum([
@@ -67,9 +67,13 @@ export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;
 export const defaultEdgeStyle: EdgeStyleConfig = {
     line: {
         type: "solid",
-        animationSpeed: 0.1,
+        animationSpeed: 0,
         width: 0.25,
         color: "darkgrey",
     },
+    arrowHead: ArrowStyle.parse({
+        type: "normal",
+        color: "darkgrey",
+    }),
     enabled: true,
 };
