@@ -623,3 +623,32 @@ export const DepthFade: Story = {
         },
     },
 };
+
+export const EmojiLabels: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "🚀💫🌈✨",
+                    fontSize: 32,
+                },
+            },
+        }),
+    },
+};
+
+export const UnicodeText: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "こんにちは\nПривет\nمرحبا",
+                    fontSize: 96,
+                    lineHeight: 1.5,
+                },
+            },
+        }),
+    },
+};
