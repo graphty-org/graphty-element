@@ -1,4 +1,3 @@
-export type {GraphOptsType} from "./src/config";
 export type {StyleSchema, StyleSchemaV1} from "./src/config";
 export {StyleTemplate} from "./src/config";
 export {DataSource} from "./src/data/DataSource";

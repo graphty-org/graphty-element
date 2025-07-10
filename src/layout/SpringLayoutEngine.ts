@@ -22,6 +22,7 @@ export type SpringLayoutOpts = Partial<SpringLayoutConfigType>;
 
 export class SpringLayout extends SimpleLayoutEngine {
     static type = "spring";
+    static maxDimensions = 3;
     scalingFactor = 100;
     config: SpringLayoutConfigType;
 

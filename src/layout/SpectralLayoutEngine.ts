@@ -14,6 +14,7 @@ export type SpectralLayoutOpts = Partial<SpectralLayoutConfigType>;
 
 export class SpectralLayout extends SimpleLayoutEngine {
     static type = "spectral";
+    static maxDimensions = 2;
     scalingFactor = 100;
     config: SpectralLayoutConfigType;
 

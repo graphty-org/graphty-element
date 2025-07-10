@@ -24,13 +24,16 @@ npm run storybook   # Start Storybook on port 9025
 ### Testing
 ```bash
 npm test            # Run default Vitest tests
-npm run test:all    # Run all tests (default + Storybook)
+npm run test:visual # Run visual tests to see if rendering changed
+npm run test:storybook # Run storybook tests to see if functionality work
+npm run test:all    # Run all tests (default + Storybook + Chromatic tests)
 npm run coverage    # Run all tests with coverage
 ```
 
 ### Linting & Code Quality
 ```bash
 npm run lint        # Run ESLint
+npm run lint -- --fix # Run ESLint, fix auto-fixable errors
 npm run lint:pkg    # Run knip (check unused dependencies/exports)
 npm run lint:all    # Run both ESLint and knip
 ```
@@ -40,6 +43,16 @@ npm run lint:all    # Run both ESLint and knip
 npm run build       # TypeScript + Vite build
 npm run preview     # Preview production build
 ```
+
+### Pre-commit Workflow
+```bash
+npm run ready:commit # Run lint, build, and test:all to prepare for commit
+```
+
+When preparing code for commit, you can ask Claude to "run ready:commit and fix
+all errors" or "make it ready:commit". Claude will repeatedly run this command
+and fix any lint, build, or test errors until everything passes. After
+successfully completing, generate a commit comment for all current changes.
 
 ## Architecture Overview
 

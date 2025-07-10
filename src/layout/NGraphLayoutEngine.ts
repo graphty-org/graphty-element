@@ -7,6 +7,7 @@ import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 
 export class NGraphEngine extends LayoutEngine {
     static type = "ngraph";
+    static maxDimensions = 3;
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
     nodeMapping = new Map<Node, NGraphNode>();

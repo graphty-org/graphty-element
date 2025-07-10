@@ -15,6 +15,7 @@ export type ShellLayoutOpts = Partial<ShellLayoutConfigType>;
 
 export class ShellLayout extends SimpleLayoutEngine {
     static type = "shell";
+    static maxDimensions = 2;
     scalingFactor = 100;
     config: ShellLayoutConfigType;
 

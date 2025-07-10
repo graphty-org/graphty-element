@@ -67,6 +67,7 @@ function isD3Edge(e: unknown): e is D3Edge {
 
 export class D3GraphEngine extends LayoutEngine {
     static type = "d3";
+    static maxDimensions = 3;
     d3ForceLayout: ReturnType<typeof forceSimulation>;
     d3AlphaMin: number;
     d3AlphaTarget: number;

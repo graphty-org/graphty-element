@@ -12,7 +12,8 @@
   "scripts": {
     "test": "vitest --project=default",
     "test:storybook": "vitest --project=storybook",
-    "test:all": "vitest --project=storybook --project=default",
+    "test:all": "vitest --project=storybook --project=default && npm run chromatic",
+    "test:visual": "npm run chromatic",
     "coverage": "vitest --project=storybook --project=default --coverage",
     "lint": "eslint",
     "lint:pkg": "knip",
@@ -24,7 +25,9 @@
     "storybook": "storybook dev -p 9025 --no-open",
     "chromatic": "npx chromatic --project-token=chpt_1dbd83f7d3e84f6",
     "prepare": "husky",
-    "postinstall": "playwright install"
+    "postinstall": "playwright install",
+    "build-storybook": "npm run build:storybook",
+    "ready:commit": "npm run build && npm run lint && npm run test:all"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.0.0",
@@ -42,7 +45,7 @@
     "@types/node": "^20.19.2",
     "@vitest/browser": "^3.1.4",
     "@vitest/coverage-v8": "^3.1.4",
-    "chromatic": "^11.28.2",
+    "chromatic": "^13.1.2",
     "cz-conventional-changelog": "^3.3.0",
     "d3-force-3d": "^3.0.5",
     "eruda": "^3.4.3",

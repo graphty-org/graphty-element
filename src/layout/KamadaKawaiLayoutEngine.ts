@@ -17,6 +17,7 @@ export type KamadaKawaiLayoutOpts = Partial<KamadaKawaiLayoutConfigType>;
 
 export class KamadaKawaiLayout extends SimpleLayoutEngine {
     static type = "kamada-kawai";
+    static maxDimensions = 3;
     scalingFactor = 50;
     config: KamadaKawaiLayoutConfigType;
 

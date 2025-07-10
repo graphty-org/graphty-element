@@ -177,8 +177,7 @@ export class Graph {
         // setup default layout
         this.setLayout("ngraph")
             .catch((e: unknown) => {
-                // eslint-disable-next-line no-console
-                console.log("ERROR", e);
+                console.error("ERROR", e);
                 throw e;
             });
 
@@ -196,7 +195,6 @@ export class Graph {
         }
 
         await this.scene.whenReadyAsync();
-        console.log("engine WebGPU", this.engine.isWebGPU);
 
         // Register a render loop to repeatedly render the scene
         this.engine.runRenderLoop(() => {
@@ -286,7 +284,7 @@ export class Graph {
 
         // style nodes
         for (const n of this.nodes.values()) {
-            const styleId = this.styles.getStyleForNode(n.data, this.styles.config.graph.twoD);
+            const styleId = this.styles.getStyleForNode(n.data);
             n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
             n.updateStyle(styleId);
         }
@@ -328,9 +326,45 @@ export class Graph {
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
 
         // setup camera
-        console.log("creating camera 2d", this.styles.config.graph.twoD);
         const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
         this.camera.activateCamera(cameraType);
+
+        // Update layout dimension if it supports it and twoD mode changed
+        // Check if layoutEngine is initialized
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            if (this.layoutEngine) {
+                const currentDimension = this.styles.config.graph.twoD ? 2 : 3;
+                const currentDimensionOpts = LayoutEngine.getOptionsForDimensionByType(this.layoutEngine.type, currentDimension);
+
+                // Only recreate if the layout supports dimension configuration
+                if (currentDimensionOpts && Object.keys(currentDimensionOpts).length > 0) {
+                    // Check if we need to recreate the layout
+                    // This is a bit tricky since we don't know what property name is used for dimensions
+                    // The safest approach is to always recreate when switching between 2D/3D modes
+                    const layoutType = this.layoutEngine.type;
+                    const layoutOpts = this.layoutEngine.config ? {... this.layoutEngine.config} : {};
+
+                    // Remove any dimension-related options that might conflict
+                    // We'll let getOptionsForDimensionByType add the correct ones
+                    const previousDimensionOpts2D = LayoutEngine.getOptionsForDimensionByType(layoutType, 2);
+                    const previousDimensionOpts3D = LayoutEngine.getOptionsForDimensionByType(layoutType, 3);
+                    const allDimensionKeys = new Set([
+                        ... Object.keys(previousDimensionOpts2D ?? {}),
+                        ... Object.keys(previousDimensionOpts3D ?? {}),
+                    ]);
+
+                    allDimensionKeys.forEach((key) => {
+                        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                        delete (layoutOpts as Record<string, unknown>)[key];
+                    });
+
+                    await this.setLayout(layoutType, layoutOpts);
+                }
+            }
+        } catch {
+            // Layout engine not yet initialized - will be set with correct dimension when initialized
+        }
 
         // run algorithms
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
@@ -421,7 +455,23 @@ export class Graph {
     }
 
     async setLayout(type: string, opts: object = {}): Promise<void> {
-        const engine = LayoutEngine.get(type, opts);
+        // Auto-sync layout dimension with graph's 2D/3D mode if not explicitly set
+        const layoutOpts = {... opts};
+
+        // Get dimension-specific options from the layout if not already provided
+        const dimension = this.styles.config.graph.twoD ? 2 : 3;
+        const dimensionOpts = LayoutEngine.getOptionsForDimensionByType(type, dimension);
+
+        if (dimensionOpts) {
+            // Merge dimension options, but don't override user-provided options
+            Object.keys(dimensionOpts).forEach((key) => {
+                if (!(key in layoutOpts)) {
+                    (layoutOpts as Record<string, unknown>)[key] = (dimensionOpts as Record<string, unknown>)[key];
+                }
+            });
+        }
+
+        const engine = LayoutEngine.get(type, layoutOpts);
         if (!engine) {
             throw new TypeError(`No layout named: ${type}`);
         }

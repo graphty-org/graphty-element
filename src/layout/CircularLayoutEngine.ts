@@ -14,6 +14,7 @@ export type CircularLayoutOpts = Partial<CircularLayoutConfigType>;
 
 export class CircularLayout extends SimpleLayoutEngine {
     static type = "circular";
+    static maxDimensions = 2;
     scalingFactor = 80;
     config: CircularLayoutConfigType;
 

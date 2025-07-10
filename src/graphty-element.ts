@@ -41,11 +41,7 @@ export class Graphty extends LitElement {
 
     async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
-            if (this.layout2d) {
-                this.#graph.createCamera(2);
-            } else {
-                this.#graph.createCamera(3);
-            }
+            setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
         }
 
         if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {

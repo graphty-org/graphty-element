@@ -25,7 +25,8 @@ const preview: Preview = {
             page: DocumentationTemplate,
         },
         options: {
-            storySort: (a, b) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            storySort: (a: any, b: any) => {
                 // Define stories that should always come first (in this order)
                 const priorityStories = [
                     "graphty--docs",

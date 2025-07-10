@@ -25,6 +25,7 @@ export type ForceAtlas2LayoutOpts = Partial<ForceAtlas2LayoutConfigType>;
 
 export class ForceAtlas2Layout extends SimpleLayoutEngine {
     static type = "forceatlas2";
+    static maxDimensions = 3;
     scalingFactor = 100;
     config: ForceAtlas2LayoutConfigType;
 

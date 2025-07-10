@@ -37,7 +37,6 @@ export const NodeStyle = z.strictObject({
     shape: z.strictObject({
         size: z.number().positive().optional(),
         type: NodeShapes.optional(),
-        twoD: z.boolean().optional(),
         // custom mesh https://doc.babylonjs.com/features/featuresDeepDive/mesh/creation/custom/custom
         // import mesh https://doc.babylonjs.com/typedoc/functions/BABYLON.ImportMeshAsync
     }).optional(),

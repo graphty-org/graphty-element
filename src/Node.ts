@@ -259,7 +259,7 @@ export class Node {
             }
 
             mat.wireframe = o.effect?.wireframe ?? false;
-            if (color3 && o.shape.twoD !== true) {
+            if (color3 && !g.styles.config.graph.twoD) {
                 mat.diffuseColor = color3;
             } else if (color3) {
                 mat.disableLighting = true;

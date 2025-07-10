@@ -1,6 +1,6 @@
 declare module "d3-force-3d" {
     interface Node {
-        index: NodeIndex;
+        index: number;
         x: number;
         y: number;
         z: number;
@@ -31,8 +31,8 @@ declare module "d3-force-3d" {
     export interface Force {
         (alpha?: number): void;
         initialize(nodes: Nodes, ... args: unknown[]): unknown;
-        links(links: Links): Force;
-        links(): Links;
+        links(links: unknown[]): Force;
+        links(): unknown[];
         id(forceAccessor: IdAccessor): Force;
         id(): IdAccessor;
         iterations(x: unknown): unknown;
@@ -64,7 +64,7 @@ declare module "d3-force-3d" {
         force(name: string): Force;
         find(): Node;
         on(name: string, args: unknown): unknown;
-    };
+    }
 
     export function forceSimulation(nodes?: Nodes, numDimensions?: number): Simulation;
     export function forceLink(links?: unknown): Force;

@@ -19,6 +19,7 @@ export type ArfLayoutOpts = Partial<ArfLayoutConfigType>;
 
 export class ArfLayout extends SimpleLayoutEngine {
     static type = "arf";
+    static maxDimensions = 2;
     scalingFactor = 100;
     config: ArfLayoutConfigType;
 

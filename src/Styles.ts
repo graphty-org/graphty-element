@@ -1,5 +1,5 @@
 import jmespath from "jmespath";
-import {defaultsDeep, isEqual, set as setDeep} from "lodash";
+import {defaultsDeep, isEqual} from "lodash";
 
 import {CalculatedValue} from "./CalculatedValue";
 import {
@@ -98,7 +98,7 @@ export class Styles {
         // TODO: recalculate
     }
 
-    getStyleForNode(data: AdHocData, twoD = false): NodeStyleId {
+    getStyleForNode(data: AdHocData): NodeStyleId {
         const styles: NodeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {node} = layer;
@@ -113,9 +113,6 @@ export class Styles {
         const mergedStyle: NodeStyleConfig = defaultsDeep({}, ... styles, this.#emptyNodeStyle);
         if (styles.length === 0) {
             mergedStyle.enabled = false;
-        } else {
-            // TODO: use calculated style?
-            setDeep(mergedStyle, "shape.twoD", twoD);
         }
 
         return Styles.getNodeIdForStyle(mergedStyle);

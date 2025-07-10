@@ -14,6 +14,7 @@ export type RandomLayoutOpts = Partial<RandomLayoutConfigType>;
 
 export class RandomLayout extends SimpleLayoutEngine {
     static type = "random";
+    static maxDimensions = 3;
     scalingFactor = 100;
     config: RandomLayoutConfigType;
 

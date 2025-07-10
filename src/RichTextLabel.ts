@@ -395,6 +395,18 @@ export class RichTextLabel {
         // Apply user options (these override everything)
         finalOptions = Object.assign(finalOptions, options) as ResolvedRichTextLabelOptions;
 
+        // Apply smart overflow if enabled (regardless of badge type)
+        if (finalOptions.smartOverflow && finalOptions.text && !isNaN(Number(finalOptions.text))) {
+            const num = parseInt(finalOptions.text);
+            if (num > finalOptions.maxNumber) {
+                if (num >= 1000) {
+                    finalOptions.text = `${Math.floor(num / 1000)}k`;
+                } else {
+                    finalOptions.text = `${finalOptions.maxNumber}${finalOptions.overflowSuffix}`;
+                }
+            }
+        }
+
         // Convert single border to borders array if needed
         if (finalOptions.borderWidth > 0 && finalOptions.borders.length === 0) {
             finalOptions.borders = [{
@@ -1596,7 +1608,22 @@ export class RichTextLabel {
 
     // Public methods
     public setText(text: string): void {
-        this.options.text = text;
+        // Apply smart overflow if enabled
+        if (this.options.smartOverflow && !isNaN(Number(text))) {
+            const num = parseInt(text);
+            if (num > this.options.maxNumber) {
+                if (num >= 1000) {
+                    this.options.text = `${Math.floor(num / 1000)}k`;
+                } else {
+                    this.options.text = `${this.options.maxNumber}${this.options.overflowSuffix}`;
+                }
+            } else {
+                this.options.text = text;
+            }
+        } else {
+            this.options.text = text;
+        }
+
         this._parseRichText();
         this._calculateDimensions();
         this._drawContent();

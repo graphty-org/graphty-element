@@ -62,11 +62,11 @@ const meta: Meta = {
         labelPointerHeight: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Pointer"}, name: "label.pointerHeight"},
 
         // Animation
-        labelAnimation: {control: "select", options: ["none", "pulse", "bounce", "fade"], table: {category: "Animation"}, name: "label.animation"},
+        labelAnimation: {control: "select", options: ["none", "pulse", "bounce", "shake", "glow", "fill"], table: {category: "Animation"}, name: "label.animation"},
         labelAnimationSpeed: {control: {type: "range", min: 0.1, max: 5, step: 0.1}, table: {category: "Animation"}, name: "label.animationSpeed"},
 
         // Badge
-        labelBadge: {control: "select", options: ["none", "notification", "number", "dot"], table: {category: "Badge"}, name: "label.badge"},
+        labelBadge: {control: "select", options: ["none", "notification", "label", "label-success", "label-warning", "label-danger", "count", "icon", "progress", "dot"], table: {category: "Badge"}, name: "label.badge"},
 
         // Smart Overflow
         labelSmartOverflow: {control: "boolean", table: {category: "Smart Overflow"}, name: "label.smartOverflow"},
@@ -116,7 +116,9 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
-export const Default: Story = {};
+export const Default: Story = {
+    storyName: "000 Default",
+};
 
 export const Enabled: Story = {
     args: {
@@ -526,13 +528,15 @@ export const SmartOverflow: Story = {
                     enabled: true,
                     text: "999999",
                     smartOverflow: true,
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
                 },
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["label.smartOverflow"],
+            include: ["label.smartOverflow", "label.text"],
         },
     },
 };
@@ -543,16 +547,18 @@ export const MaxNumber: Story = {
             nodeStyle: {
                 label: {
                     enabled: true,
-                    text: "999999",
+                    text: "1500",
                     smartOverflow: true,
-                    maxNumber: 999,
+                    maxNumber: 99,
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
                 },
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["label.maxNumber"],
+            include: ["label.maxNumber", "label.text", "label.smartOverflow"],
         },
     },
 };
@@ -563,17 +569,19 @@ export const OverflowSuffix: Story = {
             nodeStyle: {
                 label: {
                     enabled: true,
-                    text: "999999",
+                    text: "150",
                     smartOverflow: true,
-                    maxNumber: 999,
-                    overflowSuffix: "+",
+                    maxNumber: 99,
+                    overflowSuffix: "++",
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
                 },
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["label.overflowSuffix"],
+            include: ["label.overflowSuffix", "label.maxNumber", "label.text"],
         },
     },
 };

@@ -16,6 +16,7 @@ export type BipartiteLayoutOpts = Partial<BipartiteLayoutConfigType>;
 
 export class BipartiteLayout extends SimpleLayoutEngine {
     static type = "bipartite";
+    static maxDimensions = 2;
     scalingFactor = 40;
     config: BipartiteLayoutConfigType;
 

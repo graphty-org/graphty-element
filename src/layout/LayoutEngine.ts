@@ -19,6 +19,8 @@ const layoutEngineRegistry = new Map<string, LayoutEngineClass>();
 
 export abstract class LayoutEngine {
     static type: string;
+    static maxDimensions: number;
+    config?: Record<string, unknown>;
 
     // basic functionality
     abstract init(): Promise<void>;
@@ -67,6 +69,26 @@ export abstract class LayoutEngine {
 
         return null;
     }
+
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Check if this layout supports the requested dimension
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+
+        // Default implementation returns nothing - subclasses override to provide
+        // dimension-specific options (e.g., { dim: 2 } or { twoD: true })
+        return {};
+    }
+
+    static getOptionsForDimensionByType(type: string, dimension: 2 | 3): object | null {
+        const SourceClass = layoutEngineRegistry.get(type);
+        if (!SourceClass) {
+            return null;
+        }
+
+        return ((SourceClass as unknown) as typeof LayoutEngine).getOptionsForDimension(dimension);
+    }
 }
 
 export const SimpleLayoutConfig = z.looseObject({
@@ -87,6 +109,16 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         super();
         const config = SimpleLayoutConfig.parse(opts);
         this.scalingFactor = config.scalingFactor;
+    }
+
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Check if this layout supports the requested dimension
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+
+        // Most simple layouts use 'dim' parameter
+        return {dim: dimension};
     }
 
     // basic functionality

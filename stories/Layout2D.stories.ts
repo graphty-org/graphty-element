@@ -25,7 +25,7 @@ type Story = StoryObj<Graphty>;
 export const Spiral: Story = {
     args: {
         layout: "spiral",
-        styleTemplate: templateCreator({graph: {twoD: true}, nodeStyle: {shape: {twoD: true}}}),
+        styleTemplate: templateCreator({graph: {twoD: true}}),
     },
 };
 
