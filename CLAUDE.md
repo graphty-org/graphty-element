@@ -117,3 +117,27 @@ The project uses Vitest with two test projects:
 - **storybook**: Storybook-specific tests
 
 Tests run in the browser using Playwright. Coverage reports are generated in the `coverage/` directory.
+
+## Completion Notifications
+
+When tasks are completed or when waiting for user input, use the notification script:
+
+```bash
+# Task completed successfully
+scripts/claude-notify.sh "done" "Build and tests completed successfully!"
+
+# Waiting for user input/blocked
+scripts/claude-notify.sh "waiting" "Waiting for user response to continue"
+
+# Error occurred
+scripts/claude-notify.sh "error" "Build failed with TypeScript errors"
+
+# General information
+scripts/claude-notify.sh "info" "Starting test suite"
+```
+
+Always notify the user when:
+1. A significant task is completed
+2. Waiting for user input or clarification
+3. Blocked by errors that need user intervention
+4. Starting or finishing long-running operations

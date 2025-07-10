@@ -116,9 +116,7 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
-export const Default: Story = {
-    storyName: "000 Default",
-};
+export const Default: Story = {};
 
 export const Enabled: Story = {
     args: {

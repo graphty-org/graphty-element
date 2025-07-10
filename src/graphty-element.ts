@@ -40,6 +40,11 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
+        // Set style template FIRST before any other operations that might create nodes/edges
+        if (changedProperties.has("styleTemplate") && this.styleTemplate) {
+            await this.#graph.setStyleTemplate(this.styleTemplate);
+        }
+
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
             setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
         }
@@ -48,9 +53,11 @@ export class Graphty extends LitElement {
             this.#graph.runAlgorithmsOnLoad = true;
         }
 
-        if (changedProperties.has("layout") && this.layout) {
+        // Always ensure a layout is set - use provided layout or default to "ngraph"
+        if (changedProperties.has("layout")) {
+            const layoutType = this.layout ?? "ngraph";
             const layoutConfig = this.layoutConfig ?? {};
-            await this.#graph.setLayout(this.layout, layoutConfig);
+            await this.#graph.setLayout(layoutType, layoutConfig);
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
@@ -76,10 +83,6 @@ export class Graphty extends LitElement {
         if (changedProperties.has("dataSource") && this.dataSource) {
             const sourceOpts = this.dataSourceConfig ?? {};
             await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
-        }
-
-        if (changedProperties.has("styleTemplate") && this.styleTemplate) {
-            await this.#graph.setStyleTemplate(this.styleTemplate);
         }
 
         await this.#graph.init();

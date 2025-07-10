@@ -15,7 +15,7 @@ const preview: Preview = {
     parameters: {
         // actions: { argTypesRegex: "^on[A-Z].*" },
         controls: {
-            exapanded: true,
+            expanded: true,
             matchers: {
                 color: /(background|color)$/i,
                 date: /Date$/i,
@@ -25,51 +25,32 @@ const preview: Preview = {
             page: DocumentationTemplate,
         },
         options: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            storySort: (a: any, b: any) => {
-                // Define stories that should always come first (in this order)
-                const priorityStories = [
-                    "graphty--docs",
-                ];
-
-                const aIndex = priorityStories.indexOf(a.id);
-                const bIndex = priorityStories.indexOf(b.id);
-
-                // Check if story names contain "Default" (case-insensitive)
-                const aHasDefault = a.name.toLowerCase().includes("default");
-                const bHasDefault = b.name.toLowerCase().includes("default");
-
-                // If both are in priority list, sort by their priority order
-                if (aIndex !== -1 && bIndex !== -1) {
-                    return aIndex - bIndex;
-                }
-
-                // If only one is in priority list, it comes first
-                if (aIndex !== -1) {
-                    return -1;
-                }
-
-                if (bIndex !== -1) {
-                    return 1;
-                }
-
-                // If both have "Default", sort them alphabetically among themselves
-                if (aHasDefault && bHasDefault) {
-                    return a.id.localeCompare(b.id, undefined, {numeric: true});
-                }
-
-                // If only one has "Default", it comes first (after priority list)
-                if (aHasDefault) {
-                    return -1;
-                }
-
-                if (bHasDefault) {
-                    return 1;
-                }
-
-                // Otherwise, sort alphabetically
-                return a.id.localeCompare(b.id, undefined, {numeric: true});
-            }},
+            storySort: {
+                method: 'alphabetical',
+                order: [
+                    // Graphty stories first
+                    'Graphty',
+                    ['Default', '*'],
+                    // Then other top-level stories
+                    'Data',
+                    ['Default', '*'],
+                    'Calculated',
+                    ['Default', '*'],
+                    // Layout stories
+                    'Layout',
+                    ['3D', ['Default', '*'], '2D', ['Default', '*']],
+                    // Style stories
+                    'Styles',
+                    [
+                        'Node', ['Default', '*'],
+                        'Edge', ['Default', '*'],
+                        'Graph', ['Default', '*'],
+                        'Label', ['Default', '*']
+                    ],
+                ],
+                includeNames: true,
+            },
+        },
     },
 };
 

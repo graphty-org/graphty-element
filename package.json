@@ -23,7 +23,7 @@
     "preview": "vite preview",
     "build:storybook": "storybook build",
     "storybook": "storybook dev -p 9025 --no-open",
-    "chromatic": "npx chromatic --project-token=chpt_1dbd83f7d3e84f6",
+    "chromatic": "npx chromatic --project-token=chpt_74783da3ef424ee",
     "prepare": "husky",
     "postinstall": "playwright install",
     "build-storybook": "npm run build:storybook",

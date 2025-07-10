@@ -81,7 +81,9 @@ export class Edge {
         this.styleId = styleId;
 
         // create ngraph link
-        this.parentGraph.layoutEngine.addEdge(this);
+        // Only add to layout engine if it's already initialized
+        // Otherwise, it will be added when the layout is set
+        this.parentGraph.layoutEngine?.addEdge(this);
 
         // create mesh
         this.mesh = Edge.defaultEdgeMeshFactory(this, this.parentGraph, this.styleId);
@@ -94,7 +96,10 @@ export class Edge {
     }
 
     update(): void {
-        const lnk = this.parentGraph.layoutEngine.getEdgePosition(this);
+        const lnk = this.parentGraph.layoutEngine?.getEdgePosition(this);
+        if (!lnk) {
+            return;
+        }
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
@@ -146,6 +151,10 @@ export class Edge {
 
     static updateRays(g: Graph): void {
         if (!g.needRays) {
+            return;
+        }
+
+        if (!g.layoutEngine) {
             return;
         }
 
@@ -301,10 +310,48 @@ export class Edge {
         if (this.arrowMesh) {
             this.parentGraph.stats.arrowCapUpdate.beginMonitoring();
             const {srcPoint, dstPoint, newEndPoint} = this.getInterceptPoints();
+
+            // If we can't find intercept points, fall back to approximate positions
             if (!srcPoint || !dstPoint || !newEndPoint) {
-                throw new Error("Internal Error: mesh intercept points not found");
+                const fallbackSrc = this.srcNode.mesh.position;
+                const fallbackDst = this.dstNode.mesh.position;
+
+                // Hide arrow if nodes are too close or at same position
+                if (fallbackSrc.equalsWithEpsilon(fallbackDst, 0.01)) {
+                    this.arrowMesh.setEnabled(false);
+                    this.parentGraph.stats.arrowCapUpdate.endMonitoring();
+                    return {
+                        srcPoint: fallbackSrc,
+                        dstPoint: fallbackDst,
+                    };
+                }
+
+                // Calculate approximate positions based on node sizes
+                const direction = fallbackDst.subtract(fallbackSrc).normalize();
+                const style = Styles.getStyleForEdgeStyleId(this.styleId);
+                const arrowLen = getArrowCapLen(style.line?.width ?? 0.25);
+
+                // Estimate node radius (assuming spherical nodes)
+                const dstNodeRadius = this.dstNode.size || 1;
+                const srcNodeRadius = this.srcNode.size || 1;
+
+                // Position arrow at edge of destination node
+                const approxDstPoint = fallbackDst.subtract(direction.scale(dstNodeRadius));
+                const approxSrcPoint = fallbackSrc.add(direction.scale(srcNodeRadius));
+                const approxNewEndPoint = approxDstPoint.subtract(direction.scale(arrowLen));
+
+                this.arrowMesh.setEnabled(true);
+                this.arrowMesh.position = approxDstPoint;
+                this.arrowMesh.lookAt(this.dstNode.mesh.position);
+
+                this.parentGraph.stats.arrowCapUpdate.endMonitoring();
+                return {
+                    srcPoint: approxSrcPoint,
+                    dstPoint: approxNewEndPoint,
+                };
             }
 
+            this.arrowMesh.setEnabled(true);
             this.arrowMesh.position = dstPoint;
             this.arrowMesh.lookAt(this.dstNode.mesh.position);
 

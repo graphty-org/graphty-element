@@ -62,7 +62,7 @@ export class Graph {
     nodeCache = new Map<NodeIdType, Node>();
     needRays = false; // TODO: currently always true
     // graph engine
-    layoutEngine!: LayoutEngine;
+    layoutEngine?: LayoutEngine;
     running = false;
     pinOnDrag?: boolean;
     // graph
@@ -174,11 +174,15 @@ export class Graph {
 
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
-        // setup default layout
+        // Set default background color
+        const DEFAULT_BACKGROUND = "#F5F5F5"; // whitesmoke
+        this.scene.clearColor = Color4.FromHexString(DEFAULT_BACKGROUND);
+
+        // setup default layout - but don't wait for it
+        // The layout will be properly configured when needed
         this.setLayout("ngraph")
             .catch((e: unknown) => {
-                console.error("ERROR", e);
-                throw e;
+                console.error("ERROR setting default layout:", e);
             });
 
         // setup stats
@@ -223,7 +227,7 @@ export class Graph {
         this.stats.step();
         this.stats.graphStep.beginMonitoring();
         for (let i = 0; i < this.styles.config.behavior.layout.stepMultiplier; i++) {
-            this.layoutEngine.step();
+            this.layoutEngine?.step();
         }
         this.stats.graphStep.endMonitoring();
 
@@ -249,18 +253,24 @@ export class Graph {
 
         // update nodes
         this.stats.nodeUpdate.beginMonitoring();
-        for (const n of this.layoutEngine.nodes) {
-            n.update();
-            updateBoundingBox(n);
+        if (this.layoutEngine) {
+            for (const n of this.layoutEngine.nodes) {
+                n.update();
+                updateBoundingBox(n);
+            }
         }
+
         this.stats.nodeUpdate.endMonitoring();
 
         // update edges
         this.stats.edgeUpdate.beginMonitoring();
         Edge.updateRays(this);
-        for (const e of this.layoutEngine.edges) {
-            e.update();
+        if (this.layoutEngine) {
+            for (const e of this.layoutEngine.edges) {
+                e.update();
+            }
         }
+
         this.stats.edgeUpdate.endMonitoring();
 
         const scale = 1.3;
@@ -269,7 +279,7 @@ export class Graph {
         this.camera.zoomToBoundingBox(min, max);
 
         // check to see if we are done
-        if (this.layoutEngine.isSettled) {
+        if (this.layoutEngine?.isSettled) {
             this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
             this.running = false;
         }
@@ -280,7 +290,14 @@ export class Graph {
 
         // TODO: if t is a URL, fetch URL
 
+        const previousTwoD = this.styles.config.graph.twoD;
         this.styles = Styles.fromObject(t);
+        const currentTwoD = this.styles.config.graph.twoD;
+
+        // Clear mesh cache if switching between 2D and 3D modes
+        if (previousTwoD !== currentTwoD) {
+            this.meshCache.clear();
+        }
 
         // style nodes
         for (const n of this.nodes.values()) {
@@ -312,11 +329,15 @@ export class Graph {
             dome.rotation.x = Math.PI;
         }
 
-        // background color
+        // background color - always set a default
+        const DEFAULT_BACKGROUND = "#F5F5F5"; // whitesmoke
+
         if (this.styles.config.graph.background.backgroundType === "color" &&
-            this.styles.config.graph.background.color
-        ) {
+            this.styles.config.graph.background.color) {
             this.scene.clearColor = Color4.FromHexString(this.styles.config.graph.background.color);
+        } else {
+            // Apply default background color when no background is specified
+            this.scene.clearColor = Color4.FromHexString(DEFAULT_BACKGROUND);
         }
 
         // TODO: graph styles - background, etc
@@ -332,7 +353,6 @@ export class Graph {
         // Update layout dimension if it supports it and twoD mode changed
         // Check if layoutEngine is initialized
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (this.layoutEngine) {
                 const currentDimension = this.styles.config.graph.twoD ? 2 : 3;
                 const currentDimensionOpts = LayoutEngine.getOptionsForDimensionByType(this.layoutEngine.type, currentDimension);

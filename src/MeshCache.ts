@@ -18,7 +18,10 @@ export class MeshCache {
 
         this.misses++;
         mesh = creator();
-        mesh.isVisible = false;
+        // Must keep mesh visible for instances to be visible
+        // Position it far away so it's not rendered
+        mesh.position.set(0, -10000, 0);
+        mesh.freezeWorldMatrix();
         this.meshCacheMap.set(name, mesh);
         return mesh.createInstance(`${name}`);
     }
@@ -26,5 +29,13 @@ export class MeshCache {
     reset(): void {
         this.hits = 0;
         this.misses = 0;
+    }
+
+    clear(): void {
+        for (const mesh of this.meshCacheMap.values()) {
+            mesh.dispose();
+        }
+        this.meshCacheMap.clear();
+        this.reset();
     }
 }

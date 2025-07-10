@@ -63,7 +63,9 @@ export class Node {
         this.styleId = styleId;
 
         // create graph node
-        this.parentGraph.layoutEngine.addNode(this);
+        // Only add to layout engine if it's already initialized
+        // Otherwise, it will be added when the layout is set
+        this.parentGraph.layoutEngine?.addNode(this);
 
         // create mesh
         this.mesh = Node.defaultNodeMeshFactory(this, this.parentGraph, styleId);
@@ -90,11 +92,11 @@ export class Node {
             return;
         }
 
-        const pos = this.parentGraph.layoutEngine.getNodePosition(this);
-        this.mesh.position.x = pos.x;
-        this.mesh.position.y = pos.y;
-        if (pos.z) {
-            this.mesh.position.z = pos.z;
+        const pos = this.parentGraph.layoutEngine?.getNodePosition(this);
+        if (pos) {
+            this.mesh.position.x = pos.x;
+            this.mesh.position.y = pos.y;
+            this.mesh.position.z = pos.z ?? 0;
         }
     }
 
@@ -109,18 +111,19 @@ export class Node {
     }
 
     pin(): void {
-        this.parentGraph.layoutEngine.pin(this);
+        this.parentGraph.layoutEngine?.pin(this);
     }
 
     unpin(): void {
-        this.parentGraph.layoutEngine.unpin(this);
+        this.parentGraph.layoutEngine?.unpin(this);
     }
 
     static defaultNodeMeshFactory(n: Node, g: Graph, styleId: NodeStyleId): AbstractMesh {
         const o = Styles.getStyleForNodeStyleId(styleId);
         n.size = o.shape?.size ?? 0;
 
-        n.mesh = g.meshCache.get(`node-style-${styleId}`, () => {
+        const is2D = g.styles.config.graph.twoD;
+        n.mesh = g.meshCache.get(`node-style-${styleId}-${is2D ? "2d" : "3d"}`, () => {
             let mesh: Mesh;
 
             if (!o.shape) {
@@ -667,7 +670,7 @@ export class Node {
             n.parentGraph.running = true;
 
             // update the node position
-            n.parentGraph.layoutEngine.setNodePosition(n, event.position);
+            n.parentGraph.layoutEngine?.setNodePosition(n, event.position);
         });
 
         // TODO: this apparently updates dragging objects faster and more fluidly
