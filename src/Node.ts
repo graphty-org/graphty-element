@@ -540,7 +540,7 @@ export class Node {
             labelOptions.pointerCurve = labelStyle.pointerCurve;
         }
 
-        if (labelStyle.animation !== undefined) {
+        if (labelStyle.animation) {
             labelOptions.animation = labelStyle.animation;
         }
 
