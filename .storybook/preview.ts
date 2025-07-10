@@ -26,26 +26,30 @@ const preview: Preview = {
         },
         options: {
             storySort: {
-                method: 'alphabetical',
+                method: "alphabetical",
                 order: [
                     // Graphty stories first
-                    'Graphty',
-                    ['Default', '*'],
+                    "Graphty",
+                    ["Default", "*"],
                     // Then other top-level stories
-                    'Data',
-                    ['Default', '*'],
-                    'Calculated',
-                    ['Default', '*'],
+                    "Data",
+                    ["Default", "*"],
+                    "Calculated",
+                    ["Default", "*"],
                     // Layout stories
-                    'Layout',
-                    ['3D', ['Default', '*'], '2D', ['Default', '*']],
+                    "Layout",
+                    ["3D", ["Default", "*"], "2D", ["Default", "*"]],
                     // Style stories
-                    'Styles',
+                    "Styles",
                     [
-                        'Node', ['Default', '*'],
-                        'Edge', ['Default', '*'],
-                        'Graph', ['Default', '*'],
-                        'Label', ['Default', '*']
+                        "Node",
+                        ["Default", "*"],
+                        "Edge",
+                        ["Default", "*"],
+                        "Graph",
+                        ["Default", "*"],
+                        "Label",
+                        ["Default", "*"],
                     ],
                 ],
                 includeNames: true,
