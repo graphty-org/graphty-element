@@ -123,6 +123,19 @@ successfully completing, generate a commit comment for all current changes.
 - TypeScript strict mode is enabled
 - Babylon.js is externalized in the build
 
+### TypeScript Best Practices
+
+- **NEVER** disable `@typescript-eslint/no-explicit-any` unless absolutely necessary
+- When you encounter type issues, prefer:
+  1. Creating proper type definitions
+  2. Using type assertions with specific types (e.g., `as SpecificType`)
+  3. Using generics or type parameters
+  4. Creating type mappings or lookup types
+- Only use `any` as a last resort when:
+  - Interfacing with untyped third-party libraries
+  - Dynamic property access that can't be properly typed
+  - And even then, try to limit its scope as much as possible
+
 ## Testing Approach
 
 The project uses Vitest with two test projects:
