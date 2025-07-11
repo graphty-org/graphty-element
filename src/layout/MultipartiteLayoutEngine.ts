@@ -25,6 +25,15 @@ export class MultipartiteLayout extends SimpleLayoutEngine {
         this.config = MultipartiteLayoutConfig.parse(opts);
     }
 
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Multipartite only supports 2D
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+        // Multipartite doesn't use 'dim' parameter
+        return {};
+    }
+
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

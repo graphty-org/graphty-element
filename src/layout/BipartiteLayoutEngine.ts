@@ -25,6 +25,15 @@ export class BipartiteLayout extends SimpleLayoutEngine {
         this.config = BipartiteLayoutConfig.parse(opts);
     }
 
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Bipartite only supports 2D
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+        // Bipartite doesn't use 'dim' parameter
+        return {};
+    }
+
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);
