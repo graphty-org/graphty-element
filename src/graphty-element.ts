@@ -40,17 +40,18 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
-        // Set style template FIRST before any other operations that might create nodes/edges
+        // Set runAlgorithmsOnLoad BEFORE setting style template
+        if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
+            this.#graph.runAlgorithmsOnLoad = true;
+        }
+
+        // Set style template after runAlgorithmsOnLoad so algorithms can run
         if (changedProperties.has("styleTemplate") && this.styleTemplate) {
             await this.#graph.setStyleTemplate(this.styleTemplate);
         }
 
         if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
             setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
-        }
-
-        if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
-            this.#graph.runAlgorithmsOnLoad = true;
         }
 
         // Always ensure a layout is set - use provided layout or default to "ngraph"
@@ -84,6 +85,9 @@ export class Graphty extends LitElement {
             const sourceOpts = this.dataSourceConfig ?? {};
             await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
         }
+
+        // Run algorithms after all data has been loaded
+        await this.#graph.runAlgorithmsFromTemplate();
 
         await this.#graph.init();
         this.#graph.engine.resize();

@@ -193,6 +193,17 @@ export class Graph {
         this.engine.dispose();
     }
 
+    async runAlgorithmsFromTemplate(): Promise<void> {
+        if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
+            console.log(`Running ${this.styles.config.data.algorithms.length} algorithms from template`);
+            for (const algName of this.styles.config.data.algorithms) {
+                const [namespace, type] = algName.split(":");
+                console.log(`Running algorithm: ${namespace}:${type}`);
+                await this.runAlgorithm(namespace, type);
+            }
+        }
+    }
+
     async init(): Promise<void> {
         if (this.initialized) {
             return;
@@ -386,13 +397,7 @@ export class Graph {
             // Layout engine not yet initialized - will be set with correct dimension when initialized
         }
 
-        // run algorithms
-        if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
-            for (const algName of this.styles.config.data.algorithms) {
-                const [namespace, type] = algName.split(":");
-                await this.runAlgorithm(namespace, type);
-            }
-        }
+        // Don't run algorithms here - they should run after data is loaded
 
         // TODO: stats end
 
