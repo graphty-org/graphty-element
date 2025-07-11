@@ -1,6 +1,5 @@
 import {z} from "zod/v4";
 
-import {Node} from "../Node";
 import {AdvancedColorStyle, ColorStyle} from "./common";
 import {RichTextStyle} from "./RichTextStyle";
 
@@ -30,8 +29,6 @@ export const NodeShapes = z.enum([
     "icosphere",
     "geodesic",
 ]);
-
-export type NodeMeshFactoryType = typeof Node.defaultNodeMeshFactory;
 
 export const NodeStyle = z.strictObject({
     shape: z.strictObject({

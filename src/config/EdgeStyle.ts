@@ -1,6 +1,5 @@
 import {z} from "zod/v4";
 
-import {Edge} from "../Edge";
 import {ColorStyle} from "./common";
 import {RichTextStyle} from "./RichTextStyle";
 
@@ -50,8 +49,6 @@ const LineStyle = z.strictObject({
     opacity: z.number().min(0).max(1).optional(),
     bezier: z.boolean().optional(),
 });
-
-export type EdgeMeshFactory = typeof Edge.defaultEdgeMeshFactory;
 
 export const EdgeStyle = z.strictObject({
     arrowHead: ArrowStyle.optional(),
