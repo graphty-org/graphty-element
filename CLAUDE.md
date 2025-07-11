@@ -54,6 +54,8 @@ all errors" or "make it ready:commit". Claude will repeatedly run this command
 and fix any lint, build, or test errors until everything passes. After
 successfully completing, generate a commit comment for all current changes.
 
+**IMPORTANT**: Never run `git commit` commands. The user will handle all git commits themselves.
+
 ## Architecture Overview
 
 ### Core Components
