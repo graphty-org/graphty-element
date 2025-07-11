@@ -326,7 +326,7 @@ export class Graph {
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
                 typeof this.styles.config.graph.background.data === "string") {
-            const dome = new PhotoDome(
+            new PhotoDome(
                 "testdome",
                 this.styles.config.graph.background.data,
                 {
@@ -335,9 +335,6 @@ export class Graph {
                 },
                 this.scene,
             );
-
-            dome.rotation.z = -Math.PI / 2;
-            dome.rotation.x = Math.PI;
         }
 
         // background color - always set a default
