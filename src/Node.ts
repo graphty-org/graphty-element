@@ -205,10 +205,9 @@ export class Node {
         ];
 
         for (const prop of propertiesToCopy) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((labelStyle as any)[prop] !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (labelOptions as any)[prop] = (labelStyle as any)[prop];
+            if (prop in labelStyle && labelStyle[prop as keyof typeof labelStyle] !== undefined) {
+                const value = labelStyle[prop as keyof typeof labelStyle];
+                (labelOptions as Record<string, unknown>)[prop] = value;
             }
         }
 

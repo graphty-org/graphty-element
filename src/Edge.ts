@@ -28,6 +28,11 @@ interface EdgeOpts {
     metadata?: object;
 }
 
+// Extend Ray type to include position property
+interface RayWithPosition extends Ray {
+    position: Vector3;
+}
+
 export class Edge {
     parentGraph: Graph;
     opts: EdgeOpts;
@@ -220,8 +225,7 @@ export class Edge {
             // RayHelper.CreateAndShow(ray, e.parentGraph.scene, Color3.Red());
 
             // XXX: position is missing from Ray TypeScript definition
-            /* eslint-disable  @typescript-eslint/no-explicit-any */
-            (e.ray as any).position = dstMesh.position;
+            (e.ray as RayWithPosition).position = dstMesh.position;
             e.ray.direction = dstMesh.position.subtract(srcMesh.position);
         }
 
@@ -405,10 +409,9 @@ export class Edge {
         ];
 
         for (const prop of propertiesToCopy) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((label as any)[prop] !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (labelOptions as any)[prop] = (label as any)[prop];
+            if (prop in label && label[prop as keyof typeof label] !== undefined) {
+                const value = label[prop as keyof typeof label];
+                (labelOptions as Record<string, unknown>)[prop] = value;
             }
         }
 

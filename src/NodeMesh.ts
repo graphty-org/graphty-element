@@ -24,6 +24,12 @@ export interface NodeMeshCreateOptions {
 
 type ShapeCreator = (size: number) => Mesh;
 
+interface ColorObject {
+    colorType: string;
+    value?: string;
+    opacity?: number;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class NodeMesh {
     private static shapeCreators = new Map<string, ShapeCreator>();
@@ -124,8 +130,7 @@ export class NodeMesh {
         }
 
         if (typeof color === "object" && color !== null) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const colorObj = color as any;
+            const colorObj = color as ColorObject;
             if (colorObj.colorType === "solid" && colorObj.value) {
                 return Color3.FromHexString(colorObj.value);
             }
