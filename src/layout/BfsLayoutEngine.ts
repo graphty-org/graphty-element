@@ -29,6 +29,7 @@ export class BfsLayout extends SimpleLayoutEngine {
         if (dimension > this.maxDimensions) {
             return null;
         }
+
         // Bfs doesn't use 'dim' parameter
         return {};
     }

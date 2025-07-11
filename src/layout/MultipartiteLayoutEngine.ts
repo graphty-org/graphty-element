@@ -30,6 +30,7 @@ export class MultipartiteLayout extends SimpleLayoutEngine {
         if (dimension > this.maxDimensions) {
             return null;
         }
+
         // Multipartite doesn't use 'dim' parameter
         return {};
     }

@@ -33,6 +33,7 @@ export class ArfLayout extends SimpleLayoutEngine {
         if (dimension > this.maxDimensions) {
             return null;
         }
+
         // Arf doesn't use 'dim' parameter
         return {};
     }

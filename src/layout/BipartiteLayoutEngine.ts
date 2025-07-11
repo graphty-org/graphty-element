@@ -30,6 +30,7 @@ export class BipartiteLayout extends SimpleLayoutEngine {
         if (dimension > this.maxDimensions) {
             return null;
         }
+
         // Bipartite doesn't use 'dim' parameter
         return {};
     }
