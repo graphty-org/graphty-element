@@ -134,27 +134,45 @@ Tests run in the browser using Playwright. Coverage reports are generated in the
 
 When you write unit tests with vitest, prefer `assert` over `expect`.
 
-## Completion Notifications
+## Pushover Notifications
 
-When tasks are completed or when waiting for user input, use the notification script:
+The project includes a Pushover notification script to alert you when Claude Code needs your attention.
+
+### Setup
+
+1. Get your Pushover credentials:
+   - User Key: Found in your Pushover account settings
+   - App Token: Create an application at https://pushover.net/apps
+
+2. Set environment variables in your shell config (.bashrc, .zshrc, etc.):
+   ```bash
+   export PUSHOVER_USER_KEY="your-user-key-here"
+   export PUSHOVER_APP_TOKEN="your-app-token-here"
+   ```
+
+3. Reload your shell config or restart your terminal
+
+### Usage
+
+Use notifications sparingly - only for these scenarios:
 
 ```bash
-# Task completed successfully
-scripts/claude-notify.sh "done" "Build and tests completed successfully!"
+# When waiting for user input or blocked
+scripts/claude-notify.sh "waiting" "Need clarification on test implementation approach"
 
-# Waiting for user input/blocked
-scripts/claude-notify.sh "waiting" "Waiting for user response to continue"
-
-# Error occurred
-scripts/claude-notify.sh "error" "Build failed with TypeScript errors"
-
-# General information
-scripts/claude-notify.sh "info" "Starting test suite"
+# When long operations complete (build, test suites, etc.)
+scripts/claude-notify.sh "done" "All tests passed - ready:commit completed!"
 ```
 
-Always notify the user when:
+### When to Notify
 
-1. A significant task is completed
-2. Waiting for user input or clarification
-3. Blocked by errors that need user intervention
-4. Starting or finishing long-running operations
+Only notify the user when:
+
+1. **Waiting for input** - When blocked and need user response to continue
+2. **Long operations complete** - When finishing operations that take >30 seconds (full test suites, builds, ready:commit, etc.)
+
+Do NOT notify for:
+- Individual file edits or small tasks
+- Starting operations
+- Minor errors that can be fixed automatically
+- General information or status updates
