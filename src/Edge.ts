@@ -6,10 +6,10 @@ import {
 import jmespath from "jmespath";
 
 import type {AdHocData, EdgeStyleConfig} from "./config";
-import {EdgeMesh} from "./EdgeMesh";
 import type {Graph} from "./Graph";
+import {EdgeMesh} from "./meshes/EdgeMesh";
+import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
-import {RichTextLabel, type RichTextLabelOptions} from "./RichTextLabel";
 import {EdgeStyleId, Styles} from "./Styles";
 
 interface InterceptPoint {

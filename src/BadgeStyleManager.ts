@@ -1,4 +1,4 @@
-import type {BadgeType, RichTextLabelOptions} from "./RichTextLabel.ts";
+import type {BadgeType, RichTextLabelOptions} from "./meshes/RichTextLabel.ts";
 
 const BADGE_STYLES: Record<Exclude<BadgeType, undefined>, Partial<RichTextLabelOptions>> = {
     "notification": {

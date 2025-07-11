@@ -2,8 +2,8 @@ import {InstancedMesh, NullEngine, RawTexture, Scene, StandardMaterial, Vector3}
 import {assert, beforeEach, describe, test} from "vitest";
 
 import {EDGE_CONSTANTS} from "../src/constants/meshConstants";
-import {EdgeMesh} from "../src/EdgeMesh";
-import {MeshCache} from "../src/MeshCache";
+import {EdgeMesh} from "../src/meshes/EdgeMesh";
+import {MeshCache} from "../src/meshes/MeshCache";
 
 describe("EdgeMesh", () => {
     let scene: Scene;

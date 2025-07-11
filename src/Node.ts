@@ -9,9 +9,9 @@ import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
+import {NodeMesh} from "./meshes/NodeMesh";
+import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {NodeBehavior} from "./NodeBehavior";
-import {NodeMesh} from "./NodeMesh";
-import {RichTextLabel, type RichTextLabelOptions} from "./RichTextLabel";
 import {NodeStyleId, Styles} from "./Styles";
 
 export type NodeIdType = string | number;

@@ -17,11 +17,11 @@ import {
 import jmespath from "jmespath";
 
 import {Algorithm} from "./algorithms/Algorithm";
-import {CameraManager} from "./camera/CameraManager";
-import {OrbitCameraController} from "./camera/OrbitCameraController";
-import {OrbitInputController} from "./camera/OrbitInputController";
-import {TwoDCameraController} from "./camera/TwoDCameraController";
-import {InputController} from "./camera/TwoDInputController";
+import {CameraManager} from "./cameras/CameraManager";
+import {OrbitCameraController} from "./cameras/OrbitCameraController";
+import {OrbitInputController} from "./cameras/OrbitInputController";
+import {TwoDCameraController} from "./cameras/TwoDCameraController";
+import {InputController} from "./cameras/TwoDInputController";
 import {
     AdHocData,
     FetchEdgesFn,
@@ -38,7 +38,7 @@ import {
     NodeEvent,
 } from "./events";
 import {LayoutEngine} from "./layout/LayoutEngine";
-import {MeshCache} from "./MeshCache";
+import {MeshCache} from "./meshes/MeshCache";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";

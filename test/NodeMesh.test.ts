@@ -4,8 +4,8 @@ import type {z} from "zod/v4";
 
 import {NodeShapes} from "../src/config/NodeStyle";
 import {PolyhedronType} from "../src/constants/meshConstants";
-import {MeshCache} from "../src/MeshCache";
-import {NodeMesh} from "../src/NodeMesh";
+import {MeshCache} from "../src/meshes/MeshCache";
+import {NodeMesh} from "../src/meshes/NodeMesh";
 
 describe("NodeMesh", () => {
     let scene: Scene;
