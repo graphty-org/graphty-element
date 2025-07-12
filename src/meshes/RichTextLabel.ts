@@ -1,10 +1,10 @@
 import {AbstractMesh, Color3, DynamicTexture, Engine, Mesh, MeshBuilder, Scene, StandardMaterial, Texture, Vector3} from "@babylonjs/core";
 
-import {BadgeStyleManager} from "../BadgeStyleManager.ts";
-import {type ContentArea as PointerContentArea, type PointerDirection, PointerRenderer} from "./PointerRenderer.ts";
-import {RichTextAnimator} from "./RichTextAnimator.ts";
-import {RichTextParser} from "./RichTextParser.ts";
-import {RichTextRenderer} from "./RichTextRenderer.ts";
+import {BadgeStyleManager} from "../BadgeStyleManager";
+import {type ContentArea as PointerContentArea, type PointerDirection, PointerRenderer} from "./PointerRenderer";
+import {RichTextAnimator} from "./RichTextAnimator";
+import {RichTextParser} from "./RichTextParser";
+import {RichTextRenderer} from "./RichTextRenderer";
 
 export type BadgeType = "notification" | "label" | "label-success" | "label-warning" | "label-danger" | "count" | "icon" | "progress" | "dot" | undefined;
 export type AttachPosition = "top" | "bottom" | "left" | "right" | "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -143,6 +143,7 @@ export class RichTextLabel {
     private renderer: RichTextRenderer;
     private animator: RichTextAnimator | null = null;
     private pointerRenderer: PointerRenderer;
+    private depthFadeCallback: (() => void) | null = null;
 
     static createLabel(scene: Scene, userOptions: RichTextLabelOptions): RichTextLabel {
         return new RichTextLabel(scene, userOptions);
@@ -214,12 +215,12 @@ export class RichTextLabel {
             _progressBar: undefined,
         };
 
-        const finalOptions = Object.assign({}, defaultOptions, userOptions) as ResolvedRichTextLabelOptions;
+        let finalOptions: ResolvedRichTextLabelOptions = {... defaultOptions, ... userOptions};
 
         if (finalOptions.badge) {
             const badgeDefaults = BadgeStyleManager.getBadgeStyle(finalOptions.badge);
             if (badgeDefaults) {
-                Object.assign(finalOptions, badgeDefaults, userOptions);
+                finalOptions = {... finalOptions, ... badgeDefaults, ... userOptions};
             }
         }
 
@@ -327,20 +328,20 @@ export class RichTextLabel {
             textOutlineWidth: this.options.textOutlineWidth,
         });
 
-        const bgPadding = this.options.backgroundPadding * 2;
+        const bgPadding = Number(this.options.backgroundPadding) * 2;
 
         this.totalBorderWidth = 0;
         if (this.options.borders.length > 0) {
             for (let i = 0; i < this.options.borders.length; i++) {
-                this.totalBorderWidth += this.options.borders[i].width;
+                this.totalBorderWidth += Number(this.options.borders[i].width);
                 if (i < this.options.borders.length - 1 && this.options.borders[i].spacing > 0) {
-                    this.totalBorderWidth += this.options.borders[i].spacing;
+                    this.totalBorderWidth += Number(this.options.borders[i].spacing);
                 }
             }
         }
 
-        const contentWidth = maxWidth + this.options.marginLeft + this.options.marginRight + bgPadding;
-        const contentHeight = totalHeight + this.options.marginTop + this.options.marginBottom + bgPadding;
+        const contentWidth = maxWidth + Number(this.options.marginLeft) + Number(this.options.marginRight) + bgPadding;
+        const contentHeight = totalHeight + Number(this.options.marginTop) + Number(this.options.marginBottom) + bgPadding;
 
         this.contentArea = {
             x: this.totalBorderWidth,
@@ -358,18 +359,18 @@ export class RichTextLabel {
             if (this.pointerInfo) {
                 switch (this.pointerInfo.direction) {
                     case "top":
-                        this.actualDimensions.height += this.options.pointerHeight;
-                        this.contentArea.y = this.totalBorderWidth + this.options.pointerHeight;
+                        this.actualDimensions.height += Number(this.options.pointerHeight);
+                        this.contentArea.y = this.totalBorderWidth + Number(this.options.pointerHeight);
                         break;
                     case "bottom":
-                        this.actualDimensions.height += this.options.pointerHeight;
+                        this.actualDimensions.height += Number(this.options.pointerHeight);
                         break;
                     case "left":
-                        this.actualDimensions.width += this.options.pointerHeight;
-                        this.contentArea.x = this.totalBorderWidth + this.options.pointerHeight;
+                        this.actualDimensions.width += Number(this.options.pointerHeight);
+                        this.contentArea.x = this.totalBorderWidth + Number(this.options.pointerHeight);
                         break;
                     case "right":
-                        this.actualDimensions.width += this.options.pointerHeight;
+                        this.actualDimensions.width += Number(this.options.pointerHeight);
                         break;
                     default:
                         break;
@@ -396,9 +397,9 @@ export class RichTextLabel {
 
         this.pointerInfo = {
             direction: direction,
-            width: this.options.pointerWidth,
-            height: this.options.pointerHeight,
-            offset: this.options.pointerOffset,
+            width: Number(this.options.pointerWidth),
+            height: Number(this.options.pointerHeight),
+            offset: Number(this.options.pointerOffset),
             curve: this.options.pointerCurve,
         };
     }
@@ -473,7 +474,7 @@ export class RichTextLabel {
                 const border = this.options.borders[i];
 
                 if (i > 0 && this.options.borders[i - 1].spacing > 0) {
-                    currentOffset += this.options.borders[i - 1].spacing;
+                    currentOffset += Number(this.options.borders[i - 1].spacing);
                 }
 
                 ctx.save();
@@ -549,7 +550,7 @@ export class RichTextLabel {
                 const border = this.options.borders[i];
 
                 if (i > 0 && this.options.borders[i - 1].spacing > 0) {
-                    currentOffset += this.options.borders[i - 1].spacing;
+                    currentOffset += Number(this.options.borders[i - 1].spacing);
                 }
 
                 ctx.save();
@@ -669,9 +670,9 @@ export class RichTextLabel {
 
     private _drawProgressBar(ctx: CanvasRenderingContext2D): void {
         const progressBarHeight = this.contentArea.height * 0.2;
-        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - this.options.backgroundPadding;
-        const progressBarX = this.contentArea.x + this.options.backgroundPadding;
-        const progressBarWidth = this.contentArea.width - (this.options.backgroundPadding * 2);
+        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding);
+        const progressBarX = this.contentArea.x + Number(this.options.backgroundPadding);
+        const progressBarWidth = this.contentArea.width - (Number(this.options.backgroundPadding) * 2);
 
         ctx.save();
         ctx.fillStyle = "rgba(0, 122, 255, 1)";
@@ -708,7 +709,7 @@ export class RichTextLabel {
     }
 
     private _createMesh(): void {
-        const sizeScale = this.options.fontSize / 48;
+        const sizeScale = Number(this.options.fontSize) / 48;
 
         const aspectRatio = this.actualDimensions.width / this.actualDimensions.height;
         const planeHeight = sizeScale;
@@ -760,7 +761,7 @@ export class RichTextLabel {
             return;
         }
 
-        const sizeScale = this.options.fontSize / 48;
+        const sizeScale = Number(this.options.fontSize) / 48;
         const labelWidth = (this.actualDimensions.width / this.actualDimensions.height) * sizeScale;
         const labelHeight = sizeScale;
 
@@ -844,7 +845,7 @@ export class RichTextLabel {
     private _setupDepthFading(): void {
         const camera = this.scene.activeCamera;
 
-        this.scene.registerBeforeRender(() => {
+        this.depthFadeCallback = () => {
             if (!camera || !this.mesh || !this.material) {
                 return;
             }
@@ -852,27 +853,29 @@ export class RichTextLabel {
             const distance = Vector3.Distance(camera.position, this.mesh.position);
 
             let fadeFactor = 1.0;
-            if (distance < this.options.depthFadeNear) {
+            if (distance < Number(this.options.depthFadeNear)) {
                 fadeFactor = 1.0;
-            } else if (distance > this.options.depthFadeFar) {
+            } else if (distance > Number(this.options.depthFadeFar)) {
                 fadeFactor = 0.0;
             } else {
-                const fadeRange = this.options.depthFadeFar - this.options.depthFadeNear;
-                fadeFactor = 1.0 - ((distance - this.options.depthFadeNear) / fadeRange);
+                const fadeRange = Number(this.options.depthFadeFar) - Number(this.options.depthFadeNear);
+                fadeFactor = 1.0 - ((distance - Number(this.options.depthFadeNear)) / fadeRange);
             }
 
             this.material.alpha = fadeFactor;
-        });
+        };
+
+        this.scene.registerBeforeRender(this.depthFadeCallback);
     }
 
     public setText(text: string): void {
         if (this.options.smartOverflow && !isNaN(Number(text))) {
-            const num = parseInt(text);
-            if (num > this.options.maxNumber) {
+            const num = parseInt(text, 10);
+            if (num > Number(this.options.maxNumber)) {
                 if (num >= 1000) {
                     this.options.text = `${Math.floor(num / 1000)}k`;
                 } else {
-                    this.options.text = `${this.options.maxNumber}${this.options.overflowSuffix}`;
+                    this.options.text = `${Number(this.options.maxNumber)}${this.options.overflowSuffix}`;
                 }
             } else {
                 this.options.text = text;
@@ -904,6 +907,12 @@ export class RichTextLabel {
     }
 
     public dispose(): void {
+        // Clean up scene callback first
+        if (this.depthFadeCallback) {
+            this.scene.unregisterBeforeRender(this.depthFadeCallback);
+            this.depthFadeCallback = null;
+        }
+
         if (this.animator) {
             this.animator.dispose();
         }
