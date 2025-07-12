@@ -60,7 +60,7 @@ export class Graph {
     meshCache: MeshCache;
     edgeCache: EdgeMap = new EdgeMap();
     nodeCache = new Map<NodeIdType, Node>();
-    needRays = false; // TODO: currently always true
+    needRays = true; // TODO: currently always true
     // graph engine
     layoutEngine?: LayoutEngine;
     running = false;
@@ -236,6 +236,15 @@ export class Graph {
         window.addEventListener("resize", this.resizeHandler);
 
         this.initialized = true;
+
+        // For layouts that settle immediately, start animations after a short delay
+        setTimeout(() => {
+            if (this.layoutEngine?.isSettled && !this.running) {
+                for (const node of this.nodes.values()) {
+                    node.label?.startAnimation();
+                }
+            }
+        }, 100);
     }
 
     update(): void {
@@ -304,6 +313,11 @@ export class Graph {
         if (this.layoutEngine?.isSettled) {
             this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
             this.running = false;
+
+            // Start label animations after layout has settled
+            for (const node of this.nodes.values()) {
+                node.label?.startAnimation();
+            }
         }
     }
 

@@ -144,6 +144,7 @@ export class RichTextLabel {
     private animator: RichTextAnimator | null = null;
     private pointerRenderer: PointerRenderer;
     private depthFadeCallback: (() => void) | null = null;
+    private animationStarted = false;
 
     static createLabel(scene: Scene, userOptions: RichTextLabelOptions): RichTextLabel {
         return new RichTextLabel(scene, userOptions);
@@ -155,7 +156,7 @@ export class RichTextLabel {
         const defaultOptions: ResolvedRichTextLabelOptions = {
             text: "Label",
             position: {x: 0, y: 0, z: 0},
-            resolution: 1024,
+            resolution: 512,
             autoSize: true,
             font: "Verdana",
             fontSize: 48,
@@ -303,12 +304,8 @@ export class RichTextLabel {
             this._setupDepthFading();
         }
 
-        if (this.animator && this.mesh && this.material) {
-            this.animator.setupAnimation(this.mesh, this.material, (value) => {
-                this._progressValue = value;
-                this._drawContent();
-            });
-        }
+        // Don't start animations immediately - wait for startAnimation() to be called
+        // This allows the layout to settle before animations begin
     }
 
     private _parseRichText(): void {
@@ -456,7 +453,19 @@ export class RichTextLabel {
             this._drawBackgroundWithBorders(ctx);
         }
 
-        this.renderer.drawText(ctx, this.parsedContent, this.contentArea);
+        // Adjust content area for text if there's a progress bar
+        let textArea = this.contentArea;
+        if (this.options._progressBar) {
+            const progressBarHeight = this.contentArea.height * 0.2;
+            textArea = {
+                x: this.contentArea.x,
+                y: this.contentArea.y,
+                width: this.contentArea.width,
+                height: this.contentArea.height - progressBarHeight - (Number(this.options.marginBottom) / 2),
+            };
+        }
+
+        this.renderer.drawText(ctx, this.parsedContent, textArea);
 
         ctx.restore();
         this.texture.update();
@@ -670,14 +679,59 @@ export class RichTextLabel {
 
     private _drawProgressBar(ctx: CanvasRenderingContext2D): void {
         const progressBarHeight = this.contentArea.height * 0.2;
-        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding);
+        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding) - (Number(this.options.marginBottom) / 2);
         const progressBarX = this.contentArea.x + Number(this.options.backgroundPadding);
         const progressBarWidth = this.contentArea.width - (Number(this.options.backgroundPadding) * 2);
 
         ctx.save();
+
+        // Draw progress bar background
+        ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
+        ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
+
+        // Draw progress bar fill
         ctx.fillStyle = "rgba(0, 122, 255, 1)";
         ctx.fillRect(progressBarX, progressBarY, progressBarWidth * this._progressValue, progressBarHeight);
+
         ctx.restore();
+    }
+
+    private _updateProgressBarOnly(): void {
+        if (!this.texture || !this.options._progressBar) {
+            return;
+        }
+
+        const ctx = this.texture.getContext() as unknown as CanvasRenderingContext2D;
+        const {width} = this.texture.getSize();
+        const {height} = this.texture.getSize();
+
+        const scaleX = width / this.actualDimensions.width;
+        const scaleY = height / this.actualDimensions.height;
+
+        // Calculate progress bar area
+        const progressBarHeight = this.contentArea.height * 0.2;
+        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding) - (Number(this.options.marginBottom) / 2);
+        const progressBarX = this.contentArea.x + Number(this.options.backgroundPadding);
+        const progressBarWidth = this.contentArea.width - (Number(this.options.backgroundPadding) * 2);
+
+        // Clear only the progress bar area
+        ctx.save();
+        ctx.scale(scaleX, scaleY);
+
+        // Clear the progress bar area by redrawing the background color
+        ctx.fillStyle = this.options.backgroundColor;
+        ctx.fillRect(progressBarX - 1, progressBarY - 1, progressBarWidth + 2, progressBarHeight + 2);
+
+        // Draw progress bar background
+        ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
+        ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
+
+        // Draw progress bar fill
+        ctx.fillStyle = "rgba(0, 122, 255, 1)";
+        ctx.fillRect(progressBarX, progressBarY, progressBarWidth * this._progressValue, progressBarHeight);
+
+        ctx.restore();
+        this.texture.update();
     }
 
     private _createRoundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number,
@@ -702,7 +756,14 @@ export class RichTextLabel {
         }
 
         this.material.specularColor = new Color3(0, 0, 0);
-        this.material.emissiveColor = new Color3(1, 1, 1);
+        // Only set emissiveColor if we're not using glow animation
+        if (this.options.animation !== "glow") {
+            this.material.emissiveColor = new Color3(1, 1, 1);
+        } else {
+            // Start with a neutral emissive for glow animation
+            this.material.emissiveColor = new Color3(0.65, 0.65, 0.65);
+        }
+
         this.material.backFaceCulling = false;
         this.material.useAlphaFromDiffuseTexture = true;
         this.material.alphaMode = Engine.ALPHA_COMBINE;
@@ -904,6 +965,22 @@ export class RichTextLabel {
         }
 
         this._attachToTarget();
+    }
+
+    public startAnimation(): void {
+        if (this.animationStarted || !this.animator || !this.mesh || !this.material) {
+            return;
+        }
+
+        this.animationStarted = true;
+
+        // For fill animation, only redraw if progress bar is enabled
+        const progressCallback = this.options._progressBar ? (value: number) => {
+            this._progressValue = value;
+            this._updateProgressBarOnly();
+        } : undefined;
+
+        this.animator.setupAnimation(this.mesh, this.material, progressCallback);
     }
 
     public dispose(): void {

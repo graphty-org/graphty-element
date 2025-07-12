@@ -316,7 +316,7 @@ export class Edge {
         let newEndPoint: Vector3 | null = null;
         if (dstHitInfo.length && srcHitInfo.length) {
             const style = Styles.getStyleForEdgeStyleId(this.styleId);
-            const len = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25);
+            const hasArrowHead = style.arrowHead?.type && style.arrowHead.type !== "none";
 
             dstPoint = dstHitInfo[0].pickedPoint;
             srcPoint = srcHitInfo[0].pickedPoint;
@@ -324,15 +324,22 @@ export class Edge {
                 throw new TypeError("error picking points");
             }
 
-            const distance = srcPoint.subtract(dstPoint).length();
-            const adjDistance = distance - len;
-            const {x: x1, y: y1, z: z1} = srcPoint;
-            const {x: x2, y: y2, z: z2} = dstPoint;
-            // calculate new line endpoint along line between midpoints of meshes
-            const x3 = x1 + ((adjDistance / distance) * (x2 - x1));
-            const y3 = y1 + ((adjDistance / distance) * (y2 - y1));
-            const z3 = z1 + ((adjDistance / distance) * (z2 - z1));
-            newEndPoint = new Vector3(x3, y3, z3);
+            // Only adjust endpoint if we have an arrow head
+            if (hasArrowHead) {
+                const len = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25);
+                const distance = srcPoint.subtract(dstPoint).length();
+                const adjDistance = distance - len;
+                const {x: x1, y: y1, z: z1} = srcPoint;
+                const {x: x2, y: y2, z: z2} = dstPoint;
+                // calculate new line endpoint along line between midpoints of meshes
+                const x3 = x1 + ((adjDistance / distance) * (x2 - x1));
+                const y3 = y1 + ((adjDistance / distance) * (y2 - y1));
+                const z3 = z1 + ((adjDistance / distance) * (z2 - z1));
+                newEndPoint = new Vector3(x3, y3, z3);
+            } else {
+                // No arrow head, edge goes all the way to the node surface
+                newEndPoint = dstPoint;
+            }
         }
 
         return {

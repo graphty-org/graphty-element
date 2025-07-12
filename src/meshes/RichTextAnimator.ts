@@ -12,6 +12,7 @@ export class RichTextAnimator {
     private originalPosition: Vector3 | null = null;
     private originalScale: Vector3 | null = null;
     private sceneCallback: (() => void) | null = null;
+    private lastFillUpdate = 0;
 
     constructor(
         private readonly scene: Scene,
@@ -88,14 +89,27 @@ export class RichTextAnimator {
 
     private animateGlow(material: StandardMaterial | null): void {
         if (material) {
-            const glow = 0.8 + (Math.sin(this.animationTime * 2) * 0.2);
+            // Ensure minimum speed of 1.5 for glow animation
+            const effectiveSpeed = Math.max(1.5, this.options.animationSpeed);
+            const glowTime = this.animationTime * (effectiveSpeed / this.options.animationSpeed);
+            // Animate between 0.3 and 1.0 for more visible effect
+            const glow = 0.65 + (Math.sin(glowTime * 2) * 0.35);
             material.emissiveColor = new Color3(glow, glow, glow);
         }
     }
 
     private animateFill(progressCallback?: (value: number) => void): void {
         if (progressCallback) {
-            const progressValue = (Math.sin(this.animationTime) + 1) / 2;
+            // Throttle updates to 30 FPS (every ~33ms)
+            const currentTime = performance.now();
+            if (currentTime - this.lastFillUpdate < 33) {
+                return;
+            }
+
+            this.lastFillUpdate = currentTime;
+
+            // Use a slower sawtooth wave for better performance
+            const progressValue = (this.animationTime % 4) / 4;
             progressCallback(progressValue);
         }
     }

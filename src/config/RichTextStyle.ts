@@ -22,7 +22,7 @@ const AttachPosition = z.enum([
 ]);
 
 const TextAlign = z.enum(["left", "center", "right"]);
-const AnimationType = z.enum(["pulse", "bounce", "shake", "glow", "fill"]);
+const AnimationType = z.enum(["none", "pulse", "bounce", "shake", "glow", "fill"]);
 const BadgeType = z.enum([
     "notification",
     "label",
@@ -122,7 +122,7 @@ export const RichTextStyle = z.strictObject({
     pointerCurve: z.boolean().default(false).optional(),
 
     // Animation
-    animation: AnimationType.nullable().default(null).optional(),
+    animation: AnimationType.default("none").optional(),
     animationSpeed: z.number().default(1).optional(),
 
     // Badge

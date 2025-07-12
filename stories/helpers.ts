@@ -68,8 +68,6 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
 
     const template = StyleTemplate.parse(config);
 
-    console.log("final template:", template);
-
     return template;
 }
 

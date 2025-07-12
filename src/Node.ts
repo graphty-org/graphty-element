@@ -202,6 +202,17 @@ export class Node {
             "textAlign",
             "cornerRadius",
             "autoSize",
+            "animation",
+            "animationSpeed",
+            "badge",
+            "progress",
+            "textOutline",
+            "textOutlineWidth",
+            "textOutlineColor",
+            "backgroundPadding",
+            "smartOverflow",
+            "maxNumber",
+            "overflowSuffix",
         ];
 
         for (const prop of propertiesToCopy) {
