@@ -1,6 +1,6 @@
 import {assert, beforeEach, describe, test, vi} from "vitest";
 
-import {PointerRenderer, type PointerOptions, type ContentArea} from "../src/meshes/PointerRenderer";
+import {type ContentArea, type PointerOptions, PointerRenderer} from "../src/meshes/PointerRenderer";
 
 describe("PointerRenderer", () => {
     let renderer: PointerRenderer;
@@ -48,52 +48,52 @@ describe("PointerRenderer", () => {
             assert.include(canvasCommands[0], "moveTo(15, 10)"); // contentX + radius, contentY
 
             // Should include pointer drawing commands
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(60, 70)"))); // pointer tip
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(60, 70)"))); // pointer tip
             assert.isTrue(canvasCommands.length > 10); // Should have many drawing commands
         });
 
         test("creates top pointer correctly", () => {
             const topPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 direction: "top",
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, topPointerOptions);
 
             // Should include pointer going upward
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(60, 0)"))); // pointer tip above content
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(60, 0)"))); // pointer tip above content
             assert.isTrue(canvasCommands.length > 10);
         });
 
         test("creates left pointer correctly", () => {
             const leftPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 direction: "left",
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, leftPointerOptions);
 
             // Should include pointer going left
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(0, 35)"))); // pointer tip to the left
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(0, 35)"))); // pointer tip to the left
             assert.isTrue(canvasCommands.length > 10);
         });
 
         test("creates right pointer correctly", () => {
             const rightPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 direction: "right",
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, rightPointerOptions);
 
             // Should include pointer going right
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(120, 35)"))); // pointer tip to the right
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(120, 35)"))); // pointer tip to the right
             assert.isTrue(canvasCommands.length > 10);
         });
 
         test("defaults to bottom pointer for unknown direction", () => {
             const autoPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 direction: "auto",
             };
 
@@ -101,49 +101,49 @@ describe("PointerRenderer", () => {
 
             // Should behave like bottom pointer
             assert.include(canvasCommands[0], "moveTo(15, 10)");
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(60, 70)")));
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(60, 70)")));
         });
 
         test("applies pointer offset correctly", () => {
             const offsetPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 offset: 20, // Shift pointer 20 pixels to the right
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, offsetPointerOptions);
 
             // Pointer should be offset from center (60) by 20 pixels (to 80)
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(80, 70)")));
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(80, 70)")));
         });
 
         test("creates curved pointer when curved option is true", () => {
             const curvedPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 curved: true,
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, curvedPointerOptions);
 
             // Should use quadraticCurveTo for pointer
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("quadraticCurveTo")));
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("quadraticCurveTo")));
         });
 
         test("creates straight pointer when curved option is false", () => {
             const straightPointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 curved: false,
             };
 
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, straightPointerOptions);
 
             // Count quadraticCurveTo calls - should be 4 for corners only, not pointer
-            const curveCommands = canvasCommands.filter(cmd => cmd.includes("quadraticCurveTo"));
+            const curveCommands = canvasCommands.filter((cmd) => cmd.includes("quadraticCurveTo"));
             assert.equal(curveCommands.length, 4); // Only corner curves
         });
 
         test("handles different pointer sizes", () => {
             const largePointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 width: 40,
                 height: 20,
             };
@@ -151,13 +151,13 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, largePointerOptions);
 
             // Should create larger pointer
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(60, 80)"))); // height 20 instead of 10
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(80, 60)"))); // width 40/2 = 20 from center
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(60, 80)"))); // height 20 instead of 10
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(80, 60)"))); // width 40/2 = 20 from center
         });
 
         test("respects content boundaries with large pointer", () => {
             const largePointerOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 width: 200, // Wider than content
                 offset: -80, // Far left offset
             };
@@ -165,7 +165,7 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, largePointerOptions);
 
             // Pointer should be clamped to content boundaries
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(15, 60)"))); // Clamped to contentX + radius
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(15, 60)"))); // Clamped to contentX + radius
         });
     });
 
@@ -194,12 +194,12 @@ describe("PointerRenderer", () => {
         });
 
         test("creates all directions in CCW", () => {
-            const directions: Array<PointerOptions["direction"]> = ["top", "bottom", "left", "right"];
+            const directions: PointerOptions["direction"][] = ["top", "bottom", "left", "right"];
 
             for (const direction of directions) {
                 canvasCommands = []; // Reset for each test
                 const options: PointerOptions = {
-                    ...defaultPointerOptions,
+                    ... defaultPointerOptions,
                     direction,
                 };
 
@@ -211,7 +211,7 @@ describe("PointerRenderer", () => {
 
         test("handles curved CCW pointer", () => {
             const curvedOptions: PointerOptions = {
-                ...defaultPointerOptions,
+                ... defaultPointerOptions,
                 curved: true,
                 direction: "top",
             };
@@ -219,7 +219,7 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePathCCW(mockCtx, contentArea, 5, curvedOptions);
 
             // Should include quadratic curves for both corners and pointer
-            const curveCommands = canvasCommands.filter(cmd => cmd.includes("quadraticCurveTo"));
+            const curveCommands = canvasCommands.filter((cmd) => cmd.includes("quadraticCurveTo"));
             assert.isTrue(curveCommands.length >= 4); // At least 4 corner curves
         });
     });
@@ -304,9 +304,9 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePath(mockCtx, contentArea, 3, options);
 
             // Verify correct methods were called
-            assert.isTrue(mockCtx.moveTo.mock.calls.length >= 1);
-            assert.isTrue(mockCtx.lineTo.mock.calls.length >= 1);
-            assert.isTrue(mockCtx.quadraticCurveTo.mock.calls.length >= 1);
+            assert.isTrue((mockCtx.moveTo as ReturnType<typeof vi.fn>).mock.calls.length >= 1);
+            assert.isTrue((mockCtx.lineTo as ReturnType<typeof vi.fn>).mock.calls.length >= 1);
+            assert.isTrue((mockCtx.quadraticCurveTo as ReturnType<typeof vi.fn>).mock.calls.length >= 1);
         });
 
         test("does not call invalid canvas methods", () => {
@@ -343,7 +343,7 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePath(mockCtx, contentArea, 5, options);
 
             // Center should be at contentX + contentWidth/2 + offset = 50 + 50 + 15 = 115
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(115, 120)"))); // pointer tip
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(115, 120)"))); // pointer tip
         });
 
         test("calculates center position correctly for top pointer", () => {
@@ -359,7 +359,7 @@ describe("PointerRenderer", () => {
             renderer.createSpeechBubblePath(mockCtx, contentArea, 4, options);
 
             // Center should be at contentX + contentWidth/2 + offset = 30 + 40 + (-10) = 60
-            assert.isTrue(canvasCommands.some(cmd => cmd.includes("lineTo(60, 32)"))); // pointer tip
+            assert.isTrue(canvasCommands.some((cmd) => cmd.includes("lineTo(60, 32)"))); // pointer tip
         });
     });
 });
