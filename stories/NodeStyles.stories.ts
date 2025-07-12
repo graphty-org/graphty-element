@@ -61,6 +61,40 @@ export const Shape: Story = {
     },
 };
 
+// Create a story specifically for Chromatic that tests all shapes
+// This won't show in the Storybook UI
+const AllShapesStory: Story = {
+    args: {
+        styleTemplate: templateCreator({nodeStyle: {shape: {type: "box"}}}),
+    },
+    tags: ["!dev"], // Hide from Storybook UI
+};
+
+// Export it with a name that indicates it's for testing
+export const ChromaticAllShapes = {
+    ... AllShapesStory,
+    parameters: {
+        chromatic: {
+            // Test each shape as a different mode
+            modes: {
+                box: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "box"}}})}},
+                sphere: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "sphere"}}})}},
+                cylinder: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "cylinder"}}})}},
+                cone: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "cone"}}})}},
+                capsule: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "capsule"}}})}},
+                torusKnot: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "torus-knot"}}})}},
+                tetrahedron: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "tetrahedron"}}})}},
+                octahedron: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "octahedron"}}})}},
+                dodecahedron: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "dodecahedron"}}})}},
+                icosahedron: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "icosahedron"}}})}},
+                rhombicuboctahedron: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "rhombicuboctahedron"}}})}},
+                geodesic: {args: {styleTemplate: templateCreator({nodeStyle: {shape: {type: "geodesic"}}})}},
+            },
+            delay: 500, // Give time for 3D rendering
+        },
+    },
+};
+
 export const Size: Story = {
     args: {
         styleTemplate: templateCreator({nodeStyle: {shape: {size: 3}}}),
@@ -107,9 +141,4 @@ export const Opacity: Story = {
             include: ["texture.color.value", "texture.color.opacity"],
         },
     },
-    // parameters: {
-    //     controls: {
-    //         include: ["label.enabled"],
-    //     },
-    // },
 };
