@@ -70,6 +70,9 @@ export class Graph {
     fetchEdges?: FetchEdgesFn;
     initialized = false;
     runAlgorithmsOnLoad = false;
+    private resizeHandler = (): void => {
+        this.engine.resize();
+    };
     // observeables
     graphObservable = new Observable<GraphEvent>();
     nodeObservable = new Observable<NodeEvent>();
@@ -190,15 +193,25 @@ export class Graph {
     }
 
     shutdown(): void {
+        // Stop render loop first
+        this.engine.stopRenderLoop();
+
+        // Clean up event listeners
+        window.removeEventListener("resize", this.resizeHandler);
+
+        // Clean up observables
+        this.graphObservable.clear();
+        this.nodeObservable.clear();
+        this.edgeObservable.clear();
+
+        // Stop and dispose engine
         this.engine.dispose();
     }
 
     async runAlgorithmsFromTemplate(): Promise<void> {
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
-            console.log(`Running ${this.styles.config.data.algorithms.length} algorithms from template`);
             for (const algName of this.styles.config.data.algorithms) {
                 const [namespace, type] = algName.split(":");
-                console.log(`Running algorithm: ${namespace}:${type}`);
                 await this.runAlgorithm(namespace, type);
             }
         }
@@ -220,9 +233,7 @@ export class Graph {
         // this.xrHelper = await createXrButton(this.scene, this.camera);
 
         // Watch for browser/canvas resize events
-        window.addEventListener("resize", () => {
-            this.engine.resize();
-        });
+        window.addEventListener("resize", this.resizeHandler);
 
         this.initialized = true;
     }
