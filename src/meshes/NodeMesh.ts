@@ -3,6 +3,7 @@ import {
     Color3,
     Mesh,
     MeshBuilder,
+    Scene,
     StandardMaterial,
 } from "@babylonjs/core";
 
@@ -22,7 +23,7 @@ export interface NodeMeshCreateOptions {
     effect?: NodeStyleConfig["effect"];
 }
 
-type ShapeCreator = (size: number) => Mesh;
+type ShapeCreator = (size: number, scene?: Scene) => Mesh;
 
 interface ColorObject {
     colorType: string;
@@ -37,43 +38,44 @@ export class NodeMesh {
     static {
         NodeMesh.registerShapeCreator("box", (size) => NodeMesh.createBox(size));
         NodeMesh.registerShapeCreator("sphere", (size) => NodeMesh.createSphere(size));
-        NodeMesh.registerShapeCreator("cylinder", (size) => NodeMesh.createCylinder(size));
-        NodeMesh.registerShapeCreator("cone", (size) => NodeMesh.createCone(size));
-        NodeMesh.registerShapeCreator("capsule", (size) => NodeMesh.createCapsule(size));
-        NodeMesh.registerShapeCreator("torus", (size) => NodeMesh.createTorus(size));
-        NodeMesh.registerShapeCreator("torus-knot", (size) => NodeMesh.createTorusKnot(size));
+        NodeMesh.registerShapeCreator("cylinder", (size, scene) => NodeMesh.createCylinder(size, scene));
+        NodeMesh.registerShapeCreator("cone", (size, scene) => NodeMesh.createCone(size, scene));
+        NodeMesh.registerShapeCreator("capsule", (size, scene) => NodeMesh.createCapsule(size, scene));
+        NodeMesh.registerShapeCreator("torus", (size, scene) => NodeMesh.createTorus(size, scene));
+        NodeMesh.registerShapeCreator("torus-knot", (size, scene) => NodeMesh.createTorusKnot(size, scene));
 
-        NodeMesh.registerShapeCreator("tetrahedron", (size) => NodeMesh.createPolyhedron(PolyhedronType.TETRAHEDRON, size));
-        NodeMesh.registerShapeCreator("octahedron", (size) => NodeMesh.createPolyhedron(PolyhedronType.OCTAHEDRON, size));
-        NodeMesh.registerShapeCreator("dodecahedron", (size) => NodeMesh.createPolyhedron(PolyhedronType.DODECAHEDRON, size));
-        NodeMesh.registerShapeCreator("icosahedron", (size) => NodeMesh.createPolyhedron(PolyhedronType.ICOSAHEDRON, size));
-        NodeMesh.registerShapeCreator("rhombicuboctahedron", (size) => NodeMesh.createPolyhedron(PolyhedronType.RHOMBICUBOCTAHEDRON, size));
-        NodeMesh.registerShapeCreator("triangular-prism", (size) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_PRISM, size));
-        NodeMesh.registerShapeCreator("pentagonal-prism", (size) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PRISM, size));
-        NodeMesh.registerShapeCreator("hexagonal-prism", (size) => NodeMesh.createPolyhedron(PolyhedronType.HEXAGONAL_PRISM, size));
-        NodeMesh.registerShapeCreator("square-pyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.SQUARE_PYRAMID, size));
-        NodeMesh.registerShapeCreator("pentagonal-pyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PYRAMID, size));
-        NodeMesh.registerShapeCreator("triangular-dipyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_DIPYRAMID, size));
-        NodeMesh.registerShapeCreator("pentagonal-dipyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_DIPYRAMID, size));
-        NodeMesh.registerShapeCreator("elongated-square-dipyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_SQUARE_DIPYRAMID, size));
-        NodeMesh.registerShapeCreator("elongated-pentagonal-dipyramid", (size) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_DIPYRAMID, size));
-        NodeMesh.registerShapeCreator("elongated-pentagonal-cupola", (size) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_CUPOLA, size));
+        NodeMesh.registerShapeCreator("tetrahedron", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TETRAHEDRON, size, scene));
+        NodeMesh.registerShapeCreator("octahedron", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.OCTAHEDRON, size, scene));
+        NodeMesh.registerShapeCreator("dodecahedron", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.DODECAHEDRON, size, scene));
+        NodeMesh.registerShapeCreator("icosahedron", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ICOSAHEDRON, size, scene));
+        NodeMesh.registerShapeCreator("rhombicuboctahedron", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.RHOMBICUBOCTAHEDRON, size, scene));
+        NodeMesh.registerShapeCreator("triangular-prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal-prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("hexagonal-prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.HEXAGONAL_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("square-pyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.SQUARE_PYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal-pyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("triangular-dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal-dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated-square-dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_SQUARE_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated-pentagonal-dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated-pentagonal-cupola", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_CUPOLA, size, scene));
 
-        NodeMesh.registerShapeCreator("goldberg", (size) => NodeMesh.createGoldberg(size));
-        NodeMesh.registerShapeCreator("icosphere", (size) => NodeMesh.createIcoSphere(size));
-        NodeMesh.registerShapeCreator("geodesic", (size) => NodeMesh.createGeodesic(size));
+        NodeMesh.registerShapeCreator("goldberg", (size, scene) => NodeMesh.createGoldberg(size, scene));
+        NodeMesh.registerShapeCreator("icosphere", (size, scene) => NodeMesh.createIcoSphere(size, scene));
+        NodeMesh.registerShapeCreator("geodesic", (size, scene) => NodeMesh.createGeodesic(size, scene));
     }
 
     static create(
         cache: MeshCache,
         options: NodeMeshOptions,
         createOptions: NodeMeshCreateOptions,
+        scene?: Scene,
     ): AbstractMesh {
         const cacheKey = `node-style-${options.styleId}-${options.is2D ? "2d" : "3d"}`;
 
         return cache.get(cacheKey, () => {
-            const mesh = this.createMeshWithoutCache(options, createOptions);
-            const material = this.createMaterial(createOptions, options.is2D);
+            const mesh = this.createMeshWithoutCache(options, createOptions, scene);
+            const material = this.createMaterial(createOptions, options.is2D, scene);
             mesh.material = material;
 
             if (createOptions.texture?.color && typeof createOptions.texture.color === "object" && "opacity" in createOptions.texture.color) {
@@ -87,6 +89,7 @@ export class NodeMesh {
     static createMeshWithoutCache(
         options: NodeMeshOptions,
         createOptions: NodeMeshCreateOptions,
+        scene?: Scene,
     ): Mesh {
         if (!createOptions.shape?.type) {
             throw new TypeError("shape with type required to create mesh");
@@ -98,14 +101,15 @@ export class NodeMesh {
         }
 
         const size = createOptions.shape.size ?? options.size;
-        return creator(size);
+        return creator(size, scene);
     }
 
     private static createMaterial(
         createOptions: NodeMeshCreateOptions,
         is2D: boolean,
+        scene?: Scene,
     ): StandardMaterial {
-        const mat = new StandardMaterial("defaultMaterial");
+        const mat = new StandardMaterial("defaultMaterial", scene);
 
         const color3 = this.extractColor(createOptions.texture?.color);
 
@@ -143,73 +147,71 @@ export class NodeMesh {
         this.shapeCreators.set(type, creator);
     }
 
-    private static createBox(size: number): Mesh {
-        return MeshBuilder.CreateBox("box", {size});
+    private static createBox(size: number, scene?: Scene): Mesh {
+        return MeshBuilder.CreateBox("box", {size}, scene);
     }
 
-    private static createSphere(size: number): Mesh {
-        return MeshBuilder.CreateSphere("sphere", {diameter: size});
+    private static createSphere(size: number, scene?: Scene): Mesh {
+        return MeshBuilder.CreateSphere("sphere", {diameter: size}, scene);
     }
 
-    private static createCylinder(size: number): Mesh {
+    private static createCylinder(size: number, scene?: Scene): Mesh {
         const actualSize = size;
         return MeshBuilder.CreateCylinder("cylinder", {
             height: actualSize * SHAPE_CONSTANTS.GOLDEN_RATIO,
             diameter: actualSize,
-        });
+        }, scene);
     }
 
-    private static createCone(size: number): Mesh {
+    private static createCone(size: number, scene?: Scene): Mesh {
         const actualSize = size;
         return MeshBuilder.CreateCylinder("cylinder", {
             height: actualSize * SHAPE_CONSTANTS.GOLDEN_RATIO,
             diameterTop: 0,
             diameterBottom: actualSize,
-        });
+        }, scene);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private static createCapsule(_size: number): Mesh {
-        return MeshBuilder.CreateCapsule("capsule", {});
+    private static createCapsule(_size: number, scene?: Scene): Mesh {
+        return MeshBuilder.CreateCapsule("capsule", {}, scene);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private static createTorus(_size: number): Mesh {
-        return MeshBuilder.CreateTorus("torus", {});
+    private static createTorus(_size: number, scene?: Scene): Mesh {
+        return MeshBuilder.CreateTorus("torus", {}, scene);
     }
 
-    private static createTorusKnot(size: number): Mesh {
+    private static createTorusKnot(size: number, scene?: Scene): Mesh {
         const actualSize = size;
         return MeshBuilder.CreateTorusKnot("tk", {
             radius: actualSize * SHAPE_CONSTANTS.TORUSKNOT_RADIUS_MULTIPLIER,
             tube: actualSize * SHAPE_CONSTANTS.TORUSKNOT_TUBE_MULTIPLIER,
             radialSegments: SHAPE_CONSTANTS.TORUSKNOT_RADIAL_SEGMENTS,
-        });
+        }, scene);
     }
 
-    private static createPolyhedron(type: PolyhedronType, size: number): Mesh {
+    private static createPolyhedron(type: PolyhedronType, size: number, scene?: Scene): Mesh {
         return MeshBuilder.CreatePolyhedron("polyhedron", {
             size,
             type: type,
-        });
+        }, scene);
     }
 
-    private static createGoldberg(size: number): Mesh {
+    private static createGoldberg(size: number, scene?: Scene): Mesh {
         return MeshBuilder.CreateGoldberg("goldberg", {
             size,
-        });
+        }, scene);
     }
 
-    private static createIcoSphere(size: number): Mesh {
+    private static createIcoSphere(size: number, scene?: Scene): Mesh {
         const actualSize = size;
         return MeshBuilder.CreateIcoSphere("icosphere", {
             radius: actualSize * SHAPE_CONSTANTS.ICOSPHERE_RADIUS_MULTIPLIER,
-        });
+        }, scene);
     }
 
-    private static createGeodesic(size: number): Mesh {
+    private static createGeodesic(size: number, scene?: Scene): Mesh {
         return MeshBuilder.CreateGeodesic("geodesic", {
             size,
-        });
+        }, scene);
     }
 }

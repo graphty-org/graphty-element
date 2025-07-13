@@ -62,6 +62,7 @@ export class Node {
             this.parentGraph.meshCache,
             {styleId: String(styleId), is2D: this.parentGraph.styles.config.graph.twoD, size: this.size},
             {shape: o.shape, texture: o.texture, effect: o.effect},
+            this.parentGraph.scene,
         );
 
         // create label
@@ -116,6 +117,7 @@ export class Node {
             this.parentGraph.meshCache,
             {styleId: String(styleId), is2D: this.parentGraph.styles.config.graph.twoD, size: this.size},
             {shape: o.shape, texture: o.texture, effect: o.effect},
+            this.parentGraph.scene,
         );
 
         // recreate label if needed

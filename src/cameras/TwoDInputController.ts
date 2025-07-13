@@ -1,5 +1,5 @@
 // TwoDInputController.ts
-import {PointerEventTypes} from "@babylonjs/core";
+import {type Observer, PointerEventTypes, type PointerInfo, type PointerInfoPre} from "@babylonjs/core";
 import Hammer from "hammerjs";
 
 import {TwoDCameraController, TwoDCameraControlsConfigType} from "./TwoDCameraController";
@@ -25,6 +25,10 @@ export class InputController {
     private gestureSession: GestureSession | null = null;
     private hammer: HammerManager | null = null;
     private enabled = false;
+
+    // Store observable subscriptions for cleanup
+    private pointerObserverHandle: Observer<PointerInfo> | null = null;
+    private prePointerObserverHandle: Observer<PointerInfoPre> | null = null;
 
     private pointerDownHandler = (): void => {
         this.cam.canvas.focus();
@@ -53,7 +57,7 @@ export class InputController {
         let lastX = 0;
         let lastY = 0;
 
-        this.cam.scene.onPointerObservable.add((pi) => {
+        this.pointerObserverHandle = this.cam.scene.onPointerObservable.add((pi) => {
             const e = pi.event as PointerEvent;
 
             switch (pi.type) {
@@ -93,7 +97,7 @@ export class InputController {
             }
         });
 
-        this.cam.scene.onPrePointerObservable.add((pi) => {
+        this.prePointerObserverHandle = this.cam.scene.onPrePointerObservable.add((pi) => {
             const e = pi.event as WheelEvent;
             if (pi.type === PointerEventTypes.POINTERWHEEL) {
                 const delta = e.deltaY > 0 ? this.config.mouseWheelZoomSpeed : 1 / this.config.mouseWheelZoomSpeed;
@@ -184,6 +188,26 @@ export class InputController {
 
         this.canvas.removeEventListener("keydown", this.keyDownHandler);
         this.canvas.removeEventListener("keyup", this.keyUpHandler);
+
+        // Remove scene observable subscriptions
+        if (this.pointerObserverHandle !== null) {
+            this.cam.scene.onPointerObservable.remove(this.pointerObserverHandle);
+            this.pointerObserverHandle = null;
+        }
+
+        if (this.prePointerObserverHandle !== null) {
+            this.cam.scene.onPrePointerObservable.remove(this.prePointerObserverHandle);
+            this.prePointerObserverHandle = null;
+        }
+
+        // Destroy Hammer.js instance
+        if (this.hammer) {
+            this.hammer.destroy();
+            this.hammer = null;
+        }
+
+        // Clear gesture session
+        this.gestureSession = null;
     }
 
     public applyKeyboardInertia(): void {

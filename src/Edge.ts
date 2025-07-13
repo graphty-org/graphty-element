@@ -469,4 +469,24 @@ export class EdgeMap {
 
         return sz;
     }
+
+    delete(srcId: NodeIdType, dstId: NodeIdType): boolean {
+        const dstMap = this.map.get(srcId);
+        if (!dstMap) {
+            return false;
+        }
+
+        const result = dstMap.delete(dstId);
+
+        // Clean up empty maps
+        if (dstMap.size === 0) {
+            this.map.delete(srcId);
+        }
+
+        return result;
+    }
+
+    clear(): void {
+        this.map.clear();
+    }
 }

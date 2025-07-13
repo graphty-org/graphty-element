@@ -38,4 +38,8 @@ export class MeshCache {
         this.meshCacheMap.clear();
         this.reset();
     }
+
+    size(): number {
+        return this.meshCacheMap.size;
+    }
 }

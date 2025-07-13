@@ -27,3 +27,5 @@ TODO
 *storybook.log
 storybook-static/
 coverage/test/__screenshots__/
+test/__screenshots__/
+coverage/

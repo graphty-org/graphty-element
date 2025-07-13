@@ -60,8 +60,44 @@ export class OrbitCameraController {
 
         this.pivot.position.copyFrom(center);
 
-        const largestDimension = size.length();
-        this.cameraDistance = Scalar.Clamp(largestDimension * 0.7, this.config.minZoomDistance, this.config.maxZoomDistance);
+        // Get camera's field of view (default is ~0.8 radians or ~45.8 degrees for UniversalCamera)
+        const fov = this.camera.fov || 0.8;
+
+        // Get viewport aspect ratio
+        const engine = this.scene.getEngine();
+        const aspectRatio = engine.getAspectRatio(this.camera);
+
+        // We need to consider all three dimensions since the camera can be rotated
+        const halfExtentX = size.x / 2;
+        const halfExtentY = size.y / 2;
+        const halfExtentZ = size.z / 2;
+
+        // For a perspective camera:
+        // - Vertical FOV is fixed
+        // - Horizontal FOV = 2 * atan(tan(verticalFOV/2) * aspectRatio)
+        const halfFovY = fov / 2;
+        const halfFovX = Math.atan(Math.tan(halfFovY) * aspectRatio);
+
+        // Calculate required distance for each axis pair
+        // We need to ensure the bounding box fits when viewed from any angle
+        const distances = [
+            // XY plane (most common view)
+            halfExtentX / Math.tan(halfFovX),
+            halfExtentY / Math.tan(halfFovY),
+            // XZ plane
+            halfExtentX / Math.tan(halfFovX),
+            halfExtentZ / Math.tan(halfFovY),
+            // YZ plane
+            halfExtentY / Math.tan(halfFovX),
+            halfExtentZ / Math.tan(halfFovY),
+        ];
+
+        // Use the maximum distance to ensure content fits from any viewing angle
+        // Add small padding factor of 1.1 for visual comfort
+        const paddingFactor = 1.1;
+        const targetDistance = Math.max(... distances) * paddingFactor;
+
+        this.cameraDistance = Scalar.Clamp(targetDistance, this.config.minZoomDistance, this.config.maxZoomDistance);
         this.updateCameraPosition();
     }
 }

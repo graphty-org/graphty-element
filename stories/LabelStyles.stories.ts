@@ -116,19 +116,35 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
-export const Default: Story = {};
+// Helper to create story args with data source
+const createLabelStoryArgs = (labelConfig: Record<string, unknown>): {
+    dataSource: string;
+    dataSourceConfig: {data: string};
+    styleTemplate: ReturnType<typeof templateCreator>;
+} => ({
+    dataSource: "json",
+    dataSourceConfig: {
+        data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+    },
+    styleTemplate: templateCreator({
+        nodeStyle: {
+            label: labelConfig,
+        },
+    }),
+});
+
+export const Default: Story = {
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+    }),
+};
 
 export const Enabled: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+    }),
     parameters: {
         controls: {
             include: ["label.enabled"],
@@ -137,16 +153,10 @@ export const Enabled: Story = {
 };
 
 export const TextPath: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "group",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "group",
+    }),
     parameters: {
         controls: {
             include: ["label.textPath"],
@@ -155,16 +165,10 @@ export const TextPath: Story = {
 };
 
 export const StaticText: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "Static Label",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "Static Label",
+    }),
     parameters: {
         controls: {
             include: ["label.text"],
@@ -173,17 +177,11 @@ export const StaticText: Story = {
 };
 
 export const FontType: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    font: "'JetBrains Mono', monospace",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        font: "'JetBrains Mono', monospace",
+    }),
     parameters: {
         controls: {
             include: ["label.font"],
@@ -192,17 +190,11 @@ export const FontType: Story = {
 };
 
 export const FontSize: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    fontSize: 96,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        fontSize: 96,
+    }),
     parameters: {
         controls: {
             include: ["label.fontSize"],
@@ -211,17 +203,11 @@ export const FontSize: Story = {
 };
 
 export const FontWeight: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    fontWeight: "bold",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        fontWeight: "bold",
+    }),
     parameters: {
         controls: {
             include: ["label.fontWeight"],
@@ -230,17 +216,11 @@ export const FontWeight: Story = {
 };
 
 export const TextColor: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    textColor: "#6366F1",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        textColor: "#6366F1",
+    }),
     parameters: {
         controls: {
             include: ["label.textColor"],
@@ -249,17 +229,11 @@ export const TextColor: Story = {
 };
 
 export const BackgroundColor: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    backgroundColor: "#10B981",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        backgroundColor: "#10B981",
+    }),
     parameters: {
         controls: {
             include: ["label.backgroundColor"],
@@ -268,18 +242,12 @@ export const BackgroundColor: Story = {
 };
 
 export const CornerRadius: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    cornerRadius: 12,
-                    backgroundColor: "rgba(220, 220, 220, 1)",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        cornerRadius: 12,
+        backgroundColor: "rgba(220, 220, 220, 1)",
+    }),
     parameters: {
         controls: {
             include: ["label.cornerRadius", "label.backgroundColor"],
@@ -288,17 +256,11 @@ export const CornerRadius: Story = {
 };
 
 export const Location: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    location: "top",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        location: "top",
+    }),
     parameters: {
         controls: {
             include: ["label.location"],
@@ -307,18 +269,12 @@ export const Location: Story = {
 };
 
 export const Margin: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    margin: 10,
-                    backgroundColor: "rgba(220, 220, 220, 1)",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        margin: 10,
+        backgroundColor: "rgba(220, 220, 220, 1)",
+    }),
     parameters: {
         controls: {
             include: ["label.margin", "label.backgroundColor"],
@@ -327,17 +283,11 @@ export const Margin: Story = {
 };
 
 export const AttachOffset: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    attachOffset: 2,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        attachOffset: 2,
+    }),
     parameters: {
         controls: {
             include: ["label.attachOffset"],
@@ -346,17 +296,11 @@ export const AttachOffset: Story = {
 };
 
 export const LineHeight: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "Line 1\nLine 2\nLine 3",
-                    lineHeight: 1.5,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "Line 1\nLine 2\nLine 3",
+        lineHeight: 1.5,
+    }),
     parameters: {
         controls: {
             include: ["label.lineHeight"],
@@ -365,19 +309,13 @@ export const LineHeight: Story = {
 };
 
 export const TextOutline: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    textOutline: true,
-                    textOutlineColor: "#FF0000",
-                    textOutlineWidth: 10,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        textOutline: true,
+        textOutlineColor: "#FF0000",
+        textOutlineWidth: 10,
+    }),
     parameters: {
         controls: {
             include: ["label.textOutline", "label.textOutlineWidth", "label.textOutlineColor"],
@@ -386,22 +324,16 @@ export const TextOutline: Story = {
 };
 
 export const TextShadow: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    textShadow: true,
-                    textShadowColor: "rgba(0, 0, 0, 0.5)",
-                    textShadowBlur: 4,
-                    textShadowOffsetX: 3,
-                    textShadowOffsetY: 3,
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        textShadow: true,
+        textShadowColor: "rgba(0, 0, 0, 0.5)",
+        textShadowBlur: 4,
+        textShadowOffsetX: 3,
+        textShadowOffsetY: 3,
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+    }),
     parameters: {
         controls: {
             include: ["label.textShadow", "label.textShadowColor", "label.textShadowBlur", "label.textShadowOffsetX", "label.textShadowOffsetY", "label.backgroundColor"],
@@ -410,19 +342,13 @@ export const TextShadow: Story = {
 };
 
 export const Border: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    borderWidth: 2,
-                    borderColor: "#6366F1",
-                    backgroundColor: "rgba(255, 255, 255, 0.9)",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        borderWidth: 2,
+        borderColor: "#6366F1",
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+    }),
     parameters: {
         controls: {
             include: ["label.borderWidth", "label.borderColor", "label.backgroundColor"],
@@ -431,20 +357,14 @@ export const Border: Story = {
 };
 
 export const BackgroundGradient: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    backgroundGradient: true,
-                    backgroundGradientType: "linear",
-                    backgroundGradientDirection: "horizontal",
-                    backgroundGradientColors: ["#6366F1", "#10B981"],
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        backgroundGradient: true,
+        backgroundGradientType: "linear",
+        backgroundGradientDirection: "horizontal",
+        backgroundGradientColors: ["#6366F1", "#10B981"],
+    }),
     parameters: {
         controls: {
             include: ["label.backgroundGradient", "label.backgroundGradientType", "label.backgroundGradientDirection"],
@@ -453,23 +373,17 @@ export const BackgroundGradient: Story = {
 };
 
 export const Pointer: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    pointer: true,
-                    pointerDirection: "bottom",
-                    pointerWidth: 20,
-                    pointerHeight: 15,
-                    backgroundColor: "rgba(220, 220, 220, 1)",
-                    location: "top",
-                    attachOffset: 1.5,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        pointer: true,
+        pointerDirection: "bottom",
+        pointerWidth: 20,
+        pointerHeight: 15,
+        backgroundColor: "rgba(220, 220, 220, 1)",
+        location: "top",
+        attachOffset: 1.5,
+    }),
     parameters: {
         controls: {
             include: ["label.pointer", "label.pointerDirection", "label.pointerWidth", "label.pointerHeight", "label.backgroundColor", "label.location"],
@@ -478,20 +392,14 @@ export const Pointer: Story = {
 };
 
 export const Animation: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    animation: "pulse",
-                    animationSpeed: 2,
-                    backgroundColor: "rgba(255, 59, 48, 0.9)",
-                    textColor: "white",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        animation: "pulse",
+        animationSpeed: 2,
+        backgroundColor: "rgba(255, 59, 48, 0.9)",
+        textColor: "white",
+    }),
     parameters: {
         controls: {
             include: ["label.animation", "label.animationSpeed", "label.backgroundColor"],
@@ -500,17 +408,11 @@ export const Animation: Story = {
 };
 
 export const Badge: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    badge: "notification",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        badge: "notification",
+    }),
     parameters: {
         controls: {
             include: ["label.badge"],
@@ -519,19 +421,13 @@ export const Badge: Story = {
 };
 
 export const SmartOverflow: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "999999",
-                    smartOverflow: true,
-                    backgroundColor: "rgba(100, 100, 100, 0.8)",
-                    textColor: "white",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "999999",
+        smartOverflow: true,
+        backgroundColor: "rgba(100, 100, 100, 0.8)",
+        textColor: "white",
+    }),
     parameters: {
         controls: {
             include: ["label.smartOverflow", "label.text"],
@@ -540,20 +436,14 @@ export const SmartOverflow: Story = {
 };
 
 export const MaxNumber: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "1500",
-                    smartOverflow: true,
-                    maxNumber: 99,
-                    backgroundColor: "rgba(100, 100, 100, 0.8)",
-                    textColor: "white",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "1500",
+        smartOverflow: true,
+        maxNumber: 99,
+        backgroundColor: "rgba(100, 100, 100, 0.8)",
+        textColor: "white",
+    }),
     parameters: {
         controls: {
             include: ["label.maxNumber", "label.text", "label.smartOverflow"],
@@ -562,21 +452,15 @@ export const MaxNumber: Story = {
 };
 
 export const OverflowSuffix: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "150",
-                    smartOverflow: true,
-                    maxNumber: 99,
-                    overflowSuffix: "++",
-                    backgroundColor: "rgba(100, 100, 100, 0.8)",
-                    textColor: "white",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "150",
+        smartOverflow: true,
+        maxNumber: 99,
+        overflowSuffix: "++",
+        backgroundColor: "rgba(100, 100, 100, 0.8)",
+        textColor: "white",
+    }),
     parameters: {
         controls: {
             include: ["label.overflowSuffix", "label.maxNumber", "label.text"],
@@ -585,17 +469,11 @@ export const OverflowSuffix: Story = {
 };
 
 export const TextAlign: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "This\nis\nmulti-line\ntext",
-                    textAlign: "center",
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "This\nis\nmulti-line\ntext",
+        textAlign: "center",
+    }),
     parameters: {
         controls: {
             include: ["label.textAlign"],
@@ -604,19 +482,13 @@ export const TextAlign: Story = {
 };
 
 export const DepthFade: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    textPath: "id",
-                    depthFadeEnabled: true,
-                    depthFadeNear: 50,
-                    depthFadeFar: 200,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        textPath: "id",
+        depthFadeEnabled: true,
+        depthFadeNear: 50,
+        depthFadeFar: 200,
+    }),
     parameters: {
         controls: {
             include: ["label.depthFadeEnabled", "label.depthFadeNear", "label.depthFadeFar"],
@@ -625,30 +497,18 @@ export const DepthFade: Story = {
 };
 
 export const EmojiLabels: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "🚀💫🌈✨",
-                    fontSize: 32,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "🚀💫🌈✨",
+        fontSize: 32,
+    }),
 };
 
 export const UnicodeText: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            nodeStyle: {
-                label: {
-                    enabled: true,
-                    text: "こんにちは\nПривет\nمرحبا",
-                    fontSize: 96,
-                    lineHeight: 1.5,
-                },
-            },
-        }),
-    },
+    args: createLabelStoryArgs({
+        enabled: true,
+        text: "こんにちは\nПривет\nمرحبا",
+        fontSize: 96,
+        lineHeight: 1.5,
+    }),
 };

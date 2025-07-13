@@ -59,4 +59,18 @@ export class CameraManager {
     public update(): void {
         this.activeInputHandler?.update();
     }
+
+    public dispose(): void {
+        // Disable active input handler
+        this.activeInputHandler?.disable();
+
+        // Detach active camera
+        this.activeCameraController?.camera.detachControl();
+
+        // Clear references
+        this.activeCameraController = null;
+        this.activeInputHandler = null;
+        this.controllers.clear();
+        this.inputs.clear();
+    }
 }

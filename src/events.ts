@@ -7,16 +7,41 @@ export type EventType =
     GraphEventType |
     NodeEventType |
     EdgeEventType;
-export type EventCallbackType = (evt: GraphEvent | NodeAddEvent | EdgeEvent) => EventType;
+export type EventCallbackType = (evt: GraphEvent | NodeEvent | EdgeEvent) => void;
 
 export type GraphEventType = GraphEvent["type"];
 export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export interface GraphEvent {
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphGenericEvent;
+
+export interface GraphSettledEvent {
     type: "graph-settled";
     graph: Graph;
+}
+
+export interface GraphErrorEvent {
+    type: "error";
+    graph: Graph | null;
+    error: Error;
+    context: "init" | "data-loading" | "layout" | "algorithm" | "other";
+    details?: Record<string, unknown>;
+}
+
+export interface GraphDataLoadedEvent {
+    type: "data-loaded";
+    graph: Graph;
+    details: {
+        chunksLoaded: number;
+        dataSourceType: string;
+    };
+}
+
+// Generic events for internal manager communication
+export interface GraphGenericEvent {
+    type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed";
+    [key: string]: unknown;
 }
 
 // node events

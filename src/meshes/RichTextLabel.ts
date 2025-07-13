@@ -968,11 +968,22 @@ export class RichTextLabel {
     }
 
     public startAnimation(): void {
-        if (this.animationStarted || !this.animator || !this.mesh || !this.material) {
+        if (this.animationStarted || !this.mesh || !this.material) {
             return;
         }
 
         this.animationStarted = true;
+
+        // If no animator (animation: "none"), just ensure the label is visible
+        if (!this.animator) {
+            this.mesh.isVisible = true;
+
+            if (this.material.diffuseTexture) {
+                this.material.diffuseTexture.hasAlpha = true;
+            }
+
+            return;
+        }
 
         // For fill animation, only redraw if progress bar is enabled
         const progressCallback = this.options._progressBar ? (value: number) => {

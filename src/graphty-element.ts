@@ -73,6 +73,10 @@ export class Graphty extends LitElement {
             setDeep(this.#graph.styles.config, "data.knownFields.edgeDstIdPath", this.edgeDstIdPath);
         }
 
+        // Initialize the graph BEFORE loading data
+        await this.#graph.init();
+
+        // Now load data AFTER initialization
         if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {
             this.#graph.addNodes(this.nodeData);
         }
@@ -89,7 +93,6 @@ export class Graphty extends LitElement {
         // Run algorithms after all data has been loaded
         await this.#graph.runAlgorithmsFromTemplate();
 
-        await this.#graph.init();
         this.#graph.engine.resize();
     }
 

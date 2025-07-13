@@ -104,6 +104,15 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
         g.edgeData = args.edgeData ?? edgeData;
     }
 
+    // Set layout properties if provided
+    if (args.layout) {
+        g.layout = args.layout;
+    }
+
+    if (args.layoutConfig) {
+        g.layoutConfig = args.layoutConfig;
+    }
+
     const t = args.styleTemplate;
 
     // if argTypes have a name like "texture.color", apply that value to the node style
@@ -137,8 +146,8 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 if (val !== undefined) {
                     deepSet(t, `graph.layoutOptions.${configKey}`, val);
                 }
-            } else {
-                // For other properties, apply directly
+            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData"].includes(arg)) {
+                // For other properties, apply directly (but skip component-level props)
                 deepSet(t, name, val);
             }
         }

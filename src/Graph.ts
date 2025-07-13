@@ -5,8 +5,6 @@ import "./algorithms"; // register all internal algorithms
 import {
     Color4,
     Engine,
-    HemisphericLight,
-    Logger,
     Observable,
     PhotoDome,
     Scene,
@@ -14,7 +12,6 @@ import {
     WebGPUEngine,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
-import jmespath from "jmespath";
 
 import {Algorithm} from "./algorithms/Algorithm";
 import {CameraManager} from "./cameras/CameraManager";
@@ -28,7 +25,6 @@ import {
     FetchNodesFn,
     StyleSchema,
 } from "./config";
-import {DataSource} from "./data/DataSource";
 import {Edge, EdgeMap} from "./Edge";
 import {
     EdgeEvent,
@@ -38,6 +34,7 @@ import {
     NodeEvent,
 } from "./events";
 import {LayoutEngine} from "./layout/LayoutEngine";
+import {DataManager, EventManager, LayoutManager, LifecycleManager, type Manager, RenderManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
@@ -47,8 +44,6 @@ import {Styles} from "./Styles";
 export class Graph {
     stats: Stats;
     styles: Styles;
-    nodes = new Map<string | number, Node>();
-    edges = new Map<string | number, Edge>();
     // babylon
     element: Element;
     canvas: HTMLCanvasElement;
@@ -57,14 +52,12 @@ export class Graph {
     camera: CameraManager;
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
-    meshCache: MeshCache;
-    edgeCache: EdgeMap = new EdgeMap();
-    nodeCache = new Map<NodeIdType, Node>();
     needRays = true; // TODO: currently always true
-    // graph engine
-    layoutEngine?: LayoutEngine;
-    running = false;
+    // graph engine - delegate to LayoutManager
     pinOnDrag?: boolean;
+    // camera control
+    private hasZoomedToFit = false;
+    private needsZoomToFit = true;
     // graph
     fetchNodes?: FetchNodesFn;
     fetchEdges?: FetchEdgesFn;
@@ -73,13 +66,24 @@ export class Graph {
     private resizeHandler = (): void => {
         this.engine.resize();
     };
-    // observeables
+    // observeables - kept for backward compatibility but delegate to EventManager
     graphObservable = new Observable<GraphEvent>();
     nodeObservable = new Observable<NodeEvent>();
     edgeObservable = new Observable<EdgeEvent>();
 
+    // Managers
+    private eventManager: EventManager;
+    private renderManager: RenderManager;
+    private lifecycleManager: LifecycleManager;
+    private dataManager: DataManager;
+    private layoutManager: LayoutManager;
+
     constructor(element: Element | string) {
-        this.meshCache = new MeshCache();
+        // Initialize EventManager first as other components depend on it
+        this.eventManager = new EventManager();
+
+        // Setup backward compatibility for observables
+        this.setupObservableCompatibility();
 
         // configure graph
         this.styles = Styles.default();
@@ -111,14 +115,121 @@ export class Graph {
         this.canvas.style.touchAction = "none";
         this.element.appendChild(this.canvas);
 
-        // setup babylonjs
-        Logger.LogLevels = Logger.ErrorLogLevel;
-        // this.engine = new WebGPUEngine(this.canvas);
-        this.engine = new Engine(this.canvas, true); // Generate the BABYLON 3D engine
-        this.scene = new Scene(this.engine);
+        // Initialize RenderManager
+        this.renderManager = new RenderManager(this.canvas, this.eventManager);
 
-        // setup camera
-        this.camera = new CameraManager(this.scene);
+        // Get references from RenderManager for backward compatibility
+        this.engine = this.renderManager.engine;
+        this.scene = this.renderManager.scene;
+        this.camera = this.renderManager.camera;
+
+        // setup stats - needs to be after scene is created
+        this.stats = new Stats(this);
+
+        // Setup cameras
+        this.setupCameras();
+
+        // Initialize DataManager
+        this.dataManager = new DataManager(this.eventManager, this.styles, this.stats);
+        this.dataManager.setParentGraph(this);
+
+        // Initialize LayoutManager
+        this.layoutManager = new LayoutManager(this.eventManager, this.dataManager, this.styles);
+        this.layoutManager.setParentGraph(this);
+
+        // Setup lifecycle manager
+        const managers = new Map<string, Manager>([
+            ["event", this.eventManager],
+            ["render", this.renderManager],
+            ["data", this.dataManager],
+            ["layout", this.layoutManager],
+        ]);
+        this.lifecycleManager = new LifecycleManager(
+            managers,
+            this.eventManager,
+            ["event", "render", "data", "layout"],
+        );
+
+        // setup default layout - but don't wait for it
+        // The layout will be properly configured when needed
+        this.setLayout("ngraph")
+            .catch((e: unknown) => {
+                console.error("ERROR setting default layout:", e);
+                // Emit error event for default layout failure
+                this.eventManager.emitGraphError(
+                    this,
+                    e instanceof Error ? e : new Error(String(e)),
+                    "layout",
+                    {layoutType: "ngraph", isDefault: true},
+                );
+            });
+    }
+
+    // Getters for backward compatibility - delegate to DataManager
+    get nodes(): Map<string | number, Node> {
+        return this.dataManager.nodes;
+    }
+
+    get edges(): Map<string | number, Edge> {
+        return this.dataManager.edges;
+    }
+
+    get nodeCache(): Map<NodeIdType, Node> {
+        return this.dataManager.nodeCache;
+    }
+
+    get edgeCache(): EdgeMap {
+        return this.dataManager.edgeCache;
+    }
+
+    get meshCache(): MeshCache {
+        return this.dataManager.meshCache;
+    }
+
+    // Layout properties - delegate to LayoutManager
+    get layoutEngine(): LayoutEngine | undefined {
+        return this.layoutManager.layoutEngine;
+    }
+
+    get layoutRunning(): boolean {
+        return this.layoutManager.running;
+    }
+
+    // Update running getter and setter to delegate to LayoutManager for layout state
+    get running(): boolean {
+        return this.layoutManager.running;
+    }
+
+    set running(value: boolean) {
+        this.layoutManager.running = value;
+    }
+
+    /**
+     * Setup backward compatibility for observables
+     * Delegates to EventManager while maintaining the old API
+     */
+    private setupObservableCompatibility(): void {
+        // Forward graph observable notifications to EventManager
+        this.graphObservable.add(() => {
+            // EventManager will handle the event distribution
+            // This maintains backward compatibility
+        });
+
+        // Forward node observable notifications to EventManager
+        this.nodeObservable.add(() => {
+            // EventManager will handle the event distribution
+        });
+
+        // Forward edge observable notifications to EventManager
+        this.edgeObservable.add(() => {
+            // EventManager will handle the event distribution
+        });
+    }
+
+    /**
+     * Setup camera configurations
+     */
+    private setupCameras(): void {
         const orbitCamera = new OrbitCameraController(this.canvas, this.scene, {
             trackballRotationSpeed: 0.005,
             keyboardRotationSpeed: 0.03,
@@ -132,6 +243,7 @@ export class Graph {
         });
         const orbitInput = new OrbitInputController(this.canvas, orbitCamera);
         this.camera.registerCamera("orbit", orbitCamera, orbitInput);
+
         const twoDCamera = new TwoDCameraController(this.scene, this.engine, this.canvas, {
             panAcceleration: 0.02,
             panDamping: 0.85,
@@ -174,45 +286,66 @@ export class Graph {
         });
         this.camera.registerCamera("2d", twoDCamera, twoDInput);
         this.camera.activateCamera("orbit");
-
-        new HemisphericLight("light", new Vector3(1, 1, 0));
-
-        // Set default background color
-        const DEFAULT_BACKGROUND = "#F5F5F5"; // whitesmoke
-        this.scene.clearColor = Color4.FromHexString(DEFAULT_BACKGROUND);
-
-        // setup default layout - but don't wait for it
-        // The layout will be properly configured when needed
-        this.setLayout("ngraph")
-            .catch((e: unknown) => {
-                console.error("ERROR setting default layout:", e);
-            });
-
-        // setup stats
-        this.stats = new Stats(this);
     }
 
-    shutdown(): void {
-        // Stop render loop first
-        this.engine.stopRenderLoop();
+    private cleanup(): void {
+        // Stop render loop if it's running
+        try {
+            this.engine.stopRenderLoop();
+        } catch {
+            // Ignore errors during cleanup
+        }
 
         // Clean up event listeners
         window.removeEventListener("resize", this.resizeHandler);
 
-        // Clean up observables
+        // Mark as not initialized
+        this.initialized = false;
+    }
+
+    shutdown(): void {
+        // Use cleanup for common operations
+        this.cleanup();
+
+        // Clean up observables (for backward compatibility)
         this.graphObservable.clear();
         this.nodeObservable.clear();
         this.edgeObservable.clear();
 
-        // Stop and dispose engine
-        this.engine.dispose();
+        // Dispose all managers through lifecycle manager
+        this.lifecycleManager.dispose();
     }
 
     async runAlgorithmsFromTemplate(): Promise<void> {
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
+            const errors: Error[] = [];
+
             for (const algName of this.styles.config.data.algorithms) {
-                const [namespace, type] = algName.split(":");
-                await this.runAlgorithm(namespace, type);
+                try {
+                    const [namespace, type] = algName.split(":");
+                    if (!namespace || !type) {
+                        throw new Error(`Invalid algorithm name format: '${algName}'. Expected 'namespace:type'`);
+                    }
+
+                    await this.runAlgorithm(namespace, type);
+                } catch (error) {
+                    // Collect errors but continue with other algorithms
+                    errors.push(error instanceof Error ? error : new Error(String(error)));
+                }
+            }
+
+            // If any algorithms failed, emit a single error event with all failures
+            if (errors.length > 0) {
+                this.eventManager.emitGraphError(
+                    this,
+                    new Error(`Failed to run ${errors.length} algorithm(s) from template`),
+                    "algorithm",
+                    {
+                        errors: errors.map((e) => e.message),
+                        totalAlgorithms: this.styles.config.data.algorithms.length,
+                        failedAlgorithms: errors.length,
+                    },
+                );
             }
         }
     }
@@ -222,29 +355,52 @@ export class Graph {
             return;
         }
 
-        await this.scene.whenReadyAsync();
+        try {
+            // Initialize all managers through lifecycle manager
+            await this.lifecycleManager.init();
 
-        // Register a render loop to repeatedly render the scene
-        this.engine.runRenderLoop(() => {
-            this.update();
-            this.scene.render();
-        });
-
-        // this.xrHelper = await createXrButton(this.scene, this.camera);
-
-        // Watch for browser/canvas resize events
-        window.addEventListener("resize", this.resizeHandler);
-
-        this.initialized = true;
-
-        // For layouts that settle immediately, start animations after a short delay
-        setTimeout(() => {
-            if (this.layoutEngine?.isSettled && !this.running) {
-                for (const node of this.nodes.values()) {
-                    node.label?.startAnimation();
-                }
+            // Apply default background color if no styleTemplate was explicitly set
+            // This ensures stories without styleTemplate get the correct background
+            if (this.scene && this.styles.config.graph.background.backgroundType === "color") {
+                const backgroundColor = this.styles.config.graph.background.color || "#F5F5F5";
+                this.scene.clearColor = Color4.FromHexString(backgroundColor);
             }
-        }, 100);
+
+            // Start the graph system (render loop, etc.)
+            await this.lifecycleManager.startGraph(() => {
+                this.update();
+            });
+
+            // this.xrHelper = await createXrButton(this.scene, this.camera);
+
+            // Watch for browser/canvas resize events
+            window.addEventListener("resize", this.resizeHandler);
+
+            this.initialized = true;
+
+            // For layouts that settle immediately, start animations after a short delay
+            setTimeout(() => {
+                if (this.layoutManager.isSettled && !this.running) {
+                    for (const node of this.nodes.values()) {
+                        node.label?.startAnimation();
+                    }
+                }
+            }, 100);
+        } catch (error) {
+            // Emit error event for user handling
+            this.eventManager.emitGraphError(
+                this,
+                error instanceof Error ? error : new Error(String(error)),
+                "init",
+                {component: "Graph"},
+            );
+
+            // Clean up any partially initialized resources
+            this.cleanup();
+
+            // Re-throw with context
+            throw new Error(`Failed to initialize graph: ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     update(): void {
@@ -258,7 +414,7 @@ export class Graph {
         this.stats.step();
         this.stats.graphStep.beginMonitoring();
         for (let i = 0; i < this.styles.config.behavior.layout.stepMultiplier; i++) {
-            this.layoutEngine?.step();
+            this.layoutManager.step();
         }
         this.stats.graphStep.endMonitoring();
 
@@ -283,11 +439,9 @@ export class Graph {
 
         // update nodes
         this.stats.nodeUpdate.beginMonitoring();
-        if (this.layoutEngine) {
-            for (const n of this.layoutEngine.nodes) {
-                n.update();
-                updateBoundingBox(n);
-            }
+        for (const n of this.layoutManager.nodes) {
+            n.update();
+            updateBoundingBox(n);
         }
 
         this.stats.nodeUpdate.endMonitoring();
@@ -295,22 +449,22 @@ export class Graph {
         // update edges
         this.stats.edgeUpdate.beginMonitoring();
         Edge.updateRays(this);
-        if (this.layoutEngine) {
-            for (const e of this.layoutEngine.edges) {
-                e.update();
-            }
+        for (const e of this.layoutManager.edges) {
+            e.update();
         }
 
         this.stats.edgeUpdate.endMonitoring();
 
-        // Simply pass the bounding box to the camera - let it handle the fitting
-        const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
-        const max = boundingBoxMax ?? new Vector3(20, 20, 20);
-        this.camera.zoomToBoundingBox(min, max);
+        // Only zoom to fit when needed, not every frame
+        if (this.needsZoomToFit && boundingBoxMin && boundingBoxMax) {
+            this.camera.zoomToBoundingBox(boundingBoxMin, boundingBoxMax);
+            this.hasZoomedToFit = true;
+            this.needsZoomToFit = false;
+        }
 
         // check to see if we are done
-        if (this.layoutEngine?.isSettled) {
-            this.graphObservable.notifyObservers({type: "graph-settled", graph: this});
+        if (this.layoutManager.isSettled) {
+            this.eventManager.emitGraphSettled(this);
             this.running = false;
 
             // Start label animations after layout has settled
@@ -334,18 +488,10 @@ export class Graph {
             this.meshCache.clear();
         }
 
-        // style nodes
-        for (const n of this.nodes.values()) {
-            const styleId = this.styles.getStyleForNode(n.data);
-            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
-            n.updateStyle(styleId);
-        }
-
-        // style edges
-        for (const e of this.edges.values()) {
-            const styleId = this.styles.getStyleForEdge(e.data);
-            e.updateStyle(styleId);
-        }
+        // Update DataManager with new styles - this will apply styles to existing nodes/edges
+        // IMPORTANT: DataManager needs to be updated after this.styles is set because
+        // Node.updateStyle() calls this.parentGraph.styles
+        this.dataManager.updateStyles(this.styles);
 
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
@@ -382,52 +528,19 @@ export class Graph {
         const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
         this.camera.activateCamera(cameraType);
 
-        // Update layout dimension if it supports it and twoD mode changed
-        // Check if layoutEngine is initialized
-        try {
-            if (this.layoutEngine) {
-                const currentDimension = this.styles.config.graph.twoD ? 2 : 3;
-                const currentDimensionOpts = LayoutEngine.getOptionsForDimensionByType(this.layoutEngine.type, currentDimension);
-
-                // Only recreate if the layout supports dimension configuration
-                if (currentDimensionOpts && Object.keys(currentDimensionOpts).length > 0) {
-                    // Check if we need to recreate the layout
-                    // This is a bit tricky since we don't know what property name is used for dimensions
-                    // The safest approach is to always recreate when switching between 2D/3D modes
-                    const layoutType = this.layoutEngine.type;
-                    const layoutOpts = this.layoutEngine.config ? {... this.layoutEngine.config} : {};
-
-                    // Remove any dimension-related options that might conflict
-                    // We'll let getOptionsForDimensionByType add the correct ones
-                    const previousDimensionOpts2D = LayoutEngine.getOptionsForDimensionByType(layoutType, 2);
-                    const previousDimensionOpts3D = LayoutEngine.getOptionsForDimensionByType(layoutType, 3);
-                    const allDimensionKeys = new Set([
-                        ... Object.keys(previousDimensionOpts2D ?? {}),
-                        ... Object.keys(previousDimensionOpts3D ?? {}),
-                    ]);
-
-                    allDimensionKeys.forEach((key) => {
-                        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-                        delete (layoutOpts as Record<string, unknown>)[key];
-                    });
-
-                    await this.setLayout(layoutType, layoutOpts);
-                }
-            }
-        } catch {
-            // Layout engine not yet initialized - will be set with correct dimension when initialized
+        // Request zoom to fit when switching between 2D/3D modes
+        if (previousTwoD !== currentTwoD) {
+            this.needsZoomToFit = true;
         }
+
+        // Update layout dimension if it supports it and twoD mode changed
+        await this.layoutManager.updateLayoutDimension(this.styles.config.graph.twoD);
 
         // Apply layout from template if specified
-        if (this.styles.config.graph.layout) {
-            const layoutType = this.styles.config.graph.layout;
-            const layoutOptions = this.styles.config.graph.layoutOptions ?? {};
-
-            // Only set layout if it's different from current layout or if no layout is set
-            if (!this.layoutEngine || this.layoutEngine.type !== layoutType) {
-                await this.setLayout(layoutType, layoutOptions);
-            }
-        }
+        await this.layoutManager.applyTemplateLayout(
+            this.styles.config.graph.layout,
+            this.styles.config.graph.layoutOptions,
+        );
 
         // Don't run algorithms here - they should run after data is loaded
 
@@ -439,143 +552,70 @@ export class Graph {
     }
 
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
-        this.stats.loadTime.beginMonitoring();
-
-        const source = DataSource.get(type, opts);
-        if (!source) {
-            throw new TypeError(`No data source named: ${type}`);
-        }
-
-        for await (const chunk of source.getData()) {
-            this.addNodes(chunk.nodes);
-            this.addEdges(chunk.edges);
-        }
-
-        this.stats.loadTime.endMonitoring();
-
-        // TODO: emit event
+        return this.dataManager.addDataFromSource(type, opts);
     }
 
     addNode(node: AdHocData, idPath?: string): void {
-        this.addNodes([node], idPath);
+        this.dataManager.addNode(node, idPath);
     }
 
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
-        // create path to node ids
-        const query = idPath ?? this.styles.config.data.knownFields.nodeIdPath;
-
-        // create nodes
-        for (const node of nodes) {
-            const nodeId = jmespath.search(node, query) as NodeIdType;
-
-            if (this.nodeCache.get(nodeId)) {
-                continue;
-            }
-
-            const styleId = this.styles.getStyleForNode(node as AdHocData);
-            const n = new Node(this, nodeId, styleId, node as AdHocData, {
-                pinOnDrag: this.pinOnDrag,
-            });
-            this.nodeCache.set(nodeId, n);
-            this.nodes.set(nodeId, n);
-
-            // Add to layout engine if it exists
-            if (this.layoutEngine) {
-                this.layoutEngine.addNode(n);
-            }
-        }
-
-        this.running = true;
+        this.dataManager.addNodes(nodes, idPath);
     }
 
     addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string): void {
-        this.addEdges([edge], srcIdPath, dstIdPath);
+        this.dataManager.addEdge(edge, srcIdPath, dstIdPath);
     }
 
     addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
-        // get paths
-        const srcQuery = srcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath;
-        const dstQuery = dstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath;
-
-        // create edges
-        for (const edge of edges) {
-            const srcNodeId = jmespath.search(edge, srcQuery) as NodeIdType;
-            const dstNodeId = jmespath.search(edge, dstQuery) as NodeIdType;
-
-            if (this.edgeCache.get(srcNodeId, dstNodeId)) {
-                continue;
-            }
-
-            const style = this.styles.getStyleForEdge(edge as AdHocData);
-            const opts = {};
-            const e = new Edge(this, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
-            this.edgeCache.set(srcNodeId, dstNodeId, e); // TODO: replace with normal map and "e.id"
-            this.edges.set(e.id, e);
-
-            // Add to layout engine if it exists
-            if (this.layoutEngine) {
-                this.layoutEngine.addEdge(e);
-            }
-        }
-
-        this.running = true;
+        this.dataManager.addEdges(edges, srcIdPath, dstIdPath);
     }
 
     async setLayout(type: string, opts: object = {}): Promise<void> {
-        // Auto-sync layout dimension with graph's 2D/3D mode if not explicitly set
-        const layoutOpts = {... opts};
-
-        // Get dimension-specific options from the layout if not already provided
-        const dimension = this.styles.config.graph.twoD ? 2 : 3;
-        const dimensionOpts = LayoutEngine.getOptionsForDimensionByType(type, dimension);
-
-        if (dimensionOpts) {
-            // Merge dimension options, but don't override user-provided options
-            Object.keys(dimensionOpts).forEach((key) => {
-                if (!(key in layoutOpts)) {
-                    (layoutOpts as Record<string, unknown>)[key] = (dimensionOpts as Record<string, unknown>)[key];
-                }
-            });
-        }
-
-        const engine = LayoutEngine.get(type, layoutOpts);
-        if (!engine) {
-            throw new TypeError(`No layout named: ${type}`);
-        }
-
-        engine.addNodes([... this.nodes.values()]);
-        engine.addEdges([... this.edges.values()]);
-
-        this.layoutEngine = engine;
-        await engine.init();
-
-        // run layout presteps
-        for (let i = 0; i < this.styles.config.behavior.layout.preSteps; i++) {
-            this.layoutEngine.step();
-        }
-
-        this.running = true;
+        await this.layoutManager.setLayout(type, opts);
     }
 
     async runAlgorithm(namespace: string, type: string): Promise<void> {
-        const alg = Algorithm.get(this, namespace, type);
-        if (!alg) {
-            throw new Error(`algorithm not found: ${namespace}:${type}`);
-        }
+        try {
+            const alg = Algorithm.get(this, namespace, type);
+            if (!alg) {
+                throw new Error(`algorithm not found: ${namespace}:${type}`);
+            }
 
-        await alg.run(this);
+            try {
+                await alg.run(this);
+            } catch (error) {
+                // Emit error event
+                this.eventManager.emitGraphError(
+                    this,
+                    error instanceof Error ? error : new Error(String(error)),
+                    "algorithm",
+                    {algorithmNamespace: namespace, algorithmType: type},
+                );
+
+                throw new Error(`Algorithm '${namespace}:${type}' failed: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        } catch (error) {
+            // Re-throw if already a processed error
+            if (error instanceof Error && error.message.includes("Algorithm") && error.message.includes("failed")) {
+                throw error;
+            }
+
+            // Otherwise wrap and throw
+            throw new Error(`Error running algorithm '${namespace}:${type}': ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {
-        switch (type) {
-            case "graph-settled":
-                this.graphObservable.add((e) => {
-                    cb(e);
-                });
-                break;
-            default:
-                throw new TypeError(`Unknown listener type in addListener: ${type}`);
-        }
+        // Delegate to EventManager
+        this.eventManager.addListener(type, cb);
+    }
+
+    /**
+     * Manually trigger zoom to fit the content
+     */
+    zoomToFit(): void {
+        this.needsZoomToFit = true;
     }
 }
 
