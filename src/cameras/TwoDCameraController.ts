@@ -95,10 +95,22 @@ export class TwoDCameraController {
 
         const sizeX = max.x - min.x;
         const sizeY = max.y - min.y;
-        const largest = Math.max(sizeX, sizeY);
+
+        // Calculate aspect ratios
+        const viewportAspect = this.engine.getRenderHeight() / this.engine.getRenderWidth();
+        const contentAspect = sizeY / sizeX;
+
+        let orthoSize;
+        if (contentAspect > viewportAspect) {
+            // Content is taller relative to viewport - constrain by height
+            orthoSize = sizeY / (2 * viewportAspect);
+        } else {
+            // Content is wider relative to viewport - constrain by width
+            orthoSize = sizeX / 2;
+        }
 
         this.camera.position.x = centerX;
         this.camera.position.y = centerY;
-        this.updateOrtho(largest * 0.6); // Padding factor as needed
+        this.updateOrtho(orthoSize * 1.1); // Small padding for visual comfort
     }
 }

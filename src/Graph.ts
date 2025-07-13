@@ -271,7 +271,6 @@ export class Graph {
             if (!boundingBoxMin || !boundingBoxMax) {
                 boundingBoxMin = pos.clone();
                 boundingBoxMax = pos.clone();
-                return;
             }
 
             setMin(pos, boundingBoxMin, sz, "x");
@@ -304,9 +303,9 @@ export class Graph {
 
         this.stats.edgeUpdate.endMonitoring();
 
-        const scale = 1.3;
-        const min = boundingBoxMin?.multiplyByFloats(scale, scale, scale) ?? new Vector3(-20, -20, -20);
-        const max = boundingBoxMax?.multiplyByFloats(scale, scale, scale) ?? new Vector3(20, 20, 20);
+        // Simply pass the bounding box to the camera - let it handle the fitting
+        const min = boundingBoxMin ?? new Vector3(-20, -20, -20);
+        const max = boundingBoxMax ?? new Vector3(20, 20, 20);
         this.camera.zoomToBoundingBox(min, max);
 
         // check to see if we are done
