@@ -59,7 +59,8 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
     }
 
     if (opts.graph) {
-        deepSet(config, "graph", opts.graph);
+        // Merge with existing graph config instead of overwriting
+        config.graph = {... config.graph, ... opts.graph};
     }
 
     if (opts.behavior) {
@@ -98,8 +99,9 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
         g.dataSource = args.dataSource;
         g.dataSourceConfig = args.dataSourceConfig;
     } else {
-        g.nodeData = nodeData;
-        g.edgeData = edgeData;
+        // Use story-specific data if provided, otherwise use defaults
+        g.nodeData = args.nodeData ?? nodeData;
+        g.edgeData = args.edgeData ?? edgeData;
     }
 
     const t = args.styleTemplate;
@@ -129,6 +131,12 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 } else if (t.layers) {
                     deepSet(t, `layers[0].node.style.${name}`, val);
                 }
+            } else if (name.startsWith("graph.layoutOptions.")) {
+                // For layout options
+                const configKey = name.substring(20); // Remove "graph.layoutOptions." prefix
+                if (val !== undefined) {
+                    deepSet(t, `graph.layoutOptions.${configKey}`, val);
+                }
             } else {
                 // For other properties, apply directly
                 deepSet(t, name, val);
@@ -137,6 +145,7 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
     }
 
     g.styleTemplate = t;
+
     return g;
 };
 

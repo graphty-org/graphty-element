@@ -187,7 +187,12 @@ interface Coords {
     z: number;
 }
 
-function posToCoords(pos: number[], scale: number): Coords {
+function posToCoords(pos: number[] | undefined, scale: number): Coords {
+    if (!pos || pos.length === 0) {
+        // Return default position if pos is undefined or empty
+        return {x: 0, y: 0, z: 0};
+    }
+
     const x = pos[0] * scale;
     const y = pos[1] * scale;
     const z = (pos[2] ?? 0) * scale;

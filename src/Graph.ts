@@ -419,6 +419,17 @@ export class Graph {
             // Layout engine not yet initialized - will be set with correct dimension when initialized
         }
 
+        // Apply layout from template if specified
+        if (this.styles.config.graph.layout) {
+            const layoutType = this.styles.config.graph.layout;
+            const layoutOptions = this.styles.config.graph.layoutOptions ?? {};
+
+            // Only set layout if it's different from current layout or if no layout is set
+            if (!this.layoutEngine || this.layoutEngine.type !== layoutType) {
+                await this.setLayout(layoutType, layoutOptions);
+            }
+        }
+
         // Don't run algorithms here - they should run after data is loaded
 
         // TODO: stats end
@@ -468,6 +479,11 @@ export class Graph {
             });
             this.nodeCache.set(nodeId, n);
             this.nodes.set(nodeId, n);
+
+            // Add to layout engine if it exists
+            if (this.layoutEngine) {
+                this.layoutEngine.addNode(n);
+            }
         }
 
         this.running = true;
@@ -496,6 +512,11 @@ export class Graph {
             const e = new Edge(this, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
             this.edgeCache.set(srcNodeId, dstNodeId, e); // TODO: replace with normal map and "e.id"
             this.edges.set(e.id, e);
+
+            // Add to layout engine if it exists
+            if (this.layoutEngine) {
+                this.layoutEngine.addEdge(e);
+            }
         }
 
         this.running = true;

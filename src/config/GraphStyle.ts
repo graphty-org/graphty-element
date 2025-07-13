@@ -32,6 +32,6 @@ export const GraphStyle = z.strictObject({
     effects: GraphEffects.optional(),
     startingCameraDistance: z.number().default(30), // TODO: replace with "zoomToFit: z.boolean()"
     layout: z.string().default("ngraph"),
-    layoutOptions: z.object().optional(),
+    layoutOptions: z.looseObject({}).optional(),
     twoD: z.boolean().default(false),
 });

@@ -28,7 +28,7 @@ npm run storybook   # Start Storybook on port 9025
 ```bash
 npm test            # Run default Vitest tests
 npm run test:visual # Run visual tests to see if rendering changed
-npm run test:storybook # Run storybook tests to see if functionality work
+npm run test:storybook # Run Storybook tests to see if functionality work
 npm run test:all    # Run all tests (default + Storybook + Chromatic tests)
 npm run coverage    # Run all tests with coverage
 ```
@@ -135,6 +135,7 @@ successfully completing, generate a commit comment for all current changes.
   - Interfacing with untyped third-party libraries
   - Dynamic property access that can't be properly typed
   - And even then, try to limit its scope as much as possible
+- **DO NOT** use ESLint disable comments unless absolutely necessary
 
 ## Testing Approach
 
@@ -147,3 +148,19 @@ Tests run in the browser using Playwright. Coverage reports are generated in the
 
 When you write unit tests with vitest, prefer `assert` over `expect`.
 
+## Architectural Insights
+
+- **graphty-element wrapper principle**: 
+  - graphty-element is a light wrapper around Graph
+  - All logic and functionality should be in Graph.ts
+
+## Core Architectural Principles
+
+- **Stateless Design**:
+  - The Graph is stateless, APIs may be called in any order and are expected to operate the same regardless of the order they are called in
+
+## Design Philosophy
+
+- **Modularity and Extensibility**:
+  - This code is intended to be modular and extensible
+  - Features like cameras, meshes, layouts, and algorithms are intended to be extendible by users
