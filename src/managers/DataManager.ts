@@ -9,6 +9,7 @@ import {Node, NodeIdType} from "../Node";
 import type {Stats} from "../Stats";
 import type {Styles} from "../Styles";
 import type {EventManager} from "./EventManager";
+import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
 /**
@@ -25,13 +26,17 @@ export class DataManager implements Manager {
     // Mesh cache for performance
     meshCache: MeshCache;
 
-    // Reference to parent graph (temporary until full refactoring)
-    private parentGraph: any;
+    // GraphContext for creating nodes and edges
+    private graphContext: GraphContext | null = null;
+    
+    // State management flags
+    private shouldStartLayout = false;
+    private shouldZoomToFit = false;
 
     constructor(
         private eventManager: EventManager,
         private styles: Styles,
-        private stats: Stats,
+        private stats: Stats, // For backward compatibility
     ) {
         this.meshCache = new MeshCache();
     }
@@ -68,11 +73,10 @@ export class DataManager implements Manager {
     }
 
     /**
-     * Set the parent graph reference
-     * This is temporary until we complete the full refactoring
+     * Set the GraphContext for creating nodes and edges
      */
-    setParentGraph(graph: any): void {
-        this.parentGraph = graph;
+    setGraphContext(context: GraphContext): void {
+        this.graphContext = context;
     }
 
     /**
@@ -119,8 +123,11 @@ export class DataManager implements Manager {
             }
 
             const styleId = this.styles.getStyleForNode(node as AdHocData);
-            const n = new Node(this.parentGraph, nodeId, styleId, node as AdHocData, {
-                pinOnDrag: this.parentGraph?.pinOnDrag,
+            if (!this.graphContext) {
+                throw new Error("GraphContext not set. Call setGraphContext before adding nodes.");
+            }
+            const n = new Node(this.graphContext, nodeId, styleId, node as AdHocData, {
+                pinOnDrag: this.graphContext.getConfig().pinOnDrag,
             });
             this.nodeCache.set(nodeId, n);
             this.nodes.set(nodeId, n);
@@ -138,10 +145,12 @@ export class DataManager implements Manager {
         }
 
         // Notify that nodes were added
-        if (nodes.length > 0 && this.parentGraph) {
-            this.parentGraph.running = true;
-            // Request zoom to fit when new nodes are added
-            this.parentGraph.needsZoomToFit = true;
+        if (nodes.length > 0) {
+            // Request layout start and zoom to fit
+            this.shouldStartLayout = true;
+            this.shouldZoomToFit = true;
+            // Emit event to notify graph that data has been added
+            this.eventManager.emitDataAdded("nodes", nodes.length, true, true);
         }
     }
 
@@ -191,7 +200,10 @@ export class DataManager implements Manager {
 
             const style = this.styles.getStyleForEdge(edge as AdHocData);
             const opts = {};
-            const e = new Edge(this.parentGraph, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
+            if (!this.graphContext) {
+                throw new Error("GraphContext not set. Call setGraphContext before adding edges.");
+            }
+            const e = new Edge(this.graphContext, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
             this.edgeCache.set(srcNodeId, dstNodeId, e);
             this.edges.set(e.id, e);
 
@@ -209,8 +221,11 @@ export class DataManager implements Manager {
         }
 
         // Notify that edges were added
-        if (edges.length > 0 && this.parentGraph) {
-            this.parentGraph.running = true;
+        if (edges.length > 0) {
+            // Request layout start
+            this.shouldStartLayout = true;
+            // Emit event to notify graph that data has been added
+            this.eventManager.emitDataAdded("edges", edges.length, true, false);
         }
     }
 
@@ -261,7 +276,7 @@ export class DataManager implements Manager {
             } catch (error) {
                 // Emit error event with partial load information
                 this.eventManager.emitGraphError(
-                    this.parentGraph,
+                    this.graphContext!,
                     error instanceof Error ? error : new Error(String(error)),
                     "data-loading",
                     {chunksLoaded, dataSourceType: type},
@@ -273,7 +288,7 @@ export class DataManager implements Manager {
             this.stats.loadTime.endMonitoring();
 
             // Emit success event
-            this.eventManager.emitGraphDataLoaded(this.parentGraph, chunksLoaded, type);
+            this.eventManager.emitGraphDataLoaded(this.graphContext!, chunksLoaded, type);
         } catch (error) {
             this.stats.loadTime.endMonitoring();
 

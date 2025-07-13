@@ -7,6 +7,7 @@ import jmespath from "jmespath";
 
 import type {AdHocData, EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
+import type {GraphContext} from "./managers/GraphContext";
 import {EdgeMesh} from "./meshes/EdgeMesh";
 import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
@@ -34,7 +35,7 @@ interface RayWithPosition extends Ray {
 }
 
 export class Edge {
-    parentGraph: Graph;
+    parentGraph: Graph | GraphContext;
     opts: EdgeOpts;
     srcId: NodeIdType;
     dstId: NodeIdType;
@@ -49,7 +50,20 @@ export class Edge {
     ray: Ray;
     label: RichTextLabel | null = null;
 
-    constructor(graph: Graph, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
+    /**
+     * Helper to check if we're using GraphContext
+     */
+    private get context(): GraphContext {
+        // Check if parentGraph has GraphContext methods
+        if ("getStyles" in this.parentGraph) {
+            return this.parentGraph;
+        }
+
+        // Otherwise, it's a Graph instance which implements GraphContext
+        return this.parentGraph;
+    }
+
+    constructor(graph: Graph | GraphContext, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
@@ -58,12 +72,12 @@ export class Edge {
         this.opts = opts;
 
         // make sure both srcNode and dstNode already exist
-        const srcNode = graph.nodeCache.get(srcNodeId);
+        const srcNode = this.context.getDataManager().nodeCache.get(srcNodeId);
         if (!srcNode) {
             throw new Error(`Attempting to create edge '${srcNodeId}->${dstNodeId}', Node '${srcNodeId}' hasn't been created yet.`);
         }
 
-        const dstNode = graph.nodeCache.get(dstNodeId);
+        const dstNode = this.context.getDataManager().nodeCache.get(dstNodeId);
         if (!dstNode) {
             throw new Error(`Attempting to create edge '${srcNodeId}->${dstNodeId}', Node '${dstNodeId}' hasn't been created yet.`);
         }
@@ -80,14 +94,14 @@ export class Edge {
         // create ngraph link
         // Only add to layout engine if it's already initialized
         // Otherwise, it will be added when the layout is set
-        this.parentGraph.layoutEngine?.addEdge(this);
+        this.context.getLayoutManager().layoutEngine?.addEdge(this);
 
         // create mesh
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
         this.arrowMesh = EdgeMesh.createArrowHead(
-            this.parentGraph.meshCache,
+            this.context.getMeshCache(),
             String(this.styleId),
             {
                 type: style.arrowHead?.type ?? "none",
@@ -98,14 +112,14 @@ export class Edge {
 
         // create edge line mesh
         this.mesh = EdgeMesh.create(
-            this.parentGraph.meshCache,
+            this.context.getMeshCache(),
             {
                 styleId: String(this.styleId),
                 width: style.line?.width ?? 0.25,
                 color: style.line?.color ?? "#FFFFFF",
             },
             style,
-            this.parentGraph.scene,
+            this.context.getScene(),
         );
 
         this.mesh.isPickable = false;
@@ -119,7 +133,7 @@ export class Edge {
     }
 
     update(): void {
-        const lnk = this.parentGraph.layoutEngine?.getEdgePosition(this);
+        const lnk = this.context.getLayoutManager().layoutEngine?.getEdgePosition(this);
         if (!lnk) {
             return;
         }
@@ -165,7 +179,7 @@ export class Edge {
         }
 
         this.arrowMesh = EdgeMesh.createArrowHead(
-            this.parentGraph.meshCache,
+            this.context.getMeshCache(),
             String(styleId),
             {
                 type: style.arrowHead?.type ?? "none",
@@ -176,14 +190,14 @@ export class Edge {
 
         // recreate edge line mesh
         this.mesh = EdgeMesh.create(
-            this.parentGraph.meshCache,
+            this.context.getMeshCache(),
             {
                 styleId: String(styleId),
                 width: style.line?.width ?? 0.25,
                 color: style.line?.color ?? "#FFFFFF",
             },
             style,
-            this.parentGraph.scene,
+            this.context.getScene(),
         );
 
         this.mesh.isPickable = false;
@@ -203,16 +217,19 @@ export class Edge {
         }
     }
 
-    static updateRays(g: Graph): void {
-        if (!g.needRays) {
+    static updateRays(g: Graph | GraphContext): void {
+        const context = "getStyles" in g ? g : g;
+
+        if (!context.needsRayUpdate()) {
             return;
         }
 
-        if (!g.layoutEngine) {
+        const {layoutEngine} = context.getLayoutManager();
+        if (!layoutEngine) {
             return;
         }
 
-        for (const e of g.layoutEngine.edges) {
+        for (const e of layoutEngine.edges) {
             const srcMesh = e.srcNode.mesh;
             const dstMesh = e.dstNode.mesh;
 
@@ -231,7 +248,7 @@ export class Edge {
 
         // this sucks for performance, but we have to do a full render pass
         // to update rays and intersections
-        g.scene.render();
+        context.getScene().render();
     }
 
     transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
@@ -240,7 +257,7 @@ export class Edge {
 
     transformArrowCap(): EdgeLine {
         if (this.arrowMesh) {
-            this.parentGraph.stats.arrowCapUpdate.beginMonitoring();
+            this.context.getStats().arrowCapUpdate.beginMonitoring();
             const {srcPoint, dstPoint, newEndPoint} = this.getInterceptPoints();
 
             // If we can't find intercept points, fall back to approximate positions
@@ -251,7 +268,7 @@ export class Edge {
                 // Hide arrow if nodes are too close or at same position
                 if (fallbackSrc.equalsWithEpsilon(fallbackDst, 0.01)) {
                     this.arrowMesh.setEnabled(false);
-                    this.parentGraph.stats.arrowCapUpdate.endMonitoring();
+                    this.context.getStats().arrowCapUpdate.endMonitoring();
                     return {
                         srcPoint: fallbackSrc,
                         dstPoint: fallbackDst,
@@ -276,7 +293,7 @@ export class Edge {
                 this.arrowMesh.position = approxDstPoint;
                 this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
-                this.parentGraph.stats.arrowCapUpdate.endMonitoring();
+                this.context.getStats().arrowCapUpdate.endMonitoring();
                 return {
                     srcPoint: approxSrcPoint,
                     dstPoint: approxNewEndPoint,
@@ -287,7 +304,7 @@ export class Edge {
             this.arrowMesh.position = dstPoint;
             this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
-            this.parentGraph.stats.arrowCapUpdate.endMonitoring();
+            this.context.getStats().arrowCapUpdate.endMonitoring();
             return {
                 srcPoint,
                 dstPoint: newEndPoint,
@@ -306,10 +323,10 @@ export class Edge {
         const dstMesh = this.dstNode.mesh;
 
         // ray is updated in updateRays to ensure intersections
-        this.parentGraph.stats.intersectCalc.beginMonitoring();
+        this.context.getStats().intersectCalc.beginMonitoring();
         const dstHitInfo = this.ray.intersectsMeshes([dstMesh]);
         const srcHitInfo = this.ray.intersectsMeshes([srcMesh]);
-        this.parentGraph.stats.intersectCalc.endMonitoring();
+        this.context.getStats().intersectCalc.endMonitoring();
 
         let srcPoint: Vector3 | null = null;
         let dstPoint: Vector3 | null = null;
@@ -352,7 +369,7 @@ export class Edge {
     private createLabel(styleConfig: EdgeStyleConfig): RichTextLabel {
         const labelText = this.extractLabelText(styleConfig.label);
         const labelOptions = this.createLabelOptions(labelText, styleConfig);
-        return new RichTextLabel(this.parentGraph.scene, labelOptions);
+        return new RichTextLabel(this.context.getScene(), labelOptions);
     }
 
     private extractLabelText(labelConfig?: Record<string, unknown>): string {

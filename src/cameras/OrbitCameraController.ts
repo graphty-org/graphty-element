@@ -1,4 +1,4 @@
-import {Axis, Color4, Scalar, Scene, Space, TransformNode, UniversalCamera, Vector3} from "@babylonjs/core";
+import {Axis, Camera, Color4, Scalar, Scene, Space, TransformNode, UniversalCamera, Vector3} from "@babylonjs/core";
 
 export interface OrbitConfig {
     trackballRotationSpeed: number;
@@ -60,8 +60,18 @@ export class OrbitCameraController {
 
         this.pivot.position.copyFrom(center);
 
-        // Get camera's field of view (default is ~0.8 radians or ~45.8 degrees for UniversalCamera)
-        const fov = this.camera.fov || 0.8;
+        // Get camera's field of view
+        // UniversalCamera uses fovMode and either fov (for FOVMODE_VERTICAL_FIXED) 
+        // or horizontalFov (for FOVMODE_HORIZONTAL_FIXED)
+        // Default FOV for Babylon cameras is typically around 0.8 radians (~45.8 degrees)
+        let fov = 0.8; // default
+        if (this.camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED) {
+            fov = this.camera.fov;
+        } else if (this.camera.fovMode === Camera.FOVMODE_HORIZONTAL_FIXED && this.camera.fov) {
+            // Convert horizontal FOV to vertical FOV using aspect ratio
+            const aspectRatio = this.scene.getEngine().getAspectRatio(this.camera);
+            fov = 2 * Math.atan(Math.tan(this.camera.fov / 2) / aspectRatio);
+        }
 
         // Get viewport aspect ratio
         const engine = this.scene.getEngine();
@@ -98,6 +108,8 @@ export class OrbitCameraController {
         const targetDistance = Math.max(... distances) * paddingFactor;
 
         this.cameraDistance = Scalar.Clamp(targetDistance, this.config.minZoomDistance, this.config.maxZoomDistance);
+        
+        // Apply the new camera position immediately
         this.updateCameraPosition();
     }
 }

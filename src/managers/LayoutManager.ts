@@ -4,6 +4,7 @@ import type {Node} from "../Node";
 import type {Styles} from "../Styles";
 import type {DataManager} from "./DataManager";
 import type {EventManager} from "./EventManager";
+import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
 /**
@@ -14,8 +15,8 @@ export class LayoutManager implements Manager {
     layoutEngine?: LayoutEngine;
     running = false;
 
-    // Reference to parent graph (temporary until full refactoring)
-    private parentGraph: any;
+    // GraphContext for error reporting
+    private graphContext: GraphContext | null = null;
 
     constructor(
         private eventManager: EventManager,
@@ -24,11 +25,10 @@ export class LayoutManager implements Manager {
     ) {}
 
     /**
-     * Set the parent graph reference
-     * This is temporary until we complete the full refactoring
+     * Set the GraphContext for error reporting
      */
-    setParentGraph(graph: any): void {
-        this.parentGraph = graph;
+    setGraphContext(context: GraphContext): void {
+        this.graphContext = context;
     }
 
     async init(): Promise<void> {
@@ -91,9 +91,7 @@ export class LayoutManager implements Manager {
                 this.running = true;
 
                 // Request zoom to fit when layout changes
-                if (this.parentGraph) {
-                    this.parentGraph.needsZoomToFit = true;
-                }
+                this.eventManager.emitLayoutInitialized(type, true);
 
                 // Dispose previous engine after successful init
                 if (previousEngine && "dispose" in previousEngine) {
@@ -111,12 +109,14 @@ export class LayoutManager implements Manager {
                 this.dataManager.setLayoutEngine(previousEngine);
 
                 // Emit error event
-                this.eventManager.emitGraphError(
-                    this.parentGraph,
-                    error instanceof Error ? error : new Error(String(error)),
-                    "layout",
-                    {layoutType: type},
-                );
+                if (this.graphContext) {
+                    this.eventManager.emitGraphError(
+                        this.graphContext,
+                        error instanceof Error ? error : new Error(String(error)),
+                        "layout",
+                        {layoutType: type},
+                    );
+                }
 
                 throw new Error(`Failed to initialize layout '${type}': ${error instanceof Error ? error.message : String(error)}`);
             }

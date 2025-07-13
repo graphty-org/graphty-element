@@ -9,6 +9,7 @@ import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
+import type {GraphContext} from "./managers/GraphContext";
 import {NodeMesh} from "./meshes/NodeMesh";
 import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {NodeBehavior} from "./NodeBehavior";
@@ -21,7 +22,7 @@ interface NodeOpts {
 }
 
 export class Node {
-    parentGraph: Graph;
+    parentGraph: Graph | GraphContext;
     opts: NodeOpts;
     id: NodeIdType;
     data: AdHocData<string | number>;
@@ -36,12 +37,25 @@ export class Node {
     size!: number;
     changeManager: ChangeManager;
 
-    constructor(graph: Graph, nodeId: NodeIdType, styleId: NodeStyleId, data: AdHocData<string | number>, opts: NodeOpts = {}) {
+    /**
+     * Helper to check if we're using GraphContext
+     */
+    private get context(): GraphContext {
+        // Check if parentGraph has GraphContext methods
+        if ("getStyles" in this.parentGraph) {
+            return this.parentGraph;
+        }
+
+        // Otherwise, it's a Graph instance which implements GraphContext
+        return this.parentGraph;
+    }
+
+    constructor(graph: Graph | GraphContext, nodeId: NodeIdType, styleId: NodeStyleId, data: AdHocData<string | number>, opts: NodeOpts = {}) {
         this.parentGraph = graph;
         this.id = nodeId;
         this.opts = opts;
         this.changeManager = new ChangeManager();
-        this.changeManager.loadCalculatedValues(this.parentGraph.styles.getCalculatedStylesForNode(data));
+        this.changeManager.loadCalculatedValues(this.context.getStyles().getCalculatedStylesForNode(data));
         this.data = this.changeManager.watch("data", data);
         this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
         this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData, NodeStyle);
@@ -52,17 +66,17 @@ export class Node {
         // create graph node
         // Only add to layout engine if it's already initialized
         // Otherwise, it will be added when the layout is set
-        this.parentGraph.layoutEngine?.addNode(this);
+        this.context.getLayoutManager().layoutEngine?.addNode(this);
 
         // create mesh
         const o = Styles.getStyleForNodeStyleId(styleId);
         this.size = o.shape?.size ?? 0;
 
         this.mesh = NodeMesh.create(
-            this.parentGraph.meshCache,
-            {styleId: String(styleId), is2D: this.parentGraph.styles.config.graph.twoD, size: this.size},
+            this.context.getMeshCache(),
+            {styleId: String(styleId), is2D: this.context.is2D(), size: this.size},
             {shape: o.shape, texture: o.texture, effect: o.effect},
-            this.parentGraph.scene,
+            this.context.getScene(),
         );
 
         // create label
@@ -94,7 +108,7 @@ export class Node {
             return;
         }
 
-        const pos = this.parentGraph.layoutEngine?.getNodePosition(this);
+        const pos = this.context.getLayoutManager().layoutEngine?.getNodePosition(this);
         if (pos) {
             this.mesh.position.x = pos.x;
             this.mesh.position.y = pos.y;
@@ -114,10 +128,10 @@ export class Node {
         this.size = o.shape?.size ?? 0;
 
         this.mesh = NodeMesh.create(
-            this.parentGraph.meshCache,
-            {styleId: String(styleId), is2D: this.parentGraph.styles.config.graph.twoD, size: this.size},
+            this.context.getMeshCache(),
+            {styleId: String(styleId), is2D: this.context.is2D(), size: this.size},
             {shape: o.shape, texture: o.texture, effect: o.effect},
-            this.parentGraph.scene,
+            this.context.getScene(),
         );
 
         // recreate label if needed
@@ -133,11 +147,11 @@ export class Node {
     }
 
     pin(): void {
-        this.parentGraph.layoutEngine?.pin(this);
+        this.context.getLayoutManager().layoutEngine?.pin(this);
     }
 
     unpin(): void {
-        this.parentGraph.layoutEngine?.unpin(this);
+        this.context.getLayoutManager().layoutEngine?.unpin(this);
     }
 
     private createLabel(styleConfig: NodeStyleConfig): RichTextLabel {

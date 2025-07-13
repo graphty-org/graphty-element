@@ -4,6 +4,7 @@ import {
     SixDofDragBehavior,
 } from "@babylonjs/core";
 
+import type {GraphContext} from "./managers/GraphContext";
 import type {Node, NodeIdType} from "./Node";
 
 interface NodeBehaviorOptions {
@@ -34,7 +35,8 @@ export class NodeBehavior {
         // drag started
         node.meshDragBehavior.onDragStartObservable.add(() => {
             // make sure the graph is running
-            node.parentGraph.running = true;
+            const context = this.getContext(node);
+            context.setRunning(true);
 
             // don't let the graph engine update the node -- we are controlling it
             node.dragging = true;
@@ -43,7 +45,8 @@ export class NodeBehavior {
         // drag ended
         node.meshDragBehavior.onDragEndObservable.add(() => {
             // make sure the graph is running
-            node.parentGraph.running = true;
+            const context = this.getContext(node);
+            context.setRunning(true);
 
             // pin after dragging if configured
             if (node.pinOnDrag) {
@@ -57,10 +60,11 @@ export class NodeBehavior {
         // position changed
         node.meshDragBehavior.onPositionChangedObservable.add((event) => {
             // make sure the graph is running
-            node.parentGraph.running = true;
+            const context = this.getContext(node);
+            context.setRunning(true);
 
             // update the node position
-            node.parentGraph.layoutEngine?.setNodePosition(node, event.position);
+            context.getLayoutManager().layoutEngine?.setNodePosition(node, event.position);
         });
 
         // TODO: this apparently updates dragging objects faster and more fluidly
@@ -73,7 +77,9 @@ export class NodeBehavior {
      */
     private static addClickBehavior(node: Node): void {
         // click behavior setup
-        node.mesh.actionManager = node.mesh.actionManager ?? new ActionManager(node.parentGraph.scene);
+        const context = this.getContext(node);
+        const scene = context.getScene();
+        node.mesh.actionManager = node.mesh.actionManager ?? new ActionManager(scene);
 
         // Available triggers:
         // ActionManager.OnDoublePickTrigger
@@ -81,8 +87,11 @@ export class NodeBehavior {
         // ActionManager.OnCenterPickTrigger
         // ActionManager.OnLongPressTrigger
 
-        if (node.parentGraph.fetchNodes && node.parentGraph.fetchEdges) {
-            const {fetchNodes, fetchEdges} = node.parentGraph;
+        // Only Graph has fetchNodes/fetchEdges, not GraphContext
+        // For now, check if parentGraph is the full Graph instance
+        const graph = node.parentGraph as any;
+        if (graph.fetchNodes && graph.fetchEdges) {
+            const {fetchNodes, fetchEdges} = graph;
 
             node.mesh.actionManager.registerAction(
                 new ExecuteCodeAction(
@@ -92,31 +101,44 @@ export class NodeBehavior {
                     },
                     () => {
                         // make sure the graph is running
-                        node.parentGraph.running = true;
+                        context.setRunning(true);
 
                         // fetch all edges for current node
-                        // @ts-expect-error for some reason this is confusing window.Node with our Node
-                        const edges = fetchEdges(node, node.parentGraph);
+                        const edges = fetchEdges(node as any, graph);
 
                         // create set of unique node ids
                         const nodeIds = new Set<NodeIdType>();
-                        edges.forEach((e) => {
+                        edges.forEach((e: any) => {
                             nodeIds.add(e.src);
                             nodeIds.add(e.dst);
                         });
                         nodeIds.delete(node.id);
 
                         // fetch all nodes from associated edges
-                        const nodes = fetchNodes(nodeIds, node.parentGraph);
+                        const nodes = fetchNodes(nodeIds, graph);
 
                         // add all the nodes and edges we collected
-                        node.parentGraph.addNodes([... nodes]);
-                        node.parentGraph.addEdges([... edges]);
+                        const dataManager = context.getDataManager();
+                        dataManager.addNodes([... nodes]);
+                        dataManager.addEdges([... edges]);
 
                         // TODO: fetch and add secondary edges
                     },
                 ),
             );
         }
+    }
+
+    /**
+     * Helper to get GraphContext from a Node
+     */
+    private static getContext(node: Node): GraphContext {
+        // Check if parentGraph has GraphContext methods
+        if ("getStyles" in node.parentGraph) {
+            return node.parentGraph;
+        }
+
+        // Otherwise, it's a Graph instance which implements GraphContext
+        return node.parentGraph;
     }
 }

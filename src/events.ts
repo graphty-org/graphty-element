@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphGenericEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -36,6 +36,20 @@ export interface GraphDataLoadedEvent {
         chunksLoaded: number;
         dataSourceType: string;
     };
+}
+
+export interface GraphDataAddedEvent {
+    type: "data-added";
+    dataType: "nodes" | "edges";
+    count: number;
+    shouldStartLayout: boolean;
+    shouldZoomToFit: boolean;
+}
+
+export interface GraphLayoutInitializedEvent {
+    type: "layout-initialized";
+    layoutType: string;
+    shouldZoomToFit: boolean;
 }
 
 // Generic events for internal manager communication

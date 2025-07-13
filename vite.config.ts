@@ -17,6 +17,10 @@ export default defineConfig(({mode}) => {
                 lit: true,
             }),
         ],
+        define: {
+            // Disable Lit dev mode warning
+            "process.env.NODE_ENV": JSON.stringify(mode === "development" ? "production" : mode),
+        },
         build: {
             lib: {
                 // Could also be a dictionary or array of multiple entry points

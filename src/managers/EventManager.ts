@@ -4,10 +4,12 @@ import type {
     EdgeEvent,
     EventCallbackType,
     EventType,
+    GraphDataAddedEvent,
     GraphDataLoadedEvent,
     GraphErrorEvent,
     GraphEvent,
     GraphGenericEvent,
+    GraphLayoutInitializedEvent,
     GraphSettledEvent,
     NodeEvent,
 } from "../events";
@@ -94,6 +96,34 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    emitDataAdded(
+        dataType: "nodes" | "edges",
+        count: number,
+        shouldStartLayout: boolean,
+        shouldZoomToFit: boolean,
+    ): void {
+        const event: GraphDataAddedEvent = {
+            type: "data-added",
+            dataType,
+            count,
+            shouldStartLayout,
+            shouldZoomToFit,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
+    emitLayoutInitialized(
+        layoutType: string,
+        shouldZoomToFit: boolean,
+    ): void {
+        const event: GraphLayoutInitializedEvent = {
+            type: "layout-initialized",
+            layoutType,
+            shouldZoomToFit,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
     // Generic graph event emitter for internal events
     emitGraphEvent(type: string, data: any): void {
         const event = {type, ... data} as GraphGenericEvent;
@@ -126,7 +156,9 @@ export class EventManager implements Manager {
         switch (type) {
             case "graph-settled":
             case "error":
-            case "data-loaded": {
+            case "data-loaded":
+            case "data-added":
+            case "layout-initialized": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {
                         callback(event);

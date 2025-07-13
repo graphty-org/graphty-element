@@ -8,7 +8,6 @@ import {
     Observable,
     PhotoDome,
     Scene,
-    Vector3,
     WebGPUEngine,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
@@ -34,14 +33,14 @@ import {
     NodeEvent,
 } from "./events";
 import {LayoutEngine} from "./layout/LayoutEngine";
-import {DataManager, EventManager, LayoutManager, LifecycleManager, type Manager, RenderManager} from "./managers";
+import {DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, LayoutManager, LifecycleManager, type Manager, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Node, NodeIdType} from "./Node";
 import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 // import {createXrButton} from "./xr-button";
 
-export class Graph {
+export class Graph implements GraphContext {
     stats: Stats;
     styles: Styles;
     // babylon
@@ -55,9 +54,6 @@ export class Graph {
     needRays = true; // TODO: currently always true
     // graph engine - delegate to LayoutManager
     pinOnDrag?: boolean;
-    // camera control
-    private hasZoomedToFit = false;
-    private needsZoomToFit = true;
     // graph
     fetchNodes?: FetchNodesFn;
     fetchEdges?: FetchEdgesFn;
@@ -77,6 +73,12 @@ export class Graph {
     private lifecycleManager: LifecycleManager;
     private dataManager: DataManager;
     private layoutManager: LayoutManager;
+    private styleManager: StyleManager;
+    private statsManager: StatsManager;
+    private updateManager: UpdateManager;
+
+    // GraphContext implementation
+    private graphContext: DefaultGraphContext;
 
     constructor(element: Element | string) {
         // Initialize EventManager first as other components depend on it
@@ -85,8 +87,9 @@ export class Graph {
         // Setup backward compatibility for observables
         this.setupObservableCompatibility();
 
-        // configure graph
-        this.styles = Styles.default();
+        // Initialize StyleManager
+        this.styleManager = new StyleManager(this.eventManager);
+        this.styles = this.styleManager.getStyles();
 
         // get the element that we are going to use for placing our canvas
         if (typeof (element) === "string") {
@@ -123,7 +126,10 @@ export class Graph {
         this.scene = this.renderManager.scene;
         this.camera = this.renderManager.camera;
 
-        // setup stats - needs to be after scene is created
+        // Initialize StatsManager
+        this.statsManager = new StatsManager(this.eventManager);
+        this.statsManager.initializeBabylonInstrumentation(this.scene, this.engine);
+        // setup stats - for backward compatibility
         this.stats = new Stats(this);
 
         // Setup cameras
@@ -131,24 +137,82 @@ export class Graph {
 
         // Initialize DataManager
         this.dataManager = new DataManager(this.eventManager, this.styles, this.stats);
-        this.dataManager.setParentGraph(this);
 
         // Initialize LayoutManager
         this.layoutManager = new LayoutManager(this.eventManager, this.dataManager, this.styles);
-        this.layoutManager.setParentGraph(this);
+
+        // Initialize UpdateManager
+        this.updateManager = new UpdateManager(
+            this.eventManager,
+            this.statsManager,
+            this.layoutManager,
+            this.dataManager,
+            this.styleManager,
+            this.camera,
+            this, // GraphContext
+            {
+                layoutStepMultiplier: this.styles.config.behavior.layout.stepMultiplier,
+                autoZoomToFit: true,
+            },
+        );
+
+        // Initialize GraphContext
+        const contextConfig: GraphContextConfig = {
+            pinOnDrag: this.pinOnDrag,
+        };
+        this.graphContext = new DefaultGraphContext(
+            this.styleManager,
+            this.dataManager,
+            this.layoutManager,
+            this.dataManager.meshCache,
+            this.scene,
+            this.stats,
+            this.statsManager,
+            contextConfig,
+            this.needRays,
+        );
+
+        // Set GraphContext on managers
+        this.dataManager.setGraphContext(this);
+        this.layoutManager.setGraphContext(this);
 
         // Setup lifecycle manager
         const managers = new Map<string, Manager>([
             ["event", this.eventManager],
+            ["style", this.styleManager],
+            ["stats", this.statsManager],
             ["render", this.renderManager],
             ["data", this.dataManager],
             ["layout", this.layoutManager],
+            ["update", this.updateManager],
         ]);
         this.lifecycleManager = new LifecycleManager(
             managers,
             this.eventManager,
-            ["event", "render", "data", "layout"],
+            ["event", "style", "stats", "render", "data", "layout", "update"],
         );
+
+        // Listen for data-added events to manage running state
+        this.eventManager.addListener("data-added", (event) => {
+            if (event.type === "data-added") {
+                if (event.shouldStartLayout) {
+                    this.running = true;
+                }
+
+                if (event.shouldZoomToFit) {
+                    this.updateManager.enableZoomToFit();
+                }
+            }
+        });
+
+        // Listen for layout-initialized events to handle zoom to fit
+        this.eventManager.addListener("layout-initialized", (event) => {
+            if (event.type === "layout-initialized") {
+                if (event.shouldZoomToFit) {
+                    this.updateManager.enableZoomToFit();
+                }
+            }
+        });
 
         // setup default layout - but don't wait for it
         // The layout will be properly configured when needed
@@ -368,7 +432,7 @@ export class Graph {
 
             // Start the graph system (render loop, etc.)
             await this.lifecycleManager.startGraph(() => {
-                this.update();
+                this.updateManager.update();
             });
 
             // this.xrHelper = await createXrButton(this.scene, this.camera);
@@ -403,66 +467,14 @@ export class Graph {
         }
     }
 
+    /**
+     * Update method - kept for backward compatibility
+     * All update logic is now handled by UpdateManager
+     */
     update(): void {
-        this.camera.update();
+        this.updateManager.update();
 
-        if (!this.running) {
-            return;
-        }
-
-        // update graph engine
-        this.stats.step();
-        this.stats.graphStep.beginMonitoring();
-        for (let i = 0; i < this.styles.config.behavior.layout.stepMultiplier; i++) {
-            this.layoutManager.step();
-        }
-        this.stats.graphStep.endMonitoring();
-
-        // calculate the global bounding box of all nodes
-        let boundingBoxMin: Vector3 | undefined;
-        let boundingBoxMax: Vector3 | undefined;
-        function updateBoundingBox(n: Node): void {
-            const pos = n.mesh.getAbsolutePosition();
-            const sz = n.size;
-            if (!boundingBoxMin || !boundingBoxMax) {
-                boundingBoxMin = pos.clone();
-                boundingBoxMax = pos.clone();
-            }
-
-            setMin(pos, boundingBoxMin, sz, "x");
-            setMin(pos, boundingBoxMin, sz, "y");
-            setMin(pos, boundingBoxMin, sz, "z");
-            setMax(pos, boundingBoxMax, sz, "x");
-            setMax(pos, boundingBoxMax, sz, "y");
-            setMax(pos, boundingBoxMax, sz, "z");
-        }
-
-        // update nodes
-        this.stats.nodeUpdate.beginMonitoring();
-        for (const n of this.layoutManager.nodes) {
-            n.update();
-            updateBoundingBox(n);
-        }
-
-        this.stats.nodeUpdate.endMonitoring();
-
-        // update edges
-        this.stats.edgeUpdate.beginMonitoring();
-        Edge.updateRays(this);
-        for (const e of this.layoutManager.edges) {
-            e.update();
-        }
-
-        this.stats.edgeUpdate.endMonitoring();
-
-        // Only zoom to fit when needed, not every frame
-        if (this.needsZoomToFit && boundingBoxMin && boundingBoxMax) {
-            this.camera.zoomToBoundingBox(boundingBoxMin, boundingBoxMax);
-            this.hasZoomedToFit = true;
-            this.needsZoomToFit = false;
-        }
-
-        // check to see if we are done
+        // Check if layout has settled
         if (this.layoutManager.isSettled) {
             this.eventManager.emitGraphSettled(this);
             this.running = false;
@@ -480,7 +492,11 @@ export class Graph {
         // TODO: if t is a URL, fetch URL
 
         const previousTwoD = this.styles.config.graph.twoD;
-        this.styles = Styles.fromObject(t);
+
+        // Use StyleManager to load the new styles
+        this.styleManager.loadStylesFromObject(t);
+        this.styles = this.styleManager.getStyles();
+
         const currentTwoD = this.styles.config.graph.twoD;
 
         // Clear mesh cache if switching between 2D and 3D modes
@@ -530,7 +546,7 @@ export class Graph {
 
         // Request zoom to fit when switching between 2D/3D modes
         if (previousTwoD !== currentTwoD) {
-            this.needsZoomToFit = true;
+            this.updateManager.enableZoomToFit();
         }
 
         // Update layout dimension if it supports it and twoD mode changed
@@ -615,20 +631,62 @@ export class Graph {
      * Manually trigger zoom to fit the content
      */
     zoomToFit(): void {
-        this.needsZoomToFit = true;
+        this.updateManager.enableZoomToFit();
     }
-}
 
-function setMin(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
-    const adjPos = pos[ord] - scale;
-    if (adjPos < v[ord]) {
-        v[ord] = adjPos;
+    // GraphContext implementation methods
+
+    getStyles(): Styles {
+        return this.styles;
     }
-}
 
-function setMax(pos: Vector3, v: Vector3, scale: number, ord: "x" | "y" | "z"): void {
-    const adjPos = pos[ord] + scale;
-    if (adjPos > v[ord]) {
-        v[ord] = adjPos;
+    getStyleManager(): StyleManager {
+        return this.styleManager;
+    }
+
+    getDataManager(): DataManager {
+        return this.dataManager;
+    }
+
+    getLayoutManager(): LayoutManager {
+        return this.layoutManager;
+    }
+
+    getMeshCache(): MeshCache {
+        return this.dataManager.meshCache;
+    }
+
+    getScene(): Scene {
+        return this.scene;
+    }
+
+    getStats(): Stats {
+        return this.stats;
+    }
+
+    getStatsManager(): StatsManager {
+        return this.statsManager;
+    }
+
+    is2D(): boolean {
+        return this.styles.config.graph.twoD ?? false;
+    }
+
+    needsRayUpdate(): boolean {
+        return this.needRays;
+    }
+
+    getConfig(): GraphContextConfig {
+        return {
+            pinOnDrag: this.pinOnDrag,
+        };
+    }
+
+    isRunning(): boolean {
+        return this.layoutManager.running;
+    }
+
+    setRunning(running: boolean): void {
+        this.layoutManager.running = running;
     }
 }
