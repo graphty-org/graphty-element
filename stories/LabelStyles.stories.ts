@@ -1,6 +1,6 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../src/graphty-element.ts";
+import type {Graphty} from "../src/graphty-element.ts";
 import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {

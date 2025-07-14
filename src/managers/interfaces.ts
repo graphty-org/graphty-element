@@ -1,6 +1,5 @@
 import type {Engine, Scene, WebGPUEngine} from "@babylonjs/core";
 
-import type {Stats} from "../Stats";
 import type {EventManager} from "./EventManager";
 
 /**
@@ -26,7 +25,6 @@ export interface ManagerContext {
     engine: Engine | WebGPUEngine;
     canvas: HTMLCanvasElement;
     eventManager: EventManager;
-    stats: Stats;
 }
 
 /**

@@ -55,7 +55,7 @@ export abstract class Algorithm {
 
     get results(): AdHocData {
         const algorithmResults = {} as AdHocData;
-        for (const n of this.graph.nodes.values()) {
+        for (const n of this.graph.getDataManager().nodes.values()) {
             deepSet(algorithmResults, `node.${n.id}`, n.algorithmResults);
         }
 
@@ -80,7 +80,7 @@ export abstract class Algorithm {
 
     addNodeResult(nodeId: number | string, resultName: string, result: unknown): void {
         const p = this.#createPath(resultName);
-        const n = this.graph.nodes.get(nodeId);
+        const n = this.graph.getDataManager().nodes.get(nodeId);
         if (!n) {
             throw new Error(`couldn't find nodeId '${nodeId}' while trying to run algorithm '${this.type}'`);
         }

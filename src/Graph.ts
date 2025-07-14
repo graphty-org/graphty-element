@@ -5,43 +5,29 @@ import "./algorithms"; // register all internal algorithms
 import {
     Color4,
     Engine,
-    Observable,
     PhotoDome,
     Scene,
     WebGPUEngine,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
-import {Algorithm} from "./algorithms/Algorithm";
 import {CameraManager} from "./cameras/CameraManager";
-import {OrbitCameraController} from "./cameras/OrbitCameraController";
-import {OrbitInputController} from "./cameras/OrbitInputController";
-import {TwoDCameraController} from "./cameras/TwoDCameraController";
-import {InputController} from "./cameras/TwoDInputController";
 import {
     AdHocData,
     FetchEdgesFn,
     FetchNodesFn,
     StyleSchema,
 } from "./config";
-import {Edge, EdgeMap} from "./Edge";
 import {
-    EdgeEvent,
     EventCallbackType,
     EventType,
-    GraphEvent,
-    NodeEvent,
 } from "./events";
-import {LayoutEngine} from "./layout/LayoutEngine";
-import {DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, LayoutManager, LifecycleManager, type Manager, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
+import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, LayoutManager, LifecycleManager, type Manager, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
-import {Node, NodeIdType} from "./Node";
-import {Stats} from "./Stats";
 import {Styles} from "./Styles";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
-    stats: Stats;
     styles: Styles;
     // babylon
     element: Element;
@@ -51,7 +37,7 @@ export class Graph implements GraphContext {
     camera: CameraManager;
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
-    needRays = true; // TODO: currently always true
+    needRays = true;
     // graph engine - delegate to LayoutManager
     pinOnDrag?: boolean;
     // graph
@@ -62,10 +48,6 @@ export class Graph implements GraphContext {
     private resizeHandler = (): void => {
         this.engine.resize();
     };
-    // observeables - kept for backward compatibility but delegate to EventManager
-    graphObservable = new Observable<GraphEvent>();
-    nodeObservable = new Observable<NodeEvent>();
-    edgeObservable = new Observable<EdgeEvent>();
 
     // Managers
     private eventManager: EventManager;
@@ -76,6 +58,7 @@ export class Graph implements GraphContext {
     private styleManager: StyleManager;
     private statsManager: StatsManager;
     private updateManager: UpdateManager;
+    private algorithmManager: AlgorithmManager;
 
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
@@ -83,9 +66,6 @@ export class Graph implements GraphContext {
     constructor(element: Element | string) {
         // Initialize EventManager first as other components depend on it
         this.eventManager = new EventManager();
-
-        // Setup backward compatibility for observables
-        this.setupObservableCompatibility();
 
         // Initialize StyleManager
         this.styleManager = new StyleManager(this.eventManager);
@@ -129,14 +109,9 @@ export class Graph implements GraphContext {
         // Initialize StatsManager
         this.statsManager = new StatsManager(this.eventManager);
         this.statsManager.initializeBabylonInstrumentation(this.scene, this.engine);
-        // setup stats - for backward compatibility
-        this.stats = new Stats(this);
-
-        // Setup cameras
-        this.setupCameras();
 
         // Initialize DataManager
-        this.dataManager = new DataManager(this.eventManager, this.styles, this.stats);
+        this.dataManager = new DataManager(this.eventManager, this.styles);
 
         // Initialize LayoutManager
         this.layoutManager = new LayoutManager(this.eventManager, this.dataManager, this.styles);
@@ -156,6 +131,9 @@ export class Graph implements GraphContext {
             },
         );
 
+        // Initialize AlgorithmManager
+        this.algorithmManager = new AlgorithmManager(this.eventManager, this);
+
         // Initialize GraphContext
         const contextConfig: GraphContextConfig = {
             pinOnDrag: this.pinOnDrag,
@@ -166,7 +144,6 @@ export class Graph implements GraphContext {
             this.layoutManager,
             this.dataManager.meshCache,
             this.scene,
-            this.stats,
             this.statsManager,
             contextConfig,
             this.needRays,
@@ -185,18 +162,19 @@ export class Graph implements GraphContext {
             ["data", this.dataManager],
             ["layout", this.layoutManager],
             ["update", this.updateManager],
+            ["algorithm", this.algorithmManager],
         ]);
         this.lifecycleManager = new LifecycleManager(
             managers,
             this.eventManager,
-            ["event", "style", "stats", "render", "data", "layout", "update"],
+            ["event", "style", "stats", "render", "data", "layout", "update", "algorithm"],
         );
 
         // Listen for data-added events to manage running state
         this.eventManager.addListener("data-added", (event) => {
             if (event.type === "data-added") {
                 if (event.shouldStartLayout) {
-                    this.running = true;
+                    this.layoutManager.running = true;
                 }
 
                 if (event.shouldZoomToFit) {
@@ -229,129 +207,6 @@ export class Graph implements GraphContext {
             });
     }
 
-    // Getters for backward compatibility - delegate to DataManager
-    get nodes(): Map<string | number, Node> {
-        return this.dataManager.nodes;
-    }
-
-    get edges(): Map<string | number, Edge> {
-        return this.dataManager.edges;
-    }
-
-    get nodeCache(): Map<NodeIdType, Node> {
-        return this.dataManager.nodeCache;
-    }
-
-    get edgeCache(): EdgeMap {
-        return this.dataManager.edgeCache;
-    }
-
-    get meshCache(): MeshCache {
-        return this.dataManager.meshCache;
-    }
-
-    // Layout properties - delegate to LayoutManager
-    get layoutEngine(): LayoutEngine | undefined {
-        return this.layoutManager.layoutEngine;
-    }
-
-    get layoutRunning(): boolean {
-        return this.layoutManager.running;
-    }
-
-    // Update running getter and setter to delegate to LayoutManager for layout state
-    get running(): boolean {
-        return this.layoutManager.running;
-    }
-
-    set running(value: boolean) {
-        this.layoutManager.running = value;
-    }
-
-    /**
-     * Setup backward compatibility for observables
-     * Delegates to EventManager while maintaining the old API
-     */
-    private setupObservableCompatibility(): void {
-        // Forward graph observable notifications to EventManager
-        this.graphObservable.add(() => {
-            // EventManager will handle the event distribution
-            // This maintains backward compatibility
-        });
-
-        // Forward node observable notifications to EventManager
-        this.nodeObservable.add(() => {
-            // EventManager will handle the event distribution
-        });
-
-        // Forward edge observable notifications to EventManager
-        this.edgeObservable.add(() => {
-            // EventManager will handle the event distribution
-        });
-    }
-
-    /**
-     * Setup camera configurations
-     */
-    private setupCameras(): void {
-        const orbitCamera = new OrbitCameraController(this.canvas, this.scene, {
-            trackballRotationSpeed: 0.005,
-            keyboardRotationSpeed: 0.03,
-            keyboardZoomSpeed: 0.2,
-            keyboardYawSpeed: 0.02,
-            pinchZoomSensitivity: 10,
-            twistYawSensitivity: 1.5,
-            minZoomDistance: 2,
-            maxZoomDistance: 500,
-            inertiaDamping: 0.9,
-        });
-        const orbitInput = new OrbitInputController(this.canvas, orbitCamera);
-        this.camera.registerCamera("orbit", orbitCamera, orbitInput);
-
-        const twoDCamera = new TwoDCameraController(this.scene, this.engine, this.canvas, {
-            panAcceleration: 0.02,
-            panDamping: 0.85,
-            zoomFactorPerFrame: 0.02,
-            zoomDamping: 0.85,
-            zoomMin: 0.1,
-            zoomMax: 500,
-            rotateSpeedPerFrame: 0.02,
-            rotateDamping: 0.85,
-            rotateMin: null,
-            rotateMax: null,
-            mousePanScale: 1.0,
-            mouseWheelZoomSpeed: 1.1,
-            touchPanScale: 1.0,
-            touchPinchMin: 0.1,
-            touchPinchMax: 100,
-            initialOrthoSize: 5,
-            rotationEnabled: true,
-            inertiaEnabled: true,
-        });
-        const twoDInput = new InputController(twoDCamera, this.canvas, {
-            panAcceleration: 0.02,
-            panDamping: 0.85,
-            zoomFactorPerFrame: 0.02,
-            zoomDamping: 0.85,
-            zoomMin: 0.1,
-            zoomMax: 100,
-            rotateSpeedPerFrame: 0.02,
-            rotateDamping: 0.85,
-            rotateMin: null,
-            rotateMax: null,
-            mousePanScale: 1.0,
-            mouseWheelZoomSpeed: 1.1,
-            touchPanScale: 1.0,
-            touchPinchMin: 0.1,
-            touchPinchMax: 100,
-            initialOrthoSize: 5,
-            rotationEnabled: true,
-            inertiaEnabled: true,
-        });
-        this.camera.registerCamera("2d", twoDCamera, twoDInput);
-        this.camera.activateCamera("orbit");
-    }
-
     private cleanup(): void {
         // Stop render loop if it's running
         try {
@@ -371,46 +226,13 @@ export class Graph implements GraphContext {
         // Use cleanup for common operations
         this.cleanup();
 
-        // Clean up observables (for backward compatibility)
-        this.graphObservable.clear();
-        this.nodeObservable.clear();
-        this.edgeObservable.clear();
-
         // Dispose all managers through lifecycle manager
         this.lifecycleManager.dispose();
     }
 
     async runAlgorithmsFromTemplate(): Promise<void> {
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
-            const errors: Error[] = [];
-
-            for (const algName of this.styles.config.data.algorithms) {
-                try {
-                    const [namespace, type] = algName.split(":");
-                    if (!namespace || !type) {
-                        throw new Error(`Invalid algorithm name format: '${algName}'. Expected 'namespace:type'`);
-                    }
-
-                    await this.runAlgorithm(namespace, type);
-                } catch (error) {
-                    // Collect errors but continue with other algorithms
-                    errors.push(error instanceof Error ? error : new Error(String(error)));
-                }
-            }
-
-            // If any algorithms failed, emit a single error event with all failures
-            if (errors.length > 0) {
-                this.eventManager.emitGraphError(
-                    this,
-                    new Error(`Failed to run ${errors.length} algorithm(s) from template`),
-                    "algorithm",
-                    {
-                        errors: errors.map((e) => e.message),
-                        totalAlgorithms: this.styles.config.data.algorithms.length,
-                        failedAlgorithms: errors.length,
-                    },
-                );
-            }
+            await this.algorithmManager.runAlgorithmsFromTemplate(this.styles.config.data.algorithms);
         }
     }
 
@@ -425,14 +247,14 @@ export class Graph implements GraphContext {
 
             // Apply default background color if no styleTemplate was explicitly set
             // This ensures stories without styleTemplate get the correct background
-            if (this.scene && this.styles.config.graph.background.backgroundType === "color") {
-                const backgroundColor = this.styles.config.graph.background.color || "#F5F5F5";
+            if (this.styles.config.graph.background.backgroundType === "color") {
+                const backgroundColor = this.styles.config.graph.background.color ?? "#F5F5F5";
                 this.scene.clearColor = Color4.FromHexString(backgroundColor);
             }
 
             // Start the graph system (render loop, etc.)
             await this.lifecycleManager.startGraph(() => {
-                this.updateManager.update();
+                this.update();
             });
 
             // this.xrHelper = await createXrButton(this.scene, this.camera);
@@ -444,8 +266,8 @@ export class Graph implements GraphContext {
 
             // For layouts that settle immediately, start animations after a short delay
             setTimeout(() => {
-                if (this.layoutManager.isSettled && !this.running) {
-                    for (const node of this.nodes.values()) {
+                if (this.layoutManager.isSettled && !this.layoutManager.running) {
+                    for (const node of this.dataManager.nodes.values()) {
                         node.label?.startAnimation();
                     }
                 }
@@ -475,20 +297,18 @@ export class Graph implements GraphContext {
         this.updateManager.update();
 
         // Check if layout has settled
-        if (this.layoutManager.isSettled) {
+        if (this.layoutManager.isSettled && this.layoutManager.running) {
             this.eventManager.emitGraphSettled(this);
-            this.running = false;
+            this.layoutManager.running = false;
 
             // Start label animations after layout has settled
-            for (const node of this.nodes.values()) {
+            for (const node of this.dataManager.nodes.values()) {
                 node.label?.startAnimation();
             }
         }
     }
 
     async setStyleTemplate(t: StyleSchema): Promise<Styles> {
-        // TODO: stats start
-
         // TODO: if t is a URL, fetch URL
 
         const previousTwoD = this.styles.config.graph.twoD;
@@ -501,7 +321,7 @@ export class Graph implements GraphContext {
 
         // Clear mesh cache if switching between 2D and 3D modes
         if (previousTwoD !== currentTwoD) {
-            this.meshCache.clear();
+            this.dataManager.meshCache.clear();
         }
 
         // Update DataManager with new styles - this will apply styles to existing nodes/edges
@@ -560,10 +380,6 @@ export class Graph implements GraphContext {
 
         // Don't run algorithms here - they should run after data is loaded
 
-        // TODO: stats end
-
-        // TODO: emit event
-
         return this.styles;
     }
 
@@ -592,34 +408,7 @@ export class Graph implements GraphContext {
     }
 
     async runAlgorithm(namespace: string, type: string): Promise<void> {
-        try {
-            const alg = Algorithm.get(this, namespace, type);
-            if (!alg) {
-                throw new Error(`algorithm not found: ${namespace}:${type}`);
-            }
-
-            try {
-                await alg.run(this);
-            } catch (error) {
-                // Emit error event
-                this.eventManager.emitGraphError(
-                    this,
-                    error instanceof Error ? error : new Error(String(error)),
-                    "algorithm",
-                    {algorithmNamespace: namespace, algorithmType: type},
-                );
-
-                throw new Error(`Algorithm '${namespace}:${type}' failed: ${error instanceof Error ? error.message : String(error)}`);
-            }
-        } catch (error) {
-            // Re-throw if already a processed error
-            if (error instanceof Error && error.message.includes("Algorithm") && error.message.includes("failed")) {
-                throw error;
-            }
-
-            // Otherwise wrap and throw
-            throw new Error(`Error running algorithm '${namespace}:${type}': ${error instanceof Error ? error.message : String(error)}`);
-        }
+        await this.algorithmManager.runAlgorithm(namespace, type);
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {
@@ -660,16 +449,12 @@ export class Graph implements GraphContext {
         return this.scene;
     }
 
-    getStats(): Stats {
-        return this.stats;
-    }
-
     getStatsManager(): StatsManager {
         return this.statsManager;
     }
 
     is2D(): boolean {
-        return this.styles.config.graph.twoD ?? false;
+        return this.styles.config.graph.twoD;
     }
 
     needsRayUpdate(): boolean {

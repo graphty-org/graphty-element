@@ -61,7 +61,7 @@ export class OrbitCameraController {
         this.pivot.position.copyFrom(center);
 
         // Get camera's field of view
-        // UniversalCamera uses fovMode and either fov (for FOVMODE_VERTICAL_FIXED) 
+        // UniversalCamera uses fovMode and either fov (for FOVMODE_VERTICAL_FIXED)
         // or horizontalFov (for FOVMODE_HORIZONTAL_FIXED)
         // Default FOV for Babylon cameras is typically around 0.8 radians (~45.8 degrees)
         let fov = 0.8; // default
@@ -108,7 +108,7 @@ export class OrbitCameraController {
         const targetDistance = Math.max(... distances) * paddingFactor;
 
         this.cameraDistance = Scalar.Clamp(targetDistance, this.config.minZoomDistance, this.config.maxZoomDistance);
-        
+
         // Apply the new camera position immediately
         this.updateCameraPosition();
     }

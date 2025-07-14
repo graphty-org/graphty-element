@@ -1,3 +1,4 @@
+export * from "./AlgorithmManager";
 export * from "./DataManager";
 export * from "./EventManager";
 export * from "./GraphContext";

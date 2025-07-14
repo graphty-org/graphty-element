@@ -1,10 +1,10 @@
 import {
+    type Engine,
     EngineInstrumentation,
     PerfCounter,
     type Scene,
     SceneInstrumentation,
     type WebGPUEngine,
-    type Engine,
 } from "@babylonjs/core";
 
 import type {EventManager} from "./EventManager";
@@ -100,7 +100,7 @@ export class StatsManager implements Manager {
      */
     step(): void {
         this.totalUpdates++;
-        
+
         // Emit stats update event periodically (every 60 updates)
         if (this.totalUpdates % 60 === 0) {
             this.eventManager.emitGraphEvent("stats-update", {
@@ -161,7 +161,7 @@ export class StatsManager implements Manager {
      */
     toString(): string {
         let statsStr = "";
-        
+
         function appendStat(name: string, stat: string | number, units = ""): void {
             statsStr += `${name}: ${stat}${units}\n`;
         }
@@ -243,9 +243,9 @@ export class StatsManager implements Manager {
         }
 
         return {
-            fps: this.sceneInstrumentation.frameTimeCounter.average > 0 
-                ? 1000 / this.sceneInstrumentation.frameTimeCounter.average 
-                : 0,
+            fps: this.sceneInstrumentation.frameTimeCounter.average > 0 ?
+                1000 / this.sceneInstrumentation.frameTimeCounter.average :
+                0,
             frameTime: this.sceneInstrumentation.frameTimeCounter.lastSecAverage,
             renderTime: this.sceneInstrumentation.renderTimeCounter.lastSecAverage,
             gpuTime: this.babylonInstrumentation.gpuFrameTimeCounter.lastSecAverage * 0.000001,

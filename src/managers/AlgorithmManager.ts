@@ -1,0 +1,120 @@
+import {Algorithm} from "../algorithms/Algorithm";
+import type {Graph} from "../Graph";
+import type {EventManager} from "./EventManager";
+import type {Manager} from "./interfaces";
+
+/**
+ * Manages algorithm execution and coordination
+ * Handles running algorithms from templates and individual algorithm execution
+ */
+export class AlgorithmManager implements Manager {
+    constructor(
+        private eventManager: EventManager,
+        private graph: Graph,
+    ) {}
+
+    async init(): Promise<void> {
+        // AlgorithmManager doesn't need async initialization
+        return Promise.resolve();
+    }
+
+    dispose(): void {
+        // No cleanup needed for algorithms
+    }
+
+    /**
+     * Run algorithms specified in the template configuration
+     * Called during initialization if runAlgorithmsOnLoad is true
+     */
+    async runAlgorithmsFromTemplate(algorithms: string[]): Promise<void> {
+        const errors: Error[] = [];
+
+        for (const algName of algorithms) {
+            try {
+                const trimmedName = algName.trim();
+                const [namespace, type] = trimmedName.split(":");
+                if (!namespace || !type) {
+                    throw new Error(`invalid algorithm name format: ${trimmedName}. Expected format: namespace:type`);
+                }
+
+                await this.runAlgorithm(namespace.trim(), type.trim());
+            } catch (error) {
+                const algorithmError = error instanceof Error ? error : new Error(String(error));
+                errors.push(algorithmError);
+                // Individual error already emitted by runAlgorithm
+            }
+        }
+
+        // If there were any errors, throw a summary error
+        if (errors.length > 0) {
+            const summaryError = new Error(
+                `${errors.length} algorithm(s) failed during template execution: ${
+                    errors.map((e) => e.message).join(", ")
+                }`,
+            );
+
+            this.eventManager.emitGraphError(
+                this.graph,
+                summaryError,
+                "algorithm",
+                {
+                    errorCount: errors.length,
+                    component: "AlgorithmManager",
+                },
+            );
+
+            throw summaryError;
+        }
+    }
+
+    /**
+     * Run a specific algorithm by namespace and type
+     */
+    async runAlgorithm(namespace: string, type: string): Promise<void> {
+        try {
+            const alg = Algorithm.get(this.graph, namespace, type);
+            if (!alg) {
+                throw new Error(`algorithm not found: ${namespace}:${type}`);
+            }
+
+            await alg.run(this.graph);
+        } catch (error) {
+            // Emit error event for any error (not found or execution)
+            const algorithmError = error instanceof Error ? error : new Error(String(error));
+
+            this.eventManager.emitGraphError(
+                this.graph,
+                algorithmError,
+                "algorithm",
+                {
+                    algorithm: `${namespace}:${type}`,
+                    component: "AlgorithmManager",
+                },
+            );
+
+            throw algorithmError;
+        }
+    }
+
+    /**
+     * Check if an algorithm exists
+     */
+    hasAlgorithm(namespace: string, type: string): boolean {
+        try {
+            const alg = Algorithm.get(this.graph, namespace, type);
+            return alg !== null;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Get list of available algorithms
+     * Note: This depends on the Algorithm registry implementation
+     */
+    getAvailableAlgorithms(): string[] {
+        // This would need to be implemented in the Algorithm class
+        // For now, return empty array
+        return [];
+    }
+}

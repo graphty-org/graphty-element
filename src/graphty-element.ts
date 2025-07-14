@@ -2,7 +2,8 @@ import {LitElement} from "lit";
 import {customElement, property} from "lit/decorators.js";
 import {set as setDeep} from "lodash";
 
-import {Graph, StyleSchema} from "../index.ts";
+import type {StyleSchema} from "./config";
+import {Graph} from "./Graph";
 
 /**
  * Graphty creates a graph
@@ -155,7 +156,7 @@ export class Graphty extends LitElement {
      * jmespath that describes where to find the desination node identifier for this edge.
      * Defaults to "dst", as in `{src: 42, dst: 31337}`
      */
-    @property({attribute: "edge-src-id-path"})
+    @property({attribute: "edge-dst-id-path"})
     edgeDstIdPath?: string;
 
     /**
@@ -193,16 +194,4 @@ export class Graphty extends LitElement {
     @property({attribute: "run-algorithms-on-load"})
     runAlgorithmsOnLoad?: boolean;
 
-    /**
-     * The color to use for the background. Accepts any CSS 4 color specifier.
-     */
-    // @property({attribute: "background"})
-    // background?: string;
-
-    /**
-     * Use a skybox image for the background. This can be a URL or base64
-     * encoded data for the image.
-     */
-    // @property({attribute: "skybox"})
-    // skybox?: string;
 }

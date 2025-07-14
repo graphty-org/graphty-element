@@ -1,10 +1,9 @@
 import type {Meta} from "@storybook/web-components-vite";
 import {set as deepSet} from "lodash";
 
-import {StyleSchema, StyleTemplate} from "../index";
-import {AdHocData, StyleLayerType} from "../src/config";
-import {CalculatedStyleConfig} from "../src/config/StyleTemplate";
-import {Graphty} from "../src/graphty-element";
+import type {AdHocData, CalculatedStyleConfig, StyleLayerType, StyleSchema} from "../src/config";
+import {StyleTemplate} from "../src/config";
+import type {Graphty} from "../src/graphty-element";
 
 export interface TemplateOpts {
     nodeStyle?: Record<string, unknown>;

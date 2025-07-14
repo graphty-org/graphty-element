@@ -3,7 +3,7 @@ import {
     Ray,
     Vector3,
 } from "@babylonjs/core";
-import jmespath from "jmespath";
+import * as jmespath from "jmespath";
 
 import type {AdHocData, EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
@@ -257,7 +257,6 @@ export class Edge {
 
     transformArrowCap(): EdgeLine {
         if (this.arrowMesh) {
-            this.context.getStats().arrowCapUpdate.beginMonitoring();
             const {srcPoint, dstPoint, newEndPoint} = this.getInterceptPoints();
 
             // If we can't find intercept points, fall back to approximate positions
@@ -268,7 +267,6 @@ export class Edge {
                 // Hide arrow if nodes are too close or at same position
                 if (fallbackSrc.equalsWithEpsilon(fallbackDst, 0.01)) {
                     this.arrowMesh.setEnabled(false);
-                    this.context.getStats().arrowCapUpdate.endMonitoring();
                     return {
                         srcPoint: fallbackSrc,
                         dstPoint: fallbackDst,
@@ -293,7 +291,6 @@ export class Edge {
                 this.arrowMesh.position = approxDstPoint;
                 this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
-                this.context.getStats().arrowCapUpdate.endMonitoring();
                 return {
                     srcPoint: approxSrcPoint,
                     dstPoint: approxNewEndPoint,
@@ -304,7 +301,6 @@ export class Edge {
             this.arrowMesh.position = dstPoint;
             this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
-            this.context.getStats().arrowCapUpdate.endMonitoring();
             return {
                 srcPoint,
                 dstPoint: newEndPoint,
@@ -323,10 +319,8 @@ export class Edge {
         const dstMesh = this.dstNode.mesh;
 
         // ray is updated in updateRays to ensure intersections
-        this.context.getStats().intersectCalc.beginMonitoring();
         const dstHitInfo = this.ray.intersectsMeshes([dstMesh]);
         const srcHitInfo = this.ray.intersectsMeshes([srcMesh]);
-        this.context.getStats().intersectCalc.endMonitoring();
 
         let srcPoint: Vector3 | null = null;
         let dstPoint: Vector3 | null = null;

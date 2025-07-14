@@ -164,3 +164,7 @@ When you write unit tests with vitest, prefer `assert` over `expect`.
 - **Modularity and Extensibility**:
   - This code is intended to be modular and extensible
   - Features like cameras, meshes, layouts, and algorithms are intended to be extendible by users
+
+## Development Best Practices
+
+- Always create unit tests when you write new core functionality

@@ -19,7 +19,7 @@ export class DegreeAlgorithm extends Algorithm {
             m.set(idx, num);
         }
 
-        for (const e of g.edges.values()) {
+        for (const e of g.getDataManager().edges.values()) {
             incrementMap(inDegreeMap, e.srcId);
             incrementMap(outDegreeMap, e.dstId);
             incrementMap(degreeMap, e.srcId);
@@ -30,7 +30,7 @@ export class DegreeAlgorithm extends Algorithm {
         const maxOutDegree = Math.max(... outDegreeMap.values());
         const maxDegree = Math.max(... degreeMap.values());
 
-        for (const n of g.nodes.values()) {
+        for (const n of g.getDataManager().nodes.values()) {
             const inDegree = inDegreeMap.get(n.id) ?? 0;
             const outDegree = outDegreeMap.get(n.id) ?? 0;
             const degree = degreeMap.get(n.id) ?? 0;

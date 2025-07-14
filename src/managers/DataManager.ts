@@ -6,7 +6,6 @@ import {Edge, EdgeMap} from "../Edge";
 import type {LayoutEngine} from "../layout/LayoutEngine";
 import {MeshCache} from "../meshes/MeshCache";
 import {Node, NodeIdType} from "../Node";
-import type {Stats} from "../Stats";
 import type {Styles} from "../Styles";
 import type {EventManager} from "./EventManager";
 import type {GraphContext} from "./GraphContext";
@@ -28,7 +27,7 @@ export class DataManager implements Manager {
 
     // GraphContext for creating nodes and edges
     private graphContext: GraphContext | null = null;
-    
+
     // State management flags
     private shouldStartLayout = false;
     private shouldZoomToFit = false;
@@ -36,7 +35,6 @@ export class DataManager implements Manager {
     constructor(
         private eventManager: EventManager,
         private styles: Styles,
-        private stats: Stats, // For backward compatibility
     ) {
         this.meshCache = new MeshCache();
     }
@@ -126,6 +124,7 @@ export class DataManager implements Manager {
             if (!this.graphContext) {
                 throw new Error("GraphContext not set. Call setGraphContext before adding nodes.");
             }
+
             const n = new Node(this.graphContext, nodeId, styleId, node as AdHocData, {
                 pinOnDrag: this.graphContext.getConfig().pinOnDrag,
             });
@@ -203,6 +202,7 @@ export class DataManager implements Manager {
             if (!this.graphContext) {
                 throw new Error("GraphContext not set. Call setGraphContext before adding edges.");
             }
+
             const e = new Edge(this.graphContext, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
             this.edgeCache.set(srcNodeId, dstNodeId, e);
             this.edges.set(e.id, e);
@@ -258,7 +258,6 @@ export class DataManager implements Manager {
     // Data source operations
 
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
-        this.stats.loadTime.beginMonitoring();
 
         try {
             const source = DataSource.get(type, opts);
@@ -285,12 +284,10 @@ export class DataManager implements Manager {
                 throw new Error(`Failed to load data from source '${type}' after ${chunksLoaded} chunks: ${error instanceof Error ? error.message : String(error)}`);
             }
 
-            this.stats.loadTime.endMonitoring();
 
             // Emit success event
             this.eventManager.emitGraphDataLoaded(this.graphContext!, chunksLoaded, type);
         } catch (error) {
-            this.stats.loadTime.endMonitoring();
 
             // Re-throw if already a processed error
             if (error instanceof Error && error.message.includes("Failed to load data")) {
@@ -318,6 +315,16 @@ export class DataManager implements Manager {
         this.meshCache.clear();
 
         // TODO: Notify layout engine to clear
+    }
+
+    /**
+     * Start label animations for all nodes
+     * Called when layout has settled
+     */
+    startLabelAnimations(): void {
+        for (const node of this.nodes.values()) {
+            node.label?.startAnimation();
+        }
     }
 
     /**

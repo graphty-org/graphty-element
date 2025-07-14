@@ -55,7 +55,7 @@ export class Node {
         this.id = nodeId;
         this.opts = opts;
         this.changeManager = new ChangeManager();
-        this.changeManager.loadCalculatedValues(this.context.getStyles().getCalculatedStylesForNode(data));
+        this.changeManager.loadCalculatedValues(this.context.getStyleManager().getStyles().getCalculatedStylesForNode(data));
         this.data = this.changeManager.watch("data", data);
         this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
         this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData, NodeStyle);

@@ -1,8 +1,8 @@
-import {Styles, type NodeStyleId, type EdgeStyleId} from "../Styles";
-import type {AdHocData, StyleLayerType, NodeStyleConfig, EdgeStyleConfig} from "../config";
-import type {Manager} from "./interfaces";
-import type {EventManager} from "./EventManager";
 import type {CalculatedValue} from "../CalculatedValue";
+import type {AdHocData, EdgeStyleConfig, NodeStyleConfig, StyleLayerType} from "../config";
+import {type EdgeStyleId, type NodeStyleId, Styles} from "../Styles";
+import type {EventManager} from "./EventManager";
+import type {Manager} from "./interfaces";
 
 /**
  * Manages graph styling, wrapping the Styles class with additional caching
@@ -16,11 +16,11 @@ export class StyleManager implements Manager {
 
     constructor(
         private eventManager: EventManager,
-        styles?: Styles
+        styles?: Styles,
     ) {
         // Initialize with provided styles or create default
         this.styles = styles ?? Styles.default();
-        
+
         // Listen for style change events
         // Note: "style-changed" is a custom event type, not in the standard EventType enum
         // We use the graph observable directly for now
@@ -36,7 +36,7 @@ export class StyleManager implements Manager {
     }
 
     /**
-     * Get the underlying Styles instance (for backward compatibility)
+     * Get the underlying Styles instance
      */
     getStyles(): Styles {
         return this.styles;

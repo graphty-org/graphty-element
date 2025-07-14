@@ -297,17 +297,4 @@ export class EventManager implements Manager {
         throw lastError!;
     }
 
-    // Getters for backward compatibility
-
-    get graphObservables(): Observable<GraphEvent> {
-        return this.graphObservable;
-    }
-
-    get nodeObservables(): Observable<NodeEvent> {
-        return this.nodeObservable;
-    }
-
-    get edgeObservables(): Observable<EdgeEvent> {
-        return this.edgeObservable;
-    }
 }

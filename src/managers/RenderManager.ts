@@ -9,6 +9,10 @@ import {
 } from "@babylonjs/core";
 
 import {CameraManager} from "../cameras/CameraManager";
+import {OrbitCameraController} from "../cameras/OrbitCameraController";
+import {OrbitInputController} from "../cameras/OrbitInputController";
+import {TwoDCameraController} from "../cameras/TwoDCameraController";
+import {InputController} from "../cameras/TwoDInputController";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
@@ -57,6 +61,9 @@ export class RenderManager implements Manager {
 
         // Initialize camera manager
         this.camera = new CameraManager(this.scene);
+
+        // Setup cameras
+        this.setupCameras();
 
         // Setup lighting
         new HemisphericLight("light", new Vector3(1, 1, 0));
@@ -190,5 +197,67 @@ export class RenderManager implements Manager {
             fps: this.engine.getFps(),
             activeMeshes: this.scene.getActiveMeshes().length,
         };
+    }
+
+    /**
+     * Setup camera configurations
+     */
+    private setupCameras(): void {
+        const orbitCamera = new OrbitCameraController(this.canvas, this.scene, {
+            trackballRotationSpeed: 0.005,
+            keyboardRotationSpeed: 0.03,
+            keyboardZoomSpeed: 0.2,
+            keyboardYawSpeed: 0.02,
+            pinchZoomSensitivity: 10,
+            twistYawSensitivity: 1.5,
+            minZoomDistance: 2,
+            maxZoomDistance: 500,
+            inertiaDamping: 0.9,
+        });
+        const orbitInput = new OrbitInputController(this.canvas, orbitCamera);
+        this.camera.registerCamera("orbit", orbitCamera, orbitInput);
+
+        const twoDCamera = new TwoDCameraController(this.scene, this.engine, this.canvas, {
+            panAcceleration: 0.02,
+            panDamping: 0.85,
+            zoomFactorPerFrame: 0.02,
+            zoomDamping: 0.85,
+            zoomMin: 0.1,
+            zoomMax: 500,
+            rotateSpeedPerFrame: 0.02,
+            rotateDamping: 0.85,
+            rotateMin: null,
+            rotateMax: null,
+            mousePanScale: 1.0,
+            mouseWheelZoomSpeed: 1.1,
+            touchPanScale: 1.0,
+            touchPinchMin: 0.1,
+            touchPinchMax: 100,
+            initialOrthoSize: 5,
+            rotationEnabled: true,
+            inertiaEnabled: true,
+        });
+        const twoDInput = new InputController(twoDCamera, this.canvas, {
+            panAcceleration: 0.02,
+            panDamping: 0.85,
+            zoomFactorPerFrame: 0.02,
+            zoomDamping: 0.85,
+            zoomMin: 0.1,
+            zoomMax: 100,
+            rotateSpeedPerFrame: 0.02,
+            rotateDamping: 0.85,
+            rotateMin: null,
+            rotateMax: null,
+            mousePanScale: 1.0,
+            mouseWheelZoomSpeed: 1.1,
+            touchPanScale: 1.0,
+            touchPinchMin: 0.1,
+            touchPinchMax: 100,
+            initialOrthoSize: 5,
+            rotationEnabled: true,
+            inertiaEnabled: true,
+        });
+        this.camera.registerCamera("2d", twoDCamera, twoDInput);
+        this.camera.activateCamera("orbit");
     }
 }

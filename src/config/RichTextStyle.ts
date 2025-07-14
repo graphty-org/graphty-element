@@ -135,70 +135,8 @@ export const RichTextStyle = z.strictObject({
     smartOverflow: z.boolean().default(false).optional(),
     maxNumber: z.number().default(999).optional(),
     overflowSuffix: z.string().default("+").optional(),
-
-    // Legacy compatibility mappings
-    size: z.number().optional(), // maps to fontSize
-    color: ColorStyle.optional(), // maps to textColor
-    background: AdvancedColorStyle.or(ColorStyle).optional(), // maps to backgroundColor
-    backgroundCornerRadius: z.number().optional(), // maps to cornerRadius
-    margin: z.number().optional(), // maps to all margins
-    style: z.string().optional(), // maps to fontWeight (bold, italic, etc.)
 });
 
 // Type export for convenience
 export type RichTextStyleType = z.infer<typeof RichTextStyle>;
 
-// Helper to transform legacy properties to new properties
-export function transformLegacyProperties(input: Partial<RichTextStyleType>): Partial<RichTextStyleType> {
-    const transformed = {... input};
-
-    // Map legacy size to fontSize
-    if (transformed.size !== undefined && transformed.fontSize === undefined) {
-        transformed.fontSize = transformed.size;
-        delete transformed.size;
-    }
-
-    // Map legacy color to textColor
-    if (transformed.color !== undefined && transformed.textColor === undefined) {
-        transformed.textColor = transformed.color;
-        delete transformed.color;
-    }
-
-    // Map legacy background to backgroundColor
-    if (transformed.background !== undefined && transformed.backgroundColor === undefined) {
-        transformed.backgroundColor = transformed.background;
-        delete transformed.background;
-    }
-
-    // Map legacy backgroundCornerRadius to cornerRadius
-    if (transformed.backgroundCornerRadius !== undefined && transformed.cornerRadius === undefined) {
-        transformed.cornerRadius = transformed.backgroundCornerRadius;
-        delete transformed.backgroundCornerRadius;
-    }
-
-    // Map legacy margin to all margins
-    if (transformed.margin !== undefined) {
-        transformed.marginTop ??= transformed.margin;
-        transformed.marginBottom ??= transformed.margin;
-        transformed.marginLeft ??= transformed.margin;
-        transformed.marginRight ??= transformed.margin;
-
-        delete transformed.margin;
-    }
-
-    // Map legacy style to fontWeight
-    if (transformed.style !== undefined && transformed.fontWeight === undefined) {
-        // Handle common style values
-        if (transformed.style.includes("bold")) {
-            transformed.fontWeight = "bold";
-        } else if (transformed.style.includes("normal")) {
-            transformed.fontWeight = "normal";
-        } else {
-            transformed.fontWeight = transformed.style;
-        }
-
-        delete transformed.style;
-    }
-
-    return transformed;
-}

@@ -1,8 +1,6 @@
 import type {Scene} from "@babylonjs/core";
 
 import type {MeshCache} from "../meshes/MeshCache";
-import type {Stats} from "../Stats";
-import type {Styles} from "../Styles";
 import type {DataManager} from "./DataManager";
 import type {LayoutManager} from "./LayoutManager";
 import type {StatsManager} from "./StatsManager";
@@ -14,12 +12,6 @@ import type {StyleManager} from "./StyleManager";
  * without direct dependency on the Graph class, eliminating circular dependencies
  */
 export interface GraphContext {
-    /**
-     * Get the Styles instance for style operations
-     * @deprecated Use getStyleManager() instead
-     */
-    getStyles(): Styles;
-
     /**
      * Get the StyleManager for style operations
      */
@@ -44,12 +36,6 @@ export interface GraphContext {
      * Get the Babylon.js Scene
      */
     getScene(): Scene;
-
-    /**
-     * Get the Stats instance for performance monitoring
-     * @deprecated Use getStatsManager() instead
-     */
-    getStats(): Stats;
 
     /**
      * Get the StatsManager for performance monitoring
@@ -107,15 +93,10 @@ export class DefaultGraphContext implements GraphContext {
         private layoutManager: LayoutManager,
         private meshCache: MeshCache,
         private scene: Scene,
-        private stats: Stats,
         private statsManager: StatsManager,
         private config: GraphContextConfig,
         private rayUpdateNeeded = true,
     ) {}
-
-    getStyles(): Styles {
-        return this.styleManager.getStyles();
-    }
 
     getStyleManager(): StyleManager {
         return this.styleManager;
@@ -137,9 +118,6 @@ export class DefaultGraphContext implements GraphContext {
         return this.scene;
     }
 
-    getStats(): Stats {
-        return this.stats;
-    }
 
     getStatsManager(): StatsManager {
         return this.statsManager;
@@ -160,7 +138,6 @@ export class DefaultGraphContext implements GraphContext {
     getConfig(): GraphContextConfig {
         return this.config;
     }
-
 
     /**
      * Update configuration

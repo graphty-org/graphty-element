@@ -7,6 +7,6 @@ export type {NodeIdType} from "./GraphBehavior";
 export type {NodeStyleConfig} from "./NodeStyle";
 export {defaultNodeStyle, NodeStyle} from "./NodeStyle";
 export type {RichTextStyleType} from "./RichTextStyle";
-export {RichTextStyle, transformLegacyProperties} from "./RichTextStyle";
+export {RichTextStyle} from "./RichTextStyle";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";

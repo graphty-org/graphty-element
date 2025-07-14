@@ -4,6 +4,7 @@ import {
     SixDofDragBehavior,
 } from "@babylonjs/core";
 
+import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import type {Node, NodeIdType} from "./Node";
 
@@ -59,12 +60,16 @@ export class NodeBehavior {
 
         // position changed
         node.meshDragBehavior.onPositionChangedObservable.add((event) => {
-            // make sure the graph is running
-            const context = this.getContext(node);
-            context.setRunning(true);
+            // CRITICAL: DO NOT restart layout on position changes!
+            // This was causing infinite loop - position changes from layout engine
+            // would trigger this, which would restart layout, causing more position changes
 
-            // update the node position
-            context.getLayoutManager().layoutEngine?.setNodePosition(node, event.position);
+            // Only update position in layout engine if user is actively dragging
+            if (node.dragging) {
+                const context = this.getContext(node);
+                // update the node position
+                context.getLayoutManager().layoutEngine?.setNodePosition(node, event.position);
+            }
         });
 
         // TODO: this apparently updates dragging objects faster and more fluidly
@@ -89,7 +94,7 @@ export class NodeBehavior {
 
         // Only Graph has fetchNodes/fetchEdges, not GraphContext
         // For now, check if parentGraph is the full Graph instance
-        const graph = node.parentGraph as any;
+        const graph = node.parentGraph as Graph & { fetchNodes?: unknown; fetchEdges?: unknown };
         if (graph.fetchNodes && graph.fetchEdges) {
             const {fetchNodes, fetchEdges} = graph;
 
@@ -104,11 +109,11 @@ export class NodeBehavior {
                         context.setRunning(true);
 
                         // fetch all edges for current node
-                        const edges = fetchEdges(node as any, graph);
+                        const edges = fetchEdges(node, graph as unknown as Graph) as Array<{ src: NodeIdType; dst: NodeIdType }>;
 
                         // create set of unique node ids
                         const nodeIds = new Set<NodeIdType>();
-                        edges.forEach((e: any) => {
+                        edges.forEach((e) => {
                             nodeIds.add(e.src);
                             nodeIds.add(e.dst);
                         });
