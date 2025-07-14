@@ -31,7 +31,10 @@ const meta: Meta = {
             table: {category: "Position"},
             name: "label.location",
         },
-        labelMargin: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.margin"},
+        labelMarginTop: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.marginTop"},
+        labelMarginBottom: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.marginBottom"},
+        labelMarginLeft: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.marginLeft"},
+        labelMarginRight: {control: {type: "range", min: 0, max: 50, step: 1}, table: {category: "Position"}, name: "label.marginRight"},
         labelAttachOffset: {control: {type: "range", min: 0, max: 5, step: 0.1}, table: {category: "Position"}, name: "label.attachOffset"},
 
         // Style
@@ -90,7 +93,10 @@ const meta: Meta = {
                 "label.textColor",
                 "label.backgroundColor",
                 "label.location",
-                "label.margin",
+                "label.marginTop",
+                "label.marginBottom",
+                "label.marginLeft",
+                "label.marginRight",
                 "label.attachOffset",
                 "label.cornerRadius",
                 "label.fontWeight",
@@ -272,12 +278,15 @@ export const Margin: Story = {
     args: createLabelStoryArgs({
         enabled: true,
         textPath: "id",
-        margin: 10,
+        marginTop: 10,
+        marginBottom: 10,
+        marginLeft: 10,
+        marginRight: 10,
         backgroundColor: "rgba(220, 220, 220, 1)",
     }),
     parameters: {
         controls: {
-            include: ["label.margin", "label.backgroundColor"],
+            include: ["label.marginTop", "label.marginBottom", "label.marginLeft", "label.marginRight", "label.backgroundColor"],
         },
     },
 };
