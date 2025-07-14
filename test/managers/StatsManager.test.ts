@@ -20,7 +20,7 @@ describe("StatsManager", () => {
             edgeCount: 0,
             cacheHits: 0,
             cacheMisses: 0,
-        } as any;
+        } as Stats;
 
         statsManager = new StatsManager(mockStats);
     });
@@ -105,7 +105,7 @@ describe("StatsManager", () => {
         it("should calculate cache hit rate correctly", () => {
             statsManager.updateCacheStats(75, 25);
 
-            const hitRate = mockStats.cacheHits / (mockStats.cacheHits + mockStats.cacheMisses);
+            const hitRate = Number(mockStats.cacheHits) / (Number(mockStats.cacheHits) + Number(mockStats.cacheMisses));
             assert.equal(hitRate, 0.75);
         });
     });

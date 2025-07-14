@@ -3,12 +3,10 @@ import {assert} from "chai";
 import {beforeEach, describe, it, vi} from "vitest";
 
 import type {AdHocData} from "../../src/config";
-import type {Edge} from "../../src/Edge";
 import {DataManager} from "../../src/managers/DataManager";
 import type {EventManager} from "../../src/managers/EventManager";
 import type {GraphContext} from "../../src/managers/GraphContext";
 import type {LayoutManager} from "../../src/managers/LayoutManager";
-import type {Node} from "../../src/Node";
 import type {Styles} from "../../src/Styles";
 
 describe("DataManager", () => {
@@ -28,7 +26,7 @@ describe("DataManager", () => {
             emitEdgeRemoved: vi.fn(),
             emitDataAdded: vi.fn(),
             emitGraphError: vi.fn(),
-        } as any;
+        } as EventManager;
 
         mockLayoutManager = {
             layoutEngine: {
@@ -39,24 +37,24 @@ describe("DataManager", () => {
             },
             nodes: [],
             edges: [],
-        } as any;
+        } as LayoutManager;
 
         mockGraphContext = {
             getLayoutManager: () => mockLayoutManager,
             getEventManager: () => mockEventManager,
             getStyles: () => mockStyles,
             getScene: () => mockScene,
-        } as any;
+        } as GraphContext;
 
         mockStyles = {
             nodeDefaults: {},
             edgeDefaults: {},
-        } as any;
+        } as Styles;
 
         mockScene = {
             registerBeforeRender: vi.fn(),
             unregisterBeforeRender: vi.fn(),
-        } as any;
+        } as Scene;
 
         dataManager = new DataManager(
             mockEventManager,
@@ -432,7 +430,7 @@ describe("DataManager", () => {
             const mockLayoutEngine = {
                 addNode: vi.fn(),
                 addEdge: vi.fn(),
-            } as any;
+            } as EventManager;
 
             dataManager.setLayoutEngine(mockLayoutEngine);
 

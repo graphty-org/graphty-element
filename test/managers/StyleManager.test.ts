@@ -15,7 +15,7 @@ describe("StyleManager", () => {
         // Create mock EventManager
         mockEventManager = {
             emitGraphEvent: vi.fn(),
-        } as any;
+        } as EventManager;
 
         // Create mock Styles
         mockStyles = {
@@ -24,7 +24,7 @@ describe("StyleManager", () => {
             getCalculatedStylesForNode: vi.fn().mockReturnValue([]),
             addLayer: vi.fn(),
             insertLayer: vi.fn(),
-        } as any;
+        } as Styles;
 
         styleManager = new StyleManager(mockEventManager, mockStyles);
     });
@@ -55,7 +55,7 @@ describe("StyleManager", () => {
 
             styleManager.loadStylesFromObject(styleObj);
 
-            assert.isTrue((Styles.fromObject as any).calledOnce);
+            assert.isTrue(vi.mocked(Styles.fromObject).mock.calls.length === 1);
         });
 
         it("should load styles from URL", async() => {
@@ -64,7 +64,7 @@ describe("StyleManager", () => {
 
             await styleManager.loadStylesFromUrl(templateUrl);
 
-            assert.isTrue((Styles.fromUrl as any).calledOnce);
+            assert.isTrue(vi.mocked(Styles.fromUrl).mock.calls.length === 1);
         });
     });
 
@@ -74,8 +74,8 @@ describe("StyleManager", () => {
 
             const styleId = styleManager.getStyleForNode(nodeData);
 
-            assert.isTrue((mockStyles.getStyleForNode as any).calledOnce);
-            assert.isTrue((mockStyles.getStyleForNode as any).calledWith(nodeData));
+            assert.isTrue(vi.mocked(mockStyles.getStyleForNode).mock.calls.length === 1);
+            assert.isTrue(vi.mocked(mockStyles.getStyleForNode).mock.calls[0][0] === nodeData);
             assert.equal(styleId, 1);
         });
 
@@ -84,8 +84,8 @@ describe("StyleManager", () => {
 
             const styleId = styleManager.getStyleForEdge(edgeData);
 
-            assert.isTrue((mockStyles.getStyleForEdge as any).calledOnce);
-            assert.isTrue((mockStyles.getStyleForEdge as any).calledWith(edgeData));
+            assert.isTrue(vi.mocked(mockStyles.getStyleForEdge).mock.calls.length === 1);
+            assert.isTrue(vi.mocked(mockStyles.getStyleForEdge).mock.calls[0][0] === edgeData);
             assert.equal(styleId, 1);
         });
 
@@ -94,8 +94,8 @@ describe("StyleManager", () => {
 
             const calculatedStyles = styleManager.getCalculatedStylesForNode(nodeData);
 
-            assert.isTrue((mockStyles.getCalculatedStylesForNode as any).calledOnce);
-            assert.isTrue((mockStyles.getCalculatedStylesForNode as any).calledWith(nodeData));
+            assert.isTrue(vi.mocked(mockStyles.getCalculatedStylesForNode).mock.calls.length === 1);
+            assert.isTrue(vi.mocked(mockStyles.getCalculatedStylesForNode).mock.calls[0][0] === nodeData);
             assert.deepEqual(calculatedStyles, []);
         });
     });
@@ -110,7 +110,7 @@ describe("StyleManager", () => {
             styleManager.getStyleForNode(nodeData);
 
             // Should only call the underlying method once
-            assert.equal((mockStyles.getStyleForNode as any).callCount, 1);
+            assert.equal(vi.mocked(mockStyles.getStyleForNode).mock.calls.length, 1);
         });
 
         it("should cache edge styles", () => {
@@ -122,7 +122,7 @@ describe("StyleManager", () => {
             styleManager.getStyleForEdge(edgeData);
 
             // Should only call the underlying method once
-            assert.equal((mockStyles.getStyleForEdge as any).callCount, 1);
+            assert.equal(vi.mocked(mockStyles.getStyleForEdge).mock.calls.length, 1);
         });
 
         it("should disable caching when requested", () => {
@@ -134,7 +134,7 @@ describe("StyleManager", () => {
             styleManager.getStyleForNode(nodeData);
             styleManager.getStyleForNode(nodeData);
 
-            assert.equal((mockStyles.getStyleForNode as any).callCount, 2);
+            assert.equal(vi.mocked(mockStyles.getStyleForNode).mock.calls.length, 2);
         });
     });
 
@@ -149,8 +149,8 @@ describe("StyleManager", () => {
 
             styleManager.addLayer(layer);
 
-            assert.isTrue((mockStyles.addLayer as any).calledOnce);
-            assert.isTrue((mockStyles.addLayer as any).calledWith(layer));
+            assert.isTrue(vi.mocked(mockStyles.addLayer).mock.calls.length === 1);
+            assert.isTrue(vi.mocked(mockStyles.addLayer).mock.calls[0][0] === layer);
         });
 
         it("should insert style layer at position", () => {
@@ -163,26 +163,26 @@ describe("StyleManager", () => {
 
             styleManager.insertLayer(1, layer);
 
-            assert.isTrue((mockStyles.insertLayer as any).calledOnce);
-            assert.isTrue((mockStyles.insertLayer as any).calledWith(1, layer));
+            assert.isTrue(vi.mocked(mockStyles.insertLayer).mock.calls.length === 1);
+            assert.isTrue(vi.mocked(mockStyles.insertLayer).mock.calls[0][0] === 1 && vi.mocked(mockStyles.insertLayer).mock.calls[0][1] === layer);
         });
     });
 
     describe("static methods", () => {
         it("should get style for node style ID", () => {
             const nodeStyle = {enabled: true};
-            vi.spyOn(Styles, "getStyleForNodeStyleId").mockReturnValue(nodeStyle as any);
+            vi.spyOn(Styles, "getStyleForNodeStyleId").mockReturnValue(nodeStyle);
 
-            const result = StyleManager.getStyleForNodeStyleId(1 as any);
+            const result = StyleManager.getStyleForNodeStyleId(1);
 
             assert.deepEqual(result, nodeStyle);
         });
 
         it("should get style for edge style ID", () => {
             const edgeStyle = {enabled: true};
-            vi.spyOn(Styles, "getStyleForEdgeStyleId").mockReturnValue(edgeStyle as any);
+            vi.spyOn(Styles, "getStyleForEdgeStyleId").mockReturnValue(edgeStyle);
 
-            const result = StyleManager.getStyleForEdgeStyleId(1 as any);
+            const result = StyleManager.getStyleForEdgeStyleId(1);
 
             assert.deepEqual(result, edgeStyle);
         });
@@ -201,11 +201,11 @@ describe("StyleManager", () => {
             // Next call should not use cache
             styleManager.getStyleForNode(nodeData);
 
-            assert.equal((mockStyles.getStyleForNode as any).callCount, 2);
+            assert.equal(vi.mocked(mockStyles.getStyleForNode).mock.calls.length, 2);
         });
 
         it("should clear cache when updating styles", () => {
-            const newStyles = {} as any;
+            const newStyles = {} as Styles;
             const nodeData = {type: "test"} as unknown as AdHocData;
 
             // Fill cache

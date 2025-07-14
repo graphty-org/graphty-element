@@ -146,4 +146,10 @@ export default tseslint.config(
             "@stylistic/no-mixed-operators": ["error", {allowSamePrecedence: true}], // don't mix && and ||
         },
     },
+    {
+        files: ["**/*.test.ts", "test/**/*.ts"],
+        rules: {
+            "@typescript-eslint/unbound-method": "off", // Allow unbound methods in tests for mock assertions
+        },
+    },
 );

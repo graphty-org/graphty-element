@@ -13,15 +13,11 @@ vi.mock("../../src/algorithms/Algorithm", () => ({
     },
 }));
 
-// Helper to get mock calls
-const getMockCalls = (fn: any) => (fn).mock.calls;
-const getMockCallCount = (fn: any) => (fn).mock.calls.length;
-
 describe("AlgorithmManager", () => {
     let algorithmManager: AlgorithmManager;
     let mockEventManager: EventManager;
     let mockGraph: Graph;
-    let mockAlgorithm: any;
+    let mockAlgorithm: {run: ReturnType<typeof vi.fn>};
 
     beforeEach(() => {
         // Reset mocks
@@ -31,12 +27,12 @@ describe("AlgorithmManager", () => {
         mockEventManager = {
             emitGraphError: vi.fn(),
             emitGraphEvent: vi.fn(),
-        } as any;
+        } as EventManager;
 
         // Create mock graph
         mockGraph = {
             id: "test-graph",
-        } as any;
+        } as Graph;
 
         // Create mock algorithm
         mockAlgorithm = {
@@ -65,10 +61,12 @@ describe("AlgorithmManager", () => {
         it("should run a valid algorithm successfully", async() => {
             await algorithmManager.runAlgorithm("test", "algorithm");
 
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 1);
-            assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[0], [mockGraph, "test", "algorithm"]);
-            assert.equal(mockAlgorithm.run.mock.calls.length, 1);
-            assert.equal(mockAlgorithm.run.mock.calls[0][0], mockGraph);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            const {mock: {calls: algorithmRunCalls}} = mockAlgorithm.run;
+            assert.equal(algorithmGetCalls.length, 1);
+            assert.deepEqual(algorithmGetCalls[0], [mockGraph, "test", "algorithm"]);
+            assert.equal(algorithmRunCalls.length, 1);
+            assert.equal(algorithmRunCalls[0][0], mockGraph);
         });
 
         it("should handle algorithm not found", async() => {
@@ -78,8 +76,9 @@ describe("AlgorithmManager", () => {
                 algorithmManager.runAlgorithm("unknown", "algorithm"),
             ).rejects.toThrow(/algorithm not found: unknown:algorithm/);
 
-            assert.equal((mockEventManager.emitGraphError as any).mock.calls.length, 1);
-            const errorCall = (mockEventManager.emitGraphError as any).mock.calls[0];
+            const {mock: {calls: errorCalls}} = vi.mocked(mockEventManager.emitGraphError);
+            assert.equal(errorCalls.length, 1);
+            const errorCall = errorCalls[0];
             assert.equal(errorCall[0], mockGraph);
             assert.match(errorCall[1].message, /algorithm not found/);
             assert.equal(errorCall[2], "algorithm");
@@ -94,8 +93,9 @@ describe("AlgorithmManager", () => {
             ).rejects.toThrow(error);
 
             // Should emit error event
-            assert.equal((mockEventManager.emitGraphError as any).mock.calls.length, 1);
-            const errorCall = (mockEventManager.emitGraphError as any).mock.calls[0];
+            const {mock: {calls: errorCalls}} = vi.mocked(mockEventManager.emitGraphError);
+            assert.equal(errorCalls.length, 1);
+            const errorCall = errorCalls[0];
             assert.equal(errorCall[0], mockGraph);
             assert.equal(errorCall[1], error);
             assert.equal(errorCall[2], "algorithm");
@@ -112,8 +112,9 @@ describe("AlgorithmManager", () => {
                 algorithmManager.runAlgorithm("test", "algorithm"),
             ).rejects.toThrow(/string error/);
 
-            assert.equal((mockEventManager.emitGraphError as any).mock.calls.length, 1);
-            const errorCall = (mockEventManager.emitGraphError as any).mock.calls[0];
+            const {mock: {calls: errorCalls}} = vi.mocked(mockEventManager.emitGraphError);
+            assert.equal(errorCalls.length, 1);
+            const errorCall = errorCalls[0];
             assert.instanceOf(errorCall[1], Error);
             assert.equal(errorCall[1].message, "string error");
         });
@@ -125,9 +126,12 @@ describe("AlgorithmManager", () => {
 
             await algorithmManager.runAlgorithmsFromTemplate(algorithms);
 
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 3);
-            assert.equal(mockAlgorithm.run.mock.calls.length, 3);
-            assert.equal((mockEventManager.emitGraphError as any).mock.calls.length, 0);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            const {mock: {calls: algorithmRunCalls}} = mockAlgorithm.run;
+            const {mock: {calls: errorCalls}} = vi.mocked(mockEventManager.emitGraphError);
+            assert.equal(algorithmGetCalls.length, 3);
+            assert.equal(algorithmRunCalls.length, 3);
+            assert.equal(errorCalls.length, 0);
         });
 
         it("should handle invalid algorithm name format", async() => {
@@ -138,10 +142,11 @@ describe("AlgorithmManager", () => {
             ).rejects.toThrow(/1 algorithm\(s\) failed/);
 
             // Should still try to run valid algorithms
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 2); // Only valid ones
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 2); // Only valid ones
 
             // Should emit individual error for invalid format
-            const errorCalls = (mockEventManager.emitGraphError as any).mock.calls;
+            const errorCalls = vi.mocked(mockEventManager.emitGraphError).mock.calls;
             assert.isAtLeast(errorCalls.length, 1);
             assert.match(errorCalls[0][1].message, /invalid algorithm name format/);
         });
@@ -151,11 +156,12 @@ describe("AlgorithmManager", () => {
 
             // Make the second algorithm fail
             let callCount = 0;
-            mockAlgorithm.run.mockImplementation(async() => {
+            mockAlgorithm.run.mockImplementation(() => {
                 callCount++;
                 if (callCount === 2) {
                     throw new Error("Algorithm 2 failed");
                 }
+                return Promise.resolve();
             });
 
             await expect(
@@ -163,18 +169,20 @@ describe("AlgorithmManager", () => {
             ).rejects.toThrow(/1 algorithm\(s\) failed/);
 
             // Should run all algorithms even if one fails
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 3);
-            assert.equal(mockAlgorithm.run.mock.calls.length, 3);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 3);
+            const {mock: {calls: algorithmRunCalls}} = mockAlgorithm.run;
+            assert.equal(algorithmRunCalls.length, 3);
 
             // Should emit individual error for failed algorithm plus summary error
-            const individualErrors = (mockEventManager.emitGraphError as any).mock.calls.filter(
-                (call: any) => call[3].algorithm === "algo2:type2",
+            const individualErrors = vi.mocked(mockEventManager.emitGraphError).mock.calls.filter(
+                (call) => call[3]?.algorithm === "algo2:type2",
             );
             assert.equal(individualErrors.length, 1);
 
             // Should also emit summary error
-            const summaryErrors = (mockEventManager.emitGraphError as any).mock.calls.filter(
-                (call: any) => call[3].errorCount === 1,
+            const summaryErrors = vi.mocked(mockEventManager.emitGraphError).mock.calls.filter(
+                (call) => call[3]?.errorCount === 1,
             );
             assert.equal(summaryErrors.length, 1);
         });
@@ -190,11 +198,11 @@ describe("AlgorithmManager", () => {
             ).rejects.toThrow(/3 algorithm\(s\) failed/);
 
             // Should emit individual errors for each failure plus summary
-            const errorCalls = (mockEventManager.emitGraphError as any).mock.calls;
+            const errorCalls = vi.mocked(mockEventManager.emitGraphError).mock.calls;
             assert.isAtLeast(errorCalls.length, 4); // 3 individual + 1 summary
 
             // Check summary error
-            const summaryError = errorCalls.find((call: any) => call[3].errorCount === 3);
+            const summaryError = errorCalls.find((call) => call[3]?.errorCount === 3);
             assert.isDefined(summaryError);
             assert.match(summaryError[1].message, /3 algorithm\(s\) failed/);
         });
@@ -202,8 +210,9 @@ describe("AlgorithmManager", () => {
         it("should handle empty algorithm list", async() => {
             await algorithmManager.runAlgorithmsFromTemplate([]);
 
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 0);
-            assert.equal((mockEventManager.emitGraphError as any).mock.calls.length, 0);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 0);
+            assert.equal(vi.mocked(mockEventManager.emitGraphError).mock.calls.length, 0);
         });
 
         it("should handle algorithms with spaces in names", async() => {
@@ -212,8 +221,9 @@ describe("AlgorithmManager", () => {
             await algorithmManager.runAlgorithmsFromTemplate(algorithms);
 
             // Should handle trimmed names correctly
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 2);
-            assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[0], [mockGraph, "algo1", "type1"]);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 2);
+            assert.deepEqual(algorithmGetCalls[0], [mockGraph, "algo1", "type1"]);
         });
     });
 
@@ -224,8 +234,9 @@ describe("AlgorithmManager", () => {
             const result = algorithmManager.hasAlgorithm("test", "algorithm");
 
             assert.isTrue(result);
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 1);
-            assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[0], [mockGraph, "test", "algorithm"]);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 1);
+            assert.deepEqual(algorithmGetCalls[0], [mockGraph, "test", "algorithm"]);
         });
 
         it("should return false for non-existent algorithm", () => {
@@ -266,7 +277,7 @@ describe("AlgorithmManager", () => {
                 // Expected to throw
             }
 
-            const errorCall = (mockEventManager.emitGraphError as any).mock.calls[0];
+            const errorCall = vi.mocked(mockEventManager.emitGraphError).mock.calls[0];
             assert.equal(errorCall[3].component, "AlgorithmManager");
         });
 
@@ -290,7 +301,6 @@ describe("AlgorithmManager", () => {
             ];
 
             // Mock different behaviors for different algorithms
-            const callIndex = 0;
             vi.mocked(Algorithm.get).mockImplementation((graph, namespace, type) => {
                 if (namespace === "layout" && type === "force") {
                     // Layout algorithm takes longer
@@ -306,9 +316,10 @@ describe("AlgorithmManager", () => {
 
             await algorithmManager.runAlgorithmsFromTemplate(algorithms);
 
-            assert.equal(vi.mocked(Algorithm.get).mock.calls.length, 4);
+            const {mock: {calls: algorithmGetCalls}} = vi.mocked(Algorithm.get);
+            assert.equal(algorithmGetCalls.length, 4);
             // Verify all algorithms were called with correct parameters
-            assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[0], [mockGraph, "preprocessing", "normalize"]);
+            assert.deepEqual(algorithmGetCalls[0], [mockGraph, "preprocessing", "normalize"]);
             assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[1], [mockGraph, "layout", "force"]);
             assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[2], [mockGraph, "analysis", "centrality"]);
             assert.deepEqual(vi.mocked(Algorithm.get).mock.calls[3], [mockGraph, "visualization", "highlight"]);
@@ -323,11 +334,12 @@ describe("AlgorithmManager", () => {
 
             // Make middle step fail
             let callCount = 0;
-            mockAlgorithm.run.mockImplementation(async() => {
+            mockAlgorithm.run.mockImplementation(() => {
                 callCount++;
                 if (callCount === 2) {
                     throw new Error("Processing failed");
                 }
+                return Promise.resolve();
             });
 
             await expect(
@@ -335,7 +347,8 @@ describe("AlgorithmManager", () => {
             ).rejects.toThrow(/1 algorithm\(s\) failed/);
 
             // All algorithms should still be attempted
-            assert.equal(mockAlgorithm.run.mock.calls.length, 3);
+            const {mock: {calls: algorithmRunCalls}} = mockAlgorithm.run;
+            assert.equal(algorithmRunCalls.length, 3);
         });
     });
 });
