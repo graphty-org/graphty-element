@@ -193,5 +193,4 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "run-algorithms-on-load"})
     runAlgorithmsOnLoad?: boolean;
-
 }

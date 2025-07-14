@@ -118,13 +118,12 @@ export class DefaultGraphContext implements GraphContext {
         return this.scene;
     }
 
-
     getStatsManager(): StatsManager {
         return this.statsManager;
     }
 
     is2D(): boolean {
-        return this.styleManager.getStyles().config.graph.twoD ?? false;
+        return this.styleManager.getStyles().config.graph.twoD;
     }
 
     needsRayUpdate(): boolean {

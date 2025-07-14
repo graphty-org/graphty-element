@@ -69,7 +69,7 @@ export class RenderManager implements Manager {
         new HemisphericLight("light", new Vector3(1, 1, 0));
 
         // Set background color
-        const backgroundColor = this.config.backgroundColor || "#F5F5F5"; // whitesmoke
+        const backgroundColor = this.config.backgroundColor ?? "#F5F5F5"; // whitesmoke
         this.scene.clearColor = Color4.FromHexString(backgroundColor);
     }
 

@@ -7,6 +7,20 @@ import type {EventManager} from "./EventManager";
 import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
+// Type guard for layout engines with optional dispose method
+type LayoutEngineWithDispose = LayoutEngine & {dispose(): void};
+
+function hasDispose(engine: LayoutEngine): engine is LayoutEngineWithDispose {
+    return "dispose" in engine;
+}
+
+// Type guard for layout engines with optional getEdgePath method
+type LayoutEngineWithEdgePath = LayoutEngine & {getEdgePath(edge: Edge): [number, number, number][]};
+
+function hasGetEdgePath(engine: LayoutEngine): engine is LayoutEngineWithEdgePath {
+    return "getEdgePath" in engine;
+}
+
 /**
  * Manages layout engines and their lifecycle
  * Coordinates layout updates and transitions
@@ -38,8 +52,8 @@ export class LayoutManager implements Manager {
 
     dispose(): void {
         // Dispose current layout engine if any
-        if (this.layoutEngine && "dispose" in this.layoutEngine) {
-            (this.layoutEngine as any).dispose();
+        if (this.layoutEngine && hasDispose(this.layoutEngine)) {
+            this.layoutEngine.dispose();
         }
 
         this.layoutEngine = undefined;
@@ -94,8 +108,8 @@ export class LayoutManager implements Manager {
                 this.eventManager.emitLayoutInitialized(type, true);
 
                 // Dispose previous engine after successful init
-                if (previousEngine && "dispose" in previousEngine) {
-                    (previousEngine as any).dispose();
+                if (previousEngine && hasDispose(previousEngine)) {
+                    previousEngine.dispose();
                 }
 
                 // Emit layout changed event
@@ -156,8 +170,8 @@ export class LayoutManager implements Manager {
      * Get edge path from layout engine
      */
     getEdgePath(edge: Edge): [number, number, number][] | undefined {
-        if (this.layoutEngine && "getEdgePath" in this.layoutEngine) {
-            return (this.layoutEngine as any).getEdgePath(edge);
+        if (this.layoutEngine && hasGetEdgePath(this.layoutEngine)) {
+            return this.layoutEngine.getEdgePath(edge);
         }
 
         return undefined;

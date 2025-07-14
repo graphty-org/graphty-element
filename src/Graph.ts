@@ -253,7 +253,7 @@ export class Graph implements GraphContext {
             }
 
             // Start the graph system (render loop, etc.)
-            await this.lifecycleManager.startGraph(() => {
+            this.lifecycleManager.startGraph(() => {
                 this.update();
             });
 

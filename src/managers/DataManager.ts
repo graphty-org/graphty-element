@@ -11,6 +11,18 @@ import type {EventManager} from "./EventManager";
 import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
+// Type guards for layout engines with optional removal methods
+type LayoutEngineWithRemoveNode = LayoutEngine & {removeNode(node: Node): void};
+type LayoutEngineWithRemoveEdge = LayoutEngine & {removeEdge(edge: Edge): void};
+
+function hasRemoveNode(engine: LayoutEngine): engine is LayoutEngineWithRemoveNode {
+    return "removeNode" in engine;
+}
+
+function hasRemoveEdge(engine: LayoutEngine): engine is LayoutEngineWithRemoveEdge {
+    return "removeEdge" in engine;
+}
+
 /**
  * Manages all data operations for nodes and edges
  * Handles CRUD operations, caching, and data source loading
@@ -168,8 +180,8 @@ export class DataManager implements Manager {
         this.nodeCache.delete(nodeId);
 
         // Remove from layout engine
-        if (this.layoutEngine && "removeNode" in this.layoutEngine) {
-            (this.layoutEngine as any).removeNode(node);
+        if (this.layoutEngine && hasRemoveNode(this.layoutEngine)) {
+            this.layoutEngine.removeNode(node);
         }
 
         // TODO: Remove connected edges
@@ -248,8 +260,8 @@ export class DataManager implements Manager {
         this.edgeCache.delete(edge.srcNode.id, edge.dstNode.id);
 
         // Remove from layout engine
-        if (this.layoutEngine && "removeEdge" in this.layoutEngine) {
-            (this.layoutEngine as any).removeEdge(edge);
+        if (this.layoutEngine && hasRemoveEdge(this.layoutEngine)) {
+            this.layoutEngine.removeEdge(edge);
         }
 
         return true;
@@ -258,7 +270,6 @@ export class DataManager implements Manager {
     // Data source operations
 
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
-
         try {
             const source = DataSource.get(type, opts);
             if (!source) {
@@ -274,21 +285,23 @@ export class DataManager implements Manager {
                 }
             } catch (error) {
                 // Emit error event with partial load information
-                this.eventManager.emitGraphError(
-                    this.graphContext!,
-                    error instanceof Error ? error : new Error(String(error)),
-                    "data-loading",
-                    {chunksLoaded, dataSourceType: type},
-                );
+                if (this.graphContext) {
+                    this.eventManager.emitGraphError(
+                        this.graphContext,
+                        error instanceof Error ? error : new Error(String(error)),
+                        "data-loading",
+                        {chunksLoaded, dataSourceType: type},
+                    );
+                }
 
                 throw new Error(`Failed to load data from source '${type}' after ${chunksLoaded} chunks: ${error instanceof Error ? error.message : String(error)}`);
             }
 
-
             // Emit success event
-            this.eventManager.emitGraphDataLoaded(this.graphContext!, chunksLoaded, type);
+            if (this.graphContext) {
+                this.eventManager.emitGraphDataLoaded(this.graphContext, chunksLoaded, type);
+            }
         } catch (error) {
-
             // Re-throw if already a processed error
             if (error instanceof Error && error.message.includes("Failed to load data")) {
                 throw error;

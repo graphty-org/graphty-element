@@ -1,14 +1,15 @@
-import {beforeEach, describe, it, vi} from "vitest";
-import {assert} from "chai";
 import type {Scene} from "@babylonjs/core";
+import {assert} from "chai";
+import {beforeEach, describe, it, vi} from "vitest";
+
+import type {AdHocData} from "../../src/config";
+import type {Edge} from "../../src/Edge";
 import {DataManager} from "../../src/managers/DataManager";
 import type {EventManager} from "../../src/managers/EventManager";
-import type {LayoutManager} from "../../src/managers/LayoutManager";
 import type {GraphContext} from "../../src/managers/GraphContext";
-import type {Styles} from "../../src/Styles";
+import type {LayoutManager} from "../../src/managers/LayoutManager";
 import type {Node} from "../../src/Node";
-import type {Edge} from "../../src/Edge";
-import type {AdHocData} from "../../src/config";
+import type {Styles} from "../../src/Styles";
 
 describe("DataManager", () => {
     let dataManager: DataManager;
@@ -61,12 +62,12 @@ describe("DataManager", () => {
             mockEventManager,
             mockLayoutManager,
             mockGraphContext,
-            mockStyles
+            mockStyles,
         );
     });
 
     describe("initialization", () => {
-        it("should initialize without errors", async () => {
+        it("should initialize without errors", async() => {
             await dataManager.init();
             assert.isNotNull(dataManager);
         });
@@ -139,7 +140,7 @@ describe("DataManager", () => {
             dataManager.addNode(nodeData);
 
             const removed = dataManager.removeNode("node1");
-            
+
             assert.isTrue(removed);
             assert.isUndefined(dataManager.getNode("node1"));
             assert.equal(dataManager.getNodeCount(), 0);
@@ -272,7 +273,7 @@ describe("DataManager", () => {
             });
 
             const removed = dataManager.removeEdge("edge1");
-            
+
             assert.isTrue(removed);
             assert.isUndefined(dataManager.getEdge("edge1"));
             assert.equal(dataManager.getEdgeCount(), 0);
@@ -317,7 +318,7 @@ describe("DataManager", () => {
     });
 
     describe("data source loading", () => {
-        it("should load data from a data source", async () => {
+        it("should load data from a data source", async() => {
             const mockDataSource = {
                 init: vi.fn().mockResolvedValue(undefined),
                 fetchNodes: vi.fn().mockImplementation(async function* () {
@@ -339,7 +340,7 @@ describe("DataManager", () => {
             assert.isTrue(mockDataSource.fetchEdges.calledOnce);
         });
 
-        it("should handle data source errors", async () => {
+        it("should handle data source errors", async() => {
             const error = new Error("Data source error");
             const mockDataSource = {
                 init: vi.fn().mockRejectedValue(error),
@@ -357,15 +358,15 @@ describe("DataManager", () => {
     describe("cache management", () => {
         it("should use node cache for existing nodes", () => {
             const nodeData = {id: "node1", label: "Test Node"};
-            
+
             // First add
             dataManager.addNode(nodeData);
             const node1 = dataManager.getNode("node1");
-            
+
             // Second add (should use cache)
             dataManager.addNode(nodeData);
             const node2 = dataManager.getNode("node1");
-            
+
             assert.strictEqual(node1, node2); // Same instance
         });
 
@@ -376,15 +377,15 @@ describe("DataManager", () => {
             ]);
 
             const edgeData = {id: "edge1", source: "node1", target: "node2"};
-            
+
             // First add
             dataManager.addEdge(edgeData);
             const edge1 = dataManager.getEdge("edge1");
-            
+
             // Second add (should use cache)
             dataManager.addEdge(edgeData);
             const edge2 = dataManager.getEdge("edge1");
-            
+
             assert.strictEqual(edge1, edge2); // Same instance
         });
     });
@@ -392,15 +393,15 @@ describe("DataManager", () => {
     describe("statistics", () => {
         it("should return correct node count", () => {
             assert.equal(dataManager.getNodeCount(), 0);
-            
+
             dataManager.addNodes([
                 {id: "node1"},
                 {id: "node2"},
                 {id: "node3"},
             ]);
-            
+
             assert.equal(dataManager.getNodeCount(), 3);
-            
+
             dataManager.removeNode("node2");
             assert.equal(dataManager.getNodeCount(), 2);
         });
@@ -411,16 +412,16 @@ describe("DataManager", () => {
                 {id: "node2"},
                 {id: "node3"},
             ]);
-            
+
             assert.equal(dataManager.getEdgeCount(), 0);
-            
+
             dataManager.addEdges([
                 {id: "edge1", source: "node1", target: "node2"},
                 {id: "edge2", source: "node2", target: "node3"},
             ]);
-            
+
             assert.equal(dataManager.getEdgeCount(), 2);
-            
+
             dataManager.removeEdge("edge1");
             assert.equal(dataManager.getEdgeCount(), 1);
         });
@@ -437,7 +438,7 @@ describe("DataManager", () => {
 
             // Add a node to test if new engine is used
             dataManager.addNode({id: "test"});
-            
+
             assert.isTrue(mockLayoutEngine.addNode.calledOnce);
         });
 

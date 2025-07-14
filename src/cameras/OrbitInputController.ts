@@ -44,7 +44,6 @@ export class OrbitInputController {
     };
 
     private keyDownHandler = (evt: KeyboardEvent): void => {
-        console.log("orbit keydown handler");
         this.keysDown[evt.key.toLowerCase()] = true;
     };
 

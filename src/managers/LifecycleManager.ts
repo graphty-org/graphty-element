@@ -1,6 +1,13 @@
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
+// Type guard for render managers with startRenderLoop method
+type RenderManagerWithStartLoop = Manager & {startRenderLoop(callback: () => void): void};
+
+function hasStartRenderLoop(manager: Manager): manager is RenderManagerWithStartLoop {
+    return "startRenderLoop" in manager;
+}
+
 /**
  * Manages the lifecycle of all other managers
  * Ensures proper initialization order and cleanup
@@ -40,7 +47,7 @@ export class LifecycleManager implements Manager {
                     });
                 } catch (error) {
                     // Clean up any managers that were already initialized
-                    await this.cleanup(managerName);
+                    this.cleanup(managerName);
 
                     throw new Error(
                         `Failed to initialize manager '${managerName}': ${
@@ -77,7 +84,7 @@ export class LifecycleManager implements Manager {
      * Start the graph system after initialization
      * This coordinates starting the render loop and other post-init setup
      */
-    async startGraph(updateCallback: () => void): Promise<void> {
+    startGraph(updateCallback: () => void): void {
         if (!this.initialized) {
             throw new Error("Cannot start graph before initialization");
         }
@@ -85,8 +92,8 @@ export class LifecycleManager implements Manager {
         try {
             // Get the render manager and start the render loop
             const renderManager = this.managers.get("render");
-            if (renderManager && "startRenderLoop" in renderManager) {
-                (renderManager as any).startRenderLoop(updateCallback);
+            if (renderManager && hasStartRenderLoop(renderManager)) {
+                renderManager.startRenderLoop(updateCallback);
             }
 
             // Emit graph started event
@@ -143,7 +150,7 @@ export class LifecycleManager implements Manager {
     /**
      * Clean up managers that were initialized before the given manager failed
      */
-    private async cleanup(failedManager: string): Promise<void> {
+    private cleanup(failedManager: string): void {
         const failedIndex = this.initOrder.indexOf(failedManager);
         if (failedIndex === -1) {
             return;
@@ -192,7 +199,7 @@ export class LifecycleManager implements Manager {
     /**
      * Get a manager by name
      */
-    getManager<T extends Manager>(name: string): T | undefined {
-        return this.managers.get(name) as T | undefined;
+    getManager(name: string): Manager | undefined {
+        return this.managers.get(name);
     }
 }

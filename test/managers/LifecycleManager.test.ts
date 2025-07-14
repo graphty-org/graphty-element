@@ -1,8 +1,9 @@
-import {beforeEach, describe, it, vi} from "vitest";
 import {assert} from "chai";
-import {LifecycleManager} from "../../src/managers/LifecycleManager";
+import {beforeEach, describe, it, vi} from "vitest";
+
 import type {EventManager} from "../../src/managers/EventManager";
 import type {Manager} from "../../src/managers/interfaces";
+import {LifecycleManager} from "../../src/managers/LifecycleManager";
 
 describe("LifecycleManager", () => {
     let lifecycleManager: LifecycleManager;
@@ -44,17 +45,17 @@ describe("LifecycleManager", () => {
         lifecycleManager = new LifecycleManager(
             mockManagers,
             mockEventManager,
-            ["manager1", "manager2", "manager3"]
+            ["manager1", "manager2", "manager3"],
         );
     });
 
     describe("initialization", () => {
-        it("should initialize without errors", async () => {
+        it("should initialize without errors", async() => {
             await lifecycleManager.init();
             assert.isNotNull(lifecycleManager);
         });
 
-        it("should initialize managers in specified order", async () => {
+        it("should initialize managers in specified order", async() => {
             await lifecycleManager.init();
 
             assert.isTrue(manager1.init.calledOnce);
@@ -66,13 +67,13 @@ describe("LifecycleManager", () => {
             assert.isTrue(manager2.init.calledBefore(manager3.init));
         });
 
-        it("should handle manager initialization errors", async () => {
+        it("should handle manager initialization errors", async() => {
             const error = new Error("Manager init failed");
             manager2.init.mockRejectedValue(error);
 
             await assert.isRejected(
                 lifecycleManager.init(),
-                /Failed to initialize manager: manager2/
+                /Failed to initialize manager: manager2/,
             );
 
             assert.isTrue(mockEventManager.emitGraphError.calledOnce);
@@ -82,16 +83,16 @@ describe("LifecycleManager", () => {
         it("should use default order if not specified", () => {
             const newLifecycleManager = new LifecycleManager(
                 mockManagers,
-                mockEventManager
+                mockEventManager,
             );
 
             assert.isNotNull(newLifecycleManager);
         });
 
-        it("should handle empty manager map", async () => {
+        it("should handle empty manager map", async() => {
             const emptyLifecycleManager = new LifecycleManager(
                 new Map(),
-                mockEventManager
+                mockEventManager,
             );
 
             await emptyLifecycleManager.init();
@@ -143,7 +144,7 @@ describe("LifecycleManager", () => {
             const newLifecycleManager = new LifecycleManager(
                 managers,
                 mockEventManager,
-                ["manager1", "noDispose", "manager3"]
+                ["manager1", "noDispose", "manager3"],
             );
 
             // Should not throw
@@ -157,7 +158,7 @@ describe("LifecycleManager", () => {
     });
 
     describe("graph lifecycle", () => {
-        it("should start graph with update callback", async () => {
+        it("should start graph with update callback", async() => {
             const updateCallback = vi.fn();
             let renderLoopCallback: (() => void) | undefined;
 
@@ -184,7 +185,7 @@ describe("LifecycleManager", () => {
             const newLifecycleManager = new LifecycleManager(
                 managers,
                 mockEventManager,
-                ["render", "manager1"]
+                ["render", "manager1"],
             );
 
             await newLifecycleManager.init();
@@ -194,22 +195,22 @@ describe("LifecycleManager", () => {
             assert.isDefined(renderLoopCallback);
 
             // Simulate render loop callback
-            renderLoopCallback!();
+            renderLoopCallback();
             assert.isTrue(updateCallback.calledOnce);
         });
 
-        it("should handle missing render manager", async () => {
+        it("should handle missing render manager", async() => {
             const updateCallback = vi.fn();
 
             await lifecycleManager.init();
-            
+
             await assert.isRejected(
                 lifecycleManager.startGraph(updateCallback),
-                /Render manager not found/
+                /Render manager not found/,
             );
         });
 
-        it("should stop graph render loop", async () => {
+        it("should stop graph render loop", async() => {
             const mockScene = {
                 registerBeforeRender: vi.fn(),
                 unregisterBeforeRender: vi.fn(),
@@ -228,12 +229,12 @@ describe("LifecycleManager", () => {
             const newLifecycleManager = new LifecycleManager(
                 managers,
                 mockEventManager,
-                ["render"]
+                ["render"],
             );
 
             await newLifecycleManager.init();
             await newLifecycleManager.startGraph(() => {});
-            
+
             // Stop the graph
             newLifecycleManager.dispose();
 
@@ -242,14 +243,14 @@ describe("LifecycleManager", () => {
     });
 
     describe("manager access", () => {
-        it("should get manager by name", async () => {
+        it("should get manager by name", async() => {
             await lifecycleManager.init();
 
             const retrieved = lifecycleManager.getManager("manager2");
             assert.equal(retrieved, manager2);
         });
 
-        it("should return undefined for non-existent manager", async () => {
+        it("should return undefined for non-existent manager", async() => {
             await lifecycleManager.init();
 
             const retrieved = lifecycleManager.getManager("nonexistent");
@@ -266,7 +267,7 @@ describe("LifecycleManager", () => {
     });
 
     describe("error handling", () => {
-        it("should emit error event when manager throws during init", async () => {
+        it("should emit error event when manager throws during init", async() => {
             const error = new Error("Init explosion");
             manager1.init.mockRejectedValue(error);
 
@@ -278,7 +279,7 @@ describe("LifecycleManager", () => {
             assert.equal(errorCall[2], "lifecycle");
         });
 
-        it("should handle async errors in render loop", async () => {
+        it("should handle async errors in render loop", async() => {
             const updateCallback = vi.fn().mockImplementation(() => {
                 throw new Error("Update error");
             });
@@ -297,7 +298,7 @@ describe("LifecycleManager", () => {
             const managers = new Map([["render", renderManager]]);
             const newLifecycleManager = new LifecycleManager(
                 managers,
-                mockEventManager
+                mockEventManager,
             );
 
             await newLifecycleManager.init();
@@ -305,7 +306,7 @@ describe("LifecycleManager", () => {
 
             // Get the registered callback and call it
             const renderCallback = mockScene.registerBeforeRender.args[0][0];
-            
+
             // Should not throw
             assert.doesNotThrow(() => {
                 renderCallback();
@@ -314,29 +315,29 @@ describe("LifecycleManager", () => {
     });
 
     describe("initialization state", () => {
-        it("should track initialization state", async () => {
+        it("should track initialization state", async() => {
             assert.isFalse(lifecycleManager.isInitialized());
-            
+
             await lifecycleManager.init();
-            
+
             assert.isTrue(lifecycleManager.isInitialized());
         });
 
-        it("should reset initialization state on dispose", async () => {
+        it("should reset initialization state on dispose", async() => {
             await lifecycleManager.init();
             assert.isTrue(lifecycleManager.isInitialized());
-            
+
             lifecycleManager.dispose();
-            
+
             assert.isFalse(lifecycleManager.isInitialized());
         });
 
-        it("should prevent double initialization", async () => {
+        it("should prevent double initialization", async() => {
             await lifecycleManager.init();
-            
+
             // Second init should be a no-op
             await lifecycleManager.init();
-            
+
             // Managers should only be initialized once
             assert.equal(manager1.init.callCount, 1);
             assert.equal(manager2.init.callCount, 1);

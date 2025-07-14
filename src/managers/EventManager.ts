@@ -13,6 +13,8 @@ import type {
     GraphSettledEvent,
     NodeEvent,
 } from "../events";
+import type {Graph} from "../Graph";
+import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
 /**
@@ -28,8 +30,8 @@ export class EventManager implements Manager {
     // Track observers for cleanup
     private observers = new Map<symbol, {
         type: "graph" | "node" | "edge";
-        observable: Observable<any>;
-        observer: any;
+        observable: Observable<GraphEvent | NodeEvent | EdgeEvent>;
+        observer: (event: GraphEvent | NodeEvent | EdgeEvent) => void;
     }>();
 
     // Error handling configuration
@@ -56,7 +58,7 @@ export class EventManager implements Manager {
 
     // Graph Events
 
-    emitGraphSettled(graph: any): void {
+    emitGraphSettled(graph: Graph): void {
         const event: GraphSettledEvent = {
             type: "graph-settled",
             graph,
@@ -65,14 +67,14 @@ export class EventManager implements Manager {
     }
 
     emitGraphError(
-        graph: any,
+        graph: Graph | GraphContext | null,
         error: Error,
         context: GraphErrorEvent["context"],
         details?: Record<string, unknown>,
     ): void {
         const event: GraphErrorEvent = {
             type: "error",
-            graph,
+            graph: graph as Graph | null,
             error,
             context,
             details,
@@ -81,13 +83,13 @@ export class EventManager implements Manager {
     }
 
     emitGraphDataLoaded(
-        graph: any,
+        graph: Graph | GraphContext,
         chunksLoaded: number,
         dataSourceType: string,
     ): void {
         const event: GraphDataLoadedEvent = {
             type: "data-loaded",
-            graph,
+            graph: graph as Graph,
             details: {
                 chunksLoaded,
                 dataSourceType,
@@ -125,7 +127,7 @@ export class EventManager implements Manager {
     }
 
     // Generic graph event emitter for internal events
-    emitGraphEvent(type: string, data: any): void {
+    emitGraphEvent(type: string, data: Record<string, unknown>): void {
         const event = {type, ... data} as GraphGenericEvent;
         this.graphObservable.notifyObservers(event);
     }
@@ -266,7 +268,7 @@ export class EventManager implements Manager {
     async withRetry<T>(
         operation: () => Promise<T>,
         context: GraphErrorEvent["context"],
-        graph: any,
+        graph: Graph | GraphContext | null,
         details?: Record<string, unknown>,
     ): Promise<T> {
         let lastError: Error;
@@ -294,7 +296,6 @@ export class EventManager implements Manager {
         }
 
         // All attempts failed
-        throw lastError!;
+        throw lastError;
     }
-
 }

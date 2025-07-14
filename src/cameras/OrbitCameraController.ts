@@ -66,7 +66,7 @@ export class OrbitCameraController {
         // Default FOV for Babylon cameras is typically around 0.8 radians (~45.8 degrees)
         let fov = 0.8; // default
         if (this.camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED) {
-            fov = this.camera.fov;
+            ({fov} = this.camera);
         } else if (this.camera.fovMode === Camera.FOVMODE_HORIZONTAL_FIXED && this.camera.fov) {
             // Convert horizontal FOV to vertical FOV using aspect ratio
             const aspectRatio = this.scene.getEngine().getAspectRatio(this.camera);

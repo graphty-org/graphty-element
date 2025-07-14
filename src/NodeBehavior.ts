@@ -94,7 +94,7 @@ export class NodeBehavior {
 
         // Only Graph has fetchNodes/fetchEdges, not GraphContext
         // For now, check if parentGraph is the full Graph instance
-        const graph = node.parentGraph as Graph & { fetchNodes?: unknown; fetchEdges?: unknown };
+        const graph = node.parentGraph as Graph & {fetchNodes?: unknown, fetchEdges?: unknown};
         if (graph.fetchNodes && graph.fetchEdges) {
             const {fetchNodes, fetchEdges} = graph;
 
@@ -109,7 +109,7 @@ export class NodeBehavior {
                         context.setRunning(true);
 
                         // fetch all edges for current node
-                        const edges = fetchEdges(node, graph as unknown as Graph) as Array<{ src: NodeIdType; dst: NodeIdType }>;
+                        const edges = fetchEdges(node, graph as unknown as Graph) as {src: NodeIdType, dst: NodeIdType}[];
 
                         // create set of unique node ids
                         const nodeIds = new Set<NodeIdType>();

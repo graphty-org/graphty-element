@@ -90,12 +90,16 @@ export abstract class Algorithm {
         // replace algorithmResults with graph.nodes; set result on each node.algorithmResult
     }
 
-    addEdgeResult(e: Edge, result: unknown): void {
-        console.log("adding edge result", e, result);
+    addEdgeResult(_e: Edge, _result: unknown): void {
+        // Edge result added - parameters are intentionally unused
+        void _e;
+        void _result;
     }
 
-    addGraphResult(g: Graph, result: unknown): void {
-        console.log("adding graph result", g, result);
+    addGraphResult(_g: Graph, _result: unknown): void {
+        // Graph result added - parameters are intentionally unused
+        void _g;
+        void _result;
     }
 
     static register<T extends AlgorithmClass>(cls: T): T {

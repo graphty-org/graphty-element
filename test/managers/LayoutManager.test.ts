@@ -1,13 +1,14 @@
-import {beforeEach, describe, it, vi} from "vitest";
 import {assert} from "chai";
-import {LayoutManager} from "../../src/managers/LayoutManager";
-import type {EventManager} from "../../src/managers/EventManager";
-import type {DataManager} from "../../src/managers/DataManager";
-import type {Styles} from "../../src/Styles";
-import type {Node} from "../../src/Node";
+import {beforeEach, describe, it, vi} from "vitest";
+
 import type {Edge} from "../../src/Edge";
 import type {LayoutEngine} from "../../src/layout/LayoutEngine";
+import type {DataManager} from "../../src/managers/DataManager";
+import type {EventManager} from "../../src/managers/EventManager";
 import type {GraphContext} from "../../src/managers/GraphContext";
+import {LayoutManager} from "../../src/managers/LayoutManager";
+import type {Node} from "../../src/Node";
+import type {Styles} from "../../src/Styles";
 
 describe("LayoutManager", () => {
     let layoutManager: LayoutManager;
@@ -64,12 +65,12 @@ describe("LayoutManager", () => {
             mockEventManager,
             mockDataManager,
             mockStyles,
-            mockGraphContext
+            mockGraphContext,
         );
     });
 
     describe("initialization", () => {
-        it("should initialize without errors", async () => {
+        it("should initialize without errors", async() => {
             await layoutManager.init();
             assert.isNotNull(layoutManager);
         });
@@ -79,7 +80,7 @@ describe("LayoutManager", () => {
             assert.isNotNull(layoutManager);
         });
 
-        it("should dispose layout engine on dispose", async () => {
+        it("should dispose layout engine on dispose", async() => {
             // Mock layout registry
             const mockGet = vi.fn().mockReturnValue(() => mockLayoutEngine);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -102,7 +103,7 @@ describe("LayoutManager", () => {
             }));
         });
 
-        it("should set layout engine", async () => {
+        it("should set layout engine", async() => {
             const options = {springLength: 100};
             await layoutManager.setLayout("force", options);
 
@@ -113,26 +114,26 @@ describe("LayoutManager", () => {
             assert.isTrue(layoutManager.running);
         });
 
-        it("should run pre-steps when setting layout", async () => {
+        it("should run pre-steps when setting layout", async() => {
             await layoutManager.setLayout("force", {});
 
             // Should run 5 pre-steps based on config
             assert.equal(mockLayoutEngine.step.callCount, 5);
         });
 
-        it("should handle layout initialization errors", async () => {
+        it("should handle layout initialization errors", async() => {
             const error = new Error("Layout init failed");
             mockLayoutEngine.init.mockRejectedValue(error);
 
             await assert.isRejected(
                 layoutManager.setLayout("force", {}),
-                /Error setting layout 'force'/
+                /Error setting layout 'force'/,
             );
 
             assert.isTrue(mockEventManager.emitGraphError.calledOnce);
         });
 
-        it("should handle unknown layout type", async () => {
+        it("should handle unknown layout type", async() => {
             // Mock registry to return null
             const mockGet = vi.fn().mockReturnValue(null);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -141,18 +142,18 @@ describe("LayoutManager", () => {
 
             await assert.isRejected(
                 layoutManager.setLayout("unknown", {}),
-                /Layout type 'unknown' not found/
+                /Layout type 'unknown' not found/,
             );
         });
 
-        it("should dispose previous layout when setting new one", async () => {
+        it("should dispose previous layout when setting new one", async() => {
             // Set first layout
             await layoutManager.setLayout("force", {});
             const firstEngine = layoutManager.layoutEngine;
 
             // Create new mock for second layout
             const secondEngine = {
-                ...mockLayoutEngine,
+                ... mockLayoutEngine,
                 init: vi.fn().mockResolvedValue(undefined),
             };
             const mockGet = vi.fn().mockReturnValue(() => secondEngine);
@@ -169,7 +170,7 @@ describe("LayoutManager", () => {
     });
 
     describe("layout stepping", () => {
-        beforeEach(async () => {
+        beforeEach(async() => {
             // Mock layout registry
             const mockGet = vi.fn().mockReturnValue(() => mockLayoutEngine);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -187,18 +188,18 @@ describe("LayoutManager", () => {
         it("should not step when not running", () => {
             layoutManager.running = false;
             mockLayoutEngine.step.mockClear();
-            
+
             layoutManager.step();
             assert.isFalse(mockLayoutEngine.step.called);
         });
 
-        it("should not step when no layout engine", async () => {
+        it("should not step when no layout engine", async() => {
             // Create new manager without layout
             const newManager = new LayoutManager(
                 mockEventManager,
                 mockDataManager,
                 mockStyles,
-                mockGraphContext
+                mockGraphContext,
             );
 
             newManager.step();
@@ -215,7 +216,7 @@ describe("LayoutManager", () => {
             ]);
             mockDataManager.getNodes.mockReturnValue(mockNodes);
 
-            const nodes = layoutManager.nodes;
+            const {nodes} = layoutManager;
             assert.equal(nodes.length, 2);
             assert.equal(nodes[0].id, "node1");
             assert.equal(nodes[1].id, "node2");
@@ -228,7 +229,7 @@ describe("LayoutManager", () => {
             ]);
             mockDataManager.getEdges.mockReturnValue(mockEdges);
 
-            const edges = layoutManager.edges;
+            const {edges} = layoutManager;
             assert.equal(edges.length, 2);
             assert.equal(edges[0].id, "edge1");
             assert.equal(edges[1].id, "edge2");
@@ -236,7 +237,7 @@ describe("LayoutManager", () => {
     });
 
     describe("position management", () => {
-        beforeEach(async () => {
+        beforeEach(async() => {
             // Mock layout registry
             const mockGet = vi.fn().mockReturnValue(() => mockLayoutEngine);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -252,7 +253,7 @@ describe("LayoutManager", () => {
             mockLayoutEngine.getNodePosition.mockReturnValue(mockPosition);
 
             const position = layoutManager.getNodePosition(mockNode);
-            
+
             assert.isDefined(position);
             assert.deepEqual(position, [10, 20, 30]);
             assert.isTrue(mockLayoutEngine.getNodePosition.calledWith(mockNode));
@@ -263,7 +264,7 @@ describe("LayoutManager", () => {
             mockLayoutEngine.getNodePosition.mockReturnValue(undefined);
 
             const position = layoutManager.getNodePosition(mockNode);
-            
+
             assert.isUndefined(position);
         });
 
@@ -273,7 +274,7 @@ describe("LayoutManager", () => {
             mockLayoutEngine.getNodePosition.mockReturnValue(mockPosition);
 
             const position = layoutManager.getNodePosition(mockNode);
-            
+
             assert.isDefined(position);
             assert.deepEqual(position, [10, 20, 0]);
         });
@@ -284,18 +285,18 @@ describe("LayoutManager", () => {
                 mockEventManager,
                 mockDataManager,
                 mockStyles,
-                mockGraphContext
+                mockGraphContext,
             );
 
             const mockNode = {id: "node1"} as Node;
             const position = newManager.getNodePosition(mockNode);
-            
+
             assert.isUndefined(position);
         });
     });
 
     describe("layout state", () => {
-        it("should report settled state from layout engine", async () => {
+        it("should report settled state from layout engine", async() => {
             // Mock layout registry
             const mockGet = vi.fn().mockReturnValue(() => mockLayoutEngine);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -316,7 +317,7 @@ describe("LayoutManager", () => {
             assert.isTrue(layoutManager.isSettled);
         });
 
-        it("should report as settled when not running", async () => {
+        it("should report as settled when not running", async() => {
             // Mock layout registry
             const mockGet = vi.fn().mockReturnValue(() => mockLayoutEngine);
             vi.doMock("../../src/layout/LayoutRegistry", () => ({
@@ -341,13 +342,13 @@ describe("LayoutManager", () => {
     });
 
     describe("data event handling", () => {
-        it("should listen to data events on init", async () => {
+        it("should listen to data events on init", async() => {
             await layoutManager.init();
 
             assert.isTrue(mockEventManager.onDataEvent.calledWith("added", layoutManager.handleDataAdded));
         });
 
-        it("should remove listener on dispose", async () => {
+        it("should remove listener on dispose", async() => {
             const mockObserver = {remove: vi.fn()};
             mockEventManager.onDataEvent.mockReturnValue(mockObserver);
 
@@ -373,7 +374,7 @@ describe("LayoutManager", () => {
 
         it("should not restart layout if shouldStartLayout is false", () => {
             layoutManager.running = false;
-            
+
             const event = {
                 type: "data-added",
                 dataType: "nodes",
