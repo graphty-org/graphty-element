@@ -48,7 +48,7 @@
     "test": "vitest --project=default",
     "test:browser": "vitest --project=browser",
     "test:storybook": "vitest --project=storybook",
-    "test:all": "vitest run --project=storybook --project=default --project=browser && npm run chromatic",
+    "test:all": "vitest run --project=storybook --project=default --project=browser",
     "test:visual": "npm run chromatic",
     "test:order": "vitest --project=browser test/initialization-order.test.ts test/operation-order.test.ts test/graphty-element-properties.test.ts",
     "coverage": "vitest --project=storybook --project=default --project=browser --coverage",
