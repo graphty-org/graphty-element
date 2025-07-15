@@ -1,5 +1,5 @@
 {
-  "name": "graphty",
+  "name": "@graphty/graphty-element",
   "private": false,
   "version": "1.0.0",
   "description": "A Web Component library for 3D/2D graph visualization built with Lit and Babylon.js",
