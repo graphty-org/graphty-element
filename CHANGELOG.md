@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/graphty-org/graphty-element/compare/v1.0.1...v1.0.2) (2025-07-15)
+
+
+### Bug Fixes
+
+* allow side-effects to that the web component automatically gets registered ([b8f1e90](https://github.com/graphty-org/graphty-element/commit/b8f1e9048475aa6dca3d967ce1a86e717a101e91))
+
 ## [1.0.1](https://github.com/graphty-org/graphty-element/compare/v1.0.0...v1.0.1) (2025-07-15)
 
 
