@@ -1,14 +1,44 @@
 {
   "name": "graphty",
-  "private": true,
-  "version": "0.0.0",
+  "private": false,
+  "version": "1.0.0",
+  "description": "A Web Component library for 3D/2D graph visualization built with Lit and Babylon.js",
   "type": "module",
+  "main": "./dist/graphty.umd.cjs",
+  "module": "./dist/graphty.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/graphty.js",
+      "require": "./dist/graphty.umd.cjs"
+    }
+  },
+  "sideEffects": false,
   "files": [
     "dist/",
-    "package.json",
-    "package-lock.json",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "keywords": [
+    "graph",
+    "visualization",
+    "3d",
+    "web-components",
+    "lit",
+    "babylonjs",
+    "typescript"
+  ],
+  "author": "Graphty Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graphty/graphty-element.git"
+  },
+  "homepage": "https://github.com/graphty/graphty-element",
+  "bugs": {
+    "url": "https://github.com/graphty/graphty-element/issues"
+  },
   "scripts": {
     "test": "vitest --project=default",
     "test:browser": "vitest --project=browser",
@@ -22,7 +52,7 @@
     "lint:pkg": "knip",
     "lint:all": "npm run lint && npm run lint:pkg",
     "dev": "vite --force --mode development",
-    "build": "tsc && vite build",
+    "build": "tsc --project tsconfig.build.json && vite build",
     "preview": "vite preview",
     "build:storybook": "storybook build",
     "storybook": "storybook dev -p 9025 --no-open",

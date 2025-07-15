@@ -10,7 +10,12 @@ export default tseslint.config(
     tseslint.configs.stylisticTypeChecked,
     {
         ignores: [
-            "dist",
+            "**/dist/**",
+            "**/dist/*",
+            "dist/**",
+            "dist/*",
+            "index.d.ts",
+            "index.js",
             "storybook-static",
             "coverage",
         ],

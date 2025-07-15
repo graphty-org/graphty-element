@@ -1,0 +1,47 @@
+# Source files
+src/
+test/
+.storybook/
+
+# Configuration files
+*.config.ts
+*.config.js
+tsconfig.json
+tsconfig.build.json
+.eslintrc*
+.gitignore
+.husky/
+.env*
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/*.stories.ts
+coverage/
+
+# Development files
+*.md
+!README.md
+.vscode/
+.idea/
+
+# Build artifacts
+node_modules/
+.DS_Store
+*.log
+*.tgz
+
+# Documentation and analysis files
+*.analysis.md
+*_ANALYSIS.md
+*_REPORT.md
+*_PLAN.md
+*_SUMMARY.md
+*_REVIEW.md
+
+# Storybook
+storybook-static/
+chromatic-output/
+
+# Debug files
+src/debug/

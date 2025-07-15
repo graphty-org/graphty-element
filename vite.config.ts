@@ -23,24 +23,37 @@ export default defineConfig(({mode}) => {
         },
         build: {
             lib: {
-                // Could also be a dictionary or array of multiple entry points
                 entry: "./index.ts",
                 name: "Graphty",
-                // the proper extensions will be added
-                // fileName: "graphty",
+                fileName: "graphty",
+                formats: ["es", "umd"],
             },
+            minify: mode === "production",
+            sourcemap: true,
             rollupOptions: {
                 external: [
                     "@babylonjs/core",
                     "@babylonjs/inspector",
                     "@babylonjs/loaders",
+                    "lit",
+                    "lit/decorators.js",
+                    "lit/directives/class-map.js",
+                    "lit/directives/style-map.js",
                 ],
                 output: {
                     globals: {
                         "@babylonjs/core": "BABYLON",
                         "@babylonjs/inspector": "BABYLON",
                         "@babylonjs/loaders": "BABYLON",
+                        "lit": "Lit",
+                        "lit/decorators.js": "Lit",
+                        "lit/directives/class-map.js": "Lit",
+                        "lit/directives/style-map.js": "Lit",
                     },
+                    chunkFileNames: "[name]-[hash].js",
+                },
+                treeshake: {
+                    moduleSideEffects: false,
                 },
             },
         },
