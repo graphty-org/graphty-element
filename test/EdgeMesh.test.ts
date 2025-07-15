@@ -114,6 +114,7 @@ describe("EdgeMesh", () => {
                 meshCache,
                 "test-arrow",
                 {type: "normal", width: 0.5, color: "#FF0000"},
+                scene,
             );
 
             assert.exists(arrowMesh);
@@ -125,6 +126,7 @@ describe("EdgeMesh", () => {
                 meshCache,
                 "test-no-arrow",
                 {type: "none", width: 0.5, color: "#FF0000"},
+                scene,
             );
 
             assert.isNull(arrowMesh);
@@ -135,6 +137,7 @@ describe("EdgeMesh", () => {
                 meshCache,
                 "test-no-type",
                 {width: 0.5, color: "#FF0000"},
+                scene,
             );
 
             assert.isNull(arrowMesh);
@@ -143,8 +146,8 @@ describe("EdgeMesh", () => {
         test("uses cache for arrow heads", () => {
             const options = {type: "normal" as const, width: 0.5, color: "#FF0000"};
 
-            const arrow1 = EdgeMesh.createArrowHead(meshCache, "cached-arrow", options);
-            const arrow2 = EdgeMesh.createArrowHead(meshCache, "cached-arrow", options);
+            const arrow1 = EdgeMesh.createArrowHead(meshCache, "cached-arrow", options, scene);
+            const arrow2 = EdgeMesh.createArrowHead(meshCache, "cached-arrow", options, scene);
 
             // Both should be instances from the same source mesh
             assert.exists(arrow1);
@@ -157,8 +160,8 @@ describe("EdgeMesh", () => {
         test("creates different arrow for different styleId", () => {
             const options = {type: "normal" as const, width: 0.5, color: "#FF0000"};
 
-            const arrow1 = EdgeMesh.createArrowHead(meshCache, "arrow1", options);
-            const arrow2 = EdgeMesh.createArrowHead(meshCache, "arrow2", options);
+            const arrow1 = EdgeMesh.createArrowHead(meshCache, "arrow1", options, scene);
+            const arrow2 = EdgeMesh.createArrowHead(meshCache, "arrow2", options, scene);
 
             assert.notStrictEqual(arrow1, arrow2);
         });

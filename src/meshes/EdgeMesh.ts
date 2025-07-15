@@ -46,7 +46,7 @@ export class EdgeMesh {
                 return this.createAnimatedLine(options, style, scene);
             }
 
-            return this.createStaticLine(options);
+            return this.createStaticLine(options, scene);
         });
     }
 
@@ -54,6 +54,7 @@ export class EdgeMesh {
         cache: MeshCache,
         styleId: string,
         options: ArrowHeadOptions,
+        scene: Scene,
     ): AbstractMesh | null {
         if (!options.type || options.type === "none") {
             return null;
@@ -83,11 +84,12 @@ export class EdgeMesh {
                 {
                     color: Color3.FromHexString(options.color),
                 },
+                scene,
             );
         });
     }
 
-    private static createStaticLine(options: EdgeMeshOptions): GreasedLineBaseMesh {
+    private static createStaticLine(options: EdgeMeshOptions, scene: Scene): GreasedLineBaseMesh {
         return CreateGreasedLine(
             "edge-plain",
             {
@@ -97,6 +99,7 @@ export class EdgeMesh {
                 color: Color3.FromHexString(options.color),
                 width: options.width,
             },
+            scene,
         );
     }
 
@@ -119,6 +122,7 @@ export class EdgeMesh {
                 width: options.width,
                 colorMode: GreasedLineMeshColorMode.COLOR_MODE_MULTIPLY,
             },
+            scene,
         );
 
         this.applyAnimatedTexture(mesh, texture, scene, style.line?.animationSpeed);

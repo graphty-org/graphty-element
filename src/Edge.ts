@@ -106,6 +106,7 @@ export class Edge {
                 width: style.line?.width ?? 0.25,
                 color: style.line?.color ?? "#FFFFFF",
             },
+            this.context.getScene(),
         );
 
         // create edge line mesh
@@ -184,6 +185,7 @@ export class Edge {
                 width: style.line?.width ?? 0.25,
                 color: style.line?.color ?? "#FFFFFF",
             },
+            this.context.getScene(),
         );
 
         // recreate edge line mesh
