@@ -1,6 +1,7 @@
 import {AbstractMesh, Color3, DynamicTexture, Engine, Mesh, MeshBuilder, Scene, StandardMaterial, Texture, Vector3} from "@babylonjs/core";
 
 import {BadgeStyleManager} from "../BadgeStyleManager";
+import {type RichTextStyleType} from "../config";
 import {type ContentArea as PointerContentArea, type PointerDirection, PointerRenderer} from "./PointerRenderer";
 import {RichTextAnimator} from "./RichTextAnimator";
 import {RichTextParser} from "./RichTextParser";
@@ -33,7 +34,7 @@ interface PointerInfo {
 
 interface Border {
     width: number;
-    color: string;
+    color: string | undefined;
     spacing: number;
 }
 
@@ -49,62 +50,8 @@ interface ContentArea {
     height: number;
 }
 
-export interface RichTextLabelOptions {
-    text?: string;
-    position?: {x: number, y: number, z: number};
-    resolution?: number;
-    autoSize?: boolean;
-    font?: string;
-    fontSize?: number;
-    fontWeight?: string;
-    textColor?: string;
-    textAlign?: "left" | "center" | "right";
-    lineHeight?: number;
-    backgroundColor?: string;
-    backgroundGradient?: boolean;
-    backgroundGradientColors?: string[];
-    backgroundGradientType?: "linear" | "radial";
-    backgroundGradientDirection?: "vertical" | "horizontal" | "diagonal";
-    backgroundPadding?: number;
-    marginTop?: number;
-    marginBottom?: number;
-    marginLeft?: number;
-    marginRight?: number;
-    borderWidth?: number;
-    borderColor?: string;
-    borders?: Border[];
-    cornerRadius?: number;
-    animation?: "none" | "pulse" | "bounce" | "shake" | "glow" | "fill";
-    animationSpeed?: number;
-    billboardMode?: number;
-    textShadow?: boolean;
-    textShadowColor?: string;
-    textShadowBlur?: number;
-    textShadowOffsetX?: number;
-    textShadowOffsetY?: number;
-    textOutline?: boolean;
-    textOutlineColor?: string;
-    textOutlineWidth?: number;
-    textOutlineJoin?: CanvasLineJoin;
-    pointer?: boolean;
-    pointerDirection?: "top" | "bottom" | "left" | "right" | "auto";
-    pointerWidth?: number;
-    pointerHeight?: number;
-    pointerOffset?: number;
-    pointerCurve?: boolean;
-    attachTo?: AbstractMesh | Vector3;
-    attachPosition?: AttachPosition;
-    attachOffset?: number;
-    depthFadeEnabled?: boolean;
-    depthFadeNear?: number;
-    depthFadeFar?: number;
-    badge?: BadgeType;
-    icon?: string;
-    iconPosition?: "left" | "right";
-    progress?: number;
-    smartOverflow?: boolean;
-    maxNumber?: number;
-    overflowSuffix?: string;
+// Internal properties that are not part of the public RichTextStyleType API
+interface InternalBadgeProperties {
     _badgeType?: BadgeType;
     _smartSizing?: boolean;
     _paddingRatio?: number;
@@ -112,7 +59,22 @@ export interface RichTextLabelOptions {
     _progressBar?: boolean;
 }
 
-type ResolvedRichTextLabelOptions = Omit<Required<RichTextLabelOptions>, "badge" | "icon" | "progress" | "attachTo" | "_badgeType" | "_smartSizing" | "_paddingRatio" | "_removeText" | "_progressBar"> & {
+// Additional runtime properties that can be passed to RichTextLabel
+interface RuntimeProperties {
+    attachTo?: AbstractMesh | Vector3;
+}
+
+// RichTextLabelOptions extends the config schema with runtime properties
+export type RichTextLabelOptions = Partial<RichTextStyleType> & InternalBadgeProperties & RuntimeProperties;
+
+// Helper type to make all properties required except specific ones
+type RequiredExceptOptional<T, K extends keyof T> = Required<Omit<T, K>> & Pick<T, K>;
+
+// Resolved options with all properties defined
+type ResolvedRichTextLabelOptions = RequiredExceptOptional<
+    RichTextLabelOptions,
+    "badge" | "icon" | "progress" | "attachTo" | "_badgeType" | "_smartSizing" | "_paddingRatio" | "_removeText" | "_progressBar" | "enabled" | "textPath" | "location" | "borders"
+> & {
     badge: BadgeType;
     icon: string | undefined;
     progress: number | undefined;
@@ -122,6 +84,7 @@ type ResolvedRichTextLabelOptions = Omit<Required<RichTextLabelOptions>, "badge"
     _paddingRatio: number | undefined;
     _removeText: boolean | undefined;
     _progressBar: boolean | undefined;
+    borders: Border[];
 };
 
 export class RichTextLabel {
@@ -196,7 +159,7 @@ export class RichTextLabel {
             pointerHeight: 15,
             pointerOffset: 0,
             pointerCurve: true,
-            attachTo: undefined as AbstractMesh | Vector3 | undefined,
+            attachTo: undefined,
             attachPosition: "top",
             attachOffset: 0.5,
             depthFadeEnabled: false,
@@ -487,7 +450,7 @@ export class RichTextLabel {
                 }
 
                 ctx.save();
-                ctx.fillStyle = border.color;
+                ctx.fillStyle = border.color ?? "rgba(255, 255, 255, 0.8)";
 
                 const x = currentOffset;
                 const y = currentOffset;
@@ -540,7 +503,7 @@ export class RichTextLabel {
         );
         ctx.closePath();
 
-        this._fillBackground(ctx, this.actualDimensions.width, this.actualDimensions.height);
+        this._fillBackground(ctx);
 
         if (this.options._progressBar) {
             this._drawProgressBar(ctx);
@@ -548,8 +511,6 @@ export class RichTextLabel {
     }
 
     private _drawBackgroundWithPointer(ctx: CanvasRenderingContext2D): void {
-        const {width} = this.actualDimensions;
-        const {height} = this.actualDimensions;
         const radius = this.options.cornerRadius;
 
         if (this.options.borders.length > 0 && this.pointerInfo) {
@@ -563,7 +524,7 @@ export class RichTextLabel {
                 }
 
                 ctx.save();
-                ctx.fillStyle = border.color;
+                ctx.fillStyle = border.color ?? "rgba(255, 255, 255, 0.8)";
                 ctx.beginPath();
 
                 const pointerArea: PointerContentArea = {
@@ -638,14 +599,48 @@ export class RichTextLabel {
 
         ctx.closePath();
 
-        this._fillBackground(ctx, width, height);
+        this._fillBackground(ctx);
 
         if (this.options._progressBar) {
             this._drawProgressBar(ctx);
         }
     }
 
-    private _fillBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    private _fillBackground(ctx: CanvasRenderingContext2D): void {
+        // Handle AdvancedColorStyle
+        const bgColor = this.options.backgroundColor;
+        if (typeof bgColor === "object" && "colorType" in bgColor) {
+            // Handle AdvancedColorStyle
+            if (bgColor.colorType === "gradient") {
+                const gradientX = this.contentArea.x;
+                const gradientY = this.contentArea.y;
+                const gradientWidth = this.contentArea.width;
+                const gradientHeight = this.contentArea.height;
+
+                // Create linear gradient based on direction
+                const angle = (bgColor.direction * Math.PI) / 180;
+                const x1 = gradientX + (gradientWidth / 2) - ((Math.cos(angle) * gradientWidth) / 2);
+                const y1 = gradientY + (gradientHeight / 2) - ((Math.sin(angle) * gradientHeight) / 2);
+                const x2 = gradientX + (gradientWidth / 2) + ((Math.cos(angle) * gradientWidth) / 2);
+                const y2 = gradientY + (gradientHeight / 2) + ((Math.sin(angle) * gradientHeight) / 2);
+
+                const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+
+                const {colors} = bgColor;
+                for (let i = 0; i < colors.length; i++) {
+                    gradient.addColorStop(i / (colors.length - 1), colors[i] ?? "transparent");
+                }
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                return;
+            } else if (bgColor.colorType === "solid") {
+                ctx.fillStyle = bgColor.value ?? "transparent";
+                ctx.fill();
+                return;
+            }
+        }
+
+        // Handle legacy gradient properties
         if (this.options.backgroundGradient) {
             let gradient: CanvasGradient;
 
@@ -656,8 +651,8 @@ export class RichTextLabel {
             const gradientHeight = this.contentArea.height;
 
             if (this.options.backgroundGradientType === "radial") {
-                const centerX = gradientX + gradientWidth / 2;
-                const centerY = gradientY + gradientHeight / 2;
+                const centerX = gradientX + (gradientWidth / 2);
+                const centerY = gradientY + (gradientHeight / 2);
                 const radius = Math.max(gradientWidth, gradientHeight) / 2;
                 gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             } else {
@@ -677,11 +672,11 @@ export class RichTextLabel {
 
             const colors = this.options.backgroundGradientColors;
             for (let i = 0; i < colors.length; i++) {
-                gradient.addColorStop(i / (colors.length - 1), colors[i]);
+                gradient.addColorStop(i / (colors.length - 1), colors[i] ?? "transparent");
             }
             ctx.fillStyle = gradient;
         } else {
-            ctx.fillStyle = this.options.backgroundColor;
+            ctx.fillStyle = typeof bgColor === "string" ? bgColor : "transparent";
         }
 
         ctx.fill();
@@ -729,7 +724,8 @@ export class RichTextLabel {
         ctx.scale(scaleX, scaleY);
 
         // Clear the progress bar area by redrawing the background color
-        ctx.fillStyle = this.options.backgroundColor;
+        const bgColor = this.options.backgroundColor;
+        ctx.fillStyle = typeof bgColor === "string" ? bgColor : "transparent";
         ctx.fillRect(progressBarX - 1, progressBarY - 1, progressBarWidth + 2, progressBarHeight + 2);
 
         // Draw progress bar background

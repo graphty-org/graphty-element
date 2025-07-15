@@ -190,62 +190,68 @@ export class Node {
         const attachPosition = this.getAttachPosition(labelStyle.location ?? "top");
         const attachOffset = labelStyle.attachOffset ?? this.getDefaultAttachOffset(labelStyle.location ?? "top");
 
-        // Create base options
+        // Transform backgroundColor to string if it's an advanced color style
+        let backgroundColor: string | undefined = undefined;
+        if (labelStyle.backgroundColor) {
+            if (typeof labelStyle.backgroundColor === "string") {
+                ({backgroundColor} = labelStyle);
+            } else if (labelStyle.backgroundColor.colorType === "solid") {
+                ({value: backgroundColor} = labelStyle.backgroundColor);
+            } else if (labelStyle.backgroundColor.colorType === "gradient") {
+                // For gradients, use the first color as a fallback
+                [backgroundColor] = labelStyle.backgroundColor.colors;
+            }
+        }
+
+        // Filter out undefined values from backgroundGradientColors
+        let backgroundGradientColors: string[] | undefined = undefined;
+        if (labelStyle.backgroundGradientColors) {
+            backgroundGradientColors = labelStyle.backgroundGradientColors.filter((color): color is string => color !== undefined);
+            if (backgroundGradientColors.length === 0) {
+                backgroundGradientColors = undefined;
+            }
+        }
+
+        // Transform borders to ensure colors are strings
+        let borders: {width: number, color: string, spacing: number}[] | undefined = undefined;
+        if (labelStyle.borders && labelStyle.borders.length > 0) {
+            const validBorders = labelStyle.borders
+                .filter((border): border is typeof border & {color: string} => border.color !== undefined)
+                .map((border) => ({
+                    width: border.width,
+                    color: border.color,
+                    spacing: border.spacing,
+                }));
+            // Only set borders if we have valid borders, otherwise leave it undefined
+            // so the default empty array is used
+            if (validBorders.length > 0) {
+                borders = validBorders;
+            }
+        }
+
+        // Create label options by spreading the entire labelStyle object
         const labelOptions: RichTextLabelOptions = {
+            ... labelStyle,
+            // Override with computed values
             text: labelText,
             attachTo: this.mesh,
             attachPosition,
             attachOffset,
+            backgroundColor,
+            backgroundGradientColors,
+            ... (borders !== undefined && {borders}),
         };
 
-        // Copy all relevant properties from labelStyle
-        const propertiesToCopy = [
-            "font",
-            "fontSize",
-            "fontWeight",
-            "lineHeight",
-            "textColor",
-            "backgroundColor",
-            "backgroundGradient",
-            "backgroundGradientType",
-            "backgroundGradientDirection",
-            "backgroundGradientColors",
-            "borderWidth",
-            "borderColor",
-            "borders",
-            "marginTop",
-            "marginBottom",
-            "marginLeft",
-            "marginRight",
-            "textAlign",
-            "cornerRadius",
-            "autoSize",
-            "animation",
-            "animationSpeed",
-            "badge",
-            "progress",
-            "textOutline",
-            "textOutlineWidth",
-            "textOutlineColor",
-            "backgroundPadding",
-            "smartOverflow",
-            "maxNumber",
-            "overflowSuffix",
-        ];
-
-        for (const prop of propertiesToCopy) {
-            if (prop in labelStyle && labelStyle[prop as keyof typeof labelStyle] !== undefined) {
-                const value = labelStyle[prop as keyof typeof labelStyle];
-                (labelOptions as Record<string, unknown>)[prop] = value;
-            }
-        }
-
         // Handle special case for transparent background
-        if (labelStyle.backgroundColor === "transparent") {
+        if (labelOptions.backgroundColor === "transparent") {
             labelOptions.backgroundColor = undefined;
         }
 
-        return labelOptions;
+        // Remove properties that shouldn't be passed to RichTextLabel
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const {location, textPath, enabled, ... finalLabelOptions} = labelOptions as RichTextLabelOptions & {location?: string, textPath?: string, enabled?: boolean};
+
+        return finalLabelOptions;
     }
 
     private getAttachPosition(location: string): "top" | "top-left" | "top-right" | "left" | "center" | "right" | "bottom" | "bottom-left" | "bottom-right" {

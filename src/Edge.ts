@@ -9,7 +9,7 @@ import type {AdHocData, EdgeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import {EdgeMesh} from "./meshes/EdgeMesh";
-import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
+import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
 
@@ -392,52 +392,79 @@ export class Edge {
     }
 
     private createLabelOptions(labelText: string, styleConfig: EdgeStyleConfig): RichTextLabelOptions {
-        const location = styleConfig.label?.location ?? "center";
-        const attachPosition = location === "automatic" ? "center" : location;
-
-        const labelOptions: RichTextLabelOptions = {
-            text: labelText,
-            attachPosition: attachPosition,
-            attachOffset: styleConfig.label?.attachOffset ?? 0,
-        };
-
         const {label} = styleConfig;
         if (!label) {
-            return labelOptions;
+            return {
+                text: labelText,
+                attachPosition: "center",
+                attachOffset: 0,
+            };
         }
 
-        // Copy all relevant properties
-        const propertiesToCopy = [
-            "font",
-            "fontSize",
-            "fontWeight",
-            "lineHeight",
-            "textColor",
-            "backgroundColor",
-            "backgroundGradient",
-            "backgroundGradientType",
-            "backgroundGradientDirection",
-            "backgroundGradientColors",
-            "borderWidth",
-            "borderColor",
-            "borders",
-            "marginTop",
-            "marginBottom",
-            "marginLeft",
-            "marginRight",
-            "textAlign",
-            "cornerRadius",
-            "autoSize",
-        ];
+        const labelLocation = label.location ?? "center";
+        const attachPosition = labelLocation === "automatic" ? "center" : labelLocation;
 
-        for (const prop of propertiesToCopy) {
-            if (prop in label && label[prop as keyof typeof label] !== undefined) {
-                const value = label[prop as keyof typeof label];
-                (labelOptions as Record<string, unknown>)[prop] = value;
+        // Transform backgroundColor to string if it's an advanced color style
+        let backgroundColor: string | undefined = undefined;
+        if (label.backgroundColor) {
+            if (typeof label.backgroundColor === "string") {
+                ({backgroundColor} = label);
+            } else if (label.backgroundColor.colorType === "solid") {
+                ({value: backgroundColor} = label.backgroundColor);
+            } else if (label.backgroundColor.colorType === "gradient") {
+                // For gradients, use the first color as a fallback
+                [backgroundColor] = label.backgroundColor.colors;
             }
         }
 
-        return labelOptions;
+        // Filter out undefined values from backgroundGradientColors
+        let backgroundGradientColors: string[] | undefined = undefined;
+        if (label.backgroundGradientColors) {
+            backgroundGradientColors = label.backgroundGradientColors.filter((color): color is string => color !== undefined);
+            if (backgroundGradientColors.length === 0) {
+                backgroundGradientColors = undefined;
+            }
+        }
+
+        // Transform borders to ensure colors are strings
+        let borders: {width: number, color: string, spacing: number}[] | undefined = undefined;
+        if (label.borders && label.borders.length > 0) {
+            const validBorders = label.borders
+                .filter((border): border is typeof border & {color: string} => border.color !== undefined)
+                .map((border) => ({
+                    width: border.width,
+                    color: border.color,
+                    spacing: border.spacing,
+                }));
+            // Only set borders if we have valid borders, otherwise leave it undefined
+            // so the default empty array is used
+            if (validBorders.length > 0) {
+                borders = validBorders;
+            }
+        }
+
+        // Create label options by spreading the entire label object
+        const labelOptions: RichTextLabelOptions = {
+            ... label,
+            // Override with computed values
+            text: labelText,
+            attachPosition: attachPosition as AttachPosition,
+            attachOffset: label.attachOffset ?? 0,
+            backgroundColor,
+            backgroundGradientColors,
+            ... (borders !== undefined && {borders}),
+        };
+
+        // Handle special case for transparent background
+        if (labelOptions.backgroundColor === "transparent") {
+            labelOptions.backgroundColor = undefined;
+        }
+
+        // Remove properties that shouldn't be passed to RichTextLabel
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const {location, textPath, enabled, ... finalLabelOptions} = labelOptions as RichTextLabelOptions & {location?: string, textPath?: string, enabled?: boolean};
+
+        return finalLabelOptions;
     }
 }
 
