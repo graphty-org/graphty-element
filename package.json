@@ -1,6 +1,5 @@
 {
   "name": "@graphty/graphty-element",
-  "private": false,
   "version": "1.0.0",
   "description": "A Web Component library for 3D/2D graph visualization built with Lit and Babylon.js",
   "type": "module",
@@ -29,11 +28,11 @@
     "babylonjs",
     "typescript"
   ],
-  "author": "Graphty Team",
+  "author": "Adam Powers <apowers@ato.ms>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/graphty-org/graphty-element.git"
+    "url": "git+https://github.com/graphty-org/graphty-element.git"
   },
   "homepage": "https://github.com/graphty-org/graphty-element",
   "bugs": {
