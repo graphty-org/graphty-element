@@ -89,7 +89,7 @@ export class Graph implements GraphContext {
 
         // get a canvas element for rendering
         this.canvas = document.createElement("canvas");
-        this.canvas.setAttribute("id", `babylonForceGraphRenderCanvas${Date.now()}`);
+        this.canvas.setAttribute("id", `graphty-canvas-${Date.now()}`);
         this.canvas.setAttribute("touch-action", "none");
         this.canvas.setAttribute("autofocus", "true");
         this.canvas.setAttribute("tabindex", "0");
