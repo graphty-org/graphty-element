@@ -62,7 +62,8 @@
     "prepare": "husky",
     "postinstall": "playwright install",
     "build-storybook": "npm run build:storybook",
-    "ready:commit": "npm run build && npm run lint && npm run test:all"
+    "ready:commit": "npm run build && npm run lint && npm run test:all",
+    "merge:upstream": "git pull origin master --no-rebase"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.0.0",
