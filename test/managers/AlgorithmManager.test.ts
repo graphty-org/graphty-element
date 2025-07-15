@@ -1,5 +1,4 @@
-import {assert} from "chai";
-import {beforeEach, describe, expect, it, vi} from "vitest";
+import {assert, beforeEach, describe, expect, it, vi} from "vitest";
 
 import {Algorithm} from "../../src/algorithms/Algorithm";
 import type {Graph} from "../../src/Graph";
@@ -27,12 +26,12 @@ describe("AlgorithmManager", () => {
         mockEventManager = {
             emitGraphError: vi.fn(),
             emitGraphEvent: vi.fn(),
-        } as EventManager;
+        } as unknown as EventManager;
 
         // Create mock graph
         mockGraph = {
             id: "test-graph",
-        } as Graph;
+        } as unknown as Graph;
 
         // Create mock algorithm
         mockAlgorithm = {
@@ -40,7 +39,7 @@ describe("AlgorithmManager", () => {
         };
 
         // Default Algorithm.get to return mock algorithm
-        vi.mocked(Algorithm.get).mockReturnValue(mockAlgorithm);
+        vi.mocked(Algorithm.get).mockReturnValue(mockAlgorithm as unknown as Algorithm);
 
         algorithmManager = new AlgorithmManager(mockEventManager, mockGraph);
     });
@@ -161,6 +160,7 @@ describe("AlgorithmManager", () => {
                 if (callCount === 2) {
                     throw new Error("Algorithm 2 failed");
                 }
+
                 return Promise.resolve();
             });
 
@@ -229,7 +229,7 @@ describe("AlgorithmManager", () => {
 
     describe("hasAlgorithm", () => {
         it("should return true for existing algorithm", () => {
-            vi.mocked(Algorithm.get).mockReturnValue(mockAlgorithm);
+            vi.mocked(Algorithm.get).mockReturnValue(mockAlgorithm as unknown as Algorithm);
 
             const result = algorithmManager.hasAlgorithm("test", "algorithm");
 
@@ -278,6 +278,7 @@ describe("AlgorithmManager", () => {
             }
 
             const errorCall = vi.mocked(mockEventManager.emitGraphError).mock.calls[0];
+            assert.isDefined(errorCall[3]);
             assert.equal(errorCall[3].component, "AlgorithmManager");
         });
 
@@ -308,10 +309,10 @@ describe("AlgorithmManager", () => {
                         run: vi.fn().mockImplementation(() =>
                             new Promise((resolve) => setTimeout(resolve, 10)),
                         ),
-                    };
+                    } as unknown as Algorithm;
                 }
 
-                return mockAlgorithm;
+                return mockAlgorithm as unknown as Algorithm;
             });
 
             await algorithmManager.runAlgorithmsFromTemplate(algorithms);
@@ -339,6 +340,7 @@ describe("AlgorithmManager", () => {
                 if (callCount === 2) {
                     throw new Error("Processing failed");
                 }
+
                 return Promise.resolve();
             });
 

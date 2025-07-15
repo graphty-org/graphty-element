@@ -64,9 +64,7 @@ export class Node {
         this.styleId = styleId;
 
         // create graph node
-        // Only add to layout engine if it's already initialized
-        // Otherwise, it will be added when the layout is set
-        this.context.getLayoutManager().layoutEngine?.addNode(this);
+        // Note: Node is added to layout engine by DataManager, not here
 
         // create mesh
         const o = Styles.getStyleForNodeStyleId(styleId);

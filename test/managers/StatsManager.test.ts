@@ -1,28 +1,19 @@
-import {assert} from "chai";
-import {beforeEach, describe, it, vi} from "vitest";
+import {assert, beforeEach, describe, it, vi} from "vitest";
 
+import type {EventManager} from "../../src/managers/EventManager";
 import {StatsManager} from "../../src/managers/StatsManager";
-import type {Stats} from "../../src/Stats";
 
 describe("StatsManager", () => {
     let statsManager: StatsManager;
-    let mockStats: Stats;
+    let mockEventManager: EventManager;
 
     beforeEach(() => {
-        // Create mock Stats
-        mockStats = {
-            nodeUpdate: {beginMonitoring: vi.fn(), endMonitoring: vi.fn()},
-            edgeUpdate: {beginMonitoring: vi.fn(), endMonitoring: vi.fn()},
-            layoutUpdate: {beginMonitoring: vi.fn(), endMonitoring: vi.fn()},
-            graphStep: {beginMonitoring: vi.fn(), endMonitoring: vi.fn()},
-            step: vi.fn(),
-            nodeCount: 0,
-            edgeCount: 0,
-            cacheHits: 0,
-            cacheMisses: 0,
-        } as Stats;
+        // Create mock EventManager
+        mockEventManager = {
+            emitGraphEvent: vi.fn(),
+        } as unknown as EventManager;
 
-        statsManager = new StatsManager(mockStats);
+        statsManager = new StatsManager(mockEventManager);
     });
 
     describe("initialization", () => {
@@ -37,87 +28,131 @@ describe("StatsManager", () => {
         });
     });
 
-    describe("stats delegation", () => {
-        it("should delegate step to stats", () => {
+    describe("stats functionality", () => {
+        it("should increment totalUpdates on step", () => {
             statsManager.step();
-            assert.isTrue(mockStats.step.calledOnce);
+            const stats = statsManager.getStats();
+            assert.equal(stats.totalUpdates, 1);
         });
 
-        it("should provide access to nodeUpdate instrumentation", () => {
+        it("should provide access to nodeUpdate PerfCounter", () => {
             const {nodeUpdate} = statsManager;
-            assert.equal(nodeUpdate, mockStats.nodeUpdate);
+            assert.isDefined(nodeUpdate);
+            assert.isDefined(nodeUpdate.beginMonitoring);
+            assert.isDefined(nodeUpdate.endMonitoring);
         });
 
-        it("should provide access to edgeUpdate instrumentation", () => {
+        it("should provide access to edgeUpdate PerfCounter", () => {
             const {edgeUpdate} = statsManager;
-            assert.equal(edgeUpdate, mockStats.edgeUpdate);
+            assert.isDefined(edgeUpdate);
+            assert.isDefined(edgeUpdate.beginMonitoring);
+            assert.isDefined(edgeUpdate.endMonitoring);
         });
 
-        it("should provide access to layoutUpdate instrumentation", () => {
-            const {layoutUpdate} = statsManager;
-            assert.equal(layoutUpdate, mockStats.layoutUpdate);
-        });
-
-        it("should provide access to graphStep instrumentation", () => {
+        it("should provide access to graphStep PerfCounter", () => {
             const {graphStep} = statsManager;
-            assert.equal(graphStep, mockStats.graphStep);
-        });
-    });
-
-    describe("count updates", () => {
-        it("should update node and edge counts", () => {
-            statsManager.updateCounts(10, 20);
-
-            assert.equal(mockStats.nodeCount, 10);
-            assert.equal(mockStats.edgeCount, 20);
+            assert.isDefined(graphStep);
+            assert.isDefined(graphStep.beginMonitoring);
+            assert.isDefined(graphStep.endMonitoring);
         });
 
-        it("should handle zero counts", () => {
-            statsManager.updateCounts(0, 0);
-
-            assert.equal(mockStats.nodeCount, 0);
-            assert.equal(mockStats.edgeCount, 0);
+        it("should provide access to arrowCapUpdate PerfCounter", () => {
+            const {arrowCapUpdate} = statsManager;
+            assert.isDefined(arrowCapUpdate);
+            assert.isDefined(arrowCapUpdate.beginMonitoring);
+            assert.isDefined(arrowCapUpdate.endMonitoring);
         });
 
-        it("should handle large counts", () => {
-            statsManager.updateCounts(1000000, 2000000);
+        it("should provide access to intersectCalc PerfCounter", () => {
+            const {intersectCalc} = statsManager;
+            assert.isDefined(intersectCalc);
+            assert.isDefined(intersectCalc.beginMonitoring);
+            assert.isDefined(intersectCalc.endMonitoring);
+        });
 
-            assert.equal(mockStats.nodeCount, 1000000);
-            assert.equal(mockStats.edgeCount, 2000000);
+        it("should provide access to loadTime PerfCounter", () => {
+            const {loadTime} = statsManager;
+            assert.isDefined(loadTime);
+            assert.isDefined(loadTime.beginMonitoring);
+            assert.isDefined(loadTime.endMonitoring);
         });
     });
 
     describe("cache statistics", () => {
-        it("should update cache hits and misses", () => {
-            statsManager.updateCacheStats(100, 25);
-
-            assert.equal(mockStats.cacheHits, 100);
-            assert.equal(mockStats.cacheMisses, 25);
-        });
-
-        it("should handle zero cache stats", () => {
-            statsManager.updateCacheStats(0, 0);
-
-            assert.equal(mockStats.cacheHits, 0);
-            assert.equal(mockStats.cacheMisses, 0);
-        });
-
-        it("should calculate cache hit rate correctly", () => {
-            statsManager.updateCacheStats(75, 25);
-
-            const hitRate = Number(mockStats.cacheHits) / (Number(mockStats.cacheHits) + Number(mockStats.cacheMisses));
-            assert.equal(hitRate, 0.75);
+        it("should update cache stats", () => {
+            statsManager.updateCacheStats(100, 20);
+            const stats = statsManager.getStats();
+            assert.equal(stats.meshCacheHits, 100);
+            assert.equal(stats.meshCacheMisses, 20);
         });
     });
 
-    describe("instrumentation usage", () => {
+    describe("node/edge counts", () => {
+        it("should update node and edge counts", () => {
+            statsManager.updateCounts(50, 75);
+            const stats = statsManager.getStats();
+            assert.equal(stats.numNodes, 50);
+            assert.equal(stats.numEdges, 75);
+        });
+    });
+
+    describe("stats reporting", () => {
+        it("should return comprehensive stats object", () => {
+            statsManager.updateCounts(10, 20);
+            statsManager.updateCacheStats(5, 2);
+            statsManager.step();
+
+            const stats = statsManager.getStats();
+
+            assert.equal(stats.numNodes, 10);
+            assert.equal(stats.numEdges, 20);
+            assert.equal(stats.totalUpdates, 1);
+            assert.equal(stats.meshCacheHits, 5);
+            assert.equal(stats.meshCacheMisses, 2);
+            assert.isDefined(stats.nodeUpdateCount);
+            assert.isDefined(stats.edgeUpdateCount);
+            assert.isDefined(stats.arrowCapUpdateCount);
+        });
+
+        it("should emit stats-update event every 60 steps", () => {
+            // First 59 steps should not emit
+            for (let i = 0; i < 59; i++) {
+                statsManager.step();
+            }
+            assert.equal(vi.mocked(mockEventManager.emitGraphEvent).mock.calls.length, 0);
+
+            // 60th step should emit
+            statsManager.step();
+            assert.equal(vi.mocked(mockEventManager.emitGraphEvent).mock.calls.length, 1);
+            assert.equal(vi.mocked(mockEventManager.emitGraphEvent).mock.calls[0][0], "stats-update");
+            assert.equal(vi.mocked(mockEventManager.emitGraphEvent).mock.calls[0][1].totalUpdates, 60);
+        });
+    });
+
+    describe("reset functionality", () => {
+        it("should reset all counters", () => {
+            // Set some values
+            statsManager.updateCounts(10, 20);
+            statsManager.step();
+            statsManager.step();
+
+            // Reset
+            statsManager.reset();
+
+            const stats = statsManager.getStats();
+            assert.equal(stats.totalUpdates, 0);
+            // Note: node/edge counts are not reset by reset()
+        });
+    });
+
+    describe("performance monitoring", () => {
         it("should allow monitoring node updates", () => {
             statsManager.nodeUpdate.beginMonitoring();
             // Simulate some work
             statsManager.nodeUpdate.endMonitoring();
 
-            assert.isTrue(mockStats.nodeUpdate.beginMonitoring.calledOnce);
-            assert.isTrue(mockStats.nodeUpdate.endMonitoring.calledOnce);
+            // PerfCounter should track the call
+            assert.equal(statsManager.nodeUpdate.count, 1);
         });
 
         it("should allow monitoring edge updates", () => {
@@ -125,17 +160,8 @@ describe("StatsManager", () => {
             // Simulate some work
             statsManager.edgeUpdate.endMonitoring();
 
-            assert.isTrue(mockStats.edgeUpdate.beginMonitoring.calledOnce);
-            assert.isTrue(mockStats.edgeUpdate.endMonitoring.calledOnce);
-        });
-
-        it("should allow monitoring layout updates", () => {
-            statsManager.layoutUpdate.beginMonitoring();
-            // Simulate some work
-            statsManager.layoutUpdate.endMonitoring();
-
-            assert.isTrue(mockStats.layoutUpdate.beginMonitoring.calledOnce);
-            assert.isTrue(mockStats.layoutUpdate.endMonitoring.calledOnce);
+            // PerfCounter should track the call
+            assert.equal(statsManager.edgeUpdate.count, 1);
         });
 
         it("should allow monitoring graph steps", () => {
@@ -143,48 +169,38 @@ describe("StatsManager", () => {
             // Simulate some work
             statsManager.graphStep.endMonitoring();
 
-            assert.isTrue(mockStats.graphStep.beginMonitoring.calledOnce);
-            assert.isTrue(mockStats.graphStep.endMonitoring.calledOnce);
+            // PerfCounter should track the call
+            assert.equal(statsManager.graphStep.count, 1);
         });
     });
 
-    describe("stats object access", () => {
-        it("should provide access to underlying stats object", () => {
-            const stats = statsManager.getStats();
-            assert.equal(stats, mockStats);
+    describe("toString output", () => {
+        it("should generate human-readable stats report", () => {
+            statsManager.updateCounts(10, 20);
+            statsManager.updateCacheStats(100, 20);
+            statsManager.step();
+
+            const report = statsManager.toString();
+
+            assert.isTrue(report.includes("Graph"));
+            assert.isTrue(report.includes("Num Nodes: 10"));
+            assert.isTrue(report.includes("Num Edges: 20"));
+            assert.isTrue(report.includes("Total Updates: 1"));
+            assert.isTrue(report.includes("Mesh Cache Hits: 100"));
+            assert.isTrue(report.includes("Mesh Cache Misses: 20"));
+            assert.isTrue(report.includes("Graph Engine Performance"));
         });
     });
 
-    describe("performance tracking patterns", () => {
-        it("should support nested monitoring", () => {
-            // Start graph step
-            statsManager.graphStep.beginMonitoring();
+    describe("performance summary", () => {
+        it("should return default values when instrumentation not initialized", () => {
+            const summary = statsManager.getPerformanceSummary();
 
-            // Within graph step, monitor node updates
-            statsManager.nodeUpdate.beginMonitoring();
-            statsManager.nodeUpdate.endMonitoring();
-
-            // Also monitor edge updates
-            statsManager.edgeUpdate.beginMonitoring();
-            statsManager.edgeUpdate.endMonitoring();
-
-            // End graph step
-            statsManager.graphStep.endMonitoring();
-
-            assert.equal(mockStats.graphStep.beginMonitoring.callCount, 1);
-            assert.equal(mockStats.graphStep.endMonitoring.callCount, 1);
-            assert.equal(mockStats.nodeUpdate.beginMonitoring.callCount, 1);
-            assert.equal(mockStats.nodeUpdate.endMonitoring.callCount, 1);
-            assert.equal(mockStats.edgeUpdate.beginMonitoring.callCount, 1);
-            assert.equal(mockStats.edgeUpdate.endMonitoring.callCount, 1);
-        });
-
-        it("should handle multiple step calls", () => {
-            for (let i = 0; i < 10; i++) {
-                statsManager.step();
-            }
-
-            assert.equal(mockStats.step.callCount, 10);
+            assert.equal(summary.fps, 0);
+            assert.equal(summary.frameTime, 0);
+            assert.equal(summary.renderTime, 0);
+            assert.equal(summary.gpuTime, 0);
+            assert.equal(summary.drawCalls, 0);
         });
     });
 });

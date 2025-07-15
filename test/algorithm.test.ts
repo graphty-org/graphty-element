@@ -9,15 +9,29 @@ interface MockGraphOpts {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function mockGraph(opts: MockGraphOpts = {}): Promise<any> {
-    const fakeGraph = {
-        nodes: new Map<string | number, AdHocData>(),
-        edges: new Map<string | number, AdHocData>(),
-    };
+    const nodes = new Map<string | number, AdHocData>();
+    const edges = new Map<string | number, AdHocData>();
+
     if (typeof opts.dataPath === "string") {
         const imp = await import(opts.dataPath);
-        fakeGraph.nodes = new Map(imp.nodes.map((n: AdHocData) => [n.id, n]));
-        fakeGraph.edges = new Map(imp.edges.map((e: AdHocData) => [`${e.srcId}:${e.dstId}`, e]));
+        for (const n of imp.nodes) {
+            nodes.set(n.id, n);
+        }
+        for (const e of imp.edges) {
+            edges.set(`${e.srcId}:${e.dstId}`, e);
+        }
     }
+
+    const fakeGraph = {
+        nodes,
+        edges,
+        getDataManager() {
+            return {
+                nodes,
+                edges,
+            };
+        },
+    };
 
     return fakeGraph;
 }

@@ -92,9 +92,7 @@ export class Edge {
         this.styleId = styleId;
 
         // create ngraph link
-        // Only add to layout engine if it's already initialized
-        // Otherwise, it will be added when the layout is set
-        this.context.getLayoutManager().layoutEngine?.addEdge(this);
+        // Note: Edge is added to layout engine by DataManager, not here
 
         // create mesh
         const style = Styles.getStyleForEdgeStyleId(this.styleId);

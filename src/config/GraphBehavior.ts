@@ -1,6 +1,7 @@
 import {z} from "zod/v4";
 
 import type {Graph} from "../Graph";
+import type {Node as GraphNode} from "../Node";
 
 export const NodeBehaviorOpts = z.strictObject({
     pinOnDrag: z.boolean().default(true),
@@ -41,4 +42,4 @@ export type EdgeObjectType = z.infer<typeof EdgeObject>;
 // export type GraphKnownFieldsType = z.infer<typeof GraphKnownFields>
 
 export type FetchNodesFn = (nodeIds: Set<NodeIdType>, g: Graph) => Set<NodeObjectType>;
-export type FetchEdgesFn = (node: Node, g: Graph) => Set<EdgeObjectType>;
+export type FetchEdgesFn = (node: GraphNode, g: Graph) => Set<EdgeObjectType>;

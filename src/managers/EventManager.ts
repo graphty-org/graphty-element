@@ -28,10 +28,13 @@ export class EventManager implements Manager {
     private edgeObservable = new Observable<EdgeEvent>();
 
     // Track observers for cleanup
+    // Using any here is required due to BabylonJS Observable/Observer type limitations
     private observers = new Map<symbol, {
         type: "graph" | "node" | "edge";
-        observable: Observable<GraphEvent | NodeEvent | EdgeEvent>;
-        observer: (event: GraphEvent | NodeEvent | EdgeEvent) => void;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        observable: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        observer: any;
     }>();
 
     // Error handling configuration
@@ -271,7 +274,7 @@ export class EventManager implements Manager {
         graph: Graph | GraphContext | null,
         details?: Record<string, unknown>,
     ): Promise<T> {
-        let lastError: Error;
+        let lastError: Error | undefined;
 
         for (let attempt = 0; attempt < this.errorRetryCount; attempt++) {
             try {
@@ -296,6 +299,6 @@ export class EventManager implements Manager {
         }
 
         // All attempts failed
-        throw lastError;
+        throw lastError ?? new Error("Operation failed with no recorded error");
     }
 }

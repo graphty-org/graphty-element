@@ -6,7 +6,7 @@ import {
 
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
-import type {Node, NodeIdType} from "./Node";
+import type {Node as GraphNode, NodeIdType} from "./Node";
 
 interface NodeBehaviorOptions {
     pinOnDrag?: boolean;
@@ -17,7 +17,7 @@ export class NodeBehavior {
     /**
      * Add default interaction behaviors to a node
      */
-    static addDefaultBehaviors(node: Node, options: NodeBehaviorOptions = {}): void {
+    static addDefaultBehaviors(node: GraphNode, options: NodeBehaviorOptions = {}): void {
         node.mesh.isPickable = true;
 
         this.addDragBehavior(node, options);
@@ -27,7 +27,7 @@ export class NodeBehavior {
     /**
      * Add drag behavior to a node
      */
-    private static addDragBehavior(node: Node, options: NodeBehaviorOptions): void {
+    private static addDragBehavior(node: GraphNode, options: NodeBehaviorOptions): void {
         // drag behavior setup
         node.pinOnDrag = options.pinOnDrag ?? true;
         node.meshDragBehavior = new SixDofDragBehavior();
@@ -80,7 +80,7 @@ export class NodeBehavior {
     /**
      * Add click behavior for node expansion
      */
-    private static addClickBehavior(node: Node): void {
+    private static addClickBehavior(node: GraphNode): void {
         // click behavior setup
         const context = this.getContext(node);
         const scene = context.getScene();
@@ -109,7 +109,8 @@ export class NodeBehavior {
                         context.setRunning(true);
 
                         // fetch all edges for current node
-                        const edges = fetchEdges(node, graph as unknown as Graph) as {src: NodeIdType, dst: NodeIdType}[];
+                        const edgeSet = fetchEdges(node, graph as unknown as Graph);
+                        const edges = Array.from(edgeSet);
 
                         // create set of unique node ids
                         const nodeIds = new Set<NodeIdType>();
@@ -137,7 +138,7 @@ export class NodeBehavior {
     /**
      * Helper to get GraphContext from a Node
      */
-    private static getContext(node: Node): GraphContext {
+    private static getContext(node: GraphNode): GraphContext {
         // Check if parentGraph has GraphContext methods
         if ("getStyles" in node.parentGraph) {
             return node.parentGraph;

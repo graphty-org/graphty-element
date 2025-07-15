@@ -1,10 +1,9 @@
-import {assert} from "chai";
-import {beforeEach, describe, it, vi} from "vitest";
+import {assert, beforeEach, describe, it, vi} from "vitest";
 
 import type {AdHocData} from "../../src/config";
 import type {EventManager} from "../../src/managers/EventManager";
 import {StyleManager} from "../../src/managers/StyleManager";
-import {Styles} from "../../src/Styles";
+import {type EdgeStyleId, type NodeStyleId, Styles} from "../../src/Styles";
 
 describe("StyleManager", () => {
     let styleManager: StyleManager;
@@ -15,7 +14,7 @@ describe("StyleManager", () => {
         // Create mock EventManager
         mockEventManager = {
             emitGraphEvent: vi.fn(),
-        } as EventManager;
+        } as unknown as EventManager;
 
         // Create mock Styles
         mockStyles = {
@@ -24,7 +23,7 @@ describe("StyleManager", () => {
             getCalculatedStylesForNode: vi.fn().mockReturnValue([]),
             addLayer: vi.fn(),
             insertLayer: vi.fn(),
-        } as Styles;
+        } as unknown as Styles;
 
         styleManager = new StyleManager(mockEventManager, mockStyles);
     });
@@ -173,7 +172,7 @@ describe("StyleManager", () => {
             const nodeStyle = {enabled: true};
             vi.spyOn(Styles, "getStyleForNodeStyleId").mockReturnValue(nodeStyle);
 
-            const result = StyleManager.getStyleForNodeStyleId(1);
+            const result = StyleManager.getStyleForNodeStyleId(1 as NodeStyleId);
 
             assert.deepEqual(result, nodeStyle);
         });
@@ -182,7 +181,7 @@ describe("StyleManager", () => {
             const edgeStyle = {enabled: true};
             vi.spyOn(Styles, "getStyleForEdgeStyleId").mockReturnValue(edgeStyle);
 
-            const result = StyleManager.getStyleForEdgeStyleId(1);
+            const result = StyleManager.getStyleForEdgeStyleId(1 as EdgeStyleId);
 
             assert.deepEqual(result, edgeStyle);
         });
@@ -205,7 +204,7 @@ describe("StyleManager", () => {
         });
 
         it("should clear cache when updating styles", () => {
-            const newStyles = {} as Styles;
+            const newStyles = {} as unknown as Styles;
             const nodeData = {type: "test"} as unknown as AdHocData;
 
             // Fill cache

@@ -13,6 +13,18 @@ export default defineConfig({
             {
                 test: {
                     name: "default",
+                    exclude: [
+                        // These tests require DOM APIs and should run in browser environment
+                        "test/managers/DataManager.test.ts",
+                        "test/managers/LayoutManager.test.ts",
+                        "test/managers/LifecycleManager.test.ts",
+                        // Standard vitest excludes
+                        "**/node_modules/**",
+                        "**/dist/**",
+                        "**/cypress/**",
+                        "**/.{idea,git,cache,output,temp}/**",
+                        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
+                    ],
                 },
             },
             {
