@@ -33,11 +33,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/graphty/graphty-element.git"
+    "url": "https://github.com/graphty-org/graphty-element.git"
   },
-  "homepage": "https://github.com/graphty/graphty-element",
+  "homepage": "https://github.com/graphty-org/graphty-element",
   "bugs": {
-    "url": "https://github.com/graphty/graphty-element/issues"
+    "url": "https://github.com/graphty-org/graphty-element/issues"
   },
   "scripts": {
     "test": "vitest --project=default",
