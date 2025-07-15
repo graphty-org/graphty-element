@@ -23,7 +23,8 @@
     "LICENSE"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "keywords": [
     "graph",
@@ -64,7 +65,7 @@
     "chromatic": "npx chromatic",
     "prepare": "husky",
     "postinstall": "playwright install",
-    "build-storybook": "npm run build:storybook",
+    "build-storybook": "storybook build",
     "ready:commit": "npm run build && npm run lint && npm run test:all",
     "merge:upstream": "git pull origin master --no-rebase"
   },
