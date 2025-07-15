@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/graphty-org/graphty-element/compare/v1.0.0...v1.0.1) (2025-07-15)
+
+
+### Bug Fixes
+
+* semantic release (take 3) ([f603c55](https://github.com/graphty-org/graphty-element/commit/f603c55ee25bd5725baea63c0724784cf7187363))
+
 # 1.0.0 (2025-07-15)
 
 
