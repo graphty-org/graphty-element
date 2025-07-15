@@ -172,6 +172,9 @@ jobs:
         env:
           HUSKY: 0
 
+      - name: Verify npm signatures
+        run: npm audit signatures
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
