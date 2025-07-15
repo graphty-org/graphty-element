@@ -13,7 +13,10 @@
       "require": "./dist/graphty.umd.cjs"
     }
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/graphty.js",
+    "./dist/graphty.umd.cjs"
+  ],
   "files": [
     "dist/",
     "README.md",

@@ -53,7 +53,7 @@ export default defineConfig(({mode}) => {
                     chunkFileNames: "[name]-[hash].js",
                 },
                 treeshake: {
-                    moduleSideEffects: false,
+                    moduleSideEffects: true,
                 },
             },
         },
