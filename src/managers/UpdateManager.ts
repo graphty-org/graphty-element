@@ -202,6 +202,8 @@ export class UpdateManager implements Manager {
                 boundingBoxMax,
             });
         }
+        // If bounding box is too small, keep needsZoomToFit true to retry next frame
+        // This handles cases where layout positions haven't been calculated yet
     }
 
     /**

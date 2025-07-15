@@ -648,19 +648,29 @@ export class RichTextLabel {
     private _fillBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
         if (this.options.backgroundGradient) {
             let gradient: CanvasGradient;
+
+            // Use content area coordinates for gradient to ensure it's positioned correctly
+            const gradientX = this.contentArea.x;
+            const gradientY = this.contentArea.y;
+            const gradientWidth = this.contentArea.width;
+            const gradientHeight = this.contentArea.height;
+
             if (this.options.backgroundGradientType === "radial") {
-                gradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) / 2);
+                const centerX = gradientX + gradientWidth / 2;
+                const centerY = gradientY + gradientHeight / 2;
+                const radius = Math.max(gradientWidth, gradientHeight) / 2;
+                gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             } else {
                 switch (this.options.backgroundGradientDirection) {
                     case "horizontal":
-                        gradient = ctx.createLinearGradient(0, 0, width, 0);
+                        gradient = ctx.createLinearGradient(gradientX, gradientY, gradientX + gradientWidth, gradientY);
                         break;
                     case "diagonal":
-                        gradient = ctx.createLinearGradient(0, 0, width, height);
+                        gradient = ctx.createLinearGradient(gradientX, gradientY, gradientX + gradientWidth, gradientY + gradientHeight);
                         break;
                     case "vertical":
                     default:
-                        gradient = ctx.createLinearGradient(0, 0, 0, height);
+                        gradient = ctx.createLinearGradient(gradientX, gradientY, gradientX, gradientY + gradientHeight);
                         break;
                 }
             }
