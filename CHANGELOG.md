@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/graphty-org/graphty-element/compare/v1.0.3...v1.0.4) (2025-07-15)
+
+
+### Bug Fixes
+
+* fix npm provenance ([922edf5](https://github.com/graphty-org/graphty-element/commit/922edf5a13a1108457adfa9a2b6d2dc225cb95ae))
+
 ## [1.0.3](https://github.com/graphty-org/graphty-element/compare/v1.0.2...v1.0.3) (2025-07-15)
 
 
