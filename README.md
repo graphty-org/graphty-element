@@ -27,51 +27,148 @@ Graphty provides a powerful `<graphty-element>` Web Component that renders netwo
 ## Installation
 
 ```bash
-npm install graphty-element
+npm install @graphty/graphty-element
 ```
+
+### Peer Dependencies
+
+This library requires the following peer dependencies:
+
+```bash
+npm install @babylonjs/core lit
+```
+
+**Important**: Both dependencies must be installed for the library to work. The package will not function without them.
+
+### Package Details
+
+- **Package name**: `@graphty/graphty-element`
+- **Main entry**: ES module that auto-registers the `<graphty-element>` custom element
+- **Exports**: 
+  - Default: Auto-registers the web component when imported
+  - Named exports: `Graph`, `LayoutRegistry`, `DataSourceRegistry`, `LayoutEngine`, `DataSource`
+- **TypeScript**: Full TypeScript support with included type definitions
+- **Module format**: ES modules (ESM) and UMD
+- **Side effects**: Importing the package registers the custom element globally
 
 ## Quick Start
 
-### Using the Web Component
+### Minimal Complete Example
+
+```bash
+# Create a new project
+mkdir my-graph-app && cd my-graph-app
+npm init -y
+
+# Install graphty and its peer dependencies
+npm install @graphty/graphty-element @babylonjs/core lit
+
+# If using TypeScript
+npm install --save-dev typescript
+```
+
+Create `index.html`:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { margin: 0; }
+    graphty-element { width: 100vw; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <graphty-element id="graph"></graphty-element>
+  <script type="module" src="./index.js"></script>
+</body>
+</html>
+```
+
+Create `index.js`:
+```javascript
+import '@graphty/graphty-element';
+
+const graph = document.getElementById('graph');
+graph.nodeData = [
+  { id: 1, label: 'Node 1' },
+  { id: 2, label: 'Node 2' },
+  { id: 3, label: 'Node 3' }
+];
+graph.edgeData = [
+  { src: 1, dst: 2 },
+  { src: 2, dst: 3 },
+  { src: 3, dst: 1 }
+];
+```
+
+### Using in an npm-based Project
+
+```javascript
+// Import the library - this will register the custom element
+import '@graphty/graphty-element';
+
+// Now you can use <graphty-element> in your HTML
+const graph = document.createElement('graphty-element');
+graph.layout = 'ngraph';
+graph.nodeData = [
+  { id: 1, label: 'Node 1' },
+  { id: 2, label: 'Node 2' },
+  { id: 3, label: 'Node 3' }
+];
+graph.edgeData = [
+  { src: 1, dst: 2 },
+  { src: 2, dst: 3 }
+];
+document.body.appendChild(graph);
+```
+
+### Using in HTML (CDN)
+
+For simple HTML usage without a build system, load the dependencies from CDN:
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
+  <!-- Load dependencies first -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
   <script type="module">
-    import 'graphty-element';
+    import * as lit from 'https://cdn.jsdelivr.net/npm/lit@3/+esm';
+    window.lit = lit;
+  </script>
+  
+  <!-- Then load graphty -->
+  <script type="module">
+    import 'https://unpkg.com/@graphty/graphty-element@latest/dist/graphty.js';
   </script>
 </head>
 <body>
   <graphty-element
-    width="800"
-    height="600"
-    graph='{"nodes": [{"id": "1"}, {"id": "2"}], "edges": [{"source": "1", "target": "2"}]}'
+    layout="ngraph"
+    node-data='[{"id": 1}, {"id": 2}, {"id": 3}]'
+    edge-data='[{"src": 1, "dst": 2}, {"src": 2, "dst": 3}]'
+    style="width: 100%; height: 600px;"
   ></graphty-element>
 </body>
 </html>
 ```
 
-### Using with JavaScript
+### Using with TypeScript
 
-```javascript
-import 'graphty-element';
+```typescript
+import '@graphty/graphty-element';
+import type { Graphty } from '@graphty/graphty-element';
 
-const graphElement = document.createElement('graphty-element');
-graphElement.width = 800;
-graphElement.height = 600;
-graphElement.graph = {
-  nodes: [
-    { id: '1', label: 'Node 1' },
-    { id: '2', label: 'Node 2' },
-    { id: '3', label: 'Node 3' }
-  ],
-  edges: [
-    { source: '1', target: '2' },
-    { source: '2', target: '3' }
-  ]
-};
-document.body.appendChild(graphElement);
+// Get type-safe access to the element
+const graph = document.querySelector<Graphty>('graphty-element');
+if (graph) {
+  graph.layout = 'circular';
+  graph.nodeData = [
+    { id: 1, label: 'Node 1', color: '#ff0000' },
+    { id: 2, label: 'Node 2', color: '#00ff00' },
+    { id: 3, label: 'Node 3', color: '#0000ff' }
+  ];
+}
 ```
 
 ### Using the Graph Class Directly
@@ -79,51 +176,87 @@ document.body.appendChild(graphElement);
 For more control, you can use the Graph class directly:
 
 ```javascript
-import { Graph } from 'graphty-element';
+import { Graph } from '@graphty/graphty-element';
 
-const canvas = document.getElementById('myCanvas');
-const graph = new Graph(canvas, {
-  width: 800,
-  height: 600,
-  layout: 'force-directed',
-  styles: [
+// Create a container element
+const container = document.getElementById('graph-container');
+const graph = new Graph(container);
+
+// Configure the graph
+await graph.setLayout('ngraph');
+await graph.setStyleTemplate({
+  version: "1",
+  layers: [
     {
-      selector: 'node',
-      style: {
-        color: '#4A90E2',
-        size: 20,
-        shape: 'sphere'
-      }
+      id: "base",
+      selectors: [
+        {
+          selector: "node",
+          style: {
+            color: "#4A90E2",
+            size: 20,
+            shape: "sphere"
+          }
+        }
+      ]
     }
   ]
 });
 
-graph.setGraph({
-  nodes: [/* ... */],
-  edges: [/* ... */]
-});
+// Add data
+graph.addNodes([
+  { id: 1, label: 'Node 1' },
+  { id: 2, label: 'Node 2' },
+  { id: 3, label: 'Node 3' }
+]);
+graph.addEdges([
+  { src: 1, dst: 2 },
+  { src: 2, dst: 3 }
+]);
+
+// Initialize the graph
+await graph.init();
 ```
 
 ## Configuration
+
+## Component Properties
+
+### graphty-element Attributes
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `node-data` | `Array` | `[]` | Array of node objects |
+| `edge-data` | `Array` | `[]` | Array of edge objects |
+| `layout` | `string` | `'ngraph'` | Layout algorithm name |
+| `layout-config` | `object` | `{}` | Layout-specific configuration |
+| `layout-2d` | `boolean` | `false` | Enable 2D rendering mode |
+| `style-template` | `object` | - | Style configuration object |
+| `data-source` | `string` | - | Data source type (e.g., 'json') |
+| `data-source-config` | `object` | - | Data source configuration |
+| `node-id-path` | `string` | `'id'` | JMESPath to node ID field |
+| `edge-src-id-path` | `string` | `'src'` | JMESPath to edge source field |
+| `edge-dst-id-path` | `string` | `'dst'` | JMESPath to edge destination field |
 
 ### Layout Options
 
 Graphty supports multiple layout algorithms:
 
-- **`force-directed`** (default): Physics-based layout that simulates forces between nodes
-  - Engine options: `d3` (default) or `ngraph`
-  - Configurable parameters: `strength`, `distance`, `iterations`
+- **`ngraph`** (default): High-performance force-directed layout
+- **`d3-force`**: D3.js force-directed layout
 - **`circular`**: Arranges nodes in a circle
 - **`random`**: Random positioning
-- **`hierarchical`**: Tree-like layout for directed graphs
-- **`preset`**: Use predetermined node positions
+- **`spiral`**: Spiral arrangement
+- **`spectral`**: Eigenvector-based layout
+- **`kamada-kawai`**: Force-directed with ideal edge lengths
 
 ```javascript
-graphElement.layout = 'force-directed';
-graphElement.layoutSettings = {
-  engine: 'd3',
-  strength: -30,
-  distance: 100
+graphElement.layout = 'ngraph';
+graphElement.layoutConfig = {
+  timeStep: 0.1,
+  gravity: -1.2,
+  theta: 0.8,
+  dragCoefficient: 0.02
 };
 ```
 
@@ -131,14 +264,11 @@ graphElement.layoutSettings = {
 
 Built-in graph algorithms:
 
-- **Shortest Path**: Find shortest path between nodes
-- **Connected Components**: Identify graph components
-- **Degree Centrality**: Calculate node importance
-- **Community Detection**: Find node clusters
+- **Degree**: Calculate node degree (in/out connections)
 
 ```javascript
-const algorithms = graphElement.getGraphInstance().getAlgorithms();
-const path = algorithms.shortestPath('node1', 'node2');
+// Run degree algorithm
+await graph.runAlgorithm('builtin', 'degree');
 ```
 
 ### Styling
@@ -146,110 +276,104 @@ const path = algorithms.shortestPath('node1', 'node2');
 Graphty uses a CSS-like styling system with layers and selectors:
 
 ```javascript
-graphElement.styles = [
-  {
-    selector: 'node',
-    style: {
-      color: '#4A90E2',
-      size: 20,
-      shape: 'sphere',
-      opacity: 0.8
+graphElement.styleTemplate = {
+  version: "1",
+  layers: [
+    {
+      id: "base",
+      selectors: [
+        {
+          selector: "node",
+          style: {
+            color: "#4A90E2",
+            size: 20,
+            shape: "sphere",
+            opacity: 0.8
+          }
+        },
+        {
+          selector: "node[group='important']",
+          style: {
+            color: "#E74C3C",
+            size: 30,
+            shape: "box"
+          }
+        },
+        {
+          selector: "edge",
+          style: {
+            color: "#95A5A6",
+            width: 2,
+            opacity: 0.6
+          }
+        }
+      ]
     }
-  },
-  {
-    selector: 'node[group="important"]',
-    style: {
-      color: '#E74C3C',
-      size: 30,
-      shape: 'box'
-    }
-  },
-  {
-    selector: 'edge',
-    style: {
-      color: '#95A5A6',
-      width: 2,
-      opacity: 0.6
-    }
-  }
-];
+  ]
+};
 ```
 
 #### Available Node Properties
 - `color`: Hex color or CSS color name
 - `size`: Number (diameter in pixels)
-- `shape`: `sphere`, `box`, `cylinder`, `cone`, `torus`
+- `shape`: `sphere`, `box`, `cylinder`, `disc`, `torus`, `polygon`
 - `opacity`: 0-1
-- `label`: Text label
-- `icon`: URL or emoji
+- `label`: Text label with rich text support
+- `texture`: URL to texture image
 - `visible`: Boolean
 
 #### Available Edge Properties
 - `color`: Hex color or CSS color name
 - `width`: Line thickness
 - `opacity`: 0-1
-- `style`: `solid`, `dashed`, `dotted`
-- `arrow`: Boolean or `{ size: number }`
+- `dashed`: Boolean for dashed lines
+- `arrows`: Boolean or arrow configuration
 - `visible`: Boolean
 
 ### Camera and Controls
 
 ```javascript
 // Switch between 3D and 2D modes
-graphElement.dimensions = '2D'; // or '3D'
+graphElement.setAttribute('layout-2d', 'true');
 
-// Camera controls
-const graph = graphElement.getGraphInstance();
-graph.focusNode('nodeId');
-graph.fitToView();
-graph.resetCamera();
+// Camera controls with the Graph class
+graph.zoomToFit();
 ```
 
 ### Events
 
 ```javascript
-graphElement.addEventListener('node-click', (event) => {
-  console.log('Clicked node:', event.detail.node);
+// Add event listeners via the Graph class
+graph.addListener('node-clicked', (event) => {
+  console.log('Clicked node:', event.nodeId);
 });
 
-graphElement.addEventListener('node-hover', (event) => {
-  console.log('Hovering over:', event.detail.node);
+graph.addListener('node-hovered', (event) => {
+  console.log('Hovering over:', event.nodeId);
 });
 
-graphElement.addEventListener('layout-complete', () => {
+graph.addListener('graph-settled', () => {
   console.log('Layout calculation finished');
 });
 ```
 
 ## API Reference
 
-### graphty-element Properties
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `graph` | `GraphData` | `{}` | Graph data with nodes and edges |
-| `width` | `number` | `800` | Canvas width in pixels |
-| `height` | `number` | `600` | Canvas height in pixels |
-| `layout` | `string` | `'force-directed'` | Layout algorithm name |
-| `layoutSettings` | `object` | `{}` | Layout-specific settings |
-| `styles` | `StyleLayer[]` | `[]` | Styling rules |
-| `dimensions` | `'2D' \| '3D'` | `'3D'` | Rendering mode |
-| `enablePicking` | `boolean` | `true` | Enable mouse interactions |
-
 ### Graph Class Methods
 
 | Method | Description |
 |--------|-------------|
-| `setGraph(data)` | Load new graph data |
-| `updateGraph(data)` | Merge with existing graph |
 | `addNode(node)` | Add a single node |
+| `addNodes(nodes)` | Add multiple nodes |
 | `addEdge(edge)` | Add a single edge |
-| `removeNode(id)` | Remove a node |
-| `removeEdge(id)` | Remove an edge |
-| `focusNode(id)` | Center camera on node |
-| `fitToView()` | Fit all nodes in view |
-| `getAlgorithms()` | Get algorithm utilities |
-| `dispose()` | Clean up resources |
+| `addEdges(edges)` | Add multiple edges |
+| `setLayout(type, config)` | Set layout algorithm |
+| `setStyleTemplate(template)` | Set style configuration |
+| `addDataFromSource(type, config)` | Load data from source |
+| `runAlgorithm(namespace, type)` | Run graph algorithm |
+| `zoomToFit()` | Fit all nodes in view |
+| `init()` | Initialize the graph |
+| `shutdown()` | Clean up resources |
 
 ## Advanced Usage
 
@@ -258,16 +382,18 @@ graphElement.addEventListener('layout-complete', () => {
 Register custom layout algorithms:
 
 ```javascript
-import { LayoutEngine, registerLayout } from 'graphty-element';
+import { LayoutEngine, LayoutRegistry } from '@graphty/graphty-element';
 
 class MyCustomLayout extends LayoutEngine {
-  async calculate(nodes, edges) {
+  async step() {
     // Your layout logic here
-    return { nodes: updatedNodes };
+    for (const [nodeId, position] of this.nodePositions) {
+      // Update positions
+    }
   }
 }
 
-registerLayout('my-layout', MyCustomLayout);
+LayoutRegistry.register('my-layout', MyCustomLayout);
 ```
 
 ### Data Sources
@@ -275,7 +401,7 @@ registerLayout('my-layout', MyCustomLayout);
 Load data from external sources:
 
 ```javascript
-import { DataSource, registerDataSource } from 'graphty-element';
+import { DataSource, DataSourceRegistry } from '@graphty/graphty-element';
 
 class MyDataSource extends DataSource {
   async *generate() {
@@ -283,16 +409,134 @@ class MyDataSource extends DataSource {
   }
 }
 
-registerDataSource('my-source', MyDataSource);
+DataSourceRegistry.register('my-source', MyDataSource);
 
 // Use it
-graphElement.dataSource = 'my-source';
-graphElement.dataSourceSettings = { /* ... */ };
+graphElement.setAttribute('data-source', 'my-source');
+graphElement.dataSourceConfig = { /* ... */ };
 ```
 
 ## Examples
 
+### Complete Example with npm
+
+```javascript
+import '@graphty/graphty-element';
+
+// Create the element
+const graph = document.createElement('graphty-element');
+graph.style.width = '100%';
+graph.style.height = '600px';
+
+// Configure style
+graph.styleTemplate = {
+  version: "1",
+  layers: [{
+    id: "base",
+    selectors: [
+      {
+        selector: "node",
+        style: {
+          size: 20,
+          color: "#007bff",
+          label: "{data.label}"
+        }
+      },
+      {
+        selector: "edge",
+        style: {
+          width: 2,
+          color: "#cccccc"
+        }
+      }
+    ]
+  }]
+};
+
+// Set layout
+graph.layout = 'ngraph';
+
+// Add data
+graph.nodeData = [
+  { id: 1, label: 'Node 1' },
+  { id: 2, label: 'Node 2' },
+  { id: 3, label: 'Node 3' },
+  { id: 4, label: 'Node 4' }
+];
+
+graph.edgeData = [
+  { src: 1, dst: 2 },
+  { src: 2, dst: 3 },
+  { src: 3, dst: 4 },
+  { src: 4, dst: 1 }
+];
+
+// Add to page
+document.body.appendChild(graph);
+```
+
 For more examples and interactive demos, visit our [Storybook documentation](https://graphty-org.github.io/graphty-element).
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Cannot find module '@babylonjs/core'" or "Cannot find module 'lit'"
+Make sure you've installed the peer dependencies:
+```bash
+npm install @babylonjs/core lit
+```
+
+#### Bundle Size Considerations
+- The library externalizes Babylon.js and Lit to avoid duplication
+- Babylon.js core is approximately 3-4MB (1MB gzipped)
+- Consider using a CDN for Babylon.js in production if bundle size is a concern
+
+#### TypeScript Types
+The package includes TypeScript definitions. If you're using TypeScript, you may need to add these to your `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler", // or "node"
+    "allowSyntheticDefaultImports": true
+  }
+}
+```
+
+### Using with Build Tools
+
+#### Vite
+No special configuration needed. Vite will handle the ES modules correctly.
+
+#### Webpack
+You may need to configure module resolution for ES modules:
+```javascript
+module.exports = {
+  resolve: {
+    extensions: ['.js', '.ts'],
+    mainFields: ['module', 'main']
+  }
+};
+```
+
+#### Next.js
+For Next.js apps, you may need to transpile the module:
+```javascript
+// next.config.js
+module.exports = {
+  transpilePackages: ['@graphty/graphty-element']
+};
+```
+
+### Canvas Container Requirements
+The graph requires a container element with defined dimensions:
+```css
+.graph-container {
+  width: 100%;
+  height: 600px; /* Must have explicit height */
+  position: relative;
+}
+```
 
 ## Browser Support
 
