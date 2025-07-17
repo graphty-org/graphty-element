@@ -41,6 +41,14 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
+        // Forward internal graph events as DOM events
+        this.#graph.addListener("graph-settled", (event) => {
+            this.dispatchEvent(new CustomEvent("graph-settled", {
+                detail: event,
+                bubbles: true,
+                composed: true,
+            }));
+        });
         // Set runAlgorithmsOnLoad BEFORE setting style template
         if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
             this.#graph.runAlgorithmsOnLoad = true;
@@ -74,10 +82,7 @@ export class Graphty extends LitElement {
             setDeep(this.#graph.styles.config, "data.knownFields.edgeDstIdPath", this.edgeDstIdPath);
         }
 
-        // Initialize the graph BEFORE loading data
-        await this.#graph.init();
-
-        // Now load data AFTER initialization
+        // Load data BEFORE initialization (original working order)
         if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {
             this.#graph.addNodes(this.nodeData);
         }
@@ -85,6 +90,13 @@ export class Graphty extends LitElement {
         if (changedProperties.has("edgeData") && Array.isArray(this.edgeData)) {
             this.#graph.addEdges(this.edgeData);
         }
+
+        // Initialize the graph AFTER loading data
+        await this.#graph.init();
+        // Wait for first render frame to ensure graph is visible
+        await new Promise((resolve) => requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        }));
 
         if (changedProperties.has("dataSource") && this.dataSource) {
             const sourceOpts = this.dataSourceConfig ?? {};

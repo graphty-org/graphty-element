@@ -4,6 +4,34 @@ import {set as deepSet} from "lodash";
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";
 import type {Graphty} from "../src/graphty-element";
 
+// Helper to wait for graph to settle
+export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
+    const graphtyElement = canvasElement.querySelector("graphty-element");
+    if (!graphtyElement) {
+        return;
+    }
+
+    await new Promise<void>((resolve) => {
+        let settled = false;
+        const timeout = setTimeout(() => {
+            if (!settled) {
+                settled = true;
+                resolve();
+            }
+        }, 10000);
+
+        const handleSettled = (): void => {
+            if (!settled) {
+                settled = true;
+                clearTimeout(timeout);
+                resolve();
+            }
+        };
+
+        graphtyElement.addEventListener("graph-settled", handleSettled, {once: true});
+    });
+}
+
 export interface TemplateOpts {
     nodeStyle?: Record<string, unknown>;
     nodeSelector?: string;

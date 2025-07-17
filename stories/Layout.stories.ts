@@ -47,9 +47,6 @@ export const ngraph: Story = {
         layout: "ngraph",
         styleTemplate: templateCreator({}),
     },
-    parameters: {
-        chromatic: {delay: 1000},
-    },
 };
 
 export const D3: Story = {
@@ -68,7 +65,6 @@ export const D3: Story = {
         d3VelocityDecay: 0.4,
     },
     parameters: {
-        chromatic: {delay: 1000},
         controls: {
             include: [
                 "graph.layoutOptions.alphaMin",
@@ -80,20 +76,19 @@ export const D3: Story = {
     },
 };
 
-// TODO: 3D is broken?
-// export const Circular: Story = {
-//     args: {
-//         layout: "circular",
-//         layoutConfig: {dim: 3}, // doesn't work
-//     },
-// };
+export const Circular: Story = {
+    args: {
+        layout: "circular",
+        layoutConfig: {dim: 3}, // doesn't work
+    },
+};
 
 export const Random: Story = {
     args: {
         layout: "random",
         layoutConfig: {dim: 3},
         styleTemplate: templateCreator({}),
-        randomSeed: null,
+        randomSeed: 12,
     },
     parameters: {
         controls: {
@@ -111,7 +106,7 @@ export const Spring: Story = {
         springK: null,
         springIterations: 50,
         springScale: 1,
-        springSeed: null,
+        springSeed: 12,
     },
     parameters: {
         controls: {
@@ -125,7 +120,6 @@ export const Spring: Story = {
     },
 };
 
-// TODO: 3D is broken? it renders as just a random graph?
 export const KamadaKawai: Story = {
     args: {
         layout: "kamada-kawai",
@@ -142,9 +136,8 @@ export const KamadaKawai: Story = {
     },
 };
 
-// TODO: 3D is broken?
-// export const ForceAtlas2: Story = {
-//     args: {
-//         layout: "forceatlas2",
-//     },
-// };
+export const ForceAtlas2: Story = {
+    args: {
+        layout: "forceatlas2",
+    },
+};

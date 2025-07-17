@@ -1,6 +1,7 @@
-import "./data"; // register all internal data sources
-import "./layout"; // register all internal layouts
-import "./algorithms"; // register all internal algorithms
+// Force side-effect imports to not be tree-shaken
+import "./data/index"; // register all internal data sources
+import "./layout/index"; // register all internal layouts
+import "./algorithms/index"; // register all internal algorithms
 
 import {
     Color4,

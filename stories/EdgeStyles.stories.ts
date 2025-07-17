@@ -1,6 +1,6 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../src/graphty-element.ts";
+import {Graphty} from "../src/graphty-element";
 import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
@@ -21,6 +21,10 @@ const meta: Meta = {
     },
     args: {
         styleTemplate: templateCreator({}),
+        layout: "spring",
+        layoutConfig: {
+            seed: 12,
+        },
     },
 };
 export default meta;

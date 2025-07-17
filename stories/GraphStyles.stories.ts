@@ -20,6 +20,12 @@ const meta: Meta = {
             ],
         },
     },
+    args: {
+        layout: "spring",
+        layoutConfig: {
+            seed: 12,
+        },
+    },
 };
 export default meta;
 

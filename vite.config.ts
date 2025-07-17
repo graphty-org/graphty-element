@@ -31,10 +31,10 @@ export default defineConfig(({mode}) => {
             minify: mode === "production",
             sourcemap: true,
             rollupOptions: {
+                // For now, keep the original externalization
                 external: [
                     "@babylonjs/core",
                     "@babylonjs/inspector",
-                    "@babylonjs/loaders",
                     "lit",
                     "lit/decorators.js",
                     "lit/directives/class-map.js",
@@ -44,7 +44,6 @@ export default defineConfig(({mode}) => {
                     globals: {
                         "@babylonjs/core": "BABYLON",
                         "@babylonjs/inspector": "BABYLON",
-                        "@babylonjs/loaders": "BABYLON",
                         "lit": "Lit",
                         "lit/decorators.js": "Lit",
                         "lit/directives/class-map.js": "Lit",
@@ -61,7 +60,6 @@ export default defineConfig(({mode}) => {
             exclude: [
                 "@babylonjs/core",
                 "@babylonjs/inspector",
-                "@babylonjs/loaders",
             ],
         },
         resolve: {

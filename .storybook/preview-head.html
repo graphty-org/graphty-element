@@ -1,0 +1,49 @@
+<!-- Debug loading -->
+<script>
+  console.log('[preview-head] Starting to load dependencies...');
+</script>
+
+<!-- Load Babylon.js as global for production builds -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+
+<!-- Load Lit as ES modules -->
+<script type="module">
+  console.log('[preview-head] Loading Lit modules...');
+  
+  // Import Lit and make it available globally
+  import * as lit from 'https://cdn.jsdelivr.net/npm/lit@3.2.1/+esm';
+  import * as litDecorators from 'https://cdn.jsdelivr.net/npm/lit@3.2.1/decorators.js/+esm';
+  import * as litElement from 'https://cdn.jsdelivr.net/npm/lit-element@4.1.1/+esm';
+  import * as litHtml from 'https://cdn.jsdelivr.net/npm/lit-html@3.2.1/+esm';
+  
+  window.lit = lit;
+  window['lit/decorators.js'] = litDecorators;
+  window['lit-element'] = litElement;
+  window['lit-html'] = litHtml;
+  
+  console.log('[preview-head] Lit loaded:', typeof lit.LitElement);
+</script>
+
+<script>
+  // Ensure BABYLON is available globally
+  if (typeof BABYLON !== 'undefined') {
+    window.BABYLON = BABYLON;
+    console.log('[preview-head] Babylon.js loaded, version:', BABYLON.Engine.Version);
+    
+    // Create module aliases for ES module imports
+    window["@babylonjs/core"] = BABYLON;
+    
+    // Also expose commonly used classes directly
+    const classes = ['Engine', 'Scene', 'Vector3', 'Color3', 'Color4', 'UniversalCamera', 
+                     'HemisphericLight', 'MeshBuilder', 'StandardMaterial', 'Texture',
+                     'Observable', 'TransformNode', 'Mesh', 'WebGPUEngine'];
+    
+    classes.forEach(cls => {
+      if (BABYLON[cls]) {
+        window[cls] = BABYLON[cls];
+      }
+    });
+  } else {
+    console.error('[preview-head] BABYLON not loaded!');
+  }
+</script>

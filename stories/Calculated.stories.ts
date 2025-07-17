@@ -22,6 +22,10 @@ type Story = StoryObj<Graphty>;
 
 export const NodeSize: Story = {
     args: {
+        layout: "spring",
+        layoutConfig: {
+            seed: 12,
+        },
         styleTemplate: templateCreator(
             {
                 nodeCalculatedStyle: {
@@ -38,6 +42,10 @@ export const NodeSize: Story = {
 
 export const NodeColor: Story = {
     args: {
+        layout: "spring",
+        layoutConfig: {
+            seed: 12,
+        },
         styleTemplate: templateCreator(
             {
                 nodeCalculatedStyle: {

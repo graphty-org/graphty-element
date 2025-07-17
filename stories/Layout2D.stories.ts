@@ -126,7 +126,7 @@ export const Shell: Story = {
 export const Random: Story = {
     args: {
         styleTemplate: templateCreator({graph: {twoD: true, layout: "random", layoutOptions: {dim: 2}}}),
-        randomSeed: null,
+        randomSeed: 12,
     },
     parameters: {
         controls: {
@@ -143,7 +143,7 @@ export const Spring: Story = {
         springK: null,
         springIterations: 50,
         springScale: 1,
-        springSeed: null,
+        springSeed: 12,
     },
     parameters: {
         controls: {
@@ -197,7 +197,7 @@ export const ForceAtlas2: Story = {
         fa2StrongGravity: false,
         fa2DissuadeHubs: false,
         fa2LinLog: false,
-        fa2Seed: null,
+        fa2Seed: 12,
     },
     parameters: {
         controls: {
@@ -219,7 +219,7 @@ export const Arf: Story = {
         styleTemplate: templateCreator({graph: {twoD: true, layout: "arf"}}),
         arfScaling: 1,
         arfMaxIter: 1000,
-        arfSeed: null,
+        arfSeed: 12,
     },
     parameters: {
         controls: {
