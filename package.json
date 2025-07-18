@@ -115,7 +115,7 @@
     "lit": "^3.0.0"
   },
   "dependencies": {
-    "@graphty/layout": "^1.2.2",
+    "@graphty/layout": "^1.2.7",
     "colorjs.io": "^0.5.2",
     "d3-force-3d": "^3.0.6",
     "hammerjs": "^2.0.8",
