@@ -4,7 +4,6 @@ import "../src/data/index";
 import "../src/algorithms/index";
 
 import {Preview, setCustomElementsManifest} from "@storybook/web-components-vite";
-import eruda from "eruda";
 // @ts-expect-error TS doesn't recognize virtual imports?
 import manifest from "virtual:vite-plugin-cem/custom-elements-manifest";
 
@@ -61,7 +60,6 @@ async function waitForGraphSettled({canvasElement}: {canvasElement: HTMLElement}
 }
 
 const preview: Preview = {
-    play: waitForGraphSettled,
     parameters: {
         // actions: { argTypesRegex: "^on[A-Z].*" },
         controls: {
@@ -113,3 +111,6 @@ const preview: Preview = {
 };
 
 export default preview;
+
+// Export the play function for use in stories
+export {waitForGraphSettled};

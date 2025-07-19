@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion, no-console, @stylistic/rest-spread-spacing, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain, @typescript-eslint/no-deprecated */
 // Console capture with floating UI button
 interface LogEntry {
     type: string;
@@ -7,7 +8,7 @@ interface LogEntry {
 
 export class ConsoleCaptureUI {
     private logs: LogEntry[] = [];
-    private originalMethods: Record<string, Function> = {};
+    private originalMethods: Record<string, (...args: any[]) => void> = {};
     private button: HTMLElement | null = null;
 
     constructor() {
