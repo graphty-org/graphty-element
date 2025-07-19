@@ -1,0 +1,436 @@
+{
+  "nodes": [
+    {
+      "id": "Mr_Whiskers",
+      "group": 1,
+      "weight_lbs": 18,
+      "personality": "bossy",
+      "indoor_outdoor": "outdoor",
+      "age_years": 8,
+      "breed": "tabby",
+      "favorite_spot": "fence_post",
+      "hunting_skill": 9
+    },
+    {
+      "id": "Princess_Fluffington",
+      "group": 2,
+      "weight_lbs": 8,
+      "personality": "diva",
+      "indoor_outdoor": "indoor",
+      "age_years": 5,
+      "breed": "persian",
+      "favorite_spot": "velvet_cushion",
+      "hunting_skill": 2
+    },
+    {
+      "id": "Garbage_Bandit",
+      "group": 3,
+      "weight_lbs": 14,
+      "personality": "sneaky",
+      "indoor_outdoor": "stray",
+      "age_years": 4,
+      "breed": "mixed",
+      "favorite_spot": "dumpster",
+      "hunting_skill": 7
+    },
+    {
+      "id": "Mittens_The_Destroyer",
+      "group": 1,
+      "weight_lbs": 12,
+      "personality": "chaotic",
+      "indoor_outdoor": "outdoor",
+      "age_years": 3,
+      "breed": "tuxedo",
+      "favorite_spot": "flower_bed",
+      "hunting_skill": 6
+    },
+    {
+      "id": "Sir_Naps_A_Lot",
+      "group": 2,
+      "weight_lbs": 16,
+      "personality": "lazy",
+      "indoor_outdoor": "indoor",
+      "age_years": 10,
+      "breed": "british_shorthair",
+      "favorite_spot": "sunny_windowsill",
+      "hunting_skill": 1
+    },
+    {
+      "id": "Shadow_Ninja",
+      "group": 3,
+      "weight_lbs": 10,
+      "personality": "mysterious",
+      "indoor_outdoor": "stray",
+      "age_years": 6,
+      "breed": "black_cat",
+      "favorite_spot": "roof",
+      "hunting_skill": 10
+    },
+    {
+      "id": "Chonky_Boy",
+      "group": 2,
+      "weight_lbs": 22,
+      "personality": "food_obsessed",
+      "indoor_outdoor": "indoor",
+      "age_years": 7,
+      "breed": "maine_coon",
+      "favorite_spot": "kitchen",
+      "hunting_skill": 3
+    },
+    {
+      "id": "The_Vet",
+      "group": 4,
+      "weight_lbs": 165,
+      "personality": "terrifying",
+      "indoor_outdoor": "clinic",
+      "age_years": 45,
+      "breed": "human",
+      "favorite_spot": "exam_table",
+      "hunting_skill": 0
+    },
+    {
+      "id": "Mrs_Henderson",
+      "group": 5,
+      "weight_lbs": 130,
+      "personality": "cat_lady",
+      "indoor_outdoor": "human",
+      "age_years": 68,
+      "breed": "human",
+      "favorite_spot": "rocking_chair",
+      "hunting_skill": 0
+    },
+    {
+      "id": "Zoom_Zoom",
+      "group": 1,
+      "weight_lbs": 9,
+      "personality": "hyperactive",
+      "indoor_outdoor": "outdoor",
+      "age_years": 2,
+      "breed": "abyssinian",
+      "favorite_spot": "everywhere",
+      "hunting_skill": 5
+    },
+    {
+      "id": "Professor_Pawsington",
+      "group": 2,
+      "weight_lbs": 11,
+      "personality": "intellectual",
+      "indoor_outdoor": "indoor",
+      "age_years": 9,
+      "breed": "siamese",
+      "favorite_spot": "bookshelf",
+      "hunting_skill": 4
+    },
+    {
+      "id": "Tiny_Terror",
+      "group": 6,
+      "weight_lbs": 4,
+      "personality": "feisty",
+      "indoor_outdoor": "kitten",
+      "age_years": 0.5,
+      "breed": "calico",
+      "favorite_spot": "shoebox",
+      "hunting_skill": 2
+    },
+    {
+      "id": "Old_Tom",
+      "group": 3,
+      "weight_lbs": 13,
+      "personality": "grumpy",
+      "indoor_outdoor": "stray",
+      "age_years": 14,
+      "breed": "mixed",
+      "favorite_spot": "porch",
+      "hunting_skill": 8
+    },
+    {
+      "id": "Bella_Ballerina",
+      "group": 2,
+      "weight_lbs": 9,
+      "personality": "graceful",
+      "indoor_outdoor": "indoor",
+      "age_years": 4,
+      "breed": "russian_blue",
+      "favorite_spot": "piano_top",
+      "hunting_skill": 5
+    },
+    {
+      "id": "Midnight_Howler",
+      "group": 1,
+      "weight_lbs": 15,
+      "personality": "vocal",
+      "indoor_outdoor": "outdoor",
+      "age_years": 6,
+      "breed": "mixed",
+      "favorite_spot": "back_alley",
+      "hunting_skill": 7
+    },
+    {
+      "id": "Butterscotch",
+      "group": 5,
+      "weight_lbs": 14,
+      "personality": "friendly",
+      "indoor_outdoor": "indoor",
+      "age_years": 5,
+      "breed": "orange_tabby",
+      "favorite_spot": "lap",
+      "hunting_skill": 3
+    },
+    {
+      "id": "Ghost_Cat",
+      "group": 3,
+      "weight_lbs": 8,
+      "personality": "elusive",
+      "indoor_outdoor": "stray",
+      "age_years": 3,
+      "breed": "white_cat",
+      "favorite_spot": "abandoned_shed",
+      "hunting_skill": 9
+    },
+    {
+      "id": "Therapy_Cat_Whisper",
+      "group": 7,
+      "weight_lbs": 12,
+      "personality": "calm",
+      "indoor_outdoor": "working",
+      "age_years": 6,
+      "breed": "ragdoll",
+      "favorite_spot": "hospital",
+      "hunting_skill": 1
+    },
+    {
+      "id": "Neighbor_Dog_Rex",
+      "group": 8,
+      "weight_lbs": 65,
+      "personality": "confused",
+      "indoor_outdoor": "outdoor",
+      "age_years": 4,
+      "breed": "golden_retriever",
+      "favorite_spot": "yard",
+      "hunting_skill": 0
+    },
+    {
+      "id": "Window_Watcher_Wendy",
+      "group": 2,
+      "weight_lbs": 10,
+      "personality": "observant",
+      "indoor_outdoor": "indoor",
+      "age_years": 7,
+      "breed": "tortoiseshell",
+      "favorite_spot": "bay_window",
+      "hunting_skill": 6
+    }
+  ],
+  "edges": [
+    {
+      "src": "Mr_Whiskers",
+      "dst": "Mittens_The_Destroyer",
+      "value": 8,
+      "relationship": "rivals",
+      "interaction_type": "territorial"
+    },
+    {
+      "src": "Princess_Fluffington",
+      "dst": "Sir_Naps_A_Lot",
+      "value": 6,
+      "relationship": "friends",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Garbage_Bandit",
+      "dst": "Shadow_Ninja",
+      "value": 9,
+      "relationship": "allies",
+      "interaction_type": "hunting"
+    },
+    {
+      "src": "Chonky_Boy",
+      "dst": "Mrs_Henderson",
+      "value": 10,
+      "relationship": "owner",
+      "interaction_type": "feeding"
+    },
+    {
+      "src": "Chonky_Boy",
+      "dst": "The_Vet",
+      "value": 1,
+      "relationship": "avoids",
+      "interaction_type": "medical"
+    },
+    {
+      "src": "Mrs_Henderson",
+      "dst": "Garbage_Bandit",
+      "value": 7,
+      "relationship": "feeds",
+      "interaction_type": "feeding"
+    },
+    {
+      "src": "Zoom_Zoom",
+      "dst": "Sir_Naps_A_Lot",
+      "value": 3,
+      "relationship": "annoys",
+      "interaction_type": "play"
+    },
+    {
+      "src": "Princess_Fluffington",
+      "dst": "Mr_Whiskers",
+      "value": 2,
+      "relationship": "dislikes",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Shadow_Ninja",
+      "dst": "Chonky_Boy",
+      "value": 5,
+      "relationship": "rivals",
+      "interaction_type": "feeding"
+    },
+    {
+      "src": "Mittens_The_Destroyer",
+      "dst": "The_Vet",
+      "value": 4,
+      "relationship": "attacks",
+      "interaction_type": "medical"
+    },
+    {
+      "src": "Professor_Pawsington",
+      "dst": "Princess_Fluffington",
+      "value": 8,
+      "relationship": "friends",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Tiny_Terror",
+      "dst": "Old_Tom",
+      "value": 3,
+      "relationship": "annoys",
+      "interaction_type": "play"
+    },
+    {
+      "src": "Old_Tom",
+      "dst": "Tiny_Terror",
+      "value": 2,
+      "relationship": "tolerates",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Bella_Ballerina",
+      "dst": "Professor_Pawsington",
+      "value": 7,
+      "relationship": "mates",
+      "interaction_type": "romantic"
+    },
+    {
+      "src": "Midnight_Howler",
+      "dst": "Mr_Whiskers",
+      "value": 6,
+      "relationship": "rivals",
+      "interaction_type": "territorial"
+    },
+    {
+      "src": "Butterscotch",
+      "dst": "Mrs_Henderson",
+      "value": 10,
+      "relationship": "owner",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Ghost_Cat",
+      "dst": "Old_Tom",
+      "value": 5,
+      "relationship": "friends",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Therapy_Cat_Whisper",
+      "dst": "The_Vet",
+      "value": 9,
+      "relationship": "coworkers",
+      "interaction_type": "medical"
+    },
+    {
+      "src": "Neighbor_Dog_Rex",
+      "dst": "Mr_Whiskers",
+      "value": 4,
+      "relationship": "chases",
+      "interaction_type": "territorial"
+    },
+    {
+      "src": "Window_Watcher_Wendy",
+      "dst": "Zoom_Zoom",
+      "value": 6,
+      "relationship": "watches",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Zoom_Zoom",
+      "dst": "Tiny_Terror",
+      "value": 8,
+      "relationship": "playmates",
+      "interaction_type": "play"
+    },
+    {
+      "src": "Garbage_Bandit",
+      "dst": "Butterscotch",
+      "value": 3,
+      "relationship": "dislikes",
+      "interaction_type": "territorial"
+    },
+    {
+      "src": "Shadow_Ninja",
+      "dst": "Ghost_Cat",
+      "value": 7,
+      "relationship": "allies",
+      "interaction_type": "hunting"
+    },
+    {
+      "src": "Sir_Naps_A_Lot",
+      "dst": "Window_Watcher_Wendy",
+      "value": 5,
+      "relationship": "neighbors",
+      "interaction_type": "social"
+    },
+    {
+      "src": "Mittens_The_Destroyer",
+      "dst": "Neighbor_Dog_Rex",
+      "value": 9,
+      "relationship": "torments",
+      "interaction_type": "play"
+    },
+    {
+      "src": "Old_Tom",
+      "dst": "Mrs_Henderson",
+      "value": 4,
+      "relationship": "tolerates",
+      "interaction_type": "feeding"
+    },
+    {
+      "src": "Tiny_Terror",
+      "dst": "Butterscotch",
+      "value": 6,
+      "relationship": "annoys",
+      "interaction_type": "play"
+    },
+    {
+      "src": "Professor_Pawsington",
+      "dst": "The_Vet",
+      "value": 2,
+      "relationship": "avoids",
+      "interaction_type": "medical"
+    },
+    {
+      "src": "Midnight_Howler",
+      "dst": "Window_Watcher_Wendy",
+      "value": 5,
+      "relationship": "serenades",
+      "interaction_type": "romantic"
+    },
+    {
+      "src": "Bella_Ballerina",
+      "dst": "Therapy_Cat_Whisper",
+      "value": 4,
+      "relationship": "friends",
+      "interaction_type": "social"
+    }
+  ]
+}

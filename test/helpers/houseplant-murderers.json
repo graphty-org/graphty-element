@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "Serial_Succulent_Killer_Sam",
+      "group": 1,
+      "plants_killed": 47,
+      "excuses": "overwatering",
+      "trying_again": true
+    },
+    {
+      "id": "Forgot_To_Water_Fiona",
+      "group": 1,
+      "plants_killed": 23,
+      "excuses": "busy_schedule",
+      "trying_again": true
+    },
+    {
+      "id": "Brown_Thumb_Betty",
+      "group": 1,
+      "plants_killed": 35,
+      "excuses": "bad_genes",
+      "trying_again": false
+    },
+    {
+      "id": "Overzealous_Owen",
+      "group": 2,
+      "plants_killed": 18,
+      "excuses": "too_much_love",
+      "trying_again": true
+    },
+    {
+      "id": "Window_Scorcher_Wendy",
+      "group": 2,
+      "plants_killed": 12,
+      "excuses": "didnt_know_about_sun",
+      "trying_again": true
+    },
+    {
+      "id": "The_Lone_Survivor_Cactus",
+      "group": 3,
+      "plants_killed": 0,
+      "excuses": "none",
+      "trying_again": false
+    },
+    {
+      "id": "Plant_Shop_Paul",
+      "group": 4,
+      "plants_killed": 0,
+      "excuses": "none",
+      "trying_again": false
+    },
+    {
+      "id": "Plastic_Plant_Convert_Pat",
+      "group": 5,
+      "plants_killed": 8,
+      "excuses": "gave_up",
+      "trying_again": false
+    },
+    {
+      "id": "Fertilizer_Fiend_Frank",
+      "group": 2,
+      "plants_killed": 15,
+      "excuses": "chemical_burns",
+      "trying_again": true
+    },
+    {
+      "id": "Cat_Owner_Carol",
+      "group": 1,
+      "plants_killed": 21,
+      "excuses": "cat_ate_them",
+      "trying_again": false
+    }
+  ],
+  "edges": [
+    {
+      "src": "Serial_Succulent_Killer_Sam",
+      "dst": "Plant_Shop_Paul",
+      "value": 10,
+      "relationship": "best_customer"
+    },
+    {
+      "src": "Forgot_To_Water_Fiona",
+      "dst": "The_Lone_Survivor_Cactus",
+      "value": 3,
+      "relationship": "barely_maintains"
+    },
+    {
+      "src": "Brown_Thumb_Betty",
+      "dst": "Plastic_Plant_Convert_Pat",
+      "value": 8,
+      "relationship": "converts"
+    },
+    {
+      "src": "Overzealous_Owen",
+      "dst": "Serial_Succulent_Killer_Sam",
+      "value": 6,
+      "relationship": "support_group_buddies"
+    },
+    {
+      "src": "Window_Scorcher_Wendy",
+      "dst": "Fertilizer_Fiend_Frank",
+      "value": 5,
+      "relationship": "swap_horror_stories"
+    },
+    {
+      "src": "Plant_Shop_Paul",
+      "dst": "Overzealous_Owen",
+      "value": 7,
+      "relationship": "gives_advice_to"
+    },
+    {
+      "src": "Cat_Owner_Carol",
+      "dst": "The_Lone_Survivor_Cactus",
+      "value": 2,
+      "relationship": "cat_attacks"
+    },
+    {
+      "src": "Fertilizer_Fiend_Frank",
+      "dst": "Plant_Shop_Paul",
+      "value": 9,
+      "relationship": "banned_by"
+    },
+    {
+      "src": "Plastic_Plant_Convert_Pat",
+      "dst": "Brown_Thumb_Betty",
+      "value": 4,
+      "relationship": "recommends_plastic_to"
+    },
+    {
+      "src": "Forgot_To_Water_Fiona",
+      "dst": "Overzealous_Owen",
+      "value": 5,
+      "relationship": "opposites"
+    }
+  ]
+}

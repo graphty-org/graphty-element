@@ -1,0 +1,126 @@
+{
+  "nodes": [
+    {
+      "id": "Bob_CoffeePot_Burner",
+      "group": 1,
+      "coffee_crimes": 5,
+      "department": "Engineering"
+    },
+    {
+      "id": "Sarah_Decaf_Switcher",
+      "group": 2,
+      "coffee_crimes": 3,
+      "department": "HR"
+    },
+    {
+      "id": "Mike_Never_Refills",
+      "group": 1,
+      "coffee_crimes": 7,
+      "department": "Engineering"
+    },
+    {
+      "id": "The_Coffee_Machine",
+      "group": 3,
+      "coffee_crimes": 0,
+      "department": "Break Room"
+    },
+    {
+      "id": "Janet_Secret_Stash",
+      "group": 2,
+      "coffee_crimes": 2,
+      "department": "HR"
+    },
+    {
+      "id": "Dave_Double_Cupper",
+      "group": 1,
+      "coffee_crimes": 4,
+      "department": "Engineering"
+    },
+    {
+      "id": "Lisa_Tea_Rebel",
+      "group": 4,
+      "coffee_crimes": 0,
+      "department": "Marketing"
+    },
+    {
+      "id": "Tom_Creamer_Thief",
+      "group": 1,
+      "coffee_crimes": 6,
+      "department": "Sales"
+    },
+    {
+      "id": "Emergency_Instant_Coffee",
+      "group": 3,
+      "coffee_crimes": 0,
+      "department": "Supply Closet"
+    },
+    {
+      "id": "Karen_Coffee_Police",
+      "group": 2,
+      "coffee_crimes": 1,
+      "department": "Management"
+    }
+  ],
+  "edges": [
+    {
+      "src": "Bob_CoffeePot_Burner",
+      "dst": "The_Coffee_Machine",
+      "value": 10,
+      "relationship": "destroys"
+    },
+    {
+      "src": "Sarah_Decaf_Switcher",
+      "dst": "The_Coffee_Machine",
+      "value": 5,
+      "relationship": "sabotages"
+    },
+    {
+      "src": "Mike_Never_Refills",
+      "dst": "The_Coffee_Machine",
+      "value": 8,
+      "relationship": "drains"
+    },
+    {
+      "src": "Janet_Secret_Stash",
+      "dst": "Emergency_Instant_Coffee",
+      "value": 7,
+      "relationship": "hoards"
+    },
+    {
+      "src": "Dave_Double_Cupper",
+      "dst": "Mike_Never_Refills",
+      "value": 3,
+      "relationship": "enables"
+    },
+    {
+      "src": "Lisa_Tea_Rebel",
+      "dst": "Karen_Coffee_Police",
+      "value": 6,
+      "relationship": "annoys"
+    },
+    {
+      "src": "Tom_Creamer_Thief",
+      "dst": "Janet_Secret_Stash",
+      "value": 4,
+      "relationship": "raids"
+    },
+    {
+      "src": "Karen_Coffee_Police",
+      "dst": "Bob_CoffeePot_Burner",
+      "value": 9,
+      "relationship": "monitors"
+    },
+    {
+      "src": "Karen_Coffee_Police",
+      "dst": "Tom_Creamer_Thief",
+      "value": 8,
+      "relationship": "investigates"
+    },
+    {
+      "src": "Sarah_Decaf_Switcher",
+      "dst": "Dave_Double_Cupper",
+      "value": 2,
+      "relationship": "pranks"
+    }
+  ]
+}

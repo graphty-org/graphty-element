@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "Mr_Whiskers",
+      "group": 1,
+      "weight_lbs": 18,
+      "personality": "bossy",
+      "indoor_outdoor": "outdoor"
+    },
+    {
+      "id": "Princess_Fluffington",
+      "group": 2,
+      "weight_lbs": 8,
+      "personality": "diva",
+      "indoor_outdoor": "indoor"
+    },
+    {
+      "id": "Garbage_Bandit",
+      "group": 3,
+      "weight_lbs": 14,
+      "personality": "sneaky",
+      "indoor_outdoor": "stray"
+    },
+    {
+      "id": "Mittens_The_Destroyer",
+      "group": 1,
+      "weight_lbs": 12,
+      "personality": "chaotic",
+      "indoor_outdoor": "outdoor"
+    },
+    {
+      "id": "Sir_Naps_A_Lot",
+      "group": 2,
+      "weight_lbs": 16,
+      "personality": "lazy",
+      "indoor_outdoor": "indoor"
+    },
+    {
+      "id": "Shadow_Ninja",
+      "group": 3,
+      "weight_lbs": 10,
+      "personality": "mysterious",
+      "indoor_outdoor": "stray"
+    },
+    {
+      "id": "Chonky_Boy",
+      "group": 2,
+      "weight_lbs": 22,
+      "personality": "food_obsessed",
+      "indoor_outdoor": "indoor"
+    },
+    {
+      "id": "The_Vet",
+      "group": 4,
+      "weight_lbs": 165,
+      "personality": "terrifying",
+      "indoor_outdoor": "clinic"
+    },
+    {
+      "id": "Mrs_Henderson",
+      "group": 5,
+      "weight_lbs": 98,
+      "personality": "cat_lady",
+      "indoor_outdoor": "human"
+    },
+    {
+      "id": "Zoom_Zoom",
+      "group": 1,
+      "weight_lbs": 9,
+      "personality": "hyperactive",
+      "indoor_outdoor": "outdoor"
+    }
+  ],
+  "edges": [
+    {
+      "src": "Mr_Whiskers",
+      "dst": "Mittens_The_Destroyer",
+      "value": 8,
+      "relationship": "turf_war"
+    },
+    {
+      "src": "Princess_Fluffington",
+      "dst": "Sir_Naps_A_Lot",
+      "value": 6,
+      "relationship": "nap_buddies"
+    },
+    {
+      "src": "Garbage_Bandit",
+      "dst": "Shadow_Ninja",
+      "value": 9,
+      "relationship": "partners_in_crime"
+    },
+    {
+      "src": "Chonky_Boy",
+      "dst": "Mrs_Henderson",
+      "value": 10,
+      "relationship": "manipulates_for_treats"
+    },
+    {
+      "src": "Chonky_Boy",
+      "dst": "The_Vet",
+      "value": 1,
+      "relationship": "avoids"
+    },
+    {
+      "src": "Mrs_Henderson",
+      "dst": "Garbage_Bandit",
+      "value": 7,
+      "relationship": "feeds_secretly"
+    },
+    {
+      "src": "Zoom_Zoom",
+      "dst": "Sir_Naps_A_Lot",
+      "value": 3,
+      "relationship": "annoys"
+    },
+    {
+      "src": "Princess_Fluffington",
+      "dst": "Mr_Whiskers",
+      "value": 2,
+      "relationship": "judges_silently"
+    },
+    {
+      "src": "Shadow_Ninja",
+      "dst": "Chonky_Boy",
+      "value": 5,
+      "relationship": "steals_food_from"
+    },
+    {
+      "src": "Mittens_The_Destroyer",
+      "dst": "The_Vet",
+      "value": 4,
+      "relationship": "scratches"
+    }
+  ]
+}

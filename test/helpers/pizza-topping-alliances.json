@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "Pineapple_Pete",
+      "group": 1,
+      "controversy_level": 10,
+      "pizza_frequency": "weekly",
+      "side": "pro_pineapple"
+    },
+    {
+      "id": "Traditional_Tony",
+      "group": 2,
+      "controversy_level": 8,
+      "pizza_frequency": "daily",
+      "side": "anti_pineapple"
+    },
+    {
+      "id": "Anchovy_Alice",
+      "group": 3,
+      "controversy_level": 9,
+      "pizza_frequency": "monthly",
+      "side": "chaos_agent"
+    },
+    {
+      "id": "Vegan_Cheese_Victor",
+      "group": 4,
+      "controversy_level": 7,
+      "pizza_frequency": "weekly",
+      "side": "alternative"
+    },
+    {
+      "id": "Extra_Cheese_Emma",
+      "group": 2,
+      "controversy_level": 2,
+      "pizza_frequency": "twice_weekly",
+      "side": "traditionalist"
+    },
+    {
+      "id": "Ranch_Dipper_Randy",
+      "group": 1,
+      "controversy_level": 6,
+      "pizza_frequency": "weekly",
+      "side": "sauce_rebel"
+    },
+    {
+      "id": "Gluten_Free_Grace",
+      "group": 4,
+      "controversy_level": 3,
+      "pizza_frequency": "monthly",
+      "side": "alternative"
+    },
+    {
+      "id": "Meat_Lovers_Max",
+      "group": 2,
+      "controversy_level": 4,
+      "pizza_frequency": "daily",
+      "side": "carnivore"
+    },
+    {
+      "id": "Cold_Pizza_Carl",
+      "group": 3,
+      "controversy_level": 5,
+      "pizza_frequency": "daily",
+      "side": "chaos_agent"
+    },
+    {
+      "id": "The_Pizza_Place",
+      "group": 5,
+      "controversy_level": 0,
+      "pizza_frequency": "always",
+      "side": "neutral"
+    }
+  ],
+  "edges": [
+    {
+      "src": "Pineapple_Pete",
+      "dst": "Traditional_Tony",
+      "value": 10,
+      "relationship": "eternal_enemies"
+    },
+    {
+      "src": "Anchovy_Alice",
+      "dst": "Extra_Cheese_Emma",
+      "value": 8,
+      "relationship": "alienates"
+    },
+    {
+      "src": "Vegan_Cheese_Victor",
+      "dst": "Gluten_Free_Grace",
+      "value": 7,
+      "relationship": "allies"
+    },
+    {
+      "src": "Extra_Cheese_Emma",
+      "dst": "Meat_Lovers_Max",
+      "value": 9,
+      "relationship": "pizza_buddies"
+    },
+    {
+      "src": "Ranch_Dipper_Randy",
+      "dst": "Pineapple_Pete",
+      "value": 6,
+      "relationship": "controversy_bros"
+    },
+    {
+      "src": "Cold_Pizza_Carl",
+      "dst": "The_Pizza_Place",
+      "value": 5,
+      "relationship": "disappoints"
+    },
+    {
+      "src": "Traditional_Tony",
+      "dst": "The_Pizza_Place",
+      "value": 10,
+      "relationship": "loyal_customer"
+    },
+    {
+      "src": "Meat_Lovers_Max",
+      "dst": "Vegan_Cheese_Victor",
+      "value": 3,
+      "relationship": "confuses"
+    },
+    {
+      "src": "Gluten_Free_Grace",
+      "dst": "The_Pizza_Place",
+      "value": 4,
+      "relationship": "special_requests"
+    },
+    {
+      "src": "Anchovy_Alice",
+      "dst": "Cold_Pizza_Carl",
+      "value": 2,
+      "relationship": "weird_friends"
+    }
+  ]
+}
