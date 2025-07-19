@@ -93,6 +93,7 @@ export class Graphty extends LitElement {
 
         // Initialize the graph AFTER loading data
         await this.#graph.init();
+
         // Wait for first render frame to ensure graph is visible
         await new Promise((resolve) => requestAnimationFrame(() => {
             requestAnimationFrame(resolve);
