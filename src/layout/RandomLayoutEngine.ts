@@ -5,7 +5,7 @@ import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
 
 export const RandomLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
-    center: z.array(z.number()).length(2).or(z.null()).default(null),
+    center: z.array(z.number()).min(2).max(3).or(z.null()).default(null),
     dim: z.number().default(2),
     seed: z.number().positive().or(z.null()).default(null),
 });

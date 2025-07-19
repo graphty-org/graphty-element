@@ -8,12 +8,12 @@ export const SpringLayoutConfig = z.strictObject({
     k: z.number().or(z.null()).default(null),
     pos: z.record(
         z.number(),
-        z.array(z.number()),
+        z.array(z.number()).min(2).max(3),
     ).or(z.null()).default(null),
     fixed: z.array(z.number()).or(z.null()).default(null),
     iterations: z.number().positive().default(50),
     scale: z.number().positive().default(1),
-    center: z.array(z.number()).length(2).or(z.null()).default(null),
+    center: z.array(z.number()).min(2).max(3).or(z.null()).default(null),
     dim: z.number().default(3),
     seed: z.number().positive().or(z.null()).default(null),
 });
