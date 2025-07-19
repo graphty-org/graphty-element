@@ -1,7 +1,7 @@
 import {afterEach, assert, beforeEach, describe, expect, it} from "vitest";
 
 import {Graph} from "../../src/Graph";
-import type {LayoutManager} from "../../src/managers/LayoutManager";
+import {DataManager, EventManager, LayoutManager} from "../../src/managers";
 import {cleanupTestGraph, createTestGraph} from "../helpers/testSetup";
 
 describe("LayoutManager", () => {
@@ -243,19 +243,20 @@ describe("LayoutManager", () => {
             assert.isBoolean(layoutManager.isSettled);
         });
 
-        it("should report as settled when no layout engine", async() => {
-            // Create new manager without layout
-            const container = document.createElement("div");
-            document.body.appendChild(container);
-            const newGraph = new Graph(container);
-            await newGraph.init();
-            const newManager = newGraph.getLayoutManager();
+        it("should report as settled when no layout engine", () => {
+            // Get styles from current test graph
+            const currentStyles = graph.styles;
 
-            assert.isTrue(newManager.isSettled);
+            // Create a fresh layout manager without a graph (to avoid default layout)
+            const eventManager = new EventManager();
+            const dataManager = new DataManager(eventManager, currentStyles);
+            const freshLayoutManager = new LayoutManager(eventManager, dataManager, currentStyles);
+
+            // Should be settled when no layout engine is set
+            assert.isTrue(freshLayoutManager.isSettled);
 
             // Cleanup
-            newGraph.shutdown();
-            container.remove();
+            freshLayoutManager.dispose();
         });
 
         it("should report as settled when not running", async() => {
