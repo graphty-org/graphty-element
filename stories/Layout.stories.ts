@@ -45,6 +45,15 @@ const meta: Meta = {
         fa2Linlog: {control: {type: "boolean"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.linlog"},
         fa2WeightPath: {control: {type: "text"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.weightPath"},
         fa2Seed: {control: {type: "number"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.seed"},
+
+        // NGraph layout controls
+        ngraphSeed: {control: {type: "number"}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.seed"},
+        ngraphSpringLength: {control: {type: "range", min: 10, max: 100, step: 5}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.springLength"},
+        ngraphSpringCoeff: {control: {type: "range", min: 0.0001, max: 0.01, step: 0.0001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.springCoeff"},
+        ngraphGravity: {control: {type: "range", min: -10, max: 10, step: 0.1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.gravity"},
+        ngraphTheta: {control: {type: "range", min: 0.1, max: 1, step: 0.1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.theta"},
+        ngraphDragCoeff: {control: {type: "range", min: 0.001, max: 0.1, step: 0.001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.dragCoeff"},
+        ngraphTimeStep: {control: {type: "range", min: 1, max: 50, step: 1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.timeStep"},
     },
     parameters: {
         controls: {exclude: /^(#|_)/},
@@ -63,11 +72,41 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 export const ngraph: Story = {
     args: {
         layout: "ngraph",
+        layoutConfig: {
+            seed: 12,
+            springLength: 30,
+            springCoeff: 0.0008,
+            gravity: -1.2,
+            theta: 0.8,
+            dragCoeff: 0.02,
+            timeStep: 20,
+        },
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
             },
         }),
+        // Individual parameter args for controls
+        ngraphSeed: 12,
+        ngraphSpringLength: 30,
+        ngraphSpringCoeff: 0.0008,
+        ngraphGravity: -1.2,
+        ngraphTheta: 0.8,
+        ngraphDragCoeff: 0.02,
+        ngraphTimeStep: 20,
+    },
+    parameters: {
+        controls: {
+            include: [
+                "graph.layoutOptions.seed",
+                "graph.layoutOptions.springLength",
+                "graph.layoutOptions.springCoeff",
+                "graph.layoutOptions.gravity",
+                "graph.layoutOptions.theta",
+                "graph.layoutOptions.dragCoeff",
+                "graph.layoutOptions.timeStep",
+            ],
+        },
     },
 };
 
