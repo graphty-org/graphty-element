@@ -10,6 +10,7 @@ import manifest from "virtual:vite-plugin-cem/custom-elements-manifest";
 
 // Force import and registration of graphty-element and all its dependencies
 import {Graphty} from "../src/graphty-element";
+import {initConsoleCaptureUI} from "./console-capture-ui";
 import DocumentationTemplate from "./DocumentationTemplate.mdx";
 
 // Ensure custom element is registered
@@ -18,9 +19,12 @@ if (!customElements.get("graphty-element")) {
     customElements.define("graphty-element", Graphty);
 }
 
-eruda.init();
-eruda.show("console");
-eruda.position({x: window.innerWidth - 60, y: 20});
+// Initialize console capture with UI
+initConsoleCaptureUI();
+
+// eruda.init();
+// eruda.show("console");
+// eruda.position({x: window.innerWidth - 60, y: 20});
 
 setCustomElementsManifest(manifest);
 
