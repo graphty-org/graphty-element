@@ -48,6 +48,10 @@ export class Graph implements GraphContext {
     runAlgorithmsOnLoad = false;
     private resizeHandler = (): void => {
         this.engine.resize();
+        // If we've already zoomed to fit, re-zoom after resize to ensure content still fits
+        // if (this.updateManager.zoomToFitCompleted) {
+        //     this.updateManager.enableZoomToFit();
+        // }
     };
 
     // Managers
@@ -306,6 +310,9 @@ export class Graph implements GraphContext {
             for (const node of this.dataManager.nodes.values()) {
                 node.label?.startAnimation();
             }
+
+            // Force a final zoom to fit after layout has truly settled
+            this.updateManager.enableZoomToFit();
         }
     }
 
