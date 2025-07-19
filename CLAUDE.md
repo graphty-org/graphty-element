@@ -168,3 +168,76 @@ When you write unit tests with vitest, prefer `assert` over `expect`.
 ## Development Best Practices
 
 - Always create unit tests when you write new core functionality
+
+## Debugging with Screenshots
+
+When debugging rendering issues, use these approaches to capture screenshots:
+
+### 1. Playwright in Vitest Tests (Automated)
+```typescript
+import { test, expect } from "vitest";
+import { page } from "@vitest/browser/context";
+
+test("debug graph rendering", async () => {
+  // Navigate to your component
+  await page.goto("http://dev.ato.ms:9025"); // Storybook
+  
+  // Take screenshot
+  await page.locator("graphty-element").screenshot({ 
+    path: "debug-graph.png" 
+  });
+});
+```
+
+### 2. Babylon.js Built-in Tools (Canvas capture)
+```typescript
+import { CreateScreenshotAsync } from "@babylonjs/core";
+
+// Inside your graph component
+const screenshot = await CreateScreenshotAsync(
+  this.engine, 
+  this.camera, 
+  { width: 1920, height: 1080 }
+);
+// screenshot is base64 data URL
+```
+
+### 3. Quick Node.js Script (Most flexible)
+```javascript
+// test/debug-screenshot.js
+import { chromium } from "playwright";
+
+const browser = await chromium.launch();
+const page = await browser.newPage();
+await page.goto("http://dev.ato.ms:9025"); // Your Storybook
+
+// Capture specific story
+await page.locator('graphty-element').screenshot({ 
+  path: 'debug.png' 
+});
+
+await browser.close();
+```
+
+Run with: `node test/debug-screenshot.js`
+
+### 4. Interactive HTML Debug Page
+```html
+<!-- test/debug.html -->
+<script type="module">
+  import "../dist/graphty-element.js";
+  
+  document.querySelector('button').onclick = () => {
+    const canvas = document.querySelector('canvas');
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      window.open(url); // Opens screenshot in new tab
+    });
+  };
+</script>
+```
+
+**Usage recommendations:**
+- **For CI/automated testing**: Use Playwright in Vitest
+- **For runtime debugging**: Use Babylon.js screenshot tools
+- **For quick manual checks**: Create a simple HTML page or Node script
