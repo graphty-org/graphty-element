@@ -21,9 +21,18 @@ const meta: Meta = {
     },
     args: {
         styleTemplate: templateCreator({}),
-        layout: "spring",
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "../test/helpers/cat-social-network-2.json",
+        },
+        layout: "ngraph",
         layoutConfig: {
-            seed: 12,
+            springLength: 150,
+            springCoeff: 0.0008,
+            gravity: -1.2,
+            theta: 0.8,
+            dragCoeff: 0.02,
+            timeStep: 20,
         },
     },
 };

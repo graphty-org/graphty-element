@@ -20,7 +20,7 @@ export const Basic: Story = {
     args: {
         nodeData,
         edgeData,
-        layout: "spring",
+        layout: "ngraph",
         layoutConfig: {
             seed: 12,
         },
@@ -33,7 +33,7 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
-        layout: "spring",
+        layout: "ngraph",
         layoutConfig: {
             seed: 12,
         },
@@ -51,7 +51,7 @@ export const ModifiedJson: Story = {
         },
         edgeSrcIdPath: "source",
         edgeDstIdPath: "target",
-        layout: "spring",
+        layout: "ngraph",
         layoutConfig: {
             seed: 12,
         },

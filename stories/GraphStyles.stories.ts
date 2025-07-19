@@ -21,9 +21,18 @@ const meta: Meta = {
         },
     },
     args: {
-        layout: "spring",
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "../test/helpers/cat-social-network-2.json",
+        },
+        layout: "ngraph",
         layoutConfig: {
-            seed: 12,
+            springLength: 150,
+            springCoeff: 0.0008,
+            gravity: -1.2,
+            theta: 0.8,
+            dragCoeff: 0.02,
+            timeStep: 20,
         },
     },
 };
@@ -58,10 +67,6 @@ export const BackgroundColor: Story = {
 
 export const Layers: Story = {
     args: {
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
-        },
         styleTemplate: templateCreator({
             layers: [
                 {node: {selector: "starts_with(id, 'Lt.') == `true`", style: {enabled: true, texture: {color: "black"}}}},

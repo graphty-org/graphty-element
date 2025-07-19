@@ -1,4 +1,5 @@
 import "../index.ts";
+import "../src/layout/index.ts"; // Ensure all layouts are registered
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
@@ -27,6 +28,23 @@ const meta: Meta = {
 
         // Kamada-Kawai layout controls
         kamadaScale: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Kamada-Kawai Layout"}, name: "graph.layoutOptions.scale"},
+        kamadaWeightProperty: {control: {type: "text"}, table: {category: "Kamada-Kawai Layout"}, name: "graph.layoutOptions.weightProperty"},
+
+        // Circular layout controls
+        circularScale: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Circular Layout"}, name: "graph.layoutOptions.scale"},
+
+        // ForceAtlas2 layout controls
+        fa2ScalingFactor: {control: {type: "range", min: 10, max: 500, step: 10}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.scalingFactor"},
+        fa2MaxIter: {control: {type: "range", min: 10, max: 1000, step: 10}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.maxIter"},
+        fa2JitterTolerance: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.jitterTolerance"},
+        fa2ScalingRatio: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.scalingRatio"},
+        fa2Gravity: {control: {type: "range", min: 0, max: 10, step: 0.1}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.gravity"},
+        fa2DistributedAction: {control: {type: "boolean"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.distributedAction"},
+        fa2StrongGravity: {control: {type: "boolean"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.strongGravity"},
+        fa2DissuadeHubs: {control: {type: "boolean"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.dissuadeHubs"},
+        fa2Linlog: {control: {type: "boolean"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.linlog"},
+        fa2WeightPath: {control: {type: "text"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.weightPath"},
+        fa2Seed: {control: {type: "number"}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.seed"},
     },
     parameters: {
         controls: {exclude: /^(#|_)/},
@@ -45,7 +63,11 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 export const ngraph: Story = {
     args: {
         layout: "ngraph",
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
     },
 };
 
@@ -58,7 +80,11 @@ export const D3: Story = {
             alphaDecay: 0.0228,
             velocityDecay: 0.4,
         },
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
         d3AlphaMin: 0.1,
         d3AlphaTarget: 0,
         d3AlphaDecay: 0.0228,
@@ -79,7 +105,27 @@ export const D3: Story = {
 export const Circular: Story = {
     args: {
         layout: "circular",
-        layoutConfig: {dim: 3}, // doesn't work
+        layoutConfig: {
+            dim: 3,
+            scale: 1,
+        },
+        dataSource: "json", // Add data source
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        },
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
+        circularScale: 1,
+    },
+    parameters: {
+        controls: {
+            include: [
+                "graph.layoutOptions.scale",
+            ],
+        },
     },
 };
 
@@ -87,7 +133,11 @@ export const Random: Story = {
     args: {
         layout: "random",
         layoutConfig: {dim: 3},
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
         randomSeed: 12,
     },
     parameters: {
@@ -102,7 +152,11 @@ export const Random: Story = {
 export const Spring: Story = {
     args: {
         layout: "spring",
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
         springK: null,
         springIterations: 50,
         springScale: 1,
@@ -123,14 +177,28 @@ export const Spring: Story = {
 export const KamadaKawai: Story = {
     args: {
         layout: "kamada-kawai",
-        layoutConfig: {dim: 3},
-        styleTemplate: templateCreator({}),
+        layoutConfig: {
+            dim: 3,
+            scale: 1,
+            weightProperty: undefined,
+        },
+        dataSource: "json", // Add data source
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        },
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
         kamadaScale: 1,
+        kamadaWeightProperty: undefined,
     },
     parameters: {
         controls: {
             include: [
                 "graph.layoutOptions.scale",
+                "graph.layoutOptions.weightProperty",
             ],
         },
     },
@@ -139,5 +207,54 @@ export const KamadaKawai: Story = {
 export const ForceAtlas2: Story = {
     args: {
         layout: "forceatlas2",
+        layoutConfig: {
+            dim: 3,
+            scalingFactor: 10, // Override the default 100
+            maxIter: 500,
+            jitterTolerance: 1.0,
+            scalingRatio: 2.0,
+            gravity: 1.0,
+            distributedAction: false,
+            strongGravity: false,
+            dissuadeHubs: false,
+            linlog: false,
+            seed: 42,
+        },
+        dataSource: "json", // Add data source
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+        },
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // 3D mode
+            },
+        }),
+        // Individual parameter args for controls
+        fa2ScalingFactor: 10,
+        fa2MaxIter: 500,
+        fa2JitterTolerance: 1.0,
+        fa2ScalingRatio: 2.0,
+        fa2Gravity: 1.0,
+        fa2DistributedAction: false,
+        fa2StrongGravity: false,
+        fa2DissuadeHubs: false,
+        fa2Linlog: false,
+        fa2Seed: 42,
+    },
+    parameters: {
+        controls: {
+            include: [
+                "graph.layoutOptions.scalingFactor",
+                "graph.layoutOptions.maxIter",
+                "graph.layoutOptions.jitterTolerance",
+                "graph.layoutOptions.scalingRatio",
+                "graph.layoutOptions.gravity",
+                "graph.layoutOptions.distributedAction",
+                "graph.layoutOptions.strongGravity",
+                "graph.layoutOptions.dissuadeHubs",
+                "graph.layoutOptions.linlog",
+                "graph.layoutOptions.seed",
+            ],
+        },
     },
 };

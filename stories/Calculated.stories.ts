@@ -12,7 +12,16 @@ const meta: Meta = {
     args: {
         dataSource: "json",
         dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
+            data: "../test/helpers/cat-social-network-2.json",
+        },
+        layout: "ngraph",
+        layoutConfig: {
+            springLength: 150,
+            springCoeff: 0.0008,
+            gravity: -1.2,
+            theta: 0.8,
+            dragCoeff: 0.02,
+            timeStep: 20,
         },
     },
 };
@@ -22,10 +31,6 @@ type Story = StoryObj<Graphty>;
 
 export const NodeSize: Story = {
     args: {
-        layout: "spring",
-        layoutConfig: {
-            seed: 12,
-        },
         styleTemplate: templateCreator(
             {
                 nodeCalculatedStyle: {
@@ -42,10 +47,6 @@ export const NodeSize: Story = {
 
 export const NodeColor: Story = {
     args: {
-        layout: "spring",
-        layoutConfig: {
-            seed: 12,
-        },
         styleTemplate: templateCreator(
             {
                 nodeCalculatedStyle: {
