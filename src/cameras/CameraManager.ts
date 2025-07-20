@@ -53,7 +53,9 @@ export class CameraManager {
     }
 
     public zoomToBoundingBox(min: Vector3, max: Vector3): void {
-        this.activeCameraController?.zoomToBoundingBox(min, max);
+        if (this.activeCameraController) {
+            this.activeCameraController.zoomToBoundingBox(min, max);
+        }
     }
 
     public update(): void {

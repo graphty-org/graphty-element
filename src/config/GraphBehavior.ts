@@ -12,6 +12,7 @@ export const GraphLayoutOpts = z.strictObject({
     preSteps: z.number().default(0),
     stepMultiplier: z.number().default(1),
     minDelta: z.number().default(0),
+    zoomStepInterval: z.number().min(1).default(1),
 });
 
 export const GraphBehaviorOpts = z.strictObject({

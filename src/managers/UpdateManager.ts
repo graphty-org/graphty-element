@@ -38,6 +38,10 @@ export class UpdateManager implements Manager {
     private needsZoomToFit = false;
     private hasZoomedToFit = false;
     private config: Required<UpdateManagerConfig>;
+    private layoutStepCount = 0;
+    private minLayoutStepsBeforeZoom = 10;
+    private lastZoomStep = 0;
+    private wasSettled = false;
 
     constructor(
         private eventManager: EventManager,
@@ -70,20 +74,51 @@ export class UpdateManager implements Manager {
      */
     enableZoomToFit(): void {
         this.needsZoomToFit = true;
+        // Only reset the layout step count if we haven't zoomed yet
+        // This prevents the counter from being reset when enableZoomToFit is called multiple times
+        if (!this.hasZoomedToFit) {
+            this.layoutStepCount = 0;
+            this.lastZoomStep = 0;
+            this.wasSettled = false;
+        }
     }
 
     /**
      * Main update method - called by RenderManager each frame
      */
+    private frameCount = 0;
+
     update(): void {
-        // Update camera first
+        this.frameCount++;
+
+        // Always update camera
         this.camera.update();
 
         // Check if layout is running
         if (!this.layoutManager.running) {
+            // Even if layout is not running, we still need to handle zoom if requested
+            if (this.needsZoomToFit && !this.hasZoomedToFit) {
+                // Check if we have nodes to calculate bounds from
+                const nodeCount = Array.from(this.layoutManager.nodes).length;
+                if (nodeCount > 0) {
+                    // Calculate bounding box and update nodes
+                    const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
+
+                    // Update edges
+                    this.updateEdges();
+
+                    // Handle zoom to fit
+                    this.handleZoomToFit(boundingBoxMin, boundingBoxMax);
+
+                    // Update statistics
+                    this.updateStatistics();
+                }
+            }
+
             return;
         }
 
+        // Normal update when layout is running
         // Update layout engine
         this.updateLayout();
 
@@ -110,6 +145,7 @@ export class UpdateManager implements Manager {
         const {stepMultiplier} = this.styleManager.getStyles().config.behavior.layout;
         for (let i = 0; i < stepMultiplier; i++) {
             this.layoutManager.step();
+            this.layoutStepCount++;
         }
 
         this.statsManager.graphStep.endMonitoring();
@@ -127,6 +163,8 @@ export class UpdateManager implements Manager {
         for (const node of this.layoutManager.nodes) {
             node.update();
 
+            // The mesh position is already updated by node.update()
+
             // Update bounding box
             const pos = node.mesh.getAbsolutePosition();
             const sz = node.size;
@@ -135,6 +173,40 @@ export class UpdateManager implements Manager {
                 boundingBoxMin = pos.clone();
                 boundingBoxMax = pos.clone();
             }
+
+            // Calculate visual bounds including label
+            // if (node.label?.labelMesh) {
+            //     // The label mesh position should be current after node.update()
+            //     // Get the label's bounding info which includes its actual rendered size
+            //     const labelBoundingInfo = node.label.labelMesh.getBoundingInfo();
+            //     const labelMin = labelBoundingInfo.boundingBox.minimumWorld;
+            //     const labelMax = labelBoundingInfo.boundingBox.maximumWorld;
+
+            //     // Update bounding box to include label bounds
+            //     if (labelMin.x < boundingBoxMin.x) {
+            //         boundingBoxMin.x = labelMin.x;
+            //     }
+
+            //     if (labelMax.x > boundingBoxMax.x) {
+            //         boundingBoxMax.x = labelMax.x;
+            //     }
+
+            //     if (labelMin.y < boundingBoxMin.y) {
+            //         boundingBoxMin.y = labelMin.y;
+            //     }
+
+            //     if (labelMax.y > boundingBoxMax.y) {
+            //         boundingBoxMax.y = labelMax.y;
+            //     }
+
+            //     if (labelMin.z < boundingBoxMin.z) {
+            //         boundingBoxMin.z = labelMin.z;
+            //     }
+
+            //     if (labelMax.z > boundingBoxMax.z) {
+            //         boundingBoxMax.z = labelMax.z;
+            //     }
+            // }
 
             this.updateBoundingBoxAxis(pos, boundingBoxMin, boundingBoxMax, sz, "x");
             this.updateBoundingBoxAxis(pos, boundingBoxMin, boundingBoxMax, sz, "y");
@@ -184,17 +256,49 @@ export class UpdateManager implements Manager {
      * Handle zoom to fit logic
      */
     private handleZoomToFit(boundingBoxMin?: Vector3, boundingBoxMax?: Vector3): void {
-        if (!this.needsZoomToFit || !boundingBoxMin || !boundingBoxMax) {
+        if (!this.needsZoomToFit) {
             return;
         }
 
-        // Check if the bounding box is reasonable (not all nodes at origin)
+        if (!boundingBoxMin || !boundingBoxMax) {
+            return;
+        }
+
+        // Check if we should zoom:
+        // 1. Wait for minimum steps on first zoom
+        // 2. Zoom every N steps during layout (based on zoomStepInterval)
+        // 3. Zoom when layout settles
+        const isSettled = this.layoutManager.layoutEngine?.isSettled ?? false;
+        const {zoomStepInterval} = this.styleManager.getStyles().config.behavior.layout;
+        const shouldZoomPeriodically = this.layoutStepCount > 0 &&
+                                      this.layoutStepCount >= this.lastZoomStep + zoomStepInterval;
+        const justSettled = isSettled && !this.wasSettled && this.layoutStepCount > 0;
+
+        if (!this.hasZoomedToFit && this.layoutManager.running && this.layoutStepCount < this.minLayoutStepsBeforeZoom) {
+            // First zoom - wait for minimum steps
+            return;
+        } else if (!this.layoutManager.running && !this.hasZoomedToFit && this.layoutStepCount === 0) {
+            // Layout not running and no steps taken - allow immediate zoom
+        } else if (!shouldZoomPeriodically && !justSettled) {
+            // Not time for periodic zoom and didn't just settle
+            return;
+        }
+
+        // Update settled state for next frame
+        this.wasSettled = isSettled;
+
         const size = boundingBoxMax.subtract(boundingBoxMin);
 
         if (size.length() > this.config.minBoundingBoxSize) {
             this.camera.zoomToBoundingBox(boundingBoxMin, boundingBoxMax);
+
             this.hasZoomedToFit = true;
-            this.needsZoomToFit = false;
+            this.lastZoomStep = this.layoutStepCount;
+
+            // Only clear needsZoomToFit if layout is settled
+            if (isSettled) {
+                this.needsZoomToFit = false;
+            }
 
             // Emit zoom complete event
             this.eventManager.emitGraphEvent("zoom-to-fit-complete", {
@@ -202,8 +306,6 @@ export class UpdateManager implements Manager {
                 boundingBoxMax,
             });
         }
-        // If bounding box is too small, keep needsZoomToFit true to retry next frame
-        // This handles cases where layout positions haven't been calculated yet
     }
 
     /**

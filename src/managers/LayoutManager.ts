@@ -27,7 +27,16 @@ function hasGetEdgePath(engine: LayoutEngine): engine is LayoutEngineWithEdgePat
  */
 export class LayoutManager implements Manager {
     layoutEngine?: LayoutEngine;
-    running = false;
+    private _running = false;
+
+    get running(): boolean {
+        return this._running;
+    }
+
+    set running(value: boolean) {
+        // console.log(`[LayoutManager] running set to ${value}, layoutEngine exists: ${!!this.layoutEngine}`);
+        this._running = value;
+    }
 
     // GraphContext for error reporting
     private graphContext: GraphContext | null = null;
@@ -88,8 +97,10 @@ export class LayoutManager implements Manager {
 
             try {
                 // Add all existing nodes and edges to the new engine
-                engine.addNodes([... this.dataManager.nodes.values()]);
-                engine.addEdges([... this.dataManager.edges.values()]);
+                const nodeArray = [... this.dataManager.nodes.values()];
+                const edgeArray = [... this.dataManager.edges.values()];
+                engine.addNodes(nodeArray);
+                engine.addEdges(edgeArray);
 
                 this.layoutEngine = engine;
                 await engine.init();
@@ -98,7 +109,8 @@ export class LayoutManager implements Manager {
                 this.dataManager.setLayoutEngine(engine);
 
                 // run layout presteps
-                for (let i = 0; i < this.styles.config.behavior.layout.preSteps; i++) {
+                const {preSteps} = this.styles.config.behavior.layout;
+                for (let i = 0; i < preSteps; i++) {
                     this.layoutEngine.step();
                 }
 
@@ -181,7 +193,18 @@ export class LayoutManager implements Manager {
      * Check if layout has settled
      */
     get isSettled(): boolean {
-        return this.layoutEngine?.isSettled ?? true;
+        // If not running, consider it settled
+        if (!this.running) {
+            return true;
+        }
+
+        // If no layout engine, consider it settled
+        if (!this.layoutEngine) {
+            return true;
+        }
+
+        // Otherwise check layout engine's settled state
+        return this.layoutEngine.isSettled;
     }
 
     /**

@@ -136,8 +136,10 @@ export class RenderManager implements Manager {
                     this.updateCallback();
                 }
 
-                // Update camera
-                this.camera.update();
+                // Update camera - NOTE: This might be redundant with UpdateManager.update()
+                // this.camera.update() is already called in UpdateManager.update()
+                // Commenting out to avoid double updates
+                // this.camera.update();
 
                 // Render scene
                 this.scene.render();
@@ -211,7 +213,7 @@ export class RenderManager implements Manager {
             pinchZoomSensitivity: 10,
             twistYawSensitivity: 1.5,
             minZoomDistance: 2,
-            maxZoomDistance: 500,
+            maxZoomDistance: 2000, // Increased to handle large spring layouts
             inertiaDamping: 0.9,
         });
         const orbitInput = new OrbitInputController(this.canvas, orbitCamera);

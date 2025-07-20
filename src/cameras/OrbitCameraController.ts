@@ -17,11 +17,11 @@ export class OrbitCameraController {
     public pivot: TransformNode;
     public camera: UniversalCamera;
     public cameraDistance: number;
-    private canvas: Element;
+    private canvasElement: Element;
     public config: OrbitConfig;
 
     constructor(canvas: Element, scene: Scene, config: OrbitConfig) {
-        this.canvas = canvas;
+        this.canvasElement = canvas;
         this.config = config;
 
         this.scene = scene;
@@ -30,20 +30,25 @@ export class OrbitCameraController {
         this.cameraDistance = 10;
 
         this.camera = new UniversalCamera("camera", new Vector3(0, 0, -this.cameraDistance), this.scene);
-        this.camera.parent = this.pivot;
-        this.camera.lockedTarget = this.pivot;
         this.camera.inputs.clear();
         this.scene.activeCamera = this.camera;
         this.camera.attachControl(canvas, true);
+
+        // Force initial update after camera is properly set up
+        this.updateCameraPosition();
     }
 
     public rotate(dx: number, dy: number): void {
         this.pivot.rotate(Axis.Y, -dx * this.config.trackballRotationSpeed, Space.LOCAL);
         this.pivot.rotate(Axis.X, -dy * this.config.trackballRotationSpeed, Space.LOCAL);
+        // Update camera position since it's not parented
+        this.updateCameraPosition();
     }
 
     public spin(dz: number): void {
         this.pivot.rotate(Axis.Z, dz, Space.LOCAL);
+        // Update camera position since it's not parented
+        this.updateCameraPosition();
     }
 
     public zoom(delta: number): void {
@@ -51,62 +56,67 @@ export class OrbitCameraController {
     }
 
     public updateCameraPosition(): void {
-        this.camera.position.copyFrom(Vector3.Forward().scale(-this.cameraDistance));
+        // Parent the camera to the pivot for proper transformation
+        this.camera.parent = this.pivot;
+
+        // Set local position relative to pivot
+        this.camera.position.set(0, 0, -this.cameraDistance);
+
+        // Reset camera rotation - when parented, the camera inherits the pivot's rotation
+        this.camera.rotation.set(0, 0, 0);
     }
 
     public zoomToBoundingBox(min: Vector3, max: Vector3): void {
         const center = min.add(max).scale(0.5);
         const size = max.subtract(min);
 
+        // Position pivot at center of bounding box
         this.pivot.position.copyFrom(center);
+        this.pivot.computeWorldMatrix(true);
 
-        // Get camera's field of view
-        // UniversalCamera uses fovMode and either fov (for FOVMODE_VERTICAL_FIXED)
-        // or horizontalFov (for FOVMODE_HORIZONTAL_FIXED)
-        // Default FOV for Babylon cameras is typically around 0.8 radians (~45.8 degrees)
-        let fov = 0.8; // default
+        // Get canvas dimensions
+        const engine = this.scene.getEngine();
+        engine.resize(); // Ensure we have current dimensions
+        const canvasWidth = engine.getRenderWidth();
+        const canvasHeight = engine.getRenderHeight();
+        const aspectRatio = canvasWidth / canvasHeight;
+
+        // Get camera FOV (vertical)
+        let verticalFov = 0.8; // default ~45.8 degrees
         if (this.camera.fovMode === Camera.FOVMODE_VERTICAL_FIXED) {
-            ({fov} = this.camera);
+            verticalFov = this.camera.fov;
         } else if (this.camera.fovMode === Camera.FOVMODE_HORIZONTAL_FIXED && this.camera.fov) {
-            // Convert horizontal FOV to vertical FOV using aspect ratio
-            const aspectRatio = this.scene.getEngine().getAspectRatio(this.camera);
-            fov = 2 * Math.atan(Math.tan(this.camera.fov / 2) / aspectRatio);
+            // Convert horizontal to vertical
+            verticalFov = 2 * Math.atan(Math.tan(this.camera.fov / 2) / aspectRatio);
         }
 
-        // Get viewport aspect ratio
-        const engine = this.scene.getEngine();
-        const aspectRatio = engine.getAspectRatio(this.camera);
-
-        // We need to consider all three dimensions since the camera can be rotated
-        const halfExtentX = size.x / 2;
-        const halfExtentY = size.y / 2;
-        const halfExtentZ = size.z / 2;
-
-        // For a perspective camera:
-        // - Vertical FOV is fixed
-        // - Horizontal FOV = 2 * atan(tan(verticalFOV/2) * aspectRatio)
-        const halfFovY = fov / 2;
+        // Calculate horizontal FOV from vertical FOV and aspect ratio
+        const halfFovY = verticalFov / 2;
         const halfFovX = Math.atan(Math.tan(halfFovY) * aspectRatio);
 
-        // Calculate required distance for each axis pair
-        // We need to ensure the bounding box fits when viewed from any angle
-        const distances = [
-            // XY plane (most common view)
-            halfExtentX / Math.tan(halfFovX),
-            halfExtentY / Math.tan(halfFovY),
-            // XZ plane
-            halfExtentX / Math.tan(halfFovX),
-            halfExtentZ / Math.tan(halfFovY),
-            // YZ plane
-            halfExtentY / Math.tan(halfFovX),
-            halfExtentZ / Math.tan(halfFovY),
-        ];
+        // Use box fitting for tighter bounds
+        // For a perspective camera looking down the -Z axis at a box centered at origin:
+        // To fit width: distance = (width/2) / tan(fovX/2)
+        // To fit height: distance = (height/2) / tan(fovY/2)
+        const halfWidth = size.x / 2;
+        const halfHeight = size.y / 2;
 
-        // Use the maximum distance to ensure content fits from any viewing angle
-        // Add small padding factor of 1.1 for visual comfort
-        const paddingFactor = 1.1;
-        const targetDistance = Math.max(... distances) * paddingFactor;
+        // Calculate distance needed for box to fit horizontally
+        const distanceX = halfWidth / Math.tan(halfFovX);
 
+        // Calculate distance needed for box to fit vertically
+        const distanceY = halfHeight / Math.tan(halfFovY);
+
+        // Use the larger distance to ensure box fits in both dimensions
+        const minDistance = Math.max(distanceX, distanceY);
+
+        // Apply a reasonable padding factor
+        // Since we already include labels in the bounding box, we only need
+        // a small padding for visual comfort and edge arrows
+        const PADDING_PERCENT = 5; // 5% padding
+        const targetDistance = minDistance * (1 + (PADDING_PERCENT / 100));
+
+        // Clamp to configured limits
         this.cameraDistance = Scalar.Clamp(targetDistance, this.config.minZoomDistance, this.config.maxZoomDistance);
 
         // Apply the new camera position immediately
