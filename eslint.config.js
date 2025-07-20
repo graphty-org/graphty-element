@@ -18,6 +18,7 @@ export default tseslint.config(
             "index.js",
             "storybook-static",
             "coverage",
+            "test/helpers/scripts/**/*.js",
         ],
     },
     {

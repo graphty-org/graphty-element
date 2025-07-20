@@ -1,6 +1,7 @@
 import {afterEach, assert, beforeEach, describe, expect, it} from "vitest";
 
 import {Graph} from "../../src/Graph";
+import {LayoutEngine} from "../../src/layout/LayoutEngine";
 import {DataManager, EventManager, LayoutManager} from "../../src/managers";
 import {cleanupTestGraph, createTestGraph} from "../helpers/testSetup";
 
@@ -62,16 +63,148 @@ describe("LayoutManager", () => {
             assert.isTrue(layoutManager.running);
         });
 
+        it("should run configured number of pre-steps when setting layout", async() => {
+            // Configure pre-steps in styles
+            graph.styles.config.behavior.layout.preSteps = 10;
+
+            // Add some nodes
+            const dataManager = graph.getDataManager();
+            dataManager.addNodes([
+                {id: "node1", label: "Node 1"},
+                {id: "node2", label: "Node 2"},
+                {id: "node3", label: "Node 3"},
+            ] as Record<string, unknown>[]);
+            dataManager.addEdges([
+                {id: "edge1", src: "node1", dst: "node2"},
+                {id: "edge2", src: "node2", dst: "node3"},
+            ] as Record<string, unknown>[]);
+
+            // Track the number of steps called during layout initialization
+            let stepCount = 0;
+
+            // Mock the LayoutEngine.get method to return a layout with instrumented step method
+            const originalGet = LayoutEngine.get;
+            LayoutEngine.get = (type: string, opts: object) => {
+                const engine = originalGet(type, opts);
+                if (engine) {
+                    const originalStep = engine.step.bind(engine);
+                    engine.step = () => {
+                        stepCount++;
+                        originalStep();
+                    };
+                }
+
+                return engine;
+            };
+
+            try {
+                // Set layout which should trigger pre-steps
+                await layoutManager.setLayout("ngraph", {});
+
+                // Verify that pre-steps were run
+                assert.equal(stepCount, 10, "Layout engine should have been stepped 10 times for pre-steps");
+
+                // Verify layout is still running after pre-steps
+                assert.isTrue(layoutManager.running);
+            } finally {
+                // Restore original method
+                LayoutEngine.get = originalGet;
+            }
+        });
+
         it("should handle layout initialization errors", async() => {
             await expect(
                 layoutManager.setLayout("unknown", {}),
             ).rejects.toThrow(/No layout named: unknown/);
         });
 
-        it("should handle unknown layout type", async() => {
-            await expect(
-                layoutManager.setLayout("unknown", {}),
-            ).rejects.toThrow(/No layout named: unknown/);
+        it("should handle zero pre-steps configuration", async() => {
+            // Configure zero pre-steps
+            graph.styles.config.behavior.layout.preSteps = 0;
+
+            // Add some nodes
+            const dataManager = graph.getDataManager();
+            dataManager.addNodes([
+                {id: "node1", label: "Node 1"},
+                {id: "node2", label: "Node 2"},
+            ] as Record<string, unknown>[]);
+
+            // Track the number of steps called during layout initialization
+            let stepCount = 0;
+
+            // Mock the LayoutEngine.get method to return a layout with instrumented step method
+            const originalGet = LayoutEngine.get;
+            LayoutEngine.get = (type: string, opts: object) => {
+                const engine = originalGet(type, opts);
+                if (engine) {
+                    const originalStep = engine.step.bind(engine);
+                    engine.step = () => {
+                        stepCount++;
+                        originalStep();
+                    };
+                }
+
+                return engine;
+            };
+
+            try {
+                // Set layout which should NOT trigger any pre-steps
+                await layoutManager.setLayout("ngraph", {});
+
+                // Verify that NO pre-steps were run
+                assert.equal(stepCount, 0, "Layout engine should not have been stepped when preSteps is 0");
+
+                // Verify layout is still running
+                assert.isTrue(layoutManager.running);
+            } finally {
+                // Restore original method
+                LayoutEngine.get = originalGet;
+            }
+        });
+
+        it("should ensure pre-steps affect node positions", async() => {
+            // Configure pre-steps in styles
+            graph.styles.config.behavior.layout.preSteps = 50;
+
+            // Add some nodes in a connected graph
+            const dataManager = graph.getDataManager();
+            dataManager.addNodes([
+                {id: "node1", label: "Node 1"},
+                {id: "node2", label: "Node 2"},
+                {id: "node3", label: "Node 3"},
+                {id: "node4", label: "Node 4"},
+            ] as Record<string, unknown>[]);
+            dataManager.addEdges([
+                {id: "edge1", src: "node1", dst: "node2"},
+                {id: "edge2", src: "node2", dst: "node3"},
+                {id: "edge3", src: "node3", dst: "node4"},
+                {id: "edge4", src: "node4", dst: "node1"},
+            ] as Record<string, unknown>[]);
+
+            // Set layout which should trigger pre-steps
+            await layoutManager.setLayout("ngraph", {});
+
+            // Get positions after pre-steps
+            const nodes = Array.from(layoutManager.nodes);
+            const positions: ([number, number, number] | undefined)[] = nodes.map((node) => layoutManager.getNodePosition(node));
+
+            // Verify that nodes have positions
+            positions.forEach((pos, i) => {
+                assert.isDefined(pos, `Node ${i} should have a position after pre-steps`);
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                if (pos) {
+                    assert.isArray(pos);
+                    assert.equal(pos.length, 3);
+                }
+            });
+
+            // For force-directed layouts, pre-steps should spread nodes apart
+            // Check that not all nodes are at the same position
+            const uniquePositions = new Set(positions.map((p) => p?.join(",")));
+            assert.isAbove(uniquePositions.size, 1, "Pre-steps should result in nodes having different positions");
+
+            // Verify layout is still running after pre-steps
+            assert.isTrue(layoutManager.running);
         });
 
         it("should dispose previous layout when setting new one", async() => {
