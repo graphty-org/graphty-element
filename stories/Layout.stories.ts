@@ -71,10 +71,11 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 
 export const ngraph: Story = {
     args: {
-        layout: "ngraph",
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "ngraph",
+                layoutOptions: {dim: 3},
             },
         }),
         // Individual parameter args for controls
@@ -103,16 +104,16 @@ export const ngraph: Story = {
 
 export const D3: Story = {
     args: {
-        layout: "d3",
-        layoutConfig: {
-            alphaMin: 0.1,
-            alphaTarget: 0,
-            alphaDecay: 0.0228,
-            velocityDecay: 0.4,
-        },
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "d3",
+                layoutOptions: {
+                    alphaMin: 0.1,
+                    alphaTarget: 0,
+                    alphaDecay: 0.0228,
+                    velocityDecay: 0.4,
+                },
             },
         }),
         d3AlphaMin: 0.1,
@@ -134,11 +135,6 @@ export const D3: Story = {
 
 export const Circular: Story = {
     args: {
-        layout: "circular",
-        layoutConfig: {
-            dim: 3,
-            scale: 1,
-        },
         dataSource: "json", // Add data source
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
@@ -146,6 +142,11 @@ export const Circular: Story = {
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "circular",
+                layoutOptions: {
+                    dim: 3,
+                    scale: 1,
+                },
             },
         }),
         circularScale: 1,
@@ -161,11 +162,11 @@ export const Circular: Story = {
 
 export const Random: Story = {
     args: {
-        layout: "random",
-        layoutConfig: {dim: 3},
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "random",
+                layoutOptions: {dim: 3},
             },
         }),
         randomSeed: 12,
@@ -181,10 +182,11 @@ export const Random: Story = {
 
 export const Spring: Story = {
     args: {
-        layout: "spring",
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "spring",
+                layoutOptions: {dim: 3},
             },
         }),
         springK: null,
@@ -206,12 +208,6 @@ export const Spring: Story = {
 
 export const KamadaKawai: Story = {
     args: {
-        layout: "kamada-kawai",
-        layoutConfig: {
-            dim: 3,
-            scale: 1,
-            weightProperty: undefined,
-        },
         dataSource: "json", // Add data source
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
@@ -219,6 +215,12 @@ export const KamadaKawai: Story = {
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+                layout: "kamada-kawai",
+                layoutOptions: {
+                    dim: 3,
+                    scale: 1,
+                    weightProperty: undefined,
+                },
             },
         }),
         kamadaScale: 1,
@@ -236,20 +238,6 @@ export const KamadaKawai: Story = {
 
 export const ForceAtlas2: Story = {
     args: {
-        layout: "forceatlas2",
-        layoutConfig: {
-            dim: 3,
-            scalingFactor: 10, // Override the default 100
-            maxIter: 500,
-            jitterTolerance: 1.0,
-            scalingRatio: 2.0,
-            gravity: 1.0,
-            distributedAction: false,
-            strongGravity: false,
-            dissuadeHubs: false,
-            linlog: false,
-            seed: 42,
-        },
         dataSource: "json", // Add data source
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
@@ -257,6 +245,20 @@ export const ForceAtlas2: Story = {
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // 3D mode
+                layout: "forceatlas2",
+                layoutOptions: {
+                    dim: 3,
+                    scalingFactor: 10, // Override the default 100
+                    maxIter: 500,
+                    jitterTolerance: 1.0,
+                    scalingRatio: 2.0,
+                    gravity: 1.0,
+                    distributedAction: false,
+                    strongGravity: false,
+                    dissuadeHubs: false,
+                    linlog: false,
+                    seed: 42,
+                },
             },
         }),
         // Individual parameter args for controls
