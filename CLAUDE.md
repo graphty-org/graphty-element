@@ -137,6 +137,10 @@ successfully completing, generate a commit comment for all current changes.
   - And even then, try to limit its scope as much as possible
 - **DO NOT** use ESLint disable comments unless absolutely necessary
 
+## Linting and Configuration Notes
+
+- Try not to update eslint.config.js unless absolutely necessary
+
 ## Testing Approach
 
 The project uses Vitest with two test projects:
