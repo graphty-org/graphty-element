@@ -1,5 +1,6 @@
 import ngraphCreateLayout, {Layout as NGraphLayout} from "ngraph.forcelayout";
 import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
+import {random} from "ngraph.random";
 
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
@@ -14,10 +15,49 @@ export class NGraphEngine extends LayoutEngine {
     edgeMapping = new Map<Edge, NGraphLink>();
     _settled = true;
 
-    constructor() {
+    constructor(config: object = {}) {
         super();
         this.ngraph = createGraph();
-        this.ngraphLayout = ngraphCreateLayout(this.ngraph, {dimensions: 3});
+
+        // Cast config to a more specific type for property access
+        const typedConfig = config as Record<string, unknown>;
+
+        // Build ngraph configuration from provided config
+        const ngraphConfig: Record<string, unknown> = {
+            dimensions: typedConfig.dim !== undefined ? typedConfig.dim : 3,
+        };
+
+        // Map from layout config to ngraph parameters
+        if (typedConfig.springLength !== undefined) {
+            ngraphConfig.springLength = typedConfig.springLength;
+        }
+
+        if (typedConfig.springCoefficient !== undefined) {
+            ngraphConfig.springCoefficient = typedConfig.springCoefficient;
+        }
+
+        if (typedConfig.gravity !== undefined) {
+            ngraphConfig.gravity = typedConfig.gravity;
+        }
+
+        if (typedConfig.theta !== undefined) {
+            ngraphConfig.theta = typedConfig.theta;
+        }
+
+        if (typedConfig.dragCoefficient !== undefined) {
+            ngraphConfig.dragCoefficient = typedConfig.dragCoefficient;
+        }
+
+        if (typedConfig.timeStep !== undefined) {
+            ngraphConfig.timeStep = typedConfig.timeStep;
+        }
+
+        // Add random number generator with seed if provided
+        if (typedConfig.seed !== undefined && typeof typedConfig.seed === "number") {
+            ngraphConfig.random = random(typedConfig.seed);
+        }
+
+        this.ngraphLayout = ngraphCreateLayout(this.ngraph, ngraphConfig);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function

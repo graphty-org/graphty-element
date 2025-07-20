@@ -72,15 +72,6 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 export const ngraph: Story = {
     args: {
         layout: "ngraph",
-        layoutConfig: {
-            seed: 12,
-            springLength: 30,
-            springCoeff: 0.0008,
-            gravity: -1.2,
-            theta: 0.8,
-            dragCoeff: 0.02,
-            timeStep: 20,
-        },
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode

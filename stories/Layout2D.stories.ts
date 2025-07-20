@@ -111,7 +111,12 @@ export const Circular: Story = {
 
 export const Shell: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "shell"}}),
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: true,
+                layout: "shell",
+            },
+        }),
         shellScale: 1,
     },
     parameters: {

@@ -117,14 +117,6 @@ const meta: Meta = {
             },
         }),
         layout: "ngraph",
-        layoutConfig: {
-            springLength: 150,
-            springCoeff: 0.0008,
-            gravity: -1.2,
-            theta: 0.8,
-            dragCoeff: 0.02,
-            timeStep: 20,
-        },
     },
 };
 export default meta;

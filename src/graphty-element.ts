@@ -63,11 +63,11 @@ export class Graphty extends LitElement {
             setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
         }
 
-        // Always ensure a layout is set - use provided layout or default to "ngraph"
-        if (changedProperties.has("layout")) {
-            const layoutType = this.layout ?? "ngraph";
+        // Set layout AFTER styleTemplate to override any layoutOptions from template
+        // Only set layout if explicitly provided via the layout property
+        if ((changedProperties.has("layout") || changedProperties.has("layoutConfig")) && this.layout !== undefined) {
             const layoutConfig = this.layoutConfig ?? {};
-            await this.#graph.setLayout(layoutType, layoutConfig);
+            await this.#graph.setLayout(this.layout, layoutConfig);
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
@@ -206,4 +206,11 @@ export class Graphty extends LitElement {
      */
     @property({attribute: "run-algorithms-on-load"})
     runAlgorithmsOnLoad?: boolean;
+
+    /**
+     * Get the underlying Graph instance for debugging purposes
+     */
+    get graph(): Graph {
+        return this.#graph;
+    }
 }
