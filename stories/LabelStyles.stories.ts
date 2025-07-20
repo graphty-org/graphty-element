@@ -106,7 +106,7 @@ const meta: Meta = {
     args: {
         dataSource: "json",
         dataSourceConfig: {
-            data: "../test/helpers/cat-social-network-2.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
         },
         styleTemplate: templateCreator({
             nodeStyle: {
@@ -131,7 +131,7 @@ const createLabelStoryArgs = (labelConfig: Record<string, unknown>): {
 } => ({
     dataSource: "json",
     dataSourceConfig: {
-        data: "../test/helpers/cat-social-network-2.json",
+        data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
     },
     styleTemplate: templateCreator({
         nodeStyle: {

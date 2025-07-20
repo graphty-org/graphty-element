@@ -23,7 +23,7 @@ const meta: Meta = {
         styleTemplate: templateCreator({}),
         dataSource: "json",
         dataSourceConfig: {
-            data: "../test/helpers/cat-social-network-2.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
         },
         layout: "ngraph",
     },
