@@ -241,3 +241,8 @@ Run with: `node test/debug-screenshot.js`
 - **For CI/automated testing**: Use Playwright in Vitest
 - **For runtime debugging**: Use Babylon.js screenshot tools
 - **For quick manual checks**: Create a simple HTML page or Node script
+
+## Development Guidelines
+
+- **URL Requirements**:
+  - All URLs accessed by stories (e.g. data URLs) must be fully qualified, non-local URLs so that they work in Chromatic
