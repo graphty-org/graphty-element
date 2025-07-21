@@ -19,16 +19,16 @@ This creates:
 ## Proposed Solution
 
 Create an automated build process that:
-1. Reads existing human-focused story files
-2. Analyzes their parameters and controls
+1. Imports existing human-focused story files at runtime
+2. Reads their argTypes directly from the meta export
 3. Generates comprehensive Chromatic test files that import and extend the originals
-4. Tests every story with every possible parameter variation
+4. Tests every story with every possible parameter variation based on argTypes
 
 ## Current State Analysis
 
 ### Existing Story Structure
 ```typescript
-// stories/node/NodeStyles.stories.ts
+// stories/human/NodeStyles.stories.ts
 export default meta = {
   title: "Styles/Node",
   component: "graphty-element",
@@ -65,24 +65,34 @@ export const nodeColorVariations = [
 
 ### Phase 1: Core Generator Script
 
-#### 1.1 Create AST-based Story Analyzer
+#### 1.1 Create Runtime Story Analyzer
 ```typescript
-// scripts/chromatic-generator/story-analyzer.ts
-interface StoryAnalysis {
-  filePath: string;
-  metaExport: {
-    title: string;
-    component: string;
-    argTypes: Record<string, ArgTypeInfo>;
-  };
-  storyExports: Record<string, StoryInfo>;
+// stories/helpers/chromatic-generator.ts
+interface StoryModule {
+  default: Meta<any>;
+  [key: string]: Story<any> | Meta<any>;
 }
 
 class StoryAnalyzer {
   async analyzeStoryFile(filePath: string): Promise<StoryAnalysis> {
-    // Use TypeScript compiler API to parse story files
-    // Extract meta information and story exports
-    // Return structured analysis
+    // Import the story module dynamically
+    const storyModule = await import(filePath) as StoryModule;
+    
+    // Extract meta and stories directly from the module
+    const meta = storyModule.default;
+    const stories = Object.entries(storyModule)
+      .filter(([key]) => key !== 'default')
+      .reduce((acc, [key, value]) => {
+        acc[key] = value as Story<any>;
+        return acc;
+      }, {} as Record<string, Story<any>>);
+    
+    return {
+      filePath,
+      meta,
+      stories,
+      argTypes: meta.argTypes || {}
+    };
   }
 }
 ```
@@ -104,14 +114,154 @@ class VariationGenerator {
 }
 ```
 
+##### Parameter Generation Rules
+
+The variation generator follows these rules based on parameter types:
+
+1. **Number with range (min/max)**
+   - Generate 3 test values: minimum, middle, and maximum
+   - Example: range 0-10 generates tests for 0, 5, and 10
+   - Example: range 0.1-2.0 generates tests for 0.1, 1.05, and 2.0
+
+2. **Select/Options list (enumeration)**
+   - Generate a test for each member of the list
+   - Example: options ['sphere', 'cube', 'cylinder'] generates 3 tests
+
+3. **Number without range**
+   - Generate 3 test values using sensible defaults
+   - Example: small (1), medium (10), large (100)
+   - Can be configured per parameter in config file
+
+4. **Boolean**
+   - Generate 2 tests: true and false
+   - Example: wireframe generates wireframe_true and wireframe_false
+
+5. **Color**
+   - Generate 3 test formats: hex, named color, and rgb
+   - Example: generates #FF0000, "red", and "rgb(255, 0, 0)"
+   - Additional test for rgba with transparency: "rgba(255, 0, 0, 0.5)"
+
+6. **Text/String**
+   - Use the default value from the story
+   - If no default, use a standard test string
+   - Example: "Test Label" or story's default value
+
+7. **No parameters**
+   - Generate a single test that duplicates the original story
+   - Ensures even parameterless stories get visual regression testing
+
+8. **Object/Complex types**
+   - Recursively apply rules to nested properties
+   - Example: { color: 'red', size: 10 } generates combinations
+
+9. **Array types**
+   - Generate tests with empty, single item, and multiple items
+   - Example: [], ['item1'], ['item1', 'item2', 'item3']
+
+10. **Date/Time**
+    - Generate past, present, and future dates
+    - Example: yesterday, today, tomorrow
+
+```typescript
+// Example implementation
+class VariationGenerator {
+  generateVariations(argType: ArgTypeInfo): VariationSet {
+    const { control, options, min, max, defaultValue } = argType;
+    
+    switch (control.type || control) {
+      case 'range':
+        return this.generateRangeVariations(min, max);
+      
+      case 'select':
+      case 'radio':
+        return this.generateSelectVariations(options);
+      
+      case 'boolean':
+        return this.generateBooleanVariations();
+      
+      case 'color':
+        return this.generateColorVariations(defaultValue);
+      
+      case 'text':
+      case 'string':
+        return this.generateTextVariations(defaultValue);
+      
+      case 'number':
+        return min !== undefined && max !== undefined
+          ? this.generateRangeVariations(min, max)
+          : this.generateNumberVariations();
+      
+      case 'date':
+        return this.generateDateVariations();
+      
+      case 'object':
+        return this.generateObjectVariations(argType);
+      
+      case 'array':
+        return this.generateArrayVariations(argType);
+      
+      default:
+        return this.generateDefaultVariations(defaultValue);
+    }
+  }
+  
+  private generateRangeVariations(min: number, max: number): VariationSet {
+    const middle = (min + max) / 2;
+    return {
+      parameterPath: this.path,
+      variations: [
+        { name: `min_${min}`, value: min },
+        { name: `mid_${middle}`, value: middle },
+        { name: `max_${max}`, value: max }
+      ]
+    };
+  }
+  
+  private generateColorVariations(defaultValue?: string): VariationSet {
+    return {
+      parameterPath: this.path,
+      variations: [
+        { name: 'hex', value: '#FF5733' },
+        { name: 'named', value: 'blue' },
+        { name: 'rgb', value: 'rgb(128, 256, 0)' },
+        { name: 'rgba', value: 'rgba(255, 0, 0, 0.5)' }
+      ]
+    };
+  }
+}
+```
+
 #### 1.3 Create Test File Generator
 ```typescript
-// scripts/chromatic-generator/test-generator.ts
+// stories/helpers/chromatic-generator.ts (continued)
 class ChromaticTestGenerator {
   generateTestFile(analysis: StoryAnalysis, variations: VariationSet[]): string {
     // Generate TypeScript file that imports original stories
     // Create test stories for each variation combination
-    // Include proper typing and meta information
+    // Use argTypes to determine how to apply variations
+    
+    const imports = `
+import * as OriginalStories from '../../human/${path.basename(analysis.filePath)}';
+import { templateCreator } from '../../helpers/helpers';
+`;
+    
+    const metaExport = `
+const meta = {
+  ...OriginalStories.default,
+  title: \`Chromatic/Auto/\${OriginalStories.default.title}\`,
+  tags: ['!dev', 'chromatic-auto'],
+  parameters: {
+    chromatic: { delay: 2000 },
+    controls: { hideNoControlsWarning: true }
+  }
+};
+export default meta;
+`;
+    
+    // Generate story variations based on argTypes
+    const storyExports = this.generateStoryVariations(analysis, variations);
+    
+    return imports + metaExport + storyExports;
   }
 }
 ```
@@ -122,18 +272,27 @@ class ChromaticTestGenerator {
 ```json
 // chromatic-generation.config.json
 {
-  "sourcePattern": "stories/**/*.stories.ts",
-  "outputDirectory": "stories/chromatic-auto",
-  "exclude": ["**/chromatic/**", "**/*.chromatic.*"],
-  "variations": {
-    "color": ["red", "blue", "green", "yellow", "purple", "#FF1493"],
-    "boolean": [true, false],
-    "shape.type": ["box", "sphere", "cylinder", "cone", "geodesic"],
-    "shape.size": [0.5, 1, 2, 5],
-    "texture.color.opacity": [0.2, 0.5, 0.8, 1]
+  "sourcePattern": "stories/human/*.stories.ts",
+  "outputDirectory": "stories/auto-generated",
+  "exclude": ["**/auto-generated/**", "**/*.chromatic.*"],
+  "parameterGeneration": {
+    "defaults": {
+      "numberWithoutRange": [1, 10, 100],
+      "textDefault": "Test Value",
+      "dateOffsets": [-86400000, 0, 86400000]  // -1 day, today, +1 day
+    },
+    "overrides": {
+      "shape.size": [0.5, 1, 2, 5],
+      "texture.color.opacity": [0.2, 0.5, 0.8, 1],
+      "label.fontSize": [8, 14, 24]
+    }
   },
   "storiesPerFile": 100,  // Split large outputs
-  "testDelay": 2000       // Chromatic delay
+  "testDelay": 2000,      // Chromatic delay
+  "combinationTesting": {
+    "enabled": false,     // Test parameter combinations
+    "maxCombinations": 10 // Limit to prevent explosion
+  }
 }
 ```
 
@@ -153,27 +312,41 @@ const parameterMapping = {
 #### 3.1 Output Directory Structure
 ```
 stories/
-├── chromatic-auto/           # Generated files (gitignored)
-│   ├── index.ts             # Barrel export
-│   ├── NodeStyles.test.ts   # Generated from NodeStyles.stories.ts
-│   ├── EdgeStyles.test.ts   # Generated from EdgeStyles.stories.ts
+├── human/                    # All human-focused stories (flat structure)
+│   ├── NodeStyles.stories.ts
+│   ├── EdgeStyles.stories.ts
+│   ├── LabelStyles.stories.ts
+│   ├── Layout.stories.ts
+│   ├── GraphStyles.stories.ts
+│   ├── Calculated.stories.ts
+│   ├── Data.stories.ts
 │   └── ...
-├── node/                    # Original stories (unchanged)
-│   └── NodeStyles.stories.ts
-└── edge/
-    └── EdgeStyles.stories.ts
+├── auto-generated/           # Generated files (gitignored)
+│   ├── index.ts             # Barrel export
+│   ├── node/                # Organized by category
+│   │   ├── NodeStyles.chromatic.ts
+│   │   └── NodeStyles-variations.chromatic.ts
+│   ├── edge/
+│   │   ├── EdgeStyles.chromatic.ts
+│   │   └── EdgeStyles-variations.chromatic.ts
+│   ├── layout/
+│   │   └── Layout.chromatic.ts
+│   └── ...
+└── helpers/                 # Shared utilities
+    ├── helpers.ts          # Existing helper functions
+    └── chromatic-generator.ts  # Generation script
 ```
 
 #### 3.2 Generated File Format
 ```typescript
-// stories/chromatic-auto/NodeStyles.test.ts
+// stories/auto-generated/node/NodeStyles.chromatic.ts
 // AUTO-GENERATED FILE - DO NOT EDIT
-// Source: stories/node/NodeStyles.stories.ts
+// Source: stories/human/NodeStyles.stories.ts
 // Generated: 2025-07-21T10:00:00Z
 
 import { Meta, StoryObj } from '@storybook/web-components-vite';
-import * as OriginalStories from '../node/NodeStyles.stories';
-import { templateCreator } from '../helpers';
+import * as OriginalStories from '../../human/NodeStyles.stories';
+import { templateCreator } from '../../helpers/helpers';
 
 const meta: Meta = {
   ...OriginalStories.default,
@@ -231,9 +404,9 @@ export const Default_texture_color_blue = {
 // .storybook/main.ts
 export default {
   stories: [
-    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../stories/human/*.stories.@(js|jsx|mjs|ts|tsx)",
     // Include generated stories only in Chromatic builds
-    process.env.CHROMATIC && "../stories/chromatic-auto/**/*.test.@(js|ts)"
+    process.env.CHROMATIC && "../stories/auto-generated/**/*.chromatic.@(js|ts)"
   ].filter(Boolean),
 };
 ```
@@ -242,64 +415,87 @@ export default {
 ```gitignore
 # .gitignore
 # Auto-generated Chromatic test stories
-stories/chromatic-auto/
-*.chromatic.auto.ts
-*.chromatic.generated.ts
+stories/auto-generated/
 ```
 
 ### Phase 5: Advanced Features
 
-#### 5.1 Combination Testing
+#### 5.1 ArgType-Based Generation
 ```typescript
-// Generate stories that test multiple parameters together
-export const ColorShape_red_box = {
-  args: {
-    styleTemplate: templateCreator({
-      nodeStyle: {
-        texture: {color: 'red'},
-        shape: {type: 'box'}
-      }
-    })
+// Generate variations based on argType definitions
+const generateFromArgType = (argType: ArgType, paramName: string) => {
+  // Read control type and options directly from argType
+  const { control, options, min, max } = argType;
+  
+  if (control === 'select' && options) {
+    return options.map(opt => ({ name: opt, value: opt }));
   }
+  
+  if (control === 'boolean') {
+    return [
+      { name: 'true', value: true },
+      { name: 'false', value: false }
+    ];
+  }
+  
+  if (control?.type === 'range' && min !== undefined && max !== undefined) {
+    const mid = (min + max) / 2;
+    return [
+      { name: `min_${min}`, value: min },
+      { name: `mid_${mid}`, value: mid },
+      { name: `max_${max}`, value: max }
+    ];
+  }
+  
+  // Default case
+  return [{ name: 'default', value: argType.defaultValue }];
 };
 ```
 
-#### 5.2 Smart Variation Detection
+#### 5.2 Parameter Path Mapping
 ```typescript
-// Automatically detect enum values from TypeScript types
-type NodeShape = 'box' | 'sphere' | 'cylinder';
-// Generator extracts: ['box', 'sphere', 'cylinder']
-```
-
-#### 5.3 Incremental Generation
-```typescript
-// Only regenerate files that have changed
-class IncrementalGenerator {
-  async generate() {
-    const cache = await this.loadCache();
-    const files = await this.findStoryFiles();
-    
-    for (const file of files) {
-      if (this.hasChanged(file, cache)) {
-        await this.generateTestFile(file);
-      }
+// Map argType names (from story) to styleTemplate paths
+const mapParameterToStyleTemplate = (paramName: string, value: any) => {
+  // Handle nested paths like "texture.color"
+  const path = argType.name || paramName;
+  const segments = path.split('.');
+  
+  let result = {};
+  let current = result;
+  
+  // Build nested object structure
+  segments.forEach((segment, index) => {
+    if (index === segments.length - 1) {
+      current[segment] = value;
+    } else {
+      current[segment] = {};
+      current = current[segment];
     }
+  });
+  
+  // Wrap in appropriate style layer
+  if (path.startsWith('node')) {
+    return { nodeStyle: result };
+  } else if (path.startsWith('edge')) {
+    return { edgeStyle: result };
   }
-}
+  
+  return result;
+};
 ```
 
 ## Implementation Steps
 
 ### Step 1: Basic Generator (Week 1)
-1. Create simple script that reads story files
-2. Parse exports and argTypes using regex/simple parsing
-3. Generate basic test files with hardcoded variations
-4. Test with NodeStyles.stories.ts
+1. Create stories/helpers/chromatic-generator.ts script
+2. Import story modules and read argTypes directly
+3. Generate test files in stories/auto-generated/ with appropriate subdirectories
+4. Test with NodeStyles.stories.ts from stories/human/
 
-### Step 2: Enhanced Parser (Week 2)
-1. Implement TypeScript AST parsing
-2. Extract complete type information
-3. Handle complex argTypes configurations
+### Step 2: Enhanced Generator (Week 2)
+1. Handle all argType control types properly
+2. Support nested parameter paths (e.g., "texture.color")
+3. Implement parameter mapping to styleTemplate
 4. Support all existing story patterns
 
 ### Step 3: Configuration System (Week 3)
@@ -330,8 +526,8 @@ class IncrementalGenerator {
 ### Risk 2: Large Number of Generated Stories
 **Mitigation**: Implement smart filtering and story grouping
 
-### Risk 3: TypeScript Parsing Complexity
-**Mitigation**: Fallback to simpler parsing for basic cases
+### Risk 3: Runtime Import Complexity
+**Mitigation**: Use dynamic imports with proper error handling
 
 ### Risk 4: Chromatic Test Limits
 **Mitigation**: Configure story batching and priority testing
@@ -347,17 +543,53 @@ class IncrementalGenerator {
 3. **Manual Mapping**: Maintain variation mappings manually
    - Rejected: Defeats purpose of automation
 
+## Parameter Type Coverage Summary
+
+The automated generation system covers all common Storybook parameter types:
+
+1. **Number with range** → 3 tests (min, mid, max)
+2. **Select/Options** → N tests (one per option)
+3. **Number without range** → 3 tests (configurable defaults)
+4. **Boolean** → 2 tests (true, false)
+5. **Color** → 4 tests (hex, named, rgb, rgba)
+6. **Text/String** → 1 test (default or standard value)
+7. **No parameters** → 1 test (exact copy)
+8. **Object** → Recursive application of rules
+9. **Array** → 3 tests (empty, single, multiple)
+10. **Date** → 3 tests (past, present, future)
+
+This comprehensive coverage ensures that every visual aspect of the component is tested across its full range of possible values, catching regressions that might only appear at edge cases or specific parameter combinations.
+
 ## Conclusion
 
 This approach provides a clean separation between human-focused documentation and comprehensive visual testing while maintaining a single source of truth. The automated generation ensures complete test coverage without the maintenance burden of duplicate stories.
 
+## Migration Plan
+
+### Phase 1: Directory Restructuring
+1. Create `stories/human/` directory
+2. Move all existing `*.stories.ts` files to `stories/human/` (flat structure)
+3. Keep `stories/helpers/` for shared utilities
+4. Add `stories/auto-generated/` to `.gitignore`
+
+### Phase 2: Implementation
+1. Create `stories/helpers/chromatic-generator.ts`
+2. Test generator with one story file
+3. Generate all chromatic tests to `stories/auto-generated/`
+4. Verify Chromatic tests pass
+
+### Phase 3: Cleanup
+1. Remove any existing `*.chromatic.stories.ts` files
+2. Update documentation to reflect new structure
+3. Update CI/CD pipelines if needed
+
 ## Next Steps
 
 1. Review and approve this plan
-2. Create proof-of-concept with NodeStyles.stories.ts
-3. Iterate based on feedback
-4. Implement full solution
-5. Migrate existing Chromatic stories to auto-generated approach
+2. Restructure directories as specified
+3. Create proof-of-concept with NodeStyles.stories.ts
+4. Iterate based on feedback
+5. Implement full solution for all stories
 
 ## Appendix: Example Usage
 
@@ -375,7 +607,7 @@ $ npm run chromatic -- --auto-accept-changes
 
 ## References
 
-- [TypeScript Compiler API](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API)
 - [Storybook Args](https://storybook.js.org/docs/react/writing-stories/args)
+- [Storybook ArgTypes](https://storybook.js.org/docs/react/api/argtypes)
 - [Chromatic Documentation](https://www.chromatic.com/docs/test)
 - Current implementation in `stories/node/NodeStyles.chromatic.stories.ts`
