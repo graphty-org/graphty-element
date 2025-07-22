@@ -37,3 +37,10 @@ coverage/
 
 # Auto-generated Chromatic test stories
 stories/auto-generated/
+
+# Playwright test artifacts
+test/playwright/visual/screenshots-diff/
+test/playwright/visual/screenshots-actual/
+test/playwright/generated/*.visual.spec.ts
+playwright-report/
+test-results/
