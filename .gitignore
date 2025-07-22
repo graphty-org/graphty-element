@@ -34,3 +34,6 @@ coverage/
 /index.js
 /index.d.ts
 /index.d.ts.map
+
+# Auto-generated Chromatic test stories
+stories/auto-generated/

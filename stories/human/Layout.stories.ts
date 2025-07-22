@@ -1,10 +1,10 @@
-import "../index.ts";
-import "../src/layout/index.ts"; // Ensure all layouts are registered
+import "../../index.ts";
+import "../../src/layout/index.ts"; // Ensure all layouts are registered
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {Graphty} from "../../src/graphty-element";
+import {renderFn, templateCreator} from "../helpers";
 
 const meta: Meta = {
     title: "Layout/3D",
@@ -18,7 +18,7 @@ const meta: Meta = {
         d3VelocityDecay: {control: {type: "range", min: 0.1, max: 0.9, step: 0.1}, table: {category: "D3 Layout"}, name: "graph.layoutOptions.velocityDecay"},
 
         // Spring layout controls
-        springK: {control: {type: "number"}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.k"},
+        springK: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.k"},
         springIterations: {control: {type: "range", min: 10, max: 200, step: 10}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.iterations"},
         springScale: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.scale"},
         springSeed: {control: {type: "number"}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.seed"},
@@ -34,7 +34,6 @@ const meta: Meta = {
         circularScale: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Circular Layout"}, name: "graph.layoutOptions.scale"},
 
         // ForceAtlas2 layout controls
-        fa2ScalingFactor: {control: {type: "range", min: 10, max: 500, step: 10}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.scalingFactor"},
         fa2MaxIter: {control: {type: "range", min: 10, max: 1000, step: 10}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.maxIter"},
         fa2JitterTolerance: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.jitterTolerance"},
         fa2ScalingRatio: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "ForceAtlas2 Layout"}, name: "graph.layoutOptions.scalingRatio"},
@@ -49,10 +48,10 @@ const meta: Meta = {
         // NGraph layout controls
         ngraphSeed: {control: {type: "number"}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.seed"},
         ngraphSpringLength: {control: {type: "range", min: 10, max: 100, step: 5}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.springLength"},
-        ngraphSpringCoeff: {control: {type: "range", min: 0.0001, max: 0.01, step: 0.0001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.springCoeff"},
+        ngraphSpringCoefficient: {control: {type: "range", min: 0.0001, max: 0.01, step: 0.0001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.springCoefficient"},
         ngraphGravity: {control: {type: "range", min: -10, max: 10, step: 0.1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.gravity"},
         ngraphTheta: {control: {type: "range", min: 0.1, max: 1, step: 0.1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.theta"},
-        ngraphDragCoeff: {control: {type: "range", min: 0.001, max: 0.1, step: 0.001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.dragCoeff"},
+        ngraphDragCoefficient: {control: {type: "range", min: 0.001, max: 0.1, step: 0.001}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.dragCoefficient"},
         ngraphTimeStep: {control: {type: "range", min: 1, max: 50, step: 1}, table: {category: "NGraph Layout"}, name: "graph.layoutOptions.timeStep"},
     },
     parameters: {
@@ -80,22 +79,22 @@ export const ngraph: Story = {
         }),
         // Individual parameter args for controls
         ngraphSeed: 12,
-        ngraphSpringLength: 30,
-        ngraphSpringCoeff: 0.0008,
-        ngraphGravity: -1.2,
-        ngraphTheta: 0.8,
-        ngraphDragCoeff: 0.02,
-        ngraphTimeStep: 20,
+        // ngraphSpringLength: 30,
+        // ngraphSpringCoefficient: 0.0008,
+        // ngraphGravity: -1.2,
+        // ngraphTheta: 0.8,
+        // ngraphDragCoefficient: 0.02,
+        // ngraphTimeStep: 20,
     },
     parameters: {
         controls: {
             include: [
                 "graph.layoutOptions.seed",
                 "graph.layoutOptions.springLength",
-                "graph.layoutOptions.springCoeff",
+                "graph.layoutOptions.springCoefficient",
                 "graph.layoutOptions.gravity",
                 "graph.layoutOptions.theta",
-                "graph.layoutOptions.dragCoeff",
+                "graph.layoutOptions.dragCoefficient",
                 "graph.layoutOptions.timeStep",
             ],
         },
@@ -189,7 +188,7 @@ export const Spring: Story = {
                 layoutOptions: {dim: 3},
             },
         }),
-        springK: null,
+        springK: 1,
         springIterations: 50,
         springScale: 1,
         springSeed: 12,
@@ -248,7 +247,6 @@ export const ForceAtlas2: Story = {
                 layout: "forceatlas2",
                 layoutOptions: {
                     dim: 3,
-                    scalingFactor: 10, // Override the default 100
                     maxIter: 500,
                     jitterTolerance: 1.0,
                     scalingRatio: 2.0,
@@ -262,7 +260,6 @@ export const ForceAtlas2: Story = {
             },
         }),
         // Individual parameter args for controls
-        fa2ScalingFactor: 10,
         fa2MaxIter: 500,
         fa2JitterTolerance: 1.0,
         fa2ScalingRatio: 2.0,
@@ -276,7 +273,6 @@ export const ForceAtlas2: Story = {
     parameters: {
         controls: {
             include: [
-                "graph.layoutOptions.scalingFactor",
                 "graph.layoutOptions.maxIter",
                 "graph.layoutOptions.jitterTolerance",
                 "graph.layoutOptions.scalingRatio",
@@ -285,6 +281,7 @@ export const ForceAtlas2: Story = {
                 "graph.layoutOptions.strongGravity",
                 "graph.layoutOptions.dissuadeHubs",
                 "graph.layoutOptions.linlog",
+                "graph.layoutOptions.weightPath",
                 "graph.layoutOptions.seed",
             ],
         },

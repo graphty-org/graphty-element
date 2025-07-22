@@ -92,6 +92,9 @@ export class LayoutManager implements Manager {
                 throw new TypeError(`No layout named: ${type}`);
             }
 
+            // Store the current layout options for change detection
+            this.currentLayoutOptions = layoutOpts;
+
             // Store previous layout engine for cleanup if init fails
             const previousEngine = this.layoutEngine;
 
@@ -274,11 +277,42 @@ export class LayoutManager implements Manager {
         if (layoutType) {
             const options = layoutOptions ?? {};
 
-            // Only set layout if it's different from current layout or if no layout is set
-            if (!this.layoutEngine || this.layoutEngine.type !== layoutType) {
+            // Check if we need to update the layout
+            const needsUpdate = !this.layoutEngine || 
+                               this.layoutEngine.type !== layoutType ||
+                               this.hasOptionsChanged(options);
+
+            if (needsUpdate) {
                 await this.setLayout(layoutType, options);
             }
         }
+    }
+
+    /**
+     * Track current layout options to detect changes
+     */
+    private currentLayoutOptions?: object;
+
+    /**
+     * Check if layout options have changed
+     */
+    private hasOptionsChanged(newOptions: object): boolean {
+        // If no previous options, consider it changed
+        if (!this.currentLayoutOptions) {
+            this.currentLayoutOptions = newOptions;
+            return true;
+        }
+
+        // Deep compare options
+        const oldStr = JSON.stringify(this.currentLayoutOptions);
+        const newStr = JSON.stringify(newOptions);
+        
+        if (oldStr !== newStr) {
+            this.currentLayoutOptions = newOptions;
+            return true;
+        }
+
+        return false;
     }
 
     /**

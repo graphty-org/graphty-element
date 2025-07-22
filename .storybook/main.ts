@@ -2,8 +2,10 @@ import type {StorybookConfig} from "@storybook/web-components-vite";
 
 const config: StorybookConfig = {
     stories: [
-        "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    ],
+        "../stories/human/*.stories.@(js|jsx|mjs|ts|tsx)",
+        // Include generated stories only in Chromatic builds
+        process.env.CHROMATIC && "../stories/auto-generated/**/*.stories.@(js|jsx|mjs|ts|tsx)"
+    ].filter(Boolean) as string[],
     addons: [
         "@chromatic-com/storybook",
         "@storybook/addon-vitest",

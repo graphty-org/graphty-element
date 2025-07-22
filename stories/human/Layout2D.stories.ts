@@ -1,9 +1,9 @@
-import "../index.ts";
+import "../../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {Graphty} from "../../src/graphty-element";
+import {renderFn, templateCreator} from "../helpers";
 
 const meta: Meta = {
     title: "Layout/2D",

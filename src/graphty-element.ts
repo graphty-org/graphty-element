@@ -63,11 +63,14 @@ export class Graphty extends LitElement {
             setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
         }
 
-        // Set layout AFTER styleTemplate to override any layoutOptions from template
+        // Set layout AFTER styleTemplate, merging layoutOptions from template with layoutConfig
         // Only set layout if explicitly provided via the layout property
         if ((changedProperties.has("layout") || changedProperties.has("layoutConfig")) && this.layout !== undefined) {
-            const layoutConfig = this.layoutConfig ?? {};
-            await this.#graph.setLayout(this.layout, layoutConfig);
+            // Get layoutOptions from styleTemplate if available
+            const templateLayoutOptions = this.#graph.styles.config.graph.layoutOptions ?? {};
+            // Merge template options with provided layoutConfig (layoutConfig takes precedence)
+            const mergedConfig = {...templateLayoutOptions, ...(this.layoutConfig ?? {})};
+            await this.#graph.setLayout(this.layout, mergedConfig);
         }
 
         if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
