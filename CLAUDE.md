@@ -27,7 +27,7 @@ npm run storybook   # Start Storybook on port 9025
 
 ```bash
 npm test            # Run default Vitest tests
-npm run test:visual # Run visual tests to see if rendering changed
+npm run test:visual # Run visual tests (sequential execution, ~5s per test)
 npm run test:storybook # Run Storybook tests to see if functionality work
 npm run test:all    # Run all tests (default + Storybook + Chromatic tests)
 npm run coverage    # Run all tests with coverage
@@ -246,7 +246,19 @@ Run with: `node test/debug-screenshot.js`
 - **For runtime debugging**: Use Babylon.js screenshot tools
 - **For quick manual checks**: Create a simple HTML page or Node script
 
+## Visual Test Notes
+
+Visual tests run with sequential execution (`--workers=1`) to avoid resource contention issues. The generated test files are correct - the key is running them sequentially rather than in parallel. This is now the default behavior in all `npm run test:visual*` scripts.
+
+Common warnings during visual tests:
+- "Graph did not settle within 10 frames" - Normal for physics-based layouts (ngraph)
+- "Failed to preload layout-3d--*" - Expected preload timeouts, tests will still pass
+
 ## Development Guidelines
 
 - **URL Requirements**:
   - All URLs accessed by stories (e.g. data URLs) must be fully qualified, non-local URLs so that they work in Chromatic
+
+## Debugging and Testing Notes
+
+- Do not increase playwright timeout times to try and address timeout issues. The timeout is probably due to another problem
