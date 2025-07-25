@@ -52,7 +52,7 @@ class ChromaticGenerator {
                 "shape.size": [0.5, 1, 2, 5],
                 "texture.color.opacity": [0.2, 0.5, 0.8, 1],
                 "label.fontSize": [8, 14, 24],
-            },
+            } as Record<string, any[]>,
         },
     };
 
@@ -146,7 +146,7 @@ class ChromaticGenerator {
 
         // Check for overrides first
         if (this.config.parameterGeneration.overrides[paramPath]) {
-            return this.config.parameterGeneration.overrides[paramPath].map((value) => ({
+            return this.config.parameterGeneration.overrides[paramPath].map((value: any) => ({
                 name: String(value).replace(/\./g, "_").replace(/[^a-zA-Z0-9_]/g, ""),
                 value,
             }));

@@ -1,5 +1,6 @@
 import type {Meta} from "@storybook/web-components-vite";
-import {set as deepSet} from "lodash";
+import lodash from "lodash";
+const {set: deepSet} = lodash;
 
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";
 import type {Graphty} from "../src/graphty-element";
