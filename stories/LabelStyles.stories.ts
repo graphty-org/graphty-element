@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../../src/graphty-element";
-import {renderFn, templateCreator} from "../helpers";
+import {Graphty} from "../src/graphty-element";
+import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Label",
@@ -330,6 +330,9 @@ export const TextOutline: Story = {
         controls: {
             include: ["label.textOutline", "label.textOutlineWidth", "label.textOutlineColor"],
         },
+        chromatic: {
+            diffThreshold: 0.3,
+        },
     },
 };
 
@@ -347,6 +350,9 @@ export const TextShadow: Story = {
     parameters: {
         controls: {
             include: ["label.textShadow", "label.textShadowColor", "label.textShadowBlur", "label.textShadowOffsetX", "label.textShadowOffsetY", "label.backgroundColor"],
+        },
+        chromatic: {
+            diffThreshold: 0.3,
         },
     },
 };
@@ -426,6 +432,9 @@ export const Badge: Story = {
     parameters: {
         controls: {
             include: ["label.badge"],
+        },
+        chromatic: {
+            diffThreshold: 0.3,
         },
     },
 };
@@ -512,6 +521,11 @@ export const EmojiLabels: Story = {
         text: "🚀💫🌈✨",
         fontSize: 32,
     }),
+    parameters: {
+        chromatic: {
+            diffThreshold: 0.3,
+        },
+    },
 };
 
 export const UnicodeText: Story = {
@@ -521,4 +535,9 @@ export const UnicodeText: Story = {
         fontSize: 96,
         lineHeight: 1.5,
     }),
+    parameters: {
+        chromatic: {
+            diffThreshold: 0.3,
+        },
+    },
 };

@@ -8,6 +8,7 @@ export const PlanarLayoutConfig = z.strictObject({
     scale: z.number().positive().default(1),
     center: z.array(z.number()).length(2).or(z.null()).default(null),
     dim: z.number().default(2),
+    seed: z.number().or(z.null()).default(null),
 });
 export type PlanarLayoutConfigType = z.infer<typeof PlanarLayoutConfig>;
 export type PlanarLayoutOpts = Partial<PlanarLayoutConfigType>;
@@ -33,6 +34,7 @@ export class PlanarLayout extends SimpleLayoutEngine {
             this.config.scale,
             this.config.center,
             this.config.dim,
+            this.config.seed,
         );
     }
 }

@@ -73,8 +73,12 @@ const preview: Preview = {
             page: DocumentationTemplate,
         },
         chromatic: {
-            delay: 500, // Small initial delay
+            delay: 500, // Initial delay for graph setup
             pauseAnimationAtEnd: true,
+        },
+        // Add play function to all stories to wait for graph settling
+        play: async({canvasElement}: {canvasElement: HTMLElement}) => {
+            await waitForGraphSettled({canvasElement});
         },
         options: {
             storySort: {

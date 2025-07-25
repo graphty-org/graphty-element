@@ -69,7 +69,7 @@ export class Graphty extends LitElement {
             // Get layoutOptions from styleTemplate if available
             const templateLayoutOptions = this.#graph.styles.config.graph.layoutOptions ?? {};
             // Merge template options with provided layoutConfig (layoutConfig takes precedence)
-            const mergedConfig = {...templateLayoutOptions, ...(this.layoutConfig ?? {})};
+            const mergedConfig = {... templateLayoutOptions, ... (this.layoutConfig ?? {})};
             await this.#graph.setLayout(this.layout, mergedConfig);
         }
 

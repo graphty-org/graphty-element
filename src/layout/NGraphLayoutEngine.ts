@@ -67,31 +67,31 @@ export class NGraphEngine extends LayoutEngine {
 
     step(): void {
         const ngraphSettled = this.ngraphLayout.step();
-        const lastMove = this.ngraphLayout.lastMove;
+        const {lastMove} = this.ngraphLayout;
         const nodeCount = this.nodeMapping.size;
         const ratio = nodeCount > 0 ? lastMove / nodeCount : 0;
-        
+
         this._stepCount++;
-        
+
         // Keep track of last 10 moves for averaging
         this._lastMoves.push(ratio);
         if (this._lastMoves.length > 10) {
             this._lastMoves.shift();
         }
-        
+
         // Calculate average movement over last 10 steps
-        const avgMovement = this._lastMoves.length > 0 
-            ? this._lastMoves.reduce((a, b) => a + b, 0) / this._lastMoves.length 
-            : 0;
-        
+        const avgMovement = this._lastMoves.length > 0 ?
+            this._lastMoves.reduce((a, b) => a + b, 0) / this._lastMoves.length :
+            0;
+
         // Use a more forgiving threshold or force settling after many steps
         const customThreshold = 0.05; // More forgiving than ngraph's 0.01
         const maxSteps = 1000; // Force settling after 1000 steps
-        
-        this._settled = ngraphSettled || 
-                       avgMovement <= customThreshold || 
+
+        this._settled = ngraphSettled ||
+                       avgMovement <= customThreshold ||
                        this._stepCount >= maxSteps;
-        
+
         if (this._stepCount % 50 === 0) { // Log every 50 steps
             console.log(`[NGraph] step ${this._stepCount}: ngraphSettled=${ngraphSettled}, ratio=${ratio.toFixed(4)}, avgMovement=${avgMovement.toFixed(4)}, settled=${this._settled}`);
         }

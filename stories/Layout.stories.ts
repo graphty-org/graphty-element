@@ -1,10 +1,10 @@
-import "../../index.ts";
-import "../../src/layout/index.ts"; // Ensure all layouts are registered
+import "../index.ts";
+import "../src/layout/index.ts"; // Ensure all layouts are registered
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {Graphty} from "../../src/graphty-element";
-import {renderFn, templateCreator} from "../helpers";
+import {Graphty} from "../src/graphty-element";
+import {renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/3D",

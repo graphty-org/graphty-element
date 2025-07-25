@@ -1,5 +1,6 @@
 import type {Meta} from "@storybook/web-components-vite";
 import lodash from "lodash";
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const {set: deepSet} = lodash;
 
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";
@@ -52,6 +53,12 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
         majorVersion: "1",
         graph: {
             addDefaultStyle: true,
+        },
+        // Add default behavior with preSteps for Chromatic testing
+        behavior: {
+            layout: {
+                preSteps: 500, // Run 500 layout steps before rendering for better Chromatic snapshots
+            },
         },
     } as unknown as AdHocData;
 

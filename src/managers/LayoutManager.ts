@@ -278,7 +278,7 @@ export class LayoutManager implements Manager {
             const options = layoutOptions ?? {};
 
             // Check if we need to update the layout
-            const needsUpdate = !this.layoutEngine || 
+            const needsUpdate = !this.layoutEngine ||
                                this.layoutEngine.type !== layoutType ||
                                this.hasOptionsChanged(options);
 
@@ -306,7 +306,7 @@ export class LayoutManager implements Manager {
         // Deep compare options
         const oldStr = JSON.stringify(this.currentLayoutOptions);
         const newStr = JSON.stringify(newOptions);
-        
+
         if (oldStr !== newStr) {
             this.currentLayoutOptions = newOptions;
             return true;

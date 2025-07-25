@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, "../../..");
 
 interface ArgType {
-    control: string | {type: string; min?: number; max?: number; step?: number};
+    control: string | {type: string, min?: number, max?: number, step?: number};
     options?: string[];
     name?: string;
     table?: {category: string};
@@ -102,10 +102,10 @@ class ChromaticGenerator {
             const meta = storyModule.default;
             const stories = Object.entries(storyModule)
                 .filter(([key]) => key !== "default")
-                .reduce((acc, [key, value]) => {
+                .reduce<Record<string, any>>((acc, [key, value]) => {
                     acc[key] = value;
                     return acc;
-                }, {} as Record<string, any>);
+                }, {});
 
             // Generate variations for each parameter
             const variationSets = this.generateVariationSets(meta.argTypes || {});
@@ -212,7 +212,7 @@ class ChromaticGenerator {
         filePath: string,
         meta: Meta,
         stories: Record<string, any>,
-        variationSets: VariationSet[]
+        variationSets: VariationSet[],
     ): string {
         const fileName = path.basename(filePath, ".stories.ts");
         const relativeImportPath = `../../human/${fileName}.stories`;
@@ -272,7 +272,7 @@ type Story = StoryObj;
 
     private getOutputPath(sourcePath: string, storyTitle: string): string {
         const fileName = path.basename(sourcePath, ".stories.ts");
-        
+
         // Determine subdirectory based on story title
         let subDir = "";
         if (storyTitle.includes("Node")) {
