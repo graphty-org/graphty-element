@@ -36,6 +36,9 @@ const meta: Meta = {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
         },
         layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
+        },
     },
 };
 export default meta;

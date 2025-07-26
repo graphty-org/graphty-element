@@ -74,7 +74,10 @@ export const ngraph: Story = {
             graph: {
                 twoD: false, // Explicitly set to 3D mode
                 layout: "ngraph",
-                layoutOptions: {dim: 3},
+                layoutOptions: {
+                    dim: 3,
+                    seed: 12, // Fixed seed for consistent layouts in visual tests
+                },
             },
         }),
         // Individual parameter args for controls

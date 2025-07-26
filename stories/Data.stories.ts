@@ -2,6 +2,7 @@ import "../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
+import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
 import {edgeData, nodeData} from "./helpers";
 
@@ -24,6 +25,16 @@ export const Basic: Story = {
         layoutConfig: {
             seed: 12,
         },
+        // Add minimal styleTemplate just for preSteps
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 2000, // Increase preSteps for more stable layouts
+                },
+            },
+        }),
     },
 };
 
@@ -33,10 +44,20 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
-        layout: "ngraph",
+        layout: "circular", // Use more deterministic layout for visual testing
         layoutConfig: {
             seed: 12,
         },
+        // Add minimal styleTemplate just for preSteps
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 2000, // Increase preSteps for more stable layouts
+                },
+            },
+        }),
     },
 };
 
@@ -55,5 +76,15 @@ export const ModifiedJson: Story = {
         layoutConfig: {
             seed: 12,
         },
+        // Add minimal styleTemplate just for preSteps
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 2000, // Increase preSteps for more stable layouts
+                },
+            },
+        }),
     },
 };

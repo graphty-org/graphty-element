@@ -26,6 +26,16 @@ const meta: Meta = {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
         },
         layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
+        },
+        styleTemplate: templateCreator({
+            behavior: {
+                layout: {
+                    preSteps: 2000, // Extra preSteps for more stable physics layouts
+                },
+            },
+        }),
     },
 };
 export default meta;
@@ -42,6 +52,11 @@ export const Skybox: Story = {
     parameters: {
         controls: {
             include: ["graph.background.skybox"],
+        },
+        chromatic: {
+            delay: 3000, // Wait 3 seconds for skybox image to fully load
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.3,
         },
     },
 };

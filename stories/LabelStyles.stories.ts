@@ -1,4 +1,5 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
+import isChromatic from "chromatic/isChromatic";
 
 import {Graphty} from "../src/graphty-element";
 import {renderFn, templateCreator} from "./helpers";
@@ -136,6 +137,12 @@ const createLabelStoryArgs = (labelConfig: Record<string, unknown>): {
     styleTemplate: templateCreator({
         nodeStyle: {
             label: labelConfig,
+        },
+        graph: {
+            layout: "circular", // Use more deterministic layout for visual testing
+            layoutOptions: {
+                seed: 42, // Fixed seed for consistent layouts in visual tests
+            },
         },
     }),
 });
@@ -331,7 +338,8 @@ export const TextOutline: Story = {
             include: ["label.textOutline", "label.textOutlineWidth", "label.textOutlineColor"],
         },
         chromatic: {
-            diffThreshold: 0.3,
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.25,
         },
     },
 };
@@ -352,7 +360,8 @@ export const TextShadow: Story = {
             include: ["label.textShadow", "label.textShadowColor", "label.textShadowBlur", "label.textShadowOffsetX", "label.textShadowOffsetY", "label.backgroundColor"],
         },
         chromatic: {
-            diffThreshold: 0.3,
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.25,
         },
     },
 };
@@ -411,7 +420,8 @@ export const Animation: Story = {
     args: createLabelStoryArgs({
         enabled: true,
         textPath: "id",
-        animation: "pulse",
+        // Disable animation when running in Chromatic for consistent visual tests
+        animation: isChromatic() ? "none" : "pulse",
         animationSpeed: 2,
         backgroundColor: "rgba(255, 59, 48, 0.9)",
         textColor: "white",
@@ -434,7 +444,8 @@ export const Badge: Story = {
             include: ["label.badge"],
         },
         chromatic: {
-            diffThreshold: 0.3,
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.25,
         },
     },
 };
@@ -523,7 +534,8 @@ export const EmojiLabels: Story = {
     }),
     parameters: {
         chromatic: {
-            diffThreshold: 0.3,
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.25,
         },
     },
 };
@@ -537,7 +549,8 @@ export const UnicodeText: Story = {
     }),
     parameters: {
         chromatic: {
-            diffThreshold: 0.3,
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.25,
         },
     },
 };

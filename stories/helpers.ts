@@ -1,7 +1,7 @@
 import type {Meta} from "@storybook/web-components-vite";
 import lodash from "lodash";
 // eslint-disable-next-line @typescript-eslint/unbound-method
-const {set: deepSet} = lodash;
+const {set: deepSet, merge} = lodash;
 
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";
 import type {Graphty} from "../src/graphty-element";
@@ -57,7 +57,7 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
         // Add default behavior with preSteps for Chromatic testing
         behavior: {
             layout: {
-                preSteps: 500, // Run 500 layout steps before rendering for better Chromatic snapshots
+                preSteps: 2000, // Run 2000 layout steps before rendering for better Chromatic snapshots
             },
         },
     } as unknown as AdHocData;
@@ -98,7 +98,9 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
     }
 
     if (opts.behavior) {
-        deepSet(config, "behavior", opts.behavior);
+        // Merge behavior options instead of replacing them entirely
+        // This preserves the default preSteps setting for Chromatic
+        config.behavior = merge({}, config.behavior, opts.behavior);
     }
 
     const template = StyleTemplate.parse(config);

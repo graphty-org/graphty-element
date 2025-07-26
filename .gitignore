@@ -38,6 +38,9 @@ coverage/
 # Auto-generated Chromatic test stories
 stories/auto-generated/
 
+# Chromatic debug files
+chromatic-diagnostics.json
+
 # Playwright test artifacts
 test/playwright/visual/screenshots-diff/
 test/playwright/visual/screenshots-actual/

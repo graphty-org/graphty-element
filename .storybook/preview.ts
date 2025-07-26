@@ -1,12 +1,13 @@
 // import "@storybook/addon-console";
-import "../src/layout/index";
-import "../src/data/index";
 import "../src/algorithms/index";
+import "../src/data/index";
+import "../src/layout/index";
 
 import {Preview, setCustomElementsManifest} from "@storybook/web-components-vite";
 // @ts-expect-error TS doesn't recognize virtual imports?
 import manifest from "virtual:vite-plugin-cem/custom-elements-manifest";
 
+import {StyleTemplate} from "../src/config";
 // Force import and registration of graphty-element and all its dependencies
 import {Graphty} from "../src/graphty-element";
 import {initConsoleCaptureUI} from "./console-capture-ui";
@@ -60,6 +61,31 @@ async function waitForGraphSettled({canvasElement}: {canvasElement: HTMLElement}
 }
 
 const preview: Preview = {
+    decorators: [
+        (Story) => {
+            // Ensure all stories have a minimum preSteps configuration
+            // This decorator runs before the story renders
+            const originalStory = Story();
+
+            // If the story returns a graphty-element, ensure it has preSteps
+            if (originalStory && originalStory.tagName === "GRAPHTY-ELEMENT") {
+                const graphty = originalStory as Graphty;
+
+                // If no styleTemplate is set, create a minimal one with preSteps
+                graphty.styleTemplate ??= StyleTemplate.parse({
+                    graphtyTemplate: true,
+                    majorVersion: "1",
+                    behavior: {
+                        layout: {
+                            preSteps: 1000,
+                        },
+                    },
+                });
+            }
+
+            return originalStory;
+        },
+    ],
     parameters: {
         // actions: { argTypesRegex: "^on[A-Z].*" },
         controls: {
