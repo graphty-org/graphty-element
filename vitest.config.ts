@@ -38,6 +38,12 @@ export default defineConfig({
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",
+                        // Standard vitest excludes
+                        "**/node_modules/**",
+                        "**/dist/**",
+                        "**/cypress/**",
+                        "**/.{idea,git,cache,output,temp}/**",
+                        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
                     ],
                     browser: {
                         enabled: true,
@@ -60,6 +66,12 @@ export default defineConfig({
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",
+                        // Standard vitest excludes
+                        "**/node_modules/**",
+                        "**/dist/**",
+                        "**/cypress/**",
+                        "**/.{idea,git,cache,output,temp}/**",
+                        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
                     ],
                     browser: {
                         enabled: true,

@@ -45,9 +45,7 @@ export const Json: Story = {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
         layout: "circular", // Use more deterministic layout for visual testing
-        layoutConfig: {
-            seed: 12,
-        },
+        layoutConfig: {},
         // Add minimal styleTemplate just for preSteps
         styleTemplate: StyleTemplate.parse({
             graphtyTemplate: true,
