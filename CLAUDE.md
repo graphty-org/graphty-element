@@ -140,6 +140,7 @@ successfully completing, generate a commit comment for all current changes.
 ## Linting and Configuration Notes
 
 - Try not to update eslint.config.js unless absolutely necessary
+- **The config interface in src/config should be a stable interface. Try not to remove or change config settings. Adding settings is fine if absolutely necessary to support a new feature.**
 
 ## Testing Approach
 
