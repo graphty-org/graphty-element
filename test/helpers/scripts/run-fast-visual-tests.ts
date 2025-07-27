@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import {chromium, expect} from "@playwright/test";
+// @ts-expect-error - Playwright is optional dependency
+import {chromium} from "@playwright/test";
 
 /**
  * Ultra-fast visual test runner that reuses browser context
  * Achieves 5x+ speedup by eliminating startup overhead
  */
-async function runFastVisualTests() {
-    console.time("Total test time");
+async function runFastVisualTests(): Promise<void> {
+    // console.time("Total test time");
 
     const browser = await chromium.launch({headless: true});
     const context = await browser.newContext({
@@ -32,10 +33,10 @@ async function runFastVisualTests() {
         {id: "styles-edge--width", name: "edge-width", frames: 5},
     ];
 
-    console.log(`Running ${tests.length} visual tests...`);
+    console.warn(`Running ${tests.length} visual tests...`);
 
     for (const test of tests) {
-        console.time(`  ${test.name}`);
+        // console.time(`  ${test.name}`);
 
         // Navigate to story
         await page.goto(`http://dev.ato.ms:9025/iframe.html?viewMode=story&id=${test.id}`, {
@@ -52,7 +53,7 @@ async function runFastVisualTests() {
         }, {timeout: 3000});
 
         // Render frames in one batch
-        await page.evaluate((frameCount) => {
+        await page.evaluate((frameCount: number) => {
             const el = document.querySelector("graphty-element");
             if (el?.graph?.engine) {
                 el.graph.engine.stopRenderLoop();
@@ -67,11 +68,14 @@ async function runFastVisualTests() {
             path: `test-results/fast-${test.name}.png`,
         });
 
-        console.timeEnd(`  ${test.name}`);
+        // console.timeEnd(`  ${test.name}`);
     }
 
     await browser.close();
-    console.timeEnd("Total test time");
+    // console.timeEnd("Total test time");
 
-    console.log(`\nAverage time per test: ${tests.length > 0 ? Math.round(performance.now() / tests.length) : 0}ms`);
+    console.warn(`\nAverage time per test: ${tests.length > 0 ? Math.round(performance.now() / tests.length) : 0}ms`);
 }
+
+// Run the tests if this script is executed directly
+runFastVisualTests().catch(console.error);

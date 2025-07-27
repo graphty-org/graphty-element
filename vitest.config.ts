@@ -18,6 +18,10 @@ export default defineConfig({
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
+                        "test/mesh-testing/real-mesh-simple.test.ts",
+                        // Exclude experimental/temporary folders ending with ~
+                        "**/*~/**",
+                        "**/*~",
                         // Standard vitest excludes
                         "**/node_modules/**",
                         "**/dist/**",
@@ -30,6 +34,11 @@ export default defineConfig({
             {
                 test: {
                     name: "browser",
+                    exclude: [
+                        // Exclude experimental/temporary folders ending with ~
+                        "**/*~/**",
+                        "**/*~",
+                    ],
                     browser: {
                         enabled: true,
                         headless: true,
@@ -47,6 +56,11 @@ export default defineConfig({
                 ],
                 test: {
                     name: "storybook",
+                    exclude: [
+                        // Exclude experimental/temporary folders ending with ~
+                        "**/*~/**",
+                        "**/*~",
+                    ],
                     browser: {
                         enabled: true,
                         headless: true,

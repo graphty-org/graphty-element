@@ -91,10 +91,6 @@ export class NGraphEngine extends LayoutEngine {
         this._settled = ngraphSettled ||
                        avgMovement <= customThreshold ||
                        this._stepCount >= maxSteps;
-
-        if (this._stepCount % 50 === 0) { // Log every 50 steps
-            console.log(`[NGraph] step ${this._stepCount}: ngraphSettled=${ngraphSettled}, ratio=${ratio.toFixed(4)}, avgMovement=${avgMovement.toFixed(4)}, settled=${this._settled}`);
-        }
     }
 
     get isSettled(): boolean {

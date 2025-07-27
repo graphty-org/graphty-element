@@ -68,7 +68,7 @@ const preview: Preview = {
             const originalStory = Story();
 
             // If the story returns a graphty-element, ensure it has preSteps
-            if (originalStory && originalStory.tagName === "GRAPHTY-ELEMENT") {
+            if (originalStory && typeof originalStory === "object" && "tagName" in originalStory && originalStory.tagName === "GRAPHTY-ELEMENT") {
                 const graphty = originalStory as Graphty;
 
                 // If no styleTemplate is set, create a minimal one with preSteps

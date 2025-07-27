@@ -12,24 +12,24 @@ interface ArgType {
     options?: string[];
     name?: string;
     table?: {category: string};
-    defaultValue?: any;
+    defaultValue?: unknown;
 }
 
 interface Meta {
     title: string;
     component: string;
     argTypes?: Record<string, ArgType>;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface StoryModule {
     default: Meta;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface Variation {
     name: string;
-    value: any;
+    value: unknown;
 }
 
 interface VariationSet {
@@ -52,32 +52,32 @@ class ChromaticGenerator {
                 "shape.size": [0.5, 1, 2, 5],
                 "texture.color.opacity": [0.2, 0.5, 0.8, 1],
                 "label.fontSize": [8, 14, 24],
-            } as Record<string, any[]>,
+            } as Record<string, unknown[]>,
         },
     };
 
     async generate(): Promise<void> {
-        console.log("Starting Chromatic story generation...");
+        console.warn("Starting Chromatic story generation...");
 
         // Ensure output directory exists
         await this.ensureDirectory(this.outputDir);
 
         // Find all story files
         const storyFiles = await this.findStoryFiles();
-        console.log(`Found ${storyFiles.length} story files`);
+        console.warn(`Found ${storyFiles.length} story files`);
 
         // Process each story file
         for (const storyFile of storyFiles) {
             await this.processStoryFile(storyFile);
         }
 
-        console.log("Chromatic story generation complete!");
+        console.warn("Chromatic story generation complete!");
     }
 
     private async ensureDirectory(dir: string): Promise<void> {
         try {
             await fs.mkdir(dir, {recursive: true});
-        } catch (error) {
+        } catch {
             // Directory might already exist
         }
     }
@@ -90,7 +90,7 @@ class ChromaticGenerator {
     }
 
     private async processStoryFile(filePath: string): Promise<void> {
-        console.log(`Processing ${path.basename(filePath)}...`);
+        console.warn(`Processing ${path.basename(filePath)}...`);
 
         try {
             // Import the story module dynamically
@@ -102,13 +102,13 @@ class ChromaticGenerator {
             const meta = storyModule.default;
             const stories = Object.entries(storyModule)
                 .filter(([key]) => key !== "default")
-                .reduce<Record<string, any>>((acc, [key, value]) => {
+                .reduce<Record<string, unknown>>((acc, [key, value]) => {
                     acc[key] = value;
                     return acc;
                 }, {});
 
             // Generate variations for each parameter
-            const variationSets = this.generateVariationSets(meta.argTypes || {});
+            const variationSets = this.generateVariationSets(meta.argTypes ?? {});
 
             // Generate the test file content
             const content = this.generateTestFileContent(filePath, meta, stories, variationSets);
@@ -118,8 +118,8 @@ class ChromaticGenerator {
 
             // Write the generated file
             await this.writeGeneratedFile(outputPath, content);
-        } catch (error) {
-            console.error(`Error processing ${filePath}:`, error);
+        } catch {
+            console.error(`Error processing ${filePath}`);
         }
     }
 
@@ -130,7 +130,7 @@ class ChromaticGenerator {
             const variations = this.generateVariations(paramName, argType);
             if (variations.length > 0) {
                 variationSets.push({
-                    parameterPath: argType.name || paramName,
+                    parameterPath: argType.name ?? paramName,
                     parameterName: paramName,
                     variations,
                 });
@@ -142,11 +142,11 @@ class ChromaticGenerator {
 
     private generateVariations(paramName: string, argType: ArgType): Variation[] {
         const {control, options} = argType;
-        const paramPath = argType.name || paramName;
+        const paramPath = argType.name ?? paramName;
 
         // Check for overrides first
-        if (this.config.parameterGeneration.overrides[paramPath]) {
-            return this.config.parameterGeneration.overrides[paramPath].map((value: any) => ({
+        if (paramPath in this.config.parameterGeneration.overrides) {
+            return this.config.parameterGeneration.overrides[paramPath].map((value: unknown) => ({
                 name: String(value).replace(/\./g, "_").replace(/[^a-zA-Z0-9_]/g, ""),
                 value,
             }));
@@ -154,7 +154,7 @@ class ChromaticGenerator {
 
         // Handle different control types
         if (typeof control === "object" && control.type === "range") {
-            return this.generateRangeVariations(control.min!, control.max!);
+            return this.generateRangeVariations(control.min ?? 0, control.max ?? 100);
         }
 
         if (control === "select" && options) {
@@ -181,7 +181,7 @@ class ChromaticGenerator {
         }
 
         if (control === "text" || control === "string") {
-            return [{name: "default", value: argType.defaultValue || this.config.parameterGeneration.defaults.textDefault}];
+            return [{name: "default", value: argType.defaultValue ?? this.config.parameterGeneration.defaults.textDefault}];
         }
 
         if (control === "number") {
@@ -211,7 +211,7 @@ class ChromaticGenerator {
     private generateTestFileContent(
         filePath: string,
         meta: Meta,
-        stories: Record<string, any>,
+        stories: Record<string, unknown>,
         variationSets: VariationSet[],
     ): string {
         const fileName = path.basename(filePath, ".stories.ts");
@@ -241,7 +241,7 @@ type Story = StoryObj;
 `;
 
         // Generate variations for each story
-        for (const [storyName, story] of Object.entries(stories)) {
+        for (const [storyName] of Object.entries(stories)) {
             // If no variations, create a single test that duplicates the original
             if (variationSets.length === 0) {
                 content += `export const ${storyName}_default: Story = {
@@ -299,7 +299,7 @@ type Story = StoryObj;
 
         // Write the file
         await fs.writeFile(outputPath, content, "utf8");
-        console.log(`Generated: ${path.relative(PROJECT_ROOT, outputPath)}`);
+        console.warn(`Generated: ${path.relative(PROJECT_ROOT, outputPath)}`);
     }
 }
 

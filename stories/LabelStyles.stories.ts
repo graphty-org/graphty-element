@@ -124,41 +124,46 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
-// Helper to create story args with data source
-const createLabelStoryArgs = (labelConfig: Record<string, unknown>): {
-    dataSource: string;
-    dataSourceConfig: {data: string};
-    styleTemplate: ReturnType<typeof templateCreator>;
-} => ({
-    dataSource: "json",
-    dataSourceConfig: {
-        data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
-    },
-    styleTemplate: templateCreator({
-        nodeStyle: {
-            label: labelConfig,
-        },
-        graph: {
-            layout: "circular", // Use more deterministic layout for visual testing
-            layoutOptions: {
-                seed: 42, // Fixed seed for consistent layouts in visual tests
-            },
-        },
-    }),
-});
-
 export const Default: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
 };
 
 export const Enabled: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.enabled"],
@@ -167,10 +172,24 @@ export const Enabled: Story = {
 };
 
 export const TextPath: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "group",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "group",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.textPath"],
@@ -179,10 +198,24 @@ export const TextPath: Story = {
 };
 
 export const StaticText: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "Static Label",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "Static Label",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.text"],
@@ -191,11 +224,25 @@ export const StaticText: Story = {
 };
 
 export const FontType: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        font: "'JetBrains Mono', monospace",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    font: "'JetBrains Mono', monospace",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.font"],
@@ -204,11 +251,25 @@ export const FontType: Story = {
 };
 
 export const FontSize: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        fontSize: 96,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    fontSize: 96,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.fontSize"],
@@ -217,11 +278,25 @@ export const FontSize: Story = {
 };
 
 export const FontWeight: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        fontWeight: "bold",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    fontWeight: "bold",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.fontWeight"],
@@ -230,11 +305,25 @@ export const FontWeight: Story = {
 };
 
 export const TextColor: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        textColor: "#6366F1",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textColor: "#6366F1",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.textColor"],
@@ -243,11 +332,25 @@ export const TextColor: Story = {
 };
 
 export const BackgroundColor: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        backgroundColor: "#10B981",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    backgroundColor: "#10B981",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.backgroundColor"],
@@ -256,12 +359,26 @@ export const BackgroundColor: Story = {
 };
 
 export const CornerRadius: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        cornerRadius: 12,
-        backgroundColor: "rgba(220, 220, 220, 1)",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    cornerRadius: 12,
+                    backgroundColor: "rgba(220, 220, 220, 1)",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.cornerRadius", "label.backgroundColor"],
@@ -270,11 +387,25 @@ export const CornerRadius: Story = {
 };
 
 export const Location: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        location: "top",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    location: "top",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.location"],
@@ -283,15 +414,29 @@ export const Location: Story = {
 };
 
 export const Margin: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        marginTop: 10,
-        marginBottom: 10,
-        marginLeft: 10,
-        marginRight: 10,
-        backgroundColor: "rgba(220, 220, 220, 1)",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    marginTop: 10,
+                    marginBottom: 10,
+                    marginLeft: 10,
+                    marginRight: 10,
+                    backgroundColor: "rgba(220, 220, 220, 1)",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.marginTop", "label.marginBottom", "label.marginLeft", "label.marginRight", "label.backgroundColor"],
@@ -300,11 +445,25 @@ export const Margin: Story = {
 };
 
 export const AttachOffset: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        attachOffset: 2,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    attachOffset: 2,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.attachOffset"],
@@ -313,11 +472,25 @@ export const AttachOffset: Story = {
 };
 
 export const LineHeight: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "Line 1\nLine 2\nLine 3",
-        lineHeight: 1.5,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "Line 1\nLine 2\nLine 3",
+                    lineHeight: 1.5,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.lineHeight"],
@@ -326,13 +499,27 @@ export const LineHeight: Story = {
 };
 
 export const TextOutline: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        textOutline: true,
-        textOutlineColor: "#FF0000",
-        textOutlineWidth: 10,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textOutline: true,
+                    textOutlineColor: "#FF0000",
+                    textOutlineWidth: 10,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.textOutline", "label.textOutlineWidth", "label.textOutlineColor"],
@@ -345,16 +532,30 @@ export const TextOutline: Story = {
 };
 
 export const TextShadow: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        textShadow: true,
-        textShadowColor: "rgba(0, 0, 0, 0.5)",
-        textShadowBlur: 4,
-        textShadowOffsetX: 3,
-        textShadowOffsetY: 3,
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    textShadow: true,
+                    textShadowColor: "rgba(0, 0, 0, 0.5)",
+                    textShadowBlur: 4,
+                    textShadowOffsetX: 3,
+                    textShadowOffsetY: 3,
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.textShadow", "label.textShadowColor", "label.textShadowBlur", "label.textShadowOffsetX", "label.textShadowOffsetY", "label.backgroundColor"],
@@ -367,13 +568,27 @@ export const TextShadow: Story = {
 };
 
 export const Border: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        borderWidth: 2,
-        borderColor: "#6366F1",
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    borderWidth: 2,
+                    borderColor: "#6366F1",
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.borderWidth", "label.borderColor", "label.backgroundColor"],
@@ -382,14 +597,28 @@ export const Border: Story = {
 };
 
 export const BackgroundGradient: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        backgroundGradient: true,
-        backgroundGradientType: "linear",
-        backgroundGradientDirection: "horizontal",
-        backgroundGradientColors: ["#6366F1", "#10B981"],
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    backgroundGradient: true,
+                    backgroundGradientType: "linear",
+                    backgroundGradientDirection: "horizontal",
+                    backgroundGradientColors: ["#6366F1", "#10B981"],
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.backgroundGradient", "label.backgroundGradientType", "label.backgroundGradientDirection"],
@@ -398,17 +627,31 @@ export const BackgroundGradient: Story = {
 };
 
 export const Pointer: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        pointer: true,
-        pointerDirection: "bottom",
-        pointerWidth: 20,
-        pointerHeight: 15,
-        backgroundColor: "rgba(220, 220, 220, 1)",
-        location: "top",
-        attachOffset: 1.5,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    pointer: true,
+                    pointerDirection: "bottom",
+                    pointerWidth: 20,
+                    pointerHeight: 15,
+                    backgroundColor: "rgba(220, 220, 220, 1)",
+                    location: "top",
+                    attachOffset: 1.5,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.pointer", "label.pointerDirection", "label.pointerWidth", "label.pointerHeight", "label.backgroundColor", "label.location"],
@@ -417,15 +660,29 @@ export const Pointer: Story = {
 };
 
 export const Animation: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        // Disable animation when running in Chromatic for consistent visual tests
-        animation: isChromatic() ? "none" : "pulse",
-        animationSpeed: 2,
-        backgroundColor: "rgba(255, 59, 48, 0.9)",
-        textColor: "white",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    // Disable animation when running in Chromatic for consistent visual tests
+                    animation: isChromatic() ? "none" : "pulse",
+                    animationSpeed: 2,
+                    backgroundColor: "rgba(255, 59, 48, 0.9)",
+                    textColor: "white",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.animation", "label.animationSpeed", "label.backgroundColor"],
@@ -434,11 +691,25 @@ export const Animation: Story = {
 };
 
 export const Badge: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        badge: "notification",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    badge: "notification",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.badge"],
@@ -451,13 +722,27 @@ export const Badge: Story = {
 };
 
 export const SmartOverflow: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "999999",
-        smartOverflow: true,
-        backgroundColor: "rgba(100, 100, 100, 0.8)",
-        textColor: "white",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "999999",
+                    smartOverflow: true,
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.smartOverflow", "label.text"],
@@ -466,14 +751,28 @@ export const SmartOverflow: Story = {
 };
 
 export const MaxNumber: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "1500",
-        smartOverflow: true,
-        maxNumber: 99,
-        backgroundColor: "rgba(100, 100, 100, 0.8)",
-        textColor: "white",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "1500",
+                    smartOverflow: true,
+                    maxNumber: 99,
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.maxNumber", "label.text", "label.smartOverflow"],
@@ -482,15 +781,29 @@ export const MaxNumber: Story = {
 };
 
 export const OverflowSuffix: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "150",
-        smartOverflow: true,
-        maxNumber: 99,
-        overflowSuffix: "++",
-        backgroundColor: "rgba(100, 100, 100, 0.8)",
-        textColor: "white",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "150",
+                    smartOverflow: true,
+                    maxNumber: 99,
+                    overflowSuffix: "++",
+                    backgroundColor: "rgba(100, 100, 100, 0.8)",
+                    textColor: "white",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.overflowSuffix", "label.maxNumber", "label.text"],
@@ -499,11 +812,25 @@ export const OverflowSuffix: Story = {
 };
 
 export const TextAlign: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "This\nis\nmulti-line\ntext",
-        textAlign: "center",
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "This\nis\nmulti-line\ntext",
+                    textAlign: "center",
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.textAlign"],
@@ -512,13 +839,27 @@ export const TextAlign: Story = {
 };
 
 export const DepthFade: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        textPath: "id",
-        depthFadeEnabled: true,
-        depthFadeNear: 50,
-        depthFadeFar: 200,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    textPath: "id",
+                    depthFadeEnabled: true,
+                    depthFadeNear: 50,
+                    depthFadeFar: 200,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         controls: {
             include: ["label.depthFadeEnabled", "label.depthFadeNear", "label.depthFadeFar"],
@@ -527,11 +868,25 @@ export const DepthFade: Story = {
 };
 
 export const EmojiLabels: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "🚀💫🌈✨",
-        fontSize: 32,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "🚀💫🌈✨",
+                    fontSize: 32,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         chromatic: {
             diffIncludeAntiAliasing: true,
@@ -541,12 +896,26 @@ export const EmojiLabels: Story = {
 };
 
 export const UnicodeText: Story = {
-    args: createLabelStoryArgs({
-        enabled: true,
-        text: "こんにちは\nПривет\nمرحبا",
-        fontSize: 96,
-        lineHeight: 1.5,
-    }),
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+        },
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                label: {
+                    enabled: true,
+                    text: "こんにちは\nПривет\nمرحبا",
+                    fontSize: 96,
+                    lineHeight: 1.5,
+                },
+            },
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+        },
+    },
     parameters: {
         chromatic: {
             diffIncludeAntiAliasing: true,

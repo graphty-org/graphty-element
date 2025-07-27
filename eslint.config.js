@@ -19,6 +19,7 @@ export default tseslint.config(
             "storybook-static",
             "coverage",
             "test/helpers/scripts/**/*.js",
+            "test/fast-check-experiment/**",
         ],
     },
     {

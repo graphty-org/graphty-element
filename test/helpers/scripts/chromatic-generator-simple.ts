@@ -11,10 +11,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, "../../..");
 
+interface ArgTypeConfig {
+    control?: string | {type: string, min?: number, max?: number, options?: string[]};
+    options?: string[];
+    name: string;
+}
+
 interface StoryConfig {
     fileName: string;
     title: string;
-    argTypes: Record<string, any>;
+    argTypes: Record<string, ArgTypeConfig>;
     stories: string[];
 }
 
@@ -156,7 +162,7 @@ class SimpleChromaticGenerator {
     private outputDir = path.join(PROJECT_ROOT, "stories/auto-generated");
 
     async generate(): Promise<void> {
-        console.log("Starting Chromatic story generation (simple mode)...");
+        // console.log("Starting Chromatic story generation (simple mode)...");
 
         // Ensure output directory exists
         await this.ensureDirectory(this.outputDir);
@@ -166,19 +172,19 @@ class SimpleChromaticGenerator {
             await this.processStoryConfig(config);
         }
 
-        console.log("Chromatic story generation complete!");
+        // console.log("Chromatic story generation complete!");
     }
 
     private async ensureDirectory(dir: string): Promise<void> {
         try {
             await fs.mkdir(dir, {recursive: true});
-        } catch (error) {
+        } catch {
             // Directory might already exist
         }
     }
 
     private async processStoryConfig(config: StoryConfig): Promise<void> {
-        console.log(`Processing ${config.fileName}...`);
+        // console.log(`Processing ${config.fileName}...`);
 
         try {
             // Generate variations for each parameter
@@ -197,8 +203,8 @@ class SimpleChromaticGenerator {
         }
     }
 
-    private generateVariationSets(argTypes: Record<string, any>): any[] {
-        const variationSets: any[] = [];
+    private generateVariationSets(argTypes: Record<string, ArgTypeConfig>): {parameterName: string, variations: {name: string, value: unknown}[]}[] {
+        const variationSets: {parameterName: string, variations: {name: string, value: unknown}[]}[] = [];
 
         for (const [paramName, argType] of Object.entries(argTypes)) {
             const variations = this.generateVariations(paramName, argType);
@@ -213,12 +219,12 @@ class SimpleChromaticGenerator {
         return variationSets;
     }
 
-    private generateVariations(paramName: string, argType: any): any[] {
+    private generateVariations(paramName: string, argType: ArgTypeConfig): {name: string, value: unknown}[] {
         const {control, options} = argType;
 
         // Handle different control types
         if (typeof control === "object" && control.type === "range") {
-            const {min, max} = control;
+            const {min = 0, max = 100} = control;
             const mid = (min + max) / 2;
             return [
                 {name: `min_${String(min).replace(/\./g, "_")}`, value: min},
@@ -228,9 +234,9 @@ class SimpleChromaticGenerator {
         }
 
         if (control === "select" || (typeof control === "object" && control.type === "select")) {
-            const opts = options || (typeof control === "object" ? control.options : undefined);
+            const opts = options ?? (typeof control === "object" ? control.options : undefined);
             if (opts) {
-                return opts.map((opt: any) => ({
+                return opts.map((opt: string) => ({
                     name: String(opt).replace(/[^a-zA-Z0-9_]/g, "_"),
                     value: opt,
                 }));
@@ -268,7 +274,7 @@ class SimpleChromaticGenerator {
         return [];
     }
 
-    private generateTestFileContent(config: StoryConfig, variationSets: any[]): string {
+    private generateTestFileContent(config: StoryConfig, variationSets: {parameterName: string, variations: {name: string, value: unknown}[]}[]): string {
         const {fileName, title, stories} = config;
 
         let content = `// AUTO-GENERATED FILE - DO NOT EDIT
@@ -353,7 +359,7 @@ type Story = StoryObj;
 
         // Write the file
         await fs.writeFile(outputPath, content, "utf8");
-        console.log(`Generated: ${path.relative(PROJECT_ROOT, outputPath)}`);
+        // console.log(`Generated: ${path.relative(PROJECT_ROOT, outputPath)}`);
     }
 }
 
