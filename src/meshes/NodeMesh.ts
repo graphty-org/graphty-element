@@ -63,6 +63,18 @@ export class NodeMesh {
         NodeMesh.registerShapeCreator("goldberg", (size, scene) => NodeMesh.createGoldberg(size, scene));
         NodeMesh.registerShapeCreator("icosphere", (size, scene) => NodeMesh.createIcoSphere(size, scene));
         NodeMesh.registerShapeCreator("geodesic", (size, scene) => NodeMesh.createGeodesic(size, scene));
+        
+        // Also register underscore versions for backward compatibility
+        NodeMesh.registerShapeCreator("triangular_prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal_prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("hexagonal_prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.HEXAGONAL_PRISM, size, scene));
+        NodeMesh.registerShapeCreator("square_pyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.SQUARE_PYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal_pyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("triangular_dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("pentagonal_dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated_square_dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_SQUARE_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated_pentagonal_dipyramid", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_DIPYRAMID, size, scene));
+        NodeMesh.registerShapeCreator("elongated_pentagonal_cupola", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_CUPOLA, size, scene));
     }
 
     static create(
