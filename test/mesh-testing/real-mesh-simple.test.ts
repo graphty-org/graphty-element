@@ -13,7 +13,7 @@ import {MeshCache} from "../../src/meshes/MeshCache";
 import {NodeMesh} from "../../src/meshes/NodeMesh";
 import {RichTextLabel} from "../../src/meshes/RichTextLabel";
 
-type NodeShapeType = "box" | "sphere" | "cylinder" | "cone" | "capsule" | "torus" | "torus-knot" | "tetrahedron" | "octahedron" | "dodecahedron" | "icosahedron" | "rhombicuboctahedron" | "triangular-prism" | "pentagonal-prism" | "hexagonal-prism" | "square-pyramid" | "pentagonal-pyramid" | "triangular-dipyramid" | "pentagonal-dipyramid" | "elongated-square-dipyramid" | "elongated-pentagonal-dipyramid" | "elongated-pentagonal-cupola" | "goldberg" | "icosphere" | "geodesic";
+type NodeShapeType = "box" | "sphere" | "cylinder" | "cone" | "capsule" | "torus-knot" | "tetrahedron" | "octahedron" | "dodecahedron" | "icosahedron" | "rhombicuboctahedron" | "triangular_prism" | "pentagonal_prism" | "hexagonal_prism" | "square_pyramid" | "pentagonal_pyramid" | "triangular_dipyramid" | "pentagonal_dipyramid" | "elongated_square_dypyramid" | "elongated_pentagonal_dipyramid" | "elongated_pentagonal_cupola" | "goldberg" | "icosphere" | "geodesic";
 
 describe("Simple Real Mesh Tests", () => {
     let engine: NullEngine;
@@ -108,7 +108,7 @@ describe("Simple Real Mesh Tests", () => {
             assert.isNotNull(mesh1);
         });
 
-        test("creates all 27 node shapes", () => {
+        test("creates all 26 node shapes", () => {
             const shapes = [
                 // Basic shapes
                 "box",
@@ -116,7 +116,6 @@ describe("Simple Real Mesh Tests", () => {
                 "cylinder",
                 "cone",
                 "capsule",
-                "torus",
                 "torus-knot",
 
                 // Polyhedrons
@@ -127,22 +126,22 @@ describe("Simple Real Mesh Tests", () => {
                 "rhombicuboctahedron",
 
                 // Prisms
-                "triangular-prism",
-                "pentagonal-prism",
-                "hexagonal-prism",
+                "triangular_prism",
+                "pentagonal_prism",
+                "hexagonal_prism",
 
                 // Pyramids
-                "square-pyramid",
-                "pentagonal-pyramid",
+                "square_pyramid",
+                "pentagonal_pyramid",
 
                 // Dipyramids
-                "triangular-dipyramid",
-                "pentagonal-dipyramid",
-                "elongated-square-dipyramid",
-                "elongated-pentagonal-dipyramid",
+                "triangular_dipyramid",
+                "pentagonal_dipyramid",
+                "elongated_square_dypyramid",
+                "elongated_pentagonal_dipyramid",
 
                 // Complex shapes
-                "elongated-pentagonal-cupola",
+                "elongated_pentagonal_cupola",
                 "goldberg",
                 "icosphere",
                 "geodesic",

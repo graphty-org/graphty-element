@@ -5,6 +5,8 @@
  * in Node.js with necessary polyfills and configurations.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // import {NullEngine} from "@babylonjs/core";
 
 /**
@@ -16,7 +18,7 @@ export function setup(): void {
 
     // Polyfill for OffscreenCanvas (used by DynamicTexture)
     if (typeof OffscreenCanvas === "undefined") {
-        (global as unknown).OffscreenCanvas = class MockOffscreenCanvas {
+        (global as any).OffscreenCanvas = class MockOffscreenCanvas {
             width: number;
             height: number;
 
@@ -41,7 +43,7 @@ export function setup(): void {
 
     // Polyfill for Canvas (fallback)
     if (typeof HTMLCanvasElement === "undefined") {
-        (global as unknown).HTMLCanvasElement = class MockHTMLCanvasElement {
+        (global as any).HTMLCanvasElement = class MockHTMLCanvasElement {
             width: number;
             height: number;
 
@@ -66,7 +68,7 @@ export function setup(): void {
 
     // Polyfill for Image
     if (typeof Image === "undefined") {
-        (global as unknown).Image = class MockImage {
+        (global as any).Image = class MockImage {
             src = "";
             width = 0;
             height = 0;
@@ -88,10 +90,10 @@ export function setup(): void {
 
     // Polyfill for document (minimal)
     if (typeof document === "undefined") {
-        (global as unknown).document = {
+        (global as any).document = {
             createElement: (tagName: string) => {
                 if (tagName === "canvas") {
-                    return new (global as unknown).HTMLCanvasElement();
+                    return new (global as any).HTMLCanvasElement();
                 }
 
                 return {
@@ -118,7 +120,7 @@ export function setup(): void {
 
     // Polyfill for window (minimal)
     if (typeof window === "undefined") {
-        (global as unknown).window = {
+        (global as any).window = {
             ... global,
             location: {href: "http://localhost/"},
             navigator: {userAgent: "Node.js"},
@@ -131,7 +133,7 @@ export function setup(): void {
 
     // Polyfill for performance
     if (typeof performance === "undefined") {
-        (global as unknown).performance = {
+        (global as any).performance = {
             now: () => Date.now(),
             mark: () => {
                 // Mock performance API - no actual implementation needed for tests
@@ -146,7 +148,7 @@ export function setup(): void {
 
     // Setup XMLHttpRequest for Babylon.js (if needed)
     if (typeof XMLHttpRequest === "undefined") {
-        (global as unknown).XMLHttpRequest = class MockXMLHttpRequest {
+        (global as any).XMLHttpRequest = class MockXMLHttpRequest {
             readyState = 0;
             status = 200;
             statusText = "OK";

@@ -57,8 +57,8 @@ describe("RichTextAnimator Tests", () => {
             animator.setupAnimation(mesh, material);
 
             assert.equal(registeredCallbacks.length, 0);
-            assert.isNull((animator as {originalPosition: unknown}).originalPosition);
-            assert.isNull((animator as {originalScale: unknown}).originalScale);
+            assert.isNull((animator as unknown as {originalPosition: unknown}).originalPosition);
+            assert.isNull((animator as unknown as {originalScale: unknown}).originalScale);
         });
 
         test("setupAnimation stores original position and scale", () => {
@@ -74,8 +74,8 @@ describe("RichTextAnimator Tests", () => {
 
             assert.equal(registeredCallbacks.length, 1);
 
-            const originalPos = (animator as {originalPosition: Vector3}).originalPosition;
-            const {originalScale} = (animator as {originalScale: Vector3});
+            const originalPos = (animator as unknown as {originalPosition: Vector3}).originalPosition;
+            const {originalScale} = (animator as unknown as {originalScale: Vector3});
 
             assert.deepEqual(originalPos, new Vector3(5, 10, 15));
             assert.deepEqual(originalScale, new Vector3(2, 3, 4));
@@ -93,16 +93,16 @@ describe("RichTextAnimator Tests", () => {
 
             // The pulse animation uses: scale = 1 + (Math.sin(animationTime * 3) * 0.1)
             // Set animation time directly to test specific points
-            (animator as {animationTime: number}).animationTime = 0;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = 0;
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
             assert.approximately(mesh.scaling.x, 1, 0.001); // 1 + sin(0 * 3) * 0.1 = 1 + 0 * 0.1 = 1
 
-            (animator as {animationTime: number}).animationTime = Math.PI / 6; // sin(PI/6 * 3) = sin(PI/2) = 1
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = Math.PI / 6; // sin(PI/6 * 3) = sin(PI/2) = 1
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
             assert.approximately(mesh.scaling.x, 1.1, 0.001); // 1 + sin(PI/2) * 0.1 = 1 + 1 * 0.1 = 1.1
 
-            (animator as {animationTime: number}).animationTime = Math.PI / 3; // sin(PI/3 * 3) = sin(PI) = 0
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = Math.PI / 3; // sin(PI/3 * 3) = sin(PI) = 0
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
             assert.approximately(mesh.scaling.x, 1, 0.001); // 1 + sin(PI) * 0.1 = 1 + 0 * 0.1 = 1
         });
 
@@ -115,7 +115,7 @@ describe("RichTextAnimator Tests", () => {
             animator.setupAnimation(mesh, material);
 
             // Initial animationTime should be 0
-            assert.equal((animator as {animationTime: number}).animationTime, 0);
+            assert.equal((animator as unknown as {animationTime: number}).animationTime, 0);
 
             // Simulate 10 frames at 60fps (0.016s per frame)
             for (let i = 0; i < 10; i++) {
@@ -123,7 +123,7 @@ describe("RichTextAnimator Tests", () => {
             }
 
             // Animation time should be 10 * 0.016 * 2 = 0.32
-            assert.approximately((animator as {animationTime: number}).animationTime, 0.32, 0.001);
+            assert.approximately((animator as unknown as {animationTime: number}).animationTime, 0.32, 0.001);
         });
     });
 
@@ -139,14 +139,14 @@ describe("RichTextAnimator Tests", () => {
 
             // The bounce animation uses: bounce = Math.abs(Math.sin(animationTime * 2)) * 0.3
             // Test bounce at peak (abs(sin) = 1)
-            (animator as {animationTime: number}).animationTime = Math.PI / 4; // sin(PI/4 * 2) = sin(PI/2) = 1
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = Math.PI / 4; // sin(PI/4 * 2) = sin(PI/2) = 1
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             assert.approximately(mesh.position.y, 5.3, 0.001); // 5 + Math.abs(1) * 0.3 = 5.3
 
             // Test bounce at bottom (abs(sin) = 0)
-            (animator as {animationTime: number}).animationTime = 0;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = 0;
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             assert.approximately(mesh.position.y, 5, 0.001); // 5 + Math.abs(0) * 0.3 = 5
         });
@@ -170,8 +170,8 @@ describe("RichTextAnimator Tests", () => {
             let maxDeviationY = 0;
 
             for (let i = 0; i < 100; i++) {
-                (animator as {animationTime: number}).animationTime = i * 0.1;
-                (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+                (animator as unknown as {animationTime: number}).animationTime = i * 0.1;
+                (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
                 maxDeviationX = Math.max(maxDeviationX, Math.abs(mesh.position.x - originalX));
                 maxDeviationY = Math.max(maxDeviationY, Math.abs(mesh.position.y - originalY));
@@ -196,8 +196,8 @@ describe("RichTextAnimator Tests", () => {
 
             // The glow animation uses: glow = 0.65 + (Math.sin(glowTime * 2) * 0.35)
             // Test at different glow intensities
-            (animator as {animationTime: number}).animationTime = 0; // sin(0 * 2) = 0, glow = 0.65 + 0 * 0.35 = 0.65
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = 0; // sin(0 * 2) = 0, glow = 0.65 + 0 * 0.35 = 0.65
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             assert.approximately(material.emissiveColor.r, 0.65, 0.001);
             assert.approximately(material.emissiveColor.g, 0.65, 0.001);
@@ -207,8 +207,8 @@ describe("RichTextAnimator Tests", () => {
             // glowTime = animationTime * (1.5 / 1) = animationTime * 1.5
             // At animationTime = PI/4, glowTime = PI/4 * 1.5 = 3*PI/8
             // glow = 0.65 + sin(3*PI/8 * 2) * 0.35 = 0.65 + sin(3*PI/4) * 0.35
-            (animator as {animationTime: number}).animationTime = Math.PI / 4;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = Math.PI / 4;
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             const expectedGlow = 0.65 + (Math.sin(3 * Math.PI / 4) * 0.35);
             assert.approximately(material.emissiveColor.r, expectedGlow, 0.001);
@@ -224,8 +224,8 @@ describe("RichTextAnimator Tests", () => {
 
             // Animation should use effective speed of 1.5, not 0.5
             // The glow animation adjusts time with effectiveSpeed/animationSpeed ratio
-            (animator as {animationTime: number}).animationTime = 1;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = 1;
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             // Verify the glow calculation uses adjusted time
             // glowTime = animationTime * (effectiveSpeed / animationSpeed) = 1 * (1.5 / 0.5) = 3
@@ -243,7 +243,7 @@ describe("RichTextAnimator Tests", () => {
 
             // Should not throw
             assert.doesNotThrow(() => {
-                (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, null);
+                (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, null);
             });
         });
     });
@@ -268,9 +268,9 @@ describe("RichTextAnimator Tests", () => {
 
             testTimes.forEach((time, index) => {
                 progressValues.length = 0; // Clear previous values
-                (animator as {animationTime: number}).animationTime = time;
-                (animator as {lastFillUpdate: number}).lastFillUpdate = 0; // Reset throttle
-                (animator as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
+                (animator as unknown as {animationTime: number}).animationTime = time;
+                (animator as unknown as {lastFillUpdate: number}).lastFillUpdate = 0; // Reset throttle
+                (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
 
                 assert.approximately(progressValues[progressValues.length - 1], expectedValues[index], 0.001);
             });
@@ -293,22 +293,22 @@ describe("RichTextAnimator Tests", () => {
             let currentTime = 1000; // Start at 1000 to avoid issues with lastFillUpdate = 0
             global.performance = {
                 now: () => currentTime,
-            } as {now: () => number};
+            } as unknown as Performance;
 
             // First call should work - need to call updateAnimation directly for fill callback
-            (animator as {lastFillUpdate: number}).lastFillUpdate = 0; // Reset to 0 so first call goes through
-            (animator as {animationTime: number}).animationTime = 1;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
+            (animator as unknown as {lastFillUpdate: number}).lastFillUpdate = 0; // Reset to 0 so first call goes through
+            (animator as unknown as {animationTime: number}).animationTime = 1;
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
             assert.equal(callCount, 1);
 
             // Call again within 33ms - should be throttled
             currentTime = 1020;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
             assert.equal(callCount, 1);
 
             // Call after 33ms - should work
             currentTime = 1040;
-            (animator as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown, callback?: unknown) => void}).updateAnimation(mesh, material, progressCallback);
             assert.equal(callCount, 2);
         });
 
@@ -322,7 +322,7 @@ describe("RichTextAnimator Tests", () => {
 
             // Should not throw
             assert.doesNotThrow(() => {
-                (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+                (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
             });
         });
     });
@@ -339,11 +339,11 @@ describe("RichTextAnimator Tests", () => {
             const newPosition = new Vector3(100, 200, 300);
             animator.updateOriginalPosition(newPosition);
 
-            assert.deepEqual((animator as {originalPosition: Vector3}).originalPosition, newPosition);
+            assert.deepEqual((animator as unknown as {originalPosition: Vector3}).originalPosition, newPosition);
 
             // Original vector should not be affected
             newPosition.x = 999;
-            assert.equal((animator as {originalPosition: Vector3}).originalPosition.x, 100);
+            assert.equal((animator as unknown as {originalPosition: Vector3}).originalPosition.x, 100);
         });
     });
 
@@ -360,7 +360,7 @@ describe("RichTextAnimator Tests", () => {
             animator.dispose();
 
             assert.equal(registeredCallbacks.length, 0);
-            assert.isNull((animator as {sceneCallback: unknown}).sceneCallback);
+            assert.isNull((animator as unknown as {sceneCallback: unknown}).sceneCallback);
         });
 
         test("handles multiple dispose calls", () => {
@@ -401,7 +401,7 @@ describe("RichTextAnimator Tests", () => {
 
             // Should not throw when updating
             assert.doesNotThrow(() => {
-                (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+                (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
             });
         });
 
@@ -416,7 +416,7 @@ describe("RichTextAnimator Tests", () => {
             // Single frame should advance time significantly
             registeredCallbacks[0]();
 
-            assert.approximately((animator as {animationTime: number}).animationTime, 16, 0.001); // 0.016 * 1000
+            assert.approximately((animator as unknown as {animationTime: number}).animationTime, 16, 0.001); // 0.016 * 1000
         });
 
         test("preserves Z position in bounce animation", () => {
@@ -447,8 +447,8 @@ describe("RichTextAnimator Tests", () => {
             const originalZ = mesh.scaling.z;
 
             // Run animation
-            (animator as {animationTime: number}).animationTime = Math.PI / 6; // Should produce scale of 1.1
-            (animator as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
+            (animator as unknown as {animationTime: number}).animationTime = Math.PI / 6; // Should produce scale of 1.1
+            (animator as unknown as {updateAnimation: (mesh: unknown, material: unknown) => void}).updateAnimation(mesh, material);
 
             // X and Y should be animated, Z should remain unchanged
             assert.approximately(mesh.scaling.x, 1.1, 0.001);

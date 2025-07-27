@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // @ts-expect-error - Playwright is optional dependency
 import {chromium} from "@playwright/test";
 
@@ -49,16 +50,16 @@ async function runFastVisualTests(): Promise<void> {
         // Quick readiness check
         await page.waitForFunction(() => {
             const el = document.querySelector("graphty-element");
-            return el?.graph?.scene?.meshes?.length > 0;
+            return (el as any)?.graph?.scene?.meshes?.length > 0;
         }, {timeout: 3000});
 
         // Render frames in one batch
         await page.evaluate((frameCount: number) => {
             const el = document.querySelector("graphty-element");
-            if (el?.graph?.engine) {
-                el.graph.engine.stopRenderLoop();
+            if ((el as any)?.graph?.engine) {
+                (el as any).graph.engine.stopRenderLoop();
                 for (let i = 0; i < frameCount; i++) {
-                    el.graph.scene.render();
+                    (el as any).graph.scene.render();
                 }
             }
         }, test.frames);
