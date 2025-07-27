@@ -291,7 +291,7 @@ describe("RichTextAnimator Tests", () => {
 
             // Mock performance.now
             let currentTime = 1000; // Start at 1000 to avoid issues with lastFillUpdate = 0
-            global.performance = {
+            globalThis.performance = {
                 now: () => currentTime,
             } as unknown as Performance;
 
