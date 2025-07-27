@@ -63,7 +63,7 @@ export class NodeMesh {
         NodeMesh.registerShapeCreator("goldberg", (size, scene) => NodeMesh.createGoldberg(size, scene));
         NodeMesh.registerShapeCreator("icosphere", (size, scene) => NodeMesh.createIcoSphere(size, scene));
         NodeMesh.registerShapeCreator("geodesic", (size, scene) => NodeMesh.createGeodesic(size, scene));
-        
+
         // Also register underscore versions for backward compatibility
         NodeMesh.registerShapeCreator("triangular_prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.TRIANGULAR_PRISM, size, scene));
         NodeMesh.registerShapeCreator("pentagonal_prism", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.PENTAGONAL_PRISM, size, scene));
