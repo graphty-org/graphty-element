@@ -1,3 +1,16 @@
+## [1.0.5](https://github.com/graphty-org/graphty-element/compare/v1.0.4...v1.0.5) (2025-07-28)
+
+
+### Bug Fixes
+
+* 3d layout for circular ([c15a87a](https://github.com/graphty-org/graphty-element/commit/c15a87a57a90d4cb14c08255fd4f2638d636ac27))
+* 3d layout for kamada kawai ([2b17c9b](https://github.com/graphty-org/graphty-element/commit/2b17c9b30a3fff8cc878ea0bd4c7653a83e2f34e))
+* change shape names in config, fix build ([b3c2253](https://github.com/graphty-org/graphty-element/commit/b3c2253a73536439a85903cb0a208583a57c51ab))
+* ensure center agrument to layouts supports 3d ([b14ea88](https://github.com/graphty-org/graphty-element/commit/b14ea88df7284fa5879f62aa2639fa0816ec04fc))
+* fix build rollup, fix chromatic testing ([ba6a1db](https://github.com/graphty-org/graphty-element/commit/ba6a1dbbe6aa2141bf5f20f91bf738a5011370ae))
+* fix camera zoom when layout settles ([ce7d6fc](https://github.com/graphty-org/graphty-element/commit/ce7d6fc8098f3b7828aa48995a128ef439bc17bd))
+* fix orbit camera zoom while layout settles ([4d4d73f](https://github.com/graphty-org/graphty-element/commit/4d4d73f7c26b76bd0f338283326fcb3e4b063d85))
+
 ## [1.0.4](https://github.com/graphty-org/graphty-element/compare/v1.0.3...v1.0.4) (2025-07-15)
 
 
