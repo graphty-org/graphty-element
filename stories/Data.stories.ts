@@ -11,6 +11,9 @@ const meta: Meta = {
     component: "graphty-element",
     parameters: {
         controls: {exclude: /^(#|_)/},
+        chromatic: {
+            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
+        },
     },
 };
 export default meta;
@@ -21,9 +24,9 @@ export const Basic: Story = {
     args: {
         nodeData,
         edgeData,
-        layout: "ngraph",
+        layout: "circular", // Use deterministic layout for visual tests
         layoutConfig: {
-            seed: 12,
+            // circular layout is deterministic, no seed needed
         },
         // Add minimal styleTemplate just for preSteps
         styleTemplate: StyleTemplate.parse({
@@ -31,7 +34,7 @@ export const Basic: Story = {
             majorVersion: "1",
             behavior: {
                 layout: {
-                    preSteps: 2000, // Increase preSteps for more stable layouts
+                    preSteps: 8000, // Extra preSteps for data3.json (77 nodes) with ngraph
                 },
             },
         }),
@@ -44,9 +47,9 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
-        layout: "ngraph",
+        layout: "circular", // Use deterministic layout for visual tests
         layoutConfig: {
-            seed: 12,
+            // circular layout is deterministic, no seed needed
         },
         // Add minimal styleTemplate just for preSteps
         styleTemplate: StyleTemplate.parse({
@@ -54,7 +57,7 @@ export const Json: Story = {
             majorVersion: "1",
             behavior: {
                 layout: {
-                    preSteps: 2000, // Increase preSteps for more stable layouts
+                    preSteps: 8000, // Extra preSteps for data3.json (77 nodes) with ngraph
                 },
             },
         }),
@@ -72,9 +75,9 @@ export const ModifiedJson: Story = {
         },
         edgeSrcIdPath: "source",
         edgeDstIdPath: "target",
-        layout: "ngraph",
+        layout: "circular", // Use deterministic layout for visual tests
         layoutConfig: {
-            seed: 12,
+            // circular layout is deterministic, no seed needed
         },
         // Add minimal styleTemplate just for preSteps
         styleTemplate: StyleTemplate.parse({
@@ -82,7 +85,7 @@ export const ModifiedJson: Story = {
             majorVersion: "1",
             behavior: {
                 layout: {
-                    preSteps: 2000, // Increase preSteps for more stable layouts
+                    preSteps: 8000, // Extra preSteps for data3.json (77 nodes) with ngraph
                 },
             },
         }),

@@ -56,6 +56,9 @@ const meta: Meta = {
     },
     parameters: {
         controls: {exclude: /^(#|_)/},
+        chromatic: {
+            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
+        },
     },
     args: {
         dataSource: "json",
@@ -77,6 +80,11 @@ export const ngraph: Story = {
                 layoutOptions: {
                     dim: 3,
                     seed: 12, // Fixed seed for consistent layouts in visual tests
+                },
+            },
+            behavior: {
+                layout: {
+                    preSteps: 15000, // Maximum steps for data3.json (77 nodes) with ngraph physics
                 },
             },
         }),

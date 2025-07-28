@@ -2,6 +2,7 @@ import "../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
+import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
 import {edgeData, nodeData} from "./helpers";
 
@@ -22,4 +23,19 @@ export default meta;
 type Story = StoryObj<Graphty>;
 
 export const graphty: Story = {
+    args: {
+        layoutConfig: {
+            seed: 42, // Fixed seed for deterministic layout
+        },
+        // Add minimal styleTemplate just for preSteps
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 2000, // Increase preSteps for more stable layouts
+                },
+            },
+        }),
+    },
 };

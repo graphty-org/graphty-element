@@ -19,6 +19,9 @@ const meta: Meta = {
                 "graph.background.color",
             ],
         },
+        chromatic: {
+            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
+        },
     },
     args: {
         dataSource: "json",

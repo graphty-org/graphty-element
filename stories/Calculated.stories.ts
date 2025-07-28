@@ -8,6 +8,9 @@ const meta: Meta = {
     component: "graphty-element",
     parameters: {
         controls: {exclude: /^(#|_)/},
+        chromatic: {
+            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
+        },
     },
     args: {
         dataSource: "json",
