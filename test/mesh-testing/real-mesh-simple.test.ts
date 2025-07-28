@@ -13,7 +13,7 @@ import {MeshCache} from "../../src/meshes/MeshCache";
 import {NodeMesh} from "../../src/meshes/NodeMesh";
 import {RichTextLabel} from "../../src/meshes/RichTextLabel";
 
-type NodeShapeType = "box" | "sphere" | "cylinder" | "cone" | "capsule" | "torus-knot" | "tetrahedron" | "octahedron" | "dodecahedron" | "icosahedron" | "rhombicuboctahedron" | "triangular_prism" | "pentagonal_prism" | "hexagonal_prism" | "square_pyramid" | "pentagonal_pyramid" | "triangular_dipyramid" | "pentagonal_dipyramid" | "elongated_square_dypyramid" | "elongated_pentagonal_dipyramid" | "elongated_pentagonal_cupola" | "goldberg" | "icosphere" | "geodesic";
+type NodeShapeType = "box" | "sphere" | "cylinder" | "cone" | "capsule" | "torus-knot" | "tetrahedron" | "octahedron" | "dodecahedron" | "icosahedron" | "rhombicuboctahedron" | "triangular_prism" | "pentagonal_prism" | "hexagonal_prism" | "square_pyramid" | "pentagonal_pyramid" | "triangular_dipyramid" | "pentagonal_dipyramid" | "elongated_square_dipyramid" | "elongated_pentagonal_dipyramid" | "elongated_pentagonal_cupola" | "goldberg" | "icosphere" | "geodesic";
 
 describe("Simple Real Mesh Tests", () => {
     let engine: NullEngine;
@@ -137,7 +137,7 @@ describe("Simple Real Mesh Tests", () => {
                 // Dipyramids
                 "triangular_dipyramid",
                 "pentagonal_dipyramid",
-                "elongated_square_dypyramid",
+                "elongated_square_dipyramid",
                 "elongated_pentagonal_dipyramid",
 
                 // Complex shapes

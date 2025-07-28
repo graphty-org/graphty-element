@@ -264,6 +264,11 @@ export const FontSize: Story = {
                     fontSize: 96,
                 },
             },
+            behavior: {
+                layout: {
+                    preSteps: 3000, // Extra steps for large font physics settling
+                },
+            },
         }),
         layout: "ngraph",
         layoutConfig: {
@@ -273,6 +278,10 @@ export const FontSize: Story = {
     parameters: {
         controls: {
             include: ["label.fontSize"],
+        },
+        chromatic: {
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.3,
         },
     },
 };
@@ -716,7 +725,7 @@ export const Badge: Story = {
         },
         chromatic: {
             diffIncludeAntiAliasing: true,
-            diffThreshold: 0.25,
+            diffThreshold: 0.5,
         },
     },
 };

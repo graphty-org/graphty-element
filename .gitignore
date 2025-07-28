@@ -28,6 +28,7 @@ TODO
 storybook-static/
 coverage/test/__screenshots__/
 test/__screenshots__/
+test/mesh-testing/__screenshots__/
 coverage/
 
 # Generated TypeScript files in root (from tsconfig.build.json)

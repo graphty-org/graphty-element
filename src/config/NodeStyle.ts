@@ -22,7 +22,7 @@ export const NodeShapes = z.enum([
     "pentagonal_pyramid",
     "triangular_dipyramid",
     "pentagonal_dipyramid",
-    "elongated_square_dypyramid",
+    "elongated_square_dipyramid",
     "elongated_pentagonal_dipyramid",
     "elongated_pentagonal_cupola",
     "goldberg",
