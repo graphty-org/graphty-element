@@ -27,6 +27,15 @@ export class EventManager implements Manager {
     private nodeObservable = new Observable<NodeEvent>();
     private edgeObservable = new Observable<EdgeEvent>();
 
+    // Expose for testing and advanced usage
+    get onGraphEvent(): Observable<GraphEvent> {
+        return this.graphObservable;
+    }
+
+    get onGraphError(): Observable<GraphErrorEvent> {
+        return this.graphObservable as Observable<GraphErrorEvent>;
+    }
+
     // Track observers for cleanup
     // Using any here is required due to BabylonJS Observable/Observer type limitations
     private observers = new Map<symbol, {

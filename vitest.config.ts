@@ -13,12 +13,20 @@ export default defineConfig({
             {
                 test: {
                     name: "default",
+                    setupFiles: ["./test/setup.ts"],
+                    include: [
+                        "test/**/*.test.ts",
+                        "test/unit/**/*.test.ts",
+                        "test/integration/**/*.test.ts",
+                    ],
                     exclude: [
                         // These tests require DOM APIs and should run in browser environment
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
+                        // Browser-only tests
+                        "test/browser/**/*.test.ts",
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",
@@ -34,6 +42,14 @@ export default defineConfig({
             {
                 test: {
                     name: "browser",
+                    setupFiles: ["./test/setup.ts"],
+                    include: [
+                        "test/browser/**/*.test.ts",
+                        "test/managers/DataManager.test.ts",
+                        "test/managers/LayoutManager.test.ts",
+                        "test/managers/LifecycleManager.test.ts",
+                        "test/mesh-testing/real-mesh-simple.test.ts",
+                    ],
                     exclude: [
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",

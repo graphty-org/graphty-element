@@ -49,10 +49,10 @@
     "url": "https://github.com/graphty-org/graphty-element/issues"
   },
   "scripts": {
-    "test": "vitest --project=default",
+    "test": "vitest run --project=storybook --project=default --project=browser && npm run test:visual",
+    "test:default": "vitest --project=default",
     "test:browser": "vitest --project=browser",
     "test:storybook": "vitest --project=storybook",
-    "test:all": "vitest run --project=storybook --project=default --project=browser && npm run test:visual",
     "test:visual": "npx chromatic",
     "test:visual:debug": "npx chromatic --debug",
     "test:mesh": "vitest run --config test/mesh-testing/vitest-mesh.config.ts",

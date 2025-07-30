@@ -2,6 +2,7 @@ export * from "./AlgorithmManager";
 export * from "./DataManager";
 export * from "./EventManager";
 export * from "./GraphContext";
+export * from "./InputManager";
 export * from "./interfaces";
 export * from "./LayoutManager";
 export * from "./LifecycleManager";

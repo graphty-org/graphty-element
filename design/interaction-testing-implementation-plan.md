@@ -2,2936 +2,1500 @@
 
 ## Overview
 
-This document provides a detailed, step-by-step implementation plan for adding interaction testing to graphty-element based on the two-tier testing strategy outlined in the interaction testing plan. Each step includes specific implementation details, validation criteria, and anti-flakiness measures.
+This document provides a detailed implementation plan for testing the actual input handling features in graphty-element. Based on code analysis, we will test the following implemented features:
 
-## Phase 1: Foundation (Weeks 1-2)
+1. **Node behaviors** - SixDofDragBehavior and double-click expansion
+2. **2D camera controls** - Mouse pan/zoom, keyboard WASD/QE/+-, touch gestures  
+3. **3D camera controls** - Mouse orbit, keyboard arrows/WASD, touch pinch/rotate
+4. **Input system architecture** - BabylonInputSystem and MockDeviceInputSystem
 
-### Step 1.1: Create Input System Interface and Types
+## Phase 1: Fix Existing Test Infrastructure
 
-**What happens:**
-- Define the core interface that both real and mock input systems will implement
-- Create type definitions for all input events (pointer, touch, keyboard, wheel)
-- Ensure compatibility with Babylon.js event types
+### Step 1.1: Remove Non-Existent Feature Tests
 
-**Implementation:**
+**What to remove:**
+- Tests for `graph.getCamera()`, `graph.updateConfig()`, `graph.getNode()` methods that don't exist
+- Tests for keyboard shortcuts not implemented (Delete, Ctrl+A, Escape, Space, Tab)
+- Tests for features like selection, pinning, drag constraints that aren't implemented
+
+**Files to update:**
+```bash
+# Remove these test files that test non-existent features
+rm test/browser/interactions/node-drag.test.ts
+rm test/browser/interactions/camera-controls.test.ts  
+rm test/browser/interactions/touch-gestures.test.ts
+rm test/browser/interactions/keyboard-navigation.test.ts
+```
+
+### Step 1.2: Update Graph Test Helpers
+
+**Update `src/Graph.ts` helper methods:**
 ```typescript
-// src/graph/input/input-system.interface.ts
-import { Observable } from '@babylonjs/core/Misc/observable';
-import { Vector2, Vector3 } from '@babylonjs/core/Maths/math.vector';
+// Remove these temporary methods added for non-existent features
+// - getCamera()
+// - updateConfig() 
+// - getNode()
+// - addData()
+// - initWithConfig()
+// - setCameraTarget()
+
+// Keep only methods that exist or add minimal helpers:
+getCameraController(): TwoDCameraController | OrbitCameraController {
+  return this.cameraManager.activeController;
+}
+
+getNodeMesh(nodeId: string): AbstractMesh | null {
+  const node = this.dataManager.nodes.get(nodeId);
+  return node?.mesh || null;
+}
+```
+
+## Phase 2: Create Input Manager
+
+### Step 2.1: Create Input System Directory Structure
+
+**Create directory structure:**
+```bash
+mkdir -p src/input
+mv src/graph/input/input-system.interface.ts src/input/
+mv src/graph/input/babylon-input-system.ts src/input/
+mv src/test/mock-device-input-system.ts src/input/
+```
+
+### Step 2.2: Create InputManager
+
+**File:** `src/managers/InputManager.ts`
+
+```typescript
+import {Vector2} from "@babylonjs/core/Maths/math.vector";
+import {Observable} from "@babylonjs/core/Misc/observable";
+
+import {BabylonInputSystem} from "../input/babylon-input-system";
+import {MockDeviceInputSystem} from "../input/mock-device-input-system";
+import {
+    DeviceType,
+    KeyboardInfo,
+    MouseButton,
+    PointerInfo,
+    TouchPoint,
+    WheelInfo,
+} from "../input/input-system.interface";
+import type {EventManager} from "./EventManager";
+import type {Manager, ManagerContext} from "./interfaces";
+
+/**
+ * Configuration options for InputManager
+ */
+export interface InputManagerConfig {
+    /**
+     * Whether to use mock input system for testing
+     */
+    useMockInput?: boolean;
+
+    /**
+     * Whether touch input is enabled
+     */
+    touchEnabled?: boolean;
+
+    /**
+     * Whether keyboard input is enabled
+     */
+    keyboardEnabled?: boolean;
+
+    /**
+     * Whether pointer lock is enabled for FPS-style controls
+     */
+    pointerLockEnabled?: boolean;
+
+    /**
+     * Input recording/playback for automation
+     */
+    recordInput?: boolean;
+    playbackFile?: string;
+}
+
+/**
+ * Manages all user input for the graph
+ * Provides a unified interface for mouse, keyboard, and touch input
+ */
+export class InputManager implements Manager {
+    // Observable events (exposed for backward compatibility)
+    public readonly onPointerMove: Observable<PointerInfo>;
+    public readonly onPointerDown: Observable<PointerInfo>;
+    public readonly onPointerUp: Observable<PointerInfo>;
+    public readonly onWheel: Observable<WheelInfo>;
+    public readonly onTouchStart: Observable<TouchPoint[]>;
+    public readonly onTouchMove: Observable<TouchPoint[]>;
+    public readonly onTouchEnd: Observable<number[]>;
+    public readonly onKeyDown: Observable<KeyboardInfo>;
+    public readonly onKeyUp: Observable<KeyboardInfo>;
+
+    private inputSystem: BabylonInputSystem | MockDeviceInputSystem;
+    private enabled = true;
+    private recordedEvents: Array<{timestamp: number; type: string; data: any}> = [];
+    private playbackIndex = 0;
+    private playbackStartTime = 0;
+
+    constructor(
+        private context: ManagerContext,
+        private config: InputManagerConfig = {},
+    ) {
+        // Create appropriate input system based on config
+        this.inputSystem = this.config.useMockInput
+            ? new MockDeviceInputSystem()
+            : new BabylonInputSystem(this.context.scene);
+
+        // Expose observables from the input system
+        this.onPointerMove = this.inputSystem.onPointerMove;
+        this.onPointerDown = this.inputSystem.onPointerDown;
+        this.onPointerUp = this.inputSystem.onPointerUp;
+        this.onWheel = this.inputSystem.onWheel;
+        this.onTouchStart = this.inputSystem.onTouchStart;
+        this.onTouchMove = this.inputSystem.onTouchMove;
+        this.onTouchEnd = this.inputSystem.onTouchEnd;
+        this.onKeyDown = this.inputSystem.onKeyDown;
+        this.onKeyUp = this.inputSystem.onKeyUp;
+    }
+
+    async init(): Promise<void> {
+        try {
+            // Attach input system to canvas
+            this.inputSystem.attach(this.context.canvas);
+
+            // Set up event bridges to EventManager
+            this.setupEventBridges();
+
+            // Load playback file if specified
+            if (this.config.playbackFile) {
+                await this.loadPlaybackFile(this.config.playbackFile);
+            }
+
+            // Emit initialization event
+            this.context.eventManager.emitGraphEvent("input-initialized", {
+                inputManager: this,
+                config: this.config,
+            });
+        } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            this.context.eventManager.emitGraphError(
+                null,
+                err,
+                "init",
+                {component: "InputManager"},
+            );
+            throw new Error(`Failed to initialize InputManager: ${err.message}`);
+        }
+    }
+
+    dispose(): void {
+        // Save recorded events if recording
+        if (this.config.recordInput && this.recordedEvents.length > 0) {
+            this.saveRecordedEvents();
+        }
+
+        // Dispose input system
+        this.inputSystem.dispose();
+
+        // Clear references
+        this.recordedEvents = [];
+    }
+
+    /**
+     * Enable or disable all input
+     */
+    setEnabled(enabled: boolean): void {
+        this.enabled = enabled;
+        
+        if (!enabled && this.inputSystem instanceof BabylonInputSystem) {
+            // Clear any active states when disabling
+            this.inputSystem.detach();
+        } else if (enabled && this.inputSystem instanceof BabylonInputSystem) {
+            this.inputSystem.attach(this.context.canvas);
+        }
+
+        this.context.eventManager.emitGraphEvent("input-enabled-changed", {enabled});
+    }
+
+    /**
+     * Get the current pointer position
+     */
+    getPointerPosition(): Vector2 {
+        return this.inputSystem.getPointerPosition();
+    }
+
+    /**
+     * Check if a pointer button is currently down
+     */
+    isPointerDown(button?: MouseButton): boolean {
+        return this.inputSystem.isPointerDown(button);
+    }
+
+    /**
+     * Get all active touch points
+     */
+    getActiveTouches(): TouchPoint[] {
+        return this.inputSystem.getActiveTouches();
+    }
+
+    /**
+     * Get the mock input system for testing
+     * @throws Error if not using mock input
+     */
+    getMockInputSystem(): MockDeviceInputSystem {
+        if (!(this.inputSystem instanceof MockDeviceInputSystem)) {
+            throw new Error("Not using mock input system");
+        }
+        return this.inputSystem;
+    }
+
+    /**
+     * Start recording input events
+     */
+    startRecording(): void {
+        this.config.recordInput = true;
+        this.recordedEvents = [];
+        this.context.eventManager.emitGraphEvent("input-recording-started", {});
+    }
+
+    /**
+     * Stop recording input events
+     */
+    stopRecording(): Array<{timestamp: number; type: string; data: any}> {
+        this.config.recordInput = false;
+        this.context.eventManager.emitGraphEvent("input-recording-stopped", {
+            eventCount: this.recordedEvents.length,
+        });
+        return [...this.recordedEvents];
+    }
+
+    /**
+     * Start playback of recorded events
+     */
+    async startPlayback(events?: Array<{timestamp: number; type: string; data: any}>): Promise<void> {
+        if (events) {
+            this.recordedEvents = events;
+        }
+
+        if (this.recordedEvents.length === 0) {
+            throw new Error("No events to playback");
+        }
+
+        // Switch to mock input for playback
+        if (!(this.inputSystem instanceof MockDeviceInputSystem)) {
+            this.inputSystem.dispose();
+            this.inputSystem = new MockDeviceInputSystem();
+            this.inputSystem.attach(this.context.canvas);
+            this.setupEventBridges();
+        }
+
+        this.playbackIndex = 0;
+        this.playbackStartTime = Date.now();
+
+        // Start playback loop
+        this.runPlayback();
+    }
+
+    /**
+     * Set up bridges between input system and event manager
+     */
+    private setupEventBridges(): void {
+        // Only bridge events if enabled
+        const createBridge = <T>(
+            observable: Observable<T>,
+            eventName: string,
+            shouldRecord = true,
+        ) => {
+            observable.add((data) => {
+                if (!this.enabled) return;
+
+                // Record event if recording
+                if (this.config.recordInput && shouldRecord) {
+                    this.recordedEvents.push({
+                        timestamp: Date.now(),
+                        type: eventName,
+                        data: this.serializeEventData(data),
+                    });
+                }
+
+                // Emit through event manager
+                this.context.eventManager.emitGraphEvent(eventName, data);
+            });
+        };
+
+        // Bridge all input events
+        createBridge(this.onPointerMove, "input:pointer-move");
+        createBridge(this.onPointerDown, "input:pointer-down");
+        createBridge(this.onPointerUp, "input:pointer-up");
+        createBridge(this.onWheel, "input:wheel");
+        createBridge(this.onTouchStart, "input:touch-start");
+        createBridge(this.onTouchMove, "input:touch-move");
+        createBridge(this.onTouchEnd, "input:touch-end");
+        createBridge(this.onKeyDown, "input:key-down");
+        createBridge(this.onKeyUp, "input:key-up");
+
+        // Special handling for keyboard shortcuts
+        this.onKeyDown.add((info) => {
+            if (!this.enabled) return;
+
+            // Emit specific shortcut events
+            if (info.ctrlKey && info.key === "z") {
+                this.context.eventManager.emitGraphEvent("input:undo", {});
+            } else if (info.ctrlKey && info.key === "y") {
+                this.context.eventManager.emitGraphEvent("input:redo", {});
+            } else if (info.ctrlKey && info.key === "a") {
+                this.context.eventManager.emitGraphEvent("input:select-all", {});
+            }
+            // Add more shortcuts as needed
+        });
+    }
+
+    /**
+     * Serialize event data for recording
+     */
+    private serializeEventData(data: any): any {
+        // Handle Vector2 objects
+        if (data && typeof data.x === "number" && typeof data.y === "number") {
+            return {x: data.x, y: data.y};
+        }
+        // Handle arrays
+        if (Array.isArray(data)) {
+            return data.map(item => this.serializeEventData(item));
+        }
+        // Handle objects
+        if (data && typeof data === "object") {
+            const serialized: any = {};
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    serialized[key] = this.serializeEventData(data[key]);
+                }
+            }
+            return serialized;
+        }
+        // Primitives
+        return data;
+    }
+
+    /**
+     * Run playback of recorded events
+     */
+    private async runPlayback(): Promise<void> {
+        const mockSystem = this.inputSystem as MockDeviceInputSystem;
+
+        while (this.playbackIndex < this.recordedEvents.length) {
+            const event = this.recordedEvents[this.playbackIndex];
+            const elapsed = Date.now() - this.playbackStartTime;
+            const eventTime = event.timestamp - this.recordedEvents[0].timestamp;
+
+            // Wait until it's time for this event
+            if (elapsed < eventTime) {
+                await new Promise(resolve => setTimeout(resolve, eventTime - elapsed));
+            }
+
+            // Replay the event
+            switch (event.type) {
+                case "input:pointer-move":
+                    mockSystem.simulateMouseMove(event.data.x, event.data.y);
+                    break;
+                case "input:pointer-down":
+                    mockSystem.simulateMouseDown(event.data.button);
+                    break;
+                case "input:pointer-up":
+                    mockSystem.simulateMouseUp(event.data.button);
+                    break;
+                case "input:wheel":
+                    mockSystem.simulateWheel(event.data.deltaY, event.data.deltaX);
+                    break;
+                case "input:touch-start":
+                    mockSystem.simulateTouchStart(event.data);
+                    break;
+                case "input:touch-move":
+                    mockSystem.simulateTouchMove(event.data);
+                    break;
+                case "input:touch-end":
+                    mockSystem.simulateTouchEnd(event.data);
+                    break;
+                case "input:key-down":
+                    mockSystem.simulateKeyDown(event.data.key, event.data);
+                    break;
+                case "input:key-up":
+                    mockSystem.simulateKeyUp(event.data.key);
+                    break;
+            }
+
+            this.playbackIndex++;
+        }
+
+        this.context.eventManager.emitGraphEvent("input-playback-completed", {});
+    }
+
+    /**
+     * Load playback file
+     */
+    private async loadPlaybackFile(filename: string): Promise<void> {
+        try {
+            const response = await fetch(filename);
+            const data = await response.json();
+            this.recordedEvents = data.events || [];
+        } catch (error) {
+            console.warn(`Failed to load playback file: ${filename}`, error);
+        }
+    }
+
+    /**
+     * Save recorded events (implementation depends on environment)
+     */
+    private saveRecordedEvents(): void {
+        const data = {
+            version: "1.0",
+            timestamp: new Date().toISOString(),
+            events: this.recordedEvents,
+        };
+
+        // In browser, download as file
+        if (typeof window !== "undefined" && window.document) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `input-recording-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    /**
+     * Update configuration
+     */
+    updateConfig(config: Partial<InputManagerConfig>): void {
+        Object.assign(this.config, config);
+
+        // Handle specific config changes
+        if ("touchEnabled" in config || "keyboardEnabled" in config) {
+            // These would affect input system behavior
+            this.context.eventManager.emitGraphEvent("input-config-updated", config);
+        }
+    }
+
+    /**
+     * Enable pointer lock for FPS-style controls
+     */
+    async requestPointerLock(): Promise<void> {
+        if (this.config.pointerLockEnabled) {
+            try {
+                await this.context.canvas.requestPointerLock();
+                this.context.eventManager.emitGraphEvent("input-pointer-lock-changed", {
+                    locked: true,
+                });
+            } catch (error) {
+                console.warn("Failed to request pointer lock:", error);
+            }
+        }
+    }
+
+    /**
+     * Exit pointer lock
+     */
+    exitPointerLock(): void {
+        if (document.pointerLockElement === this.context.canvas) {
+            document.exitPointerLock();
+            this.context.eventManager.emitGraphEvent("input-pointer-lock-changed", {
+                locked: false,
+            });
+        }
+    }
+}
+```
+
+### Step 2.3: Update Manager Exports
+
+**Update `src/managers/index.ts`:**
+```typescript
+export * from "./AlgorithmManager";
+export * from "./DataManager";
+export * from "./EventManager";
+export * from "./GraphContext";
+export * from "./InputManager";  // Add this line
+export * from "./LayoutManager";
+export * from "./LifecycleManager";
+export * from "./RenderManager";
+export * from "./StatsManager";
+export * from "./StyleManager";
+export * from "./UpdateManager";
+export * from "./interfaces";
+```
+
+### Step 2.4: Remove IInputSystem Interface
+
+With the InputManager in place, we no longer need the IInputSystem interface. The InputManager provides all the necessary abstraction:
+
+**File to remove:** `src/input/input-system.interface.ts` (keep only the event data types)
+
+**New file:** `src/input/types.ts`
+```typescript
+import {Vector2} from "@babylonjs/core/Maths/math.vector";
 
 export enum DeviceType {
-  Mouse = 0,
-  Touch = 1,
-  Keyboard = 2
+    Mouse = 0,
+    Touch = 1,
+    Keyboard = 2,
 }
 
 export enum MouseButton {
-  Left = 0,
-  Middle = 1,
-  Right = 2
+    Left = 0,
+    Middle = 1,
+    Right = 2,
 }
 
 export interface PointerInfo {
-  x: number;
-  y: number;
-  button: MouseButton;
-  deviceType: DeviceType;
-  pointerId: number;
-  isPrimary: boolean;
-  pressure: number;
+    x: number;
+    y: number;
+    button: MouseButton;
+    deviceType: DeviceType;
+    pointerId: number;
+    isPrimary: boolean;
+    pressure: number;
 }
 
 export interface TouchPoint {
-  id: number;
-  x: number;
-  y: number;
-  radiusX?: number;
-  radiusY?: number;
-  force?: number;
+    id: number;
+    x: number;
+    y: number;
+    radiusX?: number;
+    radiusY?: number;
+    force?: number;
 }
 
 export interface WheelInfo {
-  deltaX: number;
-  deltaY: number;
-  deltaZ: number;
-  deltaMode: number;
+    deltaX: number;
+    deltaY: number;
+    deltaZ: number;
+    deltaMode: number;
 }
 
 export interface KeyboardInfo {
-  key: string;
-  code: string;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-  metaKey: boolean;
-}
-
-export interface IInputSystem {
-  // Observable events
-  onPointerMove: Observable<PointerInfo>;
-  onPointerDown: Observable<PointerInfo>;
-  onPointerUp: Observable<PointerInfo>;
-  onWheel: Observable<WheelInfo>;
-  
-  // Touch events
-  onTouchStart: Observable<TouchPoint[]>;
-  onTouchMove: Observable<TouchPoint[]>;
-  onTouchEnd: Observable<number[]>; // Touch IDs that ended
-  
-  // Keyboard events
-  onKeyDown: Observable<KeyboardInfo>;
-  onKeyUp: Observable<KeyboardInfo>;
-  
-  // State queries
-  getPointerPosition(): Vector2;
-  isPointerDown(button?: MouseButton): boolean;
-  getActiveTouches(): TouchPoint[];
-  
-  // Lifecycle
-  attach(element: HTMLElement): void;
-  detach(): void;
-  dispose(): void;
+    key: string;
+    code: string;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+    altKey: boolean;
+    metaKey: boolean;
 }
 ```
 
-**Validation:**
-- TypeScript compilation succeeds with strict mode
-- No circular dependencies
-- All event types cover real browser event properties
+### Step 2.5: Update Graph.ts Integration
 
-**Anti-flakiness measures:**
-- Use immutable event objects
-- Avoid timing-dependent properties
-- Provide default values for optional properties
-
-### Step 1.2: Implement BabylonInputSystem Adapter
-
-**What happens:**
-- Create adapter that wraps Babylon.js input handling to implement IInputSystem
-- Ensure existing input handling continues to work
-- Add observable pattern for all input events
-
-**Implementation:**
+**Update `src/Graph.ts`:**
 ```typescript
-// src/graph/input/babylon-input-system.ts
-import { Scene, PointerEventTypes, KeyboardEventTypes } from '@babylonjs/core';
-import { Observable } from '@babylonjs/core/Misc/observable';
-import { IInputSystem, PointerInfo, TouchPoint, WheelInfo, KeyboardInfo, DeviceType, MouseButton } from './input-system.interface';
-
-export class BabylonInputSystem implements IInputSystem {
-  public onPointerMove = new Observable<PointerInfo>();
-  public onPointerDown = new Observable<PointerInfo>();
-  public onPointerUp = new Observable<PointerInfo>();
-  public onWheel = new Observable<WheelInfo>();
-  public onTouchStart = new Observable<TouchPoint[]>();
-  public onTouchMove = new Observable<TouchPoint[]>();
-  public onTouchEnd = new Observable<number[]>();
-  public onKeyDown = new Observable<KeyboardInfo>();
-  public onKeyUp = new Observable<KeyboardInfo>();
-
-  private scene: Scene;
-  private element: HTMLElement;
-  private pointerPosition = new Vector2(0, 0);
-  private pointerStates = new Map<MouseButton, boolean>();
-  private activeTouches = new Map<number, TouchPoint>();
-
-  constructor(scene: Scene) {
-    this.scene = scene;
-    this.setupObservers();
-  }
-
-  private setupObservers(): void {
-    // Pointer events
-    this.scene.onPointerObservable.add((pointerInfo) => {
-      const info = this.convertPointerInfo(pointerInfo);
-      
-      switch (pointerInfo.type) {
-        case PointerEventTypes.POINTERMOVE:
-          this.pointerPosition.set(info.x, info.y);
-          this.onPointerMove.notifyObservers(info);
-          break;
-        case PointerEventTypes.POINTERDOWN:
-          this.pointerStates.set(info.button, true);
-          this.onPointerDown.notifyObservers(info);
-          break;
-        case PointerEventTypes.POINTERUP:
-          this.pointerStates.set(info.button, false);
-          this.onPointerUp.notifyObservers(info);
-          break;
-        case PointerEventTypes.POINTERWHEEL:
-          const wheelInfo = pointerInfo.event as WheelEvent;
-          this.onWheel.notifyObservers({
-            deltaX: wheelInfo.deltaX,
-            deltaY: wheelInfo.deltaY,
-            deltaZ: wheelInfo.deltaZ || 0,
-            deltaMode: wheelInfo.deltaMode
-          });
-          break;
-      }
-    });
-
-    // Handle touch events separately for better control
-    if (this.element) {
-      this.element.addEventListener('touchstart', this.handleTouchStart);
-      this.element.addEventListener('touchmove', this.handleTouchMove);
-      this.element.addEventListener('touchend', this.handleTouchEnd);
-    }
-  }
-
-  private handleTouchStart = (event: TouchEvent): void => {
-    const touches = this.extractTouches(event.touches);
-    touches.forEach(touch => this.activeTouches.set(touch.id, touch));
-    this.onTouchStart.notifyObservers(touches);
-  };
-
-  private handleTouchMove = (event: TouchEvent): void => {
-    const touches = this.extractTouches(event.touches);
-    touches.forEach(touch => this.activeTouches.set(touch.id, touch));
-    this.onTouchMove.notifyObservers(touches);
-  };
-
-  private handleTouchEnd = (event: TouchEvent): void => {
-    const endedIds = Array.from(event.changedTouches).map(t => t.identifier);
-    endedIds.forEach(id => this.activeTouches.delete(id));
-    this.onTouchEnd.notifyObservers(endedIds);
-  };
-
-  // ... rest of implementation
-}
-```
-
-**Validation:**
-- All existing input handling continues to work
-- Events fire in correct order
-- State queries return accurate information
-- Memory leaks are prevented (proper cleanup)
-
-**Anti-flakiness measures:**
-- Synchronous event handling
-- State tracking prevents race conditions
-- Defensive null checks on all browser APIs
-
-### Step 1.3: Create MockDeviceInputSystem
-
-**What happens:**
-- Implement mock system that simulates all input types
-- Add deterministic event generation
-- Include state management for complex gestures
-
-**Implementation:**
-```typescript
-// src/test/mock-device-input-system.ts
-import { Observable } from '@babylonjs/core/Misc/observable';
-import { Vector2 } from '@babylonjs/core/Maths/math.vector';
-import { IInputSystem, PointerInfo, TouchPoint, WheelInfo, KeyboardInfo, DeviceType, MouseButton } from '../graph/input/input-system.interface';
-
-export class MockDeviceInputSystem implements IInputSystem {
-  public onPointerMove = new Observable<PointerInfo>();
-  public onPointerDown = new Observable<PointerInfo>();
-  public onPointerUp = new Observable<PointerInfo>();
-  public onWheel = new Observable<WheelInfo>();
-  public onTouchStart = new Observable<TouchPoint[]>();
-  public onTouchMove = new Observable<TouchPoint[]>();
-  public onTouchEnd = new Observable<number[]>();
-  public onKeyDown = new Observable<KeyboardInfo>();
-  public onKeyUp = new Observable<KeyboardInfo>();
-
-  private pointerPosition = new Vector2(0, 0);
-  private pointerStates = new Map<MouseButton, boolean>();
-  private activeTouches = new Map<number, TouchPoint>();
-  private activeKeys = new Set<string>();
-  private nextPointerId = 1;
-  private attached = false;
-
-  // Device simulation
-  public simulateMouseMove(x: number, y: number): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    
-    this.pointerPosition.set(x, y);
-    const info: PointerInfo = {
-      x,
-      y,
-      button: MouseButton.Left, // Default for move
-      deviceType: DeviceType.Mouse,
-      pointerId: 1,
-      isPrimary: true,
-      pressure: 0.5
-    };
-    
-    this.onPointerMove.notifyObservers(info);
-  }
-
-  public simulateMouseDown(button: MouseButton = MouseButton.Left): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    if (this.pointerStates.get(button)) return; // Already down
-    
-    this.pointerStates.set(button, true);
-    const info: PointerInfo = {
-      x: this.pointerPosition.x,
-      y: this.pointerPosition.y,
-      button,
-      deviceType: DeviceType.Mouse,
-      pointerId: 1,
-      isPrimary: true,
-      pressure: 1.0
-    };
-    
-    this.onPointerDown.notifyObservers(info);
-  }
-
-  public simulateMouseUp(button: MouseButton = MouseButton.Left): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    if (!this.pointerStates.get(button)) return; // Already up
-    
-    this.pointerStates.set(button, false);
-    const info: PointerInfo = {
-      x: this.pointerPosition.x,
-      y: this.pointerPosition.y,
-      button,
-      deviceType: DeviceType.Mouse,
-      pointerId: 1,
-      isPrimary: true,
-      pressure: 0
-    };
-    
-    this.onPointerUp.notifyObservers(info);
-  }
-
-  public simulateWheel(deltaY: number, deltaX: number = 0): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    
-    const info: WheelInfo = {
-      deltaX,
-      deltaY,
-      deltaZ: 0,
-      deltaMode: 0 // DOM_DELTA_PIXEL
-    };
-    
-    this.onWheel.notifyObservers(info);
-  }
-
-  public simulateTouchStart(touches: TouchPoint[]): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    
-    touches.forEach(touch => {
-      this.activeTouches.set(touch.id, touch);
-    });
-    
-    this.onTouchStart.notifyObservers(touches);
-  }
-
-  public simulateTouchMove(touches: TouchPoint[]): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    
-    // Validate all touches are active
-    touches.forEach(touch => {
-      if (!this.activeTouches.has(touch.id)) {
-        throw new Error(`Touch ${touch.id} not started`);
-      }
-      this.activeTouches.set(touch.id, touch);
-    });
-    
-    this.onTouchMove.notifyObservers(touches);
-  }
-
-  public simulateTouchEnd(touchIds: number[]): void {
-    if (!this.attached) throw new Error('Input system not attached');
-    
-    // Validate touches exist
-    touchIds.forEach(id => {
-      if (!this.activeTouches.has(id)) {
-        throw new Error(`Touch ${id} not active`);
-      }
-      this.activeTouches.delete(id);
-    });
-    
-    this.onTouchEnd.notifyObservers(touchIds);
-  }
-
-  // Helper methods for common gestures
-  public simulateDrag(startX: number, startY: number, endX: number, endY: number, steps: number = 10): void {
-    this.simulateMouseMove(startX, startY);
-    this.simulateMouseDown();
-    
-    for (let i = 1; i <= steps; i++) {
-      const t = i / steps;
-      const x = startX + (endX - startX) * t;
-      const y = startY + (endY - startY) * t;
-      this.simulateMouseMove(x, y);
-    }
-    
-    this.simulateMouseUp();
-  }
-
-  public simulatePinch(centerX: number, centerY: number, startDistance: number, endDistance: number, steps: number = 10): void {
-    const startOffset = startDistance / 2;
-    const endOffset = endDistance / 2;
-    
-    // Start touches
-    this.simulateTouchStart([
-      { id: 1, x: centerX - startOffset, y: centerY },
-      { id: 2, x: centerX + startOffset, y: centerY }
-    ]);
-    
-    // Animate pinch
-    for (let i = 1; i <= steps; i++) {
-      const t = i / steps;
-      const offset = startOffset + (endOffset - startOffset) * t;
-      
-      this.simulateTouchMove([
-        { id: 1, x: centerX - offset, y: centerY },
-        { id: 2, x: centerX + offset, y: centerY }
-      ]);
-    }
-    
-    // End touches
-    this.simulateTouchEnd([1, 2]);
-  }
-
-  // State queries
-  public getPointerPosition(): Vector2 {
-    return this.pointerPosition.clone();
-  }
-
-  public isPointerDown(button?: MouseButton): boolean {
-    if (button === undefined) {
-      return Array.from(this.pointerStates.values()).some(state => state);
-    }
-    return this.pointerStates.get(button) || false;
-  }
-
-  public getActiveTouches(): TouchPoint[] {
-    return Array.from(this.activeTouches.values());
-  }
-
-  // Lifecycle
-  public attach(element: HTMLElement): void {
-    this.attached = true;
-  }
-
-  public detach(): void {
-    this.attached = false;
-    this.reset();
-  }
-
-  public dispose(): void {
-    this.onPointerMove.clear();
-    this.onPointerDown.clear();
-    this.onPointerUp.clear();
-    this.onWheel.clear();
-    this.onTouchStart.clear();
-    this.onTouchMove.clear();
-    this.onTouchEnd.clear();
-    this.onKeyDown.clear();
-    this.onKeyUp.clear();
-    this.reset();
-  }
-
-  public reset(): void {
-    this.pointerPosition.set(0, 0);
-    this.pointerStates.clear();
-    this.activeTouches.clear();
-    this.activeKeys.clear();
-  }
-}
-```
-
-**Validation:**
-- All simulation methods produce valid events
-- State management is consistent
-- Error handling for invalid operations
-- Helper methods produce realistic event sequences
-
-**Anti-flakiness measures:**
-- Deterministic event generation (no timestamps)
-- State validation prevents impossible sequences
-- Synchronous execution
-- Clear error messages for debugging
-
-### Step 1.4: Modify Graph Class to Accept Input System
-
-**What happens:**
-- Add optional inputSystem parameter to Graph constructor
-- Refactor existing input handling to use IInputSystem
-- Ensure backward compatibility
-
-**Implementation:**
-```typescript
-// src/graph/graph.ts (modifications)
-import { IInputSystem } from './input/input-system.interface';
-import { BabylonInputSystem } from './input/babylon-input-system';
+import {InputManager, InputManagerConfig} from "./managers/InputManager";
 
 export class Graph {
-  private inputSystem: IInputSystem;
+    private inputManager: InputManager;
 
-  constructor(
-    container: HTMLElement,
-    config: GraphConfig,
-    inputSystem?: IInputSystem
-  ) {
-    // ... existing initialization ...
-    
-    // Use provided input system or create default
-    this.inputSystem = inputSystem || new BabylonInputSystem(this.scene);
-    this.inputSystem.attach(container);
-    
-    // Setup input handlers
-    this.setupInputHandlers();
-  }
+    constructor(config: GraphConfig) {
+        // ... existing code ...
 
-  private setupInputHandlers(): void {
-    // Convert existing handlers to use IInputSystem
-    this.inputSystem.onPointerDown.add((info) => {
-      this.handlePointerDown(info);
-    });
-    
-    this.inputSystem.onPointerMove.add((info) => {
-      this.handlePointerMove(info);
-    });
-    
-    this.inputSystem.onPointerUp.add((info) => {
-      this.handlePointerUp(info);
-    });
-    
-    // Touch handlers for gestures
-    this.inputSystem.onTouchStart.add((touches) => {
-      this.handleTouchStart(touches);
-    });
-    
-    this.inputSystem.onTouchMove.add((touches) => {
-      this.handleTouchMove(touches);
-    });
-    
-    this.inputSystem.onTouchEnd.add((touchIds) => {
-      this.handleTouchEnd(touchIds);
-    });
-    
-    // Wheel for zoom
-    this.inputSystem.onWheel.add((info) => {
-      this.handleWheel(info);
-    });
-  }
+        // Create input manager
+        const inputConfig: InputManagerConfig = {
+            useMockInput: config.useMockInput ?? false,
+            touchEnabled: config.touchEnabled ?? true,
+            keyboardEnabled: config.keyboardEnabled ?? true,
+            pointerLockEnabled: config.pointerLockEnabled ?? false,
+            recordInput: config.recordInput ?? false,
+            playbackFile: config.playbackFile,
+        };
 
-  // Add methods to support testing
-  public getInputSystem(): IInputSystem {
-    return this.inputSystem;
-  }
+        this.inputManager = new InputManager(
+            {
+                scene: this.scene,
+                engine: this.engine,
+                canvas: this.canvas,
+                eventManager: this.eventManager,
+            },
+            inputConfig
+        );
 
-  public worldToScreen(worldPos: Vector3): Vector2 {
-    const engine = this.scene.getEngine();
-    const viewport = this.scene.activeCamera.viewport;
-    const matrix = this.scene.getTransformMatrix();
-    const screenPos = Vector3.Project(
-      worldPos,
-      matrix.world,
-      matrix.view,
-      matrix.projection,
-      viewport
-    );
-    
-    return new Vector2(
-      screenPos.x * engine.getRenderWidth(),
-      screenPos.y * engine.getRenderHeight()
-    );
-  }
-
-  public screenToWorld(screenPos: Vector2): Vector3 | null {
-    const pickInfo = this.scene.pick(screenPos.x, screenPos.y);
-    return pickInfo?.pickedPoint || null;
-  }
-
-  dispose(): void {
-    this.inputSystem.dispose();
-    // ... existing disposal ...
-  }
-}
-```
-
-**Validation:**
-- Existing functionality unchanged
-- New input system properly integrated
-- No memory leaks
-- Helper methods work correctly
-
-**Anti-flakiness measures:**
-- Null checks on all operations
-- Proper cleanup in dispose
-- Event handler weak references
-
-### Step 1.5: Create Test Infrastructure
-
-**What happens:**
-- Set up test directories and configuration
-- Create test utilities and helpers
-- Configure Vitest for both unit and integration tests
-
-**Implementation:**
-```typescript
-// test/setup.ts
-import { beforeEach, afterEach } from 'vitest';
-import { MockDeviceInputSystem } from './mock-device-input-system';
-
-// Global test utilities
-export function createMockInputSystem(): MockDeviceInputSystem {
-  return new MockDeviceInputSystem();
-}
-
-// Cleanup after each test
-afterEach(() => {
-  // Clean up any lingering canvases
-  document.querySelectorAll('canvas').forEach(canvas => canvas.remove());
-  
-  // Reset body styles
-  document.body.style.margin = '0';
-  document.body.style.padding = '0';
-});
-
-// Test helpers
-export function createTestContainer(): HTMLElement {
-  const container = document.createElement('div');
-  container.style.width = '800px';
-  container.style.height = '600px';
-  container.style.position = 'relative';
-  document.body.appendChild(container);
-  return container;
-}
-
-export function waitForGraph(graph: Graph): Promise<void> {
-  return new Promise((resolve) => {
-    if (graph.isReady) {
-      resolve();
-    } else {
-      graph.onReady.addOnce(() => resolve());
+        // Add to lifecycle manager
+        this.lifecycleManager.registerManager("input", this.inputManager);
     }
-  });
-}
 
-// Assertion helpers
-export function expectVector2Near(actual: Vector2, expected: Vector2, tolerance: number = 0.01): void {
-  expect(Math.abs(actual.x - expected.x)).toBeLessThan(tolerance);
-  expect(Math.abs(actual.y - expected.y)).toBeLessThan(tolerance);
-}
-
-export function expectVector3Near(actual: Vector3, expected: Vector3, tolerance: number = 0.01): void {
-  expect(Math.abs(actual.x - expected.x)).toBeLessThan(tolerance);
-  expect(Math.abs(actual.y - expected.y)).toBeLessThan(tolerance);
-  expect(Math.abs(actual.z - expected.z)).toBeLessThan(tolerance);
-}
-```
-
-```typescript
-// vitest.config.ts (update)
-import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
-  test: {
-    environment: 'jsdom',
-    setupFiles: ['./test/setup.ts'],
-    include: [
-      'test/unit/**/*.test.ts',
-      'test/integration/**/*.test.ts'
-    ],
-    coverage: {
-      include: ['src/**/*.ts'],
-      exclude: ['src/**/*.d.ts', 'src/test/**']
-    },
-    // Separate test runs for unit vs integration
-    // Unit tests run in parallel, integration tests sequential
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: false,
-        isolate: true
-      }
+    /**
+     * Get the input manager
+     */
+    get input(): InputManager {
+        return this.inputManager;
     }
-  }
-});
+
+    /**
+     * Enable or disable input
+     */
+    setInputEnabled(enabled: boolean): void {
+        this.inputManager.setEnabled(enabled);
+    }
+
+    /**
+     * Start recording input for testing/automation
+     */
+    startInputRecording(): void {
+        this.inputManager.startRecording();
+    }
+
+    /**
+     * Stop recording and get recorded events
+     */
+    stopInputRecording(): Array<{timestamp: number; type: string; data: any}> {
+        return this.inputManager.stopRecording();
+    }
+}
 ```
 
-**Validation:**
-- Test utilities compile without errors
-- Helper functions work as expected
-- Test environment properly configured
-- Cleanup prevents test interference
+## Phase 3: Unit Tests for Real Features
 
-**Anti-flakiness measures:**
-- Proper cleanup after each test
-- Isolated test environments
-- No shared state between tests
-- Deterministic test container creation
+### Step 3.1: Node Behavior Tests
 
-## Phase 2: Unit Tests (Weeks 2-3)
+**File:** `test/unit/node-behavior.test.ts`
 
-### Step 2.1: Node Dragging Tests
-
-**What happens:**
-- Test single node dragging with pinOnDrag
-- Test multi-node selection and dragging
-- Test drag constraints and boundaries
-- Performance test with many nodes
-
-**Implementation:**
 ```typescript
-// test/unit/interactions/node-drag.test.ts
 import { describe, test, expect, beforeEach } from 'vitest';
-import { Graph } from '../../../src/graph/graph';
-import { createMockInputSystem, createTestContainer, waitForGraph, expectVector3Near } from '../../setup';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Scene, Engine, NullEngine } from '@babylonjs/core';
+import { Node } from '../../src/Node';
+import { NodeBehavior } from '../../src/NodeBehavior';
 
-describe('Node Dragging', () => {
-  let graph: Graph;
-  let mockInput: MockDeviceInputSystem;
-  let container: HTMLElement;
+describe('Node Behavior', () => {
+  let scene: Scene;
+  let engine: Engine;
 
-  beforeEach(async () => {
-    container = createTestContainer();
-    mockInput = createMockInputSystem();
-    graph = new Graph(container, {
-      nodes: [],
-      edges: [],
-      physics: { enabled: false }, // Disable physics for deterministic tests
-      camera: { type: '2d' }
-    }, mockInput);
+  beforeEach(() => {
+    engine = new NullEngine();
+    scene = new Scene(engine);
+  });
+
+  test('drag behavior with pinOnDrag enabled', () => {
+    const node = new Node(mockGraph, 'test-node', 1, {});
+    NodeBehavior.addDefaultBehaviors(node, { pinOnDrag: true });
     
-    await waitForGraph(graph);
+    expect(node.meshDragBehavior).toBeDefined();
+    expect(node.pinOnDrag).toBe(true);
+    
+    // Simulate drag start
+    node.meshDragBehavior.onDragStartObservable.notifyObservers({});
+    expect(node.dragging).toBe(true);
+    
+    // Simulate drag end
+    node.meshDragBehavior.onDragEndObservable.notifyObservers({});
+    expect(node.dragging).toBe(false);
+    
+    // Node should call pin() method
+    expect(node.pin).toHaveBeenCalled();
+  });
+
+  test('double-click expansion triggers fetch', () => {
+    const fetchNodes = jest.fn().mockReturnValue([]);
+    const fetchEdges = jest.fn().mockReturnValue([]);
+    const mockGraph = { fetchNodes, fetchEdges, ...mockGraphContext };
+    
+    const node = new Node(mockGraph, 'test-node', 1, {});
+    NodeBehavior.addDefaultBehaviors(node);
+    
+    // Trigger double-click action
+    const action = node.mesh.actionManager.actions.find(
+      a => a.trigger === ActionManager.OnDoublePickTrigger
+    );
+    action._action();
+    
+    expect(fetchEdges).toHaveBeenCalledWith(node, mockGraph);
+    expect(fetchNodes).toHaveBeenCalled();
+  });
+});
+```
+
+### Step 2.2: 2D Camera Controller Tests
+
+**File:** `test/unit/2d-camera-controls.test.ts`
+
+```typescript
+import { describe, test, expect, beforeEach } from 'vitest';
+import { Scene, Engine, NullEngine } from '@babylonjs/core';
+import { TwoDCameraController } from '../../src/cameras/TwoDCameraController';
+import { TwoDInputController } from '../../src/cameras/TwoDInputController';
+
+describe('2D Camera Controls', () => {
+  let scene: Scene;
+  let canvas: HTMLCanvasElement;
+  let controller: TwoDCameraController;
+  let inputController: TwoDInputController;
+
+  beforeEach(() => {
+    const engine = new NullEngine();
+    scene = new Scene(engine);
+    canvas = document.createElement('canvas');
+    
+    controller = new TwoDCameraController(scene, canvas, {
+      panSpeed: 1,
+      zoomSpeed: 0.1,
+      mousePanScale: 1,
+      mouseWheelZoomSpeed: 1.1
+    });
+    
+    inputController = controller.inputController;
+  });
+
+  test('mouse pan updates camera position', () => {
+    const initialPos = { ...controller.camera.position };
+    
+    // Simulate mouse pan via scene observables
+    scene.onPointerObservable.notifyObservers({
+      type: PointerEventTypes.POINTERDOWN,
+      event: { clientX: 100, clientY: 100, buttons: 1 }
+    });
+    
+    scene.onPointerObservable.notifyObservers({
+      type: PointerEventTypes.POINTERMOVE,  
+      event: { clientX: 200, clientY: 150, buttons: 1 }
+    });
+    
+    scene.onPointerObservable.notifyObservers({
+      type: PointerEventTypes.POINTERUP,
+      event: {}
+    });
+    
+    expect(controller.camera.position.x).not.toBe(initialPos.x);
+    expect(controller.camera.position.y).not.toBe(initialPos.y);
+  });
+
+  test('keyboard WASD controls velocity', () => {
+    // Simulate W key press
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+    inputController.applyKeyboardInertia();
+    
+    expect(controller.velocity.y).toBeGreaterThan(0);
+    
+    // Simulate S key press
+    canvas.dispatchEvent(new KeyboardEvent('keyup', { key: 'w' }));
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+    inputController.applyKeyboardInertia();
+    
+    expect(controller.velocity.y).toBeLessThan(0);
+  });
+
+  test('mouse wheel zooms camera', () => {
+    const initialZoom = controller.camera.orthoTop - controller.camera.orthoBottom;
+    
+    // Simulate wheel event
+    scene.onPrePointerObservable.notifyObservers({
+      type: PointerEventTypes.POINTERWHEEL,
+      event: { deltaY: -100, preventDefault: () => {} }
+    });
+    
+    const newZoom = controller.camera.orthoTop - controller.camera.orthoBottom;
+    expect(newZoom).toBeLessThan(initialZoom); // Zoomed in
+  });
+
+  test('Q/E keys rotate camera', () => {
+    const initialRotation = controller.parent.rotation.z;
+    
+    // Simulate Q key
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'q' }));
+    inputController.applyKeyboardInertia();
+    controller.applyInertia();
+    
+    expect(controller.velocity.rotate).toBeGreaterThan(0);
+  });
+});
+```
+
+### Step 2.3: 3D Camera Controller Tests
+
+**File:** `test/unit/3d-camera-controls.test.ts`
+
+```typescript
+import { describe, test, expect, beforeEach } from 'vitest';
+import { Scene, Engine, NullEngine } from '@babylonjs/core';
+import { OrbitCameraController } from '../../src/cameras/OrbitCameraController';
+import { OrbitInputController } from '../../src/cameras/OrbitInputController';
+
+describe('3D Camera Controls', () => {
+  let scene: Scene;
+  let canvas: HTMLCanvasElement;
+  let controller: OrbitCameraController;
+  let inputController: OrbitInputController;
+
+  beforeEach(() => {
+    const engine = new NullEngine();
+    scene = new Scene(engine);
+    canvas = document.createElement('canvas');
+    
+    controller = new OrbitCameraController(scene, canvas, {
+      trackballRotationSpeed: 1,
+      keyboardRotationSpeed: 0.1,
+      keyboardZoomSpeed: 0.1,
+      inertiaDamping: 0.9
+    });
+    
+    inputController = controller.inputController;
+    inputController.enable();
+  });
+
+  test('mouse drag orbits camera', () => {
+    const initialAlpha = controller.camera.alpha;
+    const initialBeta = controller.camera.beta;
+    
+    // Simulate mouse orbit
+    canvas.dispatchEvent(new PointerEvent('pointerdown', {
+      clientX: 100, clientY: 100, button: 0
+    }));
+    
+    canvas.dispatchEvent(new PointerEvent('pointermove', {
+      clientX: 200, clientY: 150
+    }));
+    
+    canvas.dispatchEvent(new PointerEvent('pointerup'));
+    
+    controller.rotate(100, 50); // Apply the rotation
+    
+    expect(controller.camera.alpha).not.toBe(initialAlpha);
+    expect(controller.camera.beta).not.toBe(initialBeta);
+  });
+
+  test('arrow keys rotate with velocity', () => {
+    // Simulate arrow key press
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    
+    inputController.update();
+    
+    // Check rotation velocity was applied
+    expect(inputController.rotationVelocityY).toBeGreaterThan(0);
+  });
+
+  test('W/S keys zoom camera', () => {
+    const initialRadius = controller.camera.radius;
+    
+    // Simulate W key (zoom in)
+    canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+    inputController.update();
+    
+    expect(controller.camera.radius).toBeLessThan(initialRadius);
+  });
+});
+```
+
+### Step 3.4: Input Manager Tests
+
+**File:** `test/unit/input-manager.test.ts`
+
+```typescript
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Scene, Engine, NullEngine } from '@babylonjs/core';
+import { EventManager } from '../../src/managers/EventManager';
+import { InputManager, InputManagerConfig } from '../../src/managers/InputManager';
+import { MouseButton, DeviceType } from '../../src/input/types';
+
+describe('InputManager', () => {
+  let scene: Scene;
+  let engine: Engine;
+  let canvas: HTMLCanvasElement;
+  let eventManager: EventManager;
+  let inputManager: InputManager;
+
+  beforeEach(() => {
+    engine = new NullEngine();
+    scene = new Scene(engine);
+    canvas = document.createElement('canvas');
+    eventManager = new EventManager();
+    
+    const context = { scene, engine, canvas, eventManager };
+    inputManager = new InputManager(context, { useMockInput: true });
   });
 
   afterEach(() => {
-    graph.dispose();
-    container.remove();
+    inputManager.dispose();
   });
 
-  test('respects pinOnDrag setting when enabled', async () => {
-    // Configure graph
-    graph.updateConfig({ pinOnDrag: true });
+  test('initializes with mock input system', async () => {
+    await inputManager.init();
     
-    // Add test node
-    const nodeId = 'test-node';
-    graph.addNode({
-      id: nodeId,
-      position: { x: 0, y: 0, z: 0 }
-    });
-    
-    // Get node screen position
-    const node = graph.getNode(nodeId);
-    const startWorldPos = node.getPosition();
-    const startScreenPos = graph.worldToScreen(startWorldPos);
-    
-    // Simulate drag
-    mockInput.simulateDrag(
-      startScreenPos.x,
-      startScreenPos.y,
-      startScreenPos.x + 100,
-      startScreenPos.y + 50,
-      5 // steps
-    );
-    
-    // Allow one frame for update
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    // Verify node moved and is pinned
-    const endWorldPos = node.getPosition();
-    expect(node.isPinned()).toBe(true);
-    expect(endWorldPos.x).toBeGreaterThan(startWorldPos.x);
-    expect(endWorldPos.y).toBeGreaterThan(startWorldPos.y);
+    const mockSystem = inputManager.getMockInputSystem();
+    expect(mockSystem).toBeDefined();
   });
 
-  test('does not pin when pinOnDrag is disabled', async () => {
-    graph.updateConfig({ pinOnDrag: false });
+  test('bridges input events to event manager', async () => {
+    await inputManager.init();
     
-    const nodeId = 'test-node';
-    graph.addNode({
-      id: nodeId,
-      position: { x: 0, y: 0, z: 0 }
-    });
-    
-    const node = graph.getNode(nodeId);
-    const startScreenPos = graph.worldToScreen(node.getPosition());
-    
-    mockInput.simulateDrag(
-      startScreenPos.x,
-      startScreenPos.y,
-      startScreenPos.x + 100,
-      startScreenPos.y + 50
-    );
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(node.isPinned()).toBe(false);
-  });
-
-  test('handles multi-node selection and drag', async () => {
-    graph.updateConfig({ pinOnDrag: true });
-    
-    // Add multiple nodes
-    const nodeIds = ['node1', 'node2', 'node3'];
-    const nodes = nodeIds.map((id, i) => {
-      graph.addNode({
-        id,
-        position: { x: i * 50, y: 0, z: 0 }
-      });
-      return graph.getNode(id);
-    });
-    
-    // Select all nodes (simulate ctrl+click)
-    nodes.forEach(node => {
-      const pos = graph.worldToScreen(node.getPosition());
-      mockInput.simulateMouseMove(pos.x, pos.y);
-      mockInput.simulateKeyDown('Control');
-      mockInput.simulateMouseDown();
-      mockInput.simulateMouseUp();
-    });
-    mockInput.simulateKeyUp('Control');
-    
-    // Verify all selected
-    nodes.forEach(node => {
-      expect(node.isSelected()).toBe(true);
-    });
-    
-    // Drag from first node
-    const dragStart = graph.worldToScreen(nodes[0].getPosition());
-    mockInput.simulateDrag(
-      dragStart.x,
-      dragStart.y,
-      dragStart.x + 100,
-      dragStart.y + 100
-    );
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    // Verify all nodes moved together
-    const positions = nodes.map(n => n.getPosition());
-    expect(positions[1].x - positions[0].x).toBeCloseTo(50, 1);
-    expect(positions[2].x - positions[1].x).toBeCloseTo(50, 1);
-    expect(positions[0].y).toBeCloseTo(positions[1].y, 1);
-    expect(positions[1].y).toBeCloseTo(positions[2].y, 1);
-  });
-
-  test('respects drag constraints', async () => {
-    graph.updateConfig({
-      pinOnDrag: true,
-      dragConstraints: {
-        minX: -100,
-        maxX: 100,
-        minY: -100,
-        maxY: 100
+    const eventSpy = vi.fn();
+    eventManager.onGraphEvent.add((event) => {
+      if (event.type === 'input:pointer-move') {
+        eventSpy(event.data);
       }
     });
     
-    const nodeId = 'test-node';
-    graph.addNode({
-      id: nodeId,
-      position: { x: 0, y: 0, z: 0 }
-    });
+    const mockSystem = inputManager.getMockInputSystem();
+    mockSystem.simulateMouseMove(100, 200);
     
-    const node = graph.getNode(nodeId);
-    const startPos = graph.worldToScreen(node.getPosition());
-    
-    // Try to drag beyond constraints
-    mockInput.simulateDrag(
-      startPos.x,
-      startPos.y,
-      startPos.x + 500, // Way beyond constraint
-      startPos.y + 500
+    expect(eventSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        x: 100,
+        y: 200,
+        deviceType: DeviceType.Mouse
+      })
     );
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    // Verify position is constrained
-    const finalPos = node.getPosition();
-    expect(finalPos.x).toBeLessThanOrEqual(100);
-    expect(finalPos.y).toBeLessThanOrEqual(100);
   });
 
-  test('maintains performance with 1000 nodes', async () => {
-    // Add many nodes
-    const nodeCount = 1000;
-    for (let i = 0; i < nodeCount; i++) {
-      graph.addNode({
-        id: `node-${i}`,
-        position: {
-          x: (i % 32) * 30,
-          y: Math.floor(i / 32) * 30,
-          z: 0
+  test('can enable/disable input', async () => {
+    await inputManager.init();
+    
+    let eventReceived = false;
+    eventManager.onGraphEvent.add((event) => {
+      if (event.type === 'input:pointer-move') {
+        eventReceived = true;
+      }
+    });
+    
+    // Disable input
+    inputManager.setEnabled(false);
+    
+    const mockSystem = inputManager.getMockInputSystem();
+    mockSystem.simulateMouseMove(100, 200);
+    
+    expect(eventReceived).toBe(false);
+    
+    // Re-enable input
+    inputManager.setEnabled(true);
+    mockSystem.simulateMouseMove(200, 300);
+    
+    expect(eventReceived).toBe(true);
+  });
+
+  test('records and plays back input events', async () => {
+    await inputManager.init();
+    
+    // Start recording
+    inputManager.startRecording();
+    
+    const mockSystem = inputManager.getMockInputSystem();
+    mockSystem.simulateMouseMove(100, 200);
+    mockSystem.simulateMouseDown(MouseButton.Left);
+    mockSystem.simulateMouseUp(MouseButton.Left);
+    
+    // Stop recording
+    const recordedEvents = inputManager.stopRecording();
+    expect(recordedEvents.length).toBe(3);
+    
+    // Clear state
+    mockSystem.reset();
+    
+    // Playback
+    const playbackEvents = [];
+    eventManager.onGraphEvent.add((event) => {
+      if (event.type.startsWith('input:')) {
+        playbackEvents.push(event.type);
+      }
+    });
+    
+    await inputManager.startPlayback(recordedEvents);
+    
+    // Wait for playback to complete
+    await new Promise(resolve => {
+      eventManager.onGraphEvent.add((event) => {
+        if (event.type === 'input-playback-completed') {
+          resolve(undefined);
         }
       });
-    }
+    });
     
-    // Select a node in the middle
-    const targetNode = graph.getNode('node-500');
-    const screenPos = graph.worldToScreen(targetNode.getPosition());
-    
-    // Measure drag performance
-    const startTime = performance.now();
-    
-    mockInput.simulateDrag(
-      screenPos.x,
-      screenPos.y,
-      screenPos.x + 100,
-      screenPos.y + 100,
-      10 // steps
-    );
-    
-    const dragTime = performance.now() - startTime;
-    
-    // Should complete drag in reasonable time
-    expect(dragTime).toBeLessThan(100); // 100ms budget
-    
-    // Verify node actually moved
-    await new Promise(resolve => setTimeout(resolve, 16));
-    const endPos = targetNode.getPosition();
-    expect(endPos.x).toBeGreaterThan(15); // Started at ~15
+    expect(playbackEvents).toContain('input:pointer-move');
+    expect(playbackEvents).toContain('input:pointer-down');
+    expect(playbackEvents).toContain('input:pointer-up');
   });
-});
-```
 
-**Validation:**
-- Each test has clear pass/fail criteria
-- Performance benchmarks are reasonable
-- Edge cases are covered
-- State changes are verified
-
-**Anti-flakiness measures:**
-- Physics disabled for deterministic behavior
-- Fixed timing with setTimeout(16) for frame updates
-- Tolerance in position comparisons
-- No dependency on render loop timing
-
-### Step 2.2: Camera Control Tests
-
-**What happens:**
-- Test 2D camera pan, zoom, keyboard navigation
-- Test 3D camera orbit, pan, zoom
-- Test camera limits and constraints
-- Test smooth vs instant transitions
-
-**Implementation:**
-```typescript
-// test/unit/interactions/camera-controls.test.ts
-import { describe, test, expect, beforeEach } from 'vitest';
-import { Graph } from '../../../src/graph/graph';
-import { createMockInputSystem, createTestContainer, waitForGraph, expectVector3Near } from '../../setup';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-
-describe('Camera Controls', () => {
-  describe('2D Camera', () => {
-    let graph: Graph;
-    let mockInput: MockDeviceInputSystem;
-    let container: HTMLElement;
-
-    beforeEach(async () => {
-      container = createTestContainer();
-      mockInput = createMockInputSystem();
-      graph = new Graph(container, {
-        nodes: [],
-        edges: [],
-        camera: { type: '2d' }
-      }, mockInput);
-      
-      await waitForGraph(graph);
-    });
-
-    afterEach(() => {
-      graph.dispose();
-      container.remove();
-    });
-
-    test('pans with right mouse button', async () => {
-      const camera = graph.getCamera();
-      const startPos = camera.position.clone();
-      
-      // Simulate right-click pan
-      mockInput.simulateMouseMove(400, 300);
-      mockInput.simulateMouseDown(MouseButton.Right);
-      mockInput.simulateMouseMove(500, 400, 5); // 5 steps for smooth
-      mockInput.simulateMouseUp(MouseButton.Right);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const endPos = camera.position;
-      expect(endPos.x).not.toBeCloseTo(startPos.x, 0.1);
-      expect(endPos.y).not.toBeCloseTo(startPos.y, 0.1);
-    });
-
-    test('pans with middle mouse button', async () => {
-      const camera = graph.getCamera();
-      const startPos = camera.position.clone();
-      
-      mockInput.simulateMouseMove(400, 300);
-      mockInput.simulateMouseDown(MouseButton.Middle);
-      mockInput.simulateMouseMove(300, 200);
-      mockInput.simulateMouseUp(MouseButton.Middle);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const endPos = camera.position;
-      expect(endPos.x).not.toBeCloseTo(startPos.x, 0.1);
-    });
-
-    test('zooms with mouse wheel', async () => {
-      const camera = graph.getCamera();
-      const startOrthoSize = camera.orthoTop - camera.orthoBottom;
-      
-      // Zoom in
-      mockInput.simulateMouseMove(400, 300);
-      mockInput.simulateWheel(-120); // Negative = zoom in
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const endOrthoSize = camera.orthoTop - camera.orthoBottom;
-      expect(endOrthoSize).toBeLessThan(startOrthoSize);
-      
-      // Zoom out
-      mockInput.simulateWheel(240); // Positive = zoom out
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const finalOrthoSize = camera.orthoTop - camera.orthoBottom;
-      expect(finalOrthoSize).toBeGreaterThan(endOrthoSize);
-    });
-
-    test('navigates with keyboard arrows', async () => {
-      const camera = graph.getCamera();
-      const startPos = camera.position.clone();
-      
-      // Move right
-      mockInput.simulateKeyDown('ArrowRight');
-      await new Promise(resolve => setTimeout(resolve, 100)); // Hold key
-      mockInput.simulateKeyUp('ArrowRight');
-      
-      expect(camera.position.x).toBeGreaterThan(startPos.x);
-      
-      // Move up
-      mockInput.simulateKeyDown('ArrowUp');
-      await new Promise(resolve => setTimeout(resolve, 100));
-      mockInput.simulateKeyUp('ArrowUp');
-      
-      expect(camera.position.y).toBeGreaterThan(startPos.y);
-    });
-
-    test('respects zoom limits', async () => {
-      graph.updateConfig({
-        camera: {
-          type: '2d',
-          minZoom: 0.5,
-          maxZoom: 2.0
-        }
-      });
-      
-      const camera = graph.getCamera();
-      
-      // Try to zoom beyond limits
-      for (let i = 0; i < 20; i++) {
-        mockInput.simulateWheel(-120); // Zoom in a lot
-        await new Promise(resolve => setTimeout(resolve, 16));
+  test('emits keyboard shortcut events', async () => {
+    await inputManager.init();
+    
+    const shortcuts = [];
+    eventManager.onGraphEvent.add((event) => {
+      if (event.type.startsWith('input:') && 
+          !event.type.includes('key')) {
+        shortcuts.push(event.type);
       }
-      
-      const orthoSize = camera.orthoTop - camera.orthoBottom;
-      const expectedMinSize = 600 / 2.0; // viewport height / maxZoom
-      expect(orthoSize).toBeGreaterThanOrEqual(expectedMinSize - 1);
     });
+    
+    const mockSystem = inputManager.getMockInputSystem();
+    
+    // Test Ctrl+Z (undo)
+    mockSystem.simulateKeyDown('z', { ctrlKey: true });
+    expect(shortcuts).toContain('input:undo');
+    
+    // Test Ctrl+Y (redo)
+    mockSystem.simulateKeyDown('y', { ctrlKey: true });
+    expect(shortcuts).toContain('input:redo');
+    
+    // Test Ctrl+A (select all)
+    mockSystem.simulateKeyDown('a', { ctrlKey: true });
+    expect(shortcuts).toContain('input:select-all');
   });
 
-  describe('3D Camera', () => {
-    let graph: Graph;
-    let mockInput: MockDeviceInputSystem;
-    let container: HTMLElement;
-
-    beforeEach(async () => {
-      container = createTestContainer();
-      mockInput = createMockInputSystem();
-      graph = new Graph(container, {
-        nodes: [],
-        edges: [],
-        camera: { type: '3d' }
-      }, mockInput);
-      
-      await waitForGraph(graph);
-    });
-
-    afterEach(() => {
-      graph.dispose();
-      container.remove();
-    });
-
-    test('orbits with left mouse button', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      const startAlpha = camera.alpha;
-      const startBeta = camera.beta;
-      
-      // Simulate orbit
-      mockInput.simulateMouseMove(400, 300);
-      mockInput.simulateMouseDown(MouseButton.Left);
-      mockInput.simulateMouseMove(500, 400, 10);
-      mockInput.simulateMouseUp(MouseButton.Left);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expect(camera.alpha).not.toBeCloseTo(startAlpha, 0.01);
-      expect(camera.beta).not.toBeCloseTo(startBeta, 0.01);
-    });
-
-    test('pans with right mouse button', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      const startTarget = camera.target.clone();
-      
-      mockInput.simulateMouseMove(400, 300);
-      mockInput.simulateMouseDown(MouseButton.Right);
-      mockInput.simulateMouseMove(300, 200);
-      mockInput.simulateMouseUp(MouseButton.Right);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expectVector3Near(camera.target, startTarget, 1); // Should move
-      expect(camera.target.x).not.toBeCloseTo(startTarget.x, 0.1);
-    });
-
-    test('zooms with mouse wheel', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      const startRadius = camera.radius;
-      
-      // Zoom in
-      mockInput.simulateWheel(-240);
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expect(camera.radius).toBeLessThan(startRadius);
-      
-      // Zoom out
-      mockInput.simulateWheel(480);
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expect(camera.radius).toBeGreaterThan(startRadius);
-    });
-
-    test('resets camera position', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      
-      // Move camera around
-      mockInput.simulateDrag(400, 300, 500, 400);
-      mockInput.simulateWheel(-240);
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      // Reset
-      graph.resetCamera();
-      await new Promise(resolve => setTimeout(resolve, 100)); // Animation
-      
-      // Should be back to defaults
-      expect(camera.alpha).toBeCloseTo(Math.PI / 4, 0.1);
-      expect(camera.beta).toBeCloseTo(Math.PI / 3, 0.1);
-      expect(camera.radius).toBeCloseTo(50, 1);
-    });
+  test('state queries work correctly', async () => {
+    await inputManager.init();
+    
+    const mockSystem = inputManager.getMockInputSystem();
+    
+    // Test pointer position
+    mockSystem.simulateMouseMove(150, 250);
+    const pos = inputManager.getPointerPosition();
+    expect(pos.x).toBe(150);
+    expect(pos.y).toBe(250);
+    
+    // Test pointer down state
+    expect(inputManager.isPointerDown()).toBe(false);
+    mockSystem.simulateMouseDown(MouseButton.Left);
+    expect(inputManager.isPointerDown()).toBe(true);
+    expect(inputManager.isPointerDown(MouseButton.Left)).toBe(true);
+    expect(inputManager.isPointerDown(MouseButton.Right)).toBe(false);
+    
+    // Test touch state
+    mockSystem.simulateTouchStart([
+      { id: 1, x: 100, y: 100 },
+      { id: 2, x: 200, y: 200 }
+    ]);
+    
+    const touches = inputManager.getActiveTouches();
+    expect(touches.length).toBe(2);
+    expect(touches[0].id).toBe(1);
+    expect(touches[1].id).toBe(2);
   });
 });
 ```
 
-**Validation:**
-- Camera state changes are measurable
-- Limits and constraints are enforced
-- Different input methods work correctly
-- Animation timing is accounted for
+## Phase 3: Integration Tests with Playwright
 
-**Anti-flakiness measures:**
-- Fixed wait times for animations
-- Tolerance in floating point comparisons
-- No dependency on frame rate
-- Predictable initial camera states
+### Step 3.1: Test Configuration
 
-### Step 2.3: Touch Gesture Tests
+**File:** `playwright.config.ts`
 
-**What happens:**
-- Test single touch pan
-- Test pinch to zoom
-- Test two-finger rotate (3D)
-- Test gesture recognition accuracy
-
-**Implementation:**
 ```typescript
-// test/unit/interactions/touch-gestures.test.ts
-import { describe, test, expect, beforeEach } from 'vitest';
-import { Graph } from '../../../src/graph/graph';
-import { createMockInputSystem, createTestContainer, waitForGraph } from '../../setup';
-
-describe('Touch Gestures', () => {
-  let graph: Graph;
-  let mockInput: MockDeviceInputSystem;
-  let container: HTMLElement;
-
-  beforeEach(async () => {
-    container = createTestContainer();
-    mockInput = createMockInputSystem();
-  });
-
-  afterEach(() => {
-    graph?.dispose();
-    container.remove();
-  });
-
-  describe('2D Touch Gestures', () => {
-    beforeEach(async () => {
-      graph = new Graph(container, {
-        nodes: [],
-        edges: [],
-        camera: { type: '2d' }
-      }, mockInput);
-      await waitForGraph(graph);
-    });
-
-    test('single finger pans camera', async () => {
-      const camera = graph.getCamera();
-      const startPos = camera.position.clone();
-      
-      // Single touch drag
-      mockInput.simulateTouchStart([{ id: 1, x: 400, y: 300 }]);
-      mockInput.simulateTouchMove([{ id: 1, x: 300, y: 200 }]);
-      mockInput.simulateTouchEnd([1]);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expect(camera.position.x).not.toBeCloseTo(startPos.x, 0.1);
-      expect(camera.position.y).not.toBeCloseTo(startPos.y, 0.1);
-    });
-
-    test('pinch gesture zooms', async () => {
-      const camera = graph.getCamera();
-      const startOrthoSize = camera.orthoTop - camera.orthoBottom;
-      
-      // Pinch out (zoom in)
-      mockInput.simulatePinch(400, 300, 100, 200, 10);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const midOrthoSize = camera.orthoTop - camera.orthoBottom;
-      expect(midOrthoSize).toBeLessThan(startOrthoSize);
-      
-      // Pinch in (zoom out)
-      mockInput.simulatePinch(400, 300, 200, 100, 10);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      const endOrthoSize = camera.orthoTop - camera.orthoBottom;
-      expect(endOrthoSize).toBeGreaterThan(midOrthoSize);
-    });
-
-    test('distinguishes pinch from two-finger pan', async () => {
-      const camera = graph.getCamera();
-      const startPos = camera.position.clone();
-      const startOrthoSize = camera.orthoTop - camera.orthoBottom;
-      
-      // Two fingers moving in same direction (pan)
-      mockInput.simulateTouchStart([
-        { id: 1, x: 350, y: 300 },
-        { id: 2, x: 450, y: 300 }
-      ]);
-      
-      mockInput.simulateTouchMove([
-        { id: 1, x: 250, y: 200 },
-        { id: 2, x: 350, y: 200 }
-      ]);
-      
-      mockInput.simulateTouchEnd([1, 2]);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      // Should pan, not zoom
-      expect(camera.position.x).not.toBeCloseTo(startPos.x, 0.1);
-      const endOrthoSize = camera.orthoTop - camera.orthoBottom;
-      expect(endOrthoSize).toBeCloseTo(startOrthoSize, 1);
-    });
-  });
-
-  describe('3D Touch Gestures', () => {
-    beforeEach(async () => {
-      graph = new Graph(container, {
-        nodes: [],
-        edges: [],
-        camera: { type: '3d' }
-      }, mockInput);
-      await waitForGraph(graph);
-    });
-
-    test('two-finger rotate orbits camera', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      const startAlpha = camera.alpha;
-      
-      // Two fingers rotating around center
-      const centerX = 400, centerY = 300;
-      const radius = 100;
-      
-      mockInput.simulateTouchStart([
-        { id: 1, x: centerX - radius, y: centerY },
-        { id: 2, x: centerX + radius, y: centerY }
-      ]);
-      
-      // Rotate 45 degrees
-      const angle = Math.PI / 4;
-      mockInput.simulateTouchMove([
-        {
-          id: 1,
-          x: centerX + radius * Math.cos(Math.PI + angle),
-          y: centerY + radius * Math.sin(Math.PI + angle)
-        },
-        {
-          id: 2,
-          x: centerX + radius * Math.cos(angle),
-          y: centerY + radius * Math.sin(angle)
-        }
-      ]);
-      
-      mockInput.simulateTouchEnd([1, 2]);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      expect(camera.alpha).not.toBeCloseTo(startAlpha, 0.01);
-    });
-
-    test('three-finger swipe resets camera', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      
-      // Move camera first
-      mockInput.simulateDrag(400, 300, 500, 400);
-      await new Promise(resolve => setTimeout(resolve, 16));
-      
-      // Three finger swipe up
-      mockInput.simulateTouchStart([
-        { id: 1, x: 300, y: 400 },
-        { id: 2, x: 400, y: 400 },
-        { id: 3, x: 500, y: 400 }
-      ]);
-      
-      mockInput.simulateTouchMove([
-        { id: 1, x: 300, y: 200 },
-        { id: 2, x: 400, y: 200 },
-        { id: 3, x: 500, y: 200 }
-      ]);
-      
-      mockInput.simulateTouchEnd([1, 2, 3]);
-      
-      await new Promise(resolve => setTimeout(resolve, 200)); // Reset animation
-      
-      // Should be reset
-      expect(camera.alpha).toBeCloseTo(Math.PI / 4, 0.1);
-      expect(camera.beta).toBeCloseTo(Math.PI / 3, 0.1);
-    });
-  });
-
-  describe('Touch Gesture Recognition', () => {
-    beforeEach(async () => {
-      graph = new Graph(container, {
-        nodes: [],
-        edges: [],
-        camera: { type: '3d' }
-      }, mockInput);
-      await waitForGraph(graph);
-    });
-
-    test('correctly identifies tap vs drag', async () => {
-      let tapCount = 0;
-      let dragCount = 0;
-      
-      graph.on('tap', () => tapCount++);
-      graph.on('dragstart', () => dragCount++);
-      
-      // Quick tap
-      mockInput.simulateTouchStart([{ id: 1, x: 400, y: 300 }]);
-      await new Promise(resolve => setTimeout(resolve, 50));
-      mockInput.simulateTouchEnd([1]);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      expect(tapCount).toBe(1);
-      expect(dragCount).toBe(0);
-      
-      // Drag
-      mockInput.simulateTouchStart([{ id: 1, x: 400, y: 300 }]);
-      await new Promise(resolve => setTimeout(resolve, 50));
-      mockInput.simulateTouchMove([{ id: 1, x: 450, y: 350 }]);
-      mockInput.simulateTouchEnd([1]);
-      
-      await new Promise(resolve => setTimeout(resolve, 16));
-      expect(tapCount).toBe(1); // No new tap
-      expect(dragCount).toBe(1);
-    });
-
-    test('handles rapid gesture changes', async () => {
-      const camera = graph.getCamera() as ArcRotateCamera;
-      const startRadius = camera.radius;
-      
-      // Rapid pinch in/out
-      for (let i = 0; i < 5; i++) {
-        mockInput.simulatePinch(400, 300, 100, 150, 3);
-        await new Promise(resolve => setTimeout(resolve, 16));
-        mockInput.simulatePinch(400, 300, 150, 100, 3);
-        await new Promise(resolve => setTimeout(resolve, 16));
-      }
-      
-      // Camera should still be in valid state
-      expect(camera.radius).toBeGreaterThan(0);
-      expect(camera.radius).toBeLessThan(1000);
-      
-      // Should have changed from start
-      expect(camera.radius).not.toBeCloseTo(startRadius, 0.1);
-    });
-  });
-});
-```
-
-**Validation:**
-- Gesture recognition is accurate
-- Multi-touch handling is correct
-- Gesture conflicts are resolved properly
-- Edge cases handled gracefully
-
-**Anti-flakiness measures:**
-- Fixed timing for gesture recognition
-- Clear gesture boundaries
-- No reliance on touch event ordering
-- Predictable gesture simulation
-
-### Step 2.4: Keyboard Navigation Tests
-
-**What happens:**
-- Test arrow key camera movement
-- Test zoom with +/- keys
-- Test shortcuts (reset, fit to view)
-- Test modifier key combinations
-
-**Implementation:**
-```typescript
-// test/unit/interactions/keyboard-navigation.test.ts
-import { describe, test, expect, beforeEach } from 'vitest';
-import { Graph } from '../../../src/graph/graph';
-import { createMockInputSystem, createTestContainer, waitForGraph } from '../../setup';
-
-describe('Keyboard Navigation', () => {
-  let graph: Graph;
-  let mockInput: MockDeviceInputSystem;
-  let container: HTMLElement;
-
-  beforeEach(async () => {
-    container = createTestContainer();
-    mockInput = createMockInputSystem();
-    graph = new Graph(container, {
-      nodes: [
-        { id: 'node1', position: { x: 0, y: 0, z: 0 } },
-        { id: 'node2', position: { x: 100, y: 100, z: 0 } }
-      ],
-      edges: [],
-      camera: { type: '2d' }
-    }, mockInput);
-    
-    await waitForGraph(graph);
-  });
-
-  afterEach(() => {
-    graph.dispose();
-    container.remove();
-  });
-
-  test('arrow keys move camera', async () => {
-    const camera = graph.getCamera();
-    const startX = camera.position.x;
-    const startY = camera.position.y;
-    
-    // Test each arrow key
-    const movements = [
-      { key: 'ArrowRight', expectedX: x => x > startX, expectedY: y => y === startY },
-      { key: 'ArrowLeft', expectedX: x => x < startX, expectedY: y => y === startY },
-      { key: 'ArrowUp', expectedX: x => x === startX, expectedY: y => y > startY },
-      { key: 'ArrowDown', expectedX: x => x === startX, expectedY: y => y < startY }
-    ];
-    
-    for (const movement of movements) {
-      // Reset camera
-      camera.position.x = startX;
-      camera.position.y = startY;
-      
-      mockInput.simulateKeyDown(movement.key);
-      await new Promise(resolve => setTimeout(resolve, 100));
-      mockInput.simulateKeyUp(movement.key);
-      
-      expect(movement.expectedX(camera.position.x)).toBe(true);
-      expect(movement.expectedY(camera.position.y)).toBe(true);
-    }
-  });
-
-  test('plus/minus keys zoom', async () => {
-    const camera = graph.getCamera();
-    const startOrthoSize = camera.orthoTop - camera.orthoBottom;
-    
-    // Zoom in with plus
-    mockInput.simulateKeyDown('+');
-    await new Promise(resolve => setTimeout(resolve, 50));
-    mockInput.simulateKeyUp('+');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    const zoomedInSize = camera.orthoTop - camera.orthoBottom;
-    expect(zoomedInSize).toBeLessThan(startOrthoSize);
-    
-    // Zoom out with minus
-    mockInput.simulateKeyDown('-');
-    await new Promise(resolve => setTimeout(resolve, 50));
-    mockInput.simulateKeyUp('-');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    const zoomedOutSize = camera.orthoTop - camera.orthoBottom;
-    expect(zoomedOutSize).toBeGreaterThan(zoomedInSize);
-  });
-
-  test('R key resets camera', async () => {
-    const camera = graph.getCamera();
-    
-    // Move camera
-    mockInput.simulateKeyDown('ArrowRight');
-    await new Promise(resolve => setTimeout(resolve, 100));
-    mockInput.simulateKeyUp('ArrowRight');
-    
-    const movedX = camera.position.x;
-    
-    // Reset with R
-    mockInput.simulateKeyDown('r');
-    mockInput.simulateKeyUp('r');
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Animation
-    
-    expect(camera.position.x).toBeCloseTo(0, 0.1);
-    expect(camera.position.x).not.toBeCloseTo(movedX, 0.1);
-  });
-
-  test('F key fits graph to view', async () => {
-    const camera = graph.getCamera();
-    
-    // Move camera away
-    camera.position.set(1000, 1000, camera.position.z);
-    
-    // Fit to view
-    mockInput.simulateKeyDown('f');
-    mockInput.simulateKeyUp('f');
-    
-    await new Promise(resolve => setTimeout(resolve, 200)); // Animation
-    
-    // Camera should frame both nodes
-    const orthoSize = camera.orthoTop - camera.orthoBottom;
-    expect(orthoSize).toBeGreaterThan(100); // Enough to see both nodes
-    expect(orthoSize).toBeLessThan(500); // Not too far out
-    
-    // Should be centered between nodes
-    expect(camera.position.x).toBeCloseTo(50, 10);
-    expect(camera.position.y).toBeCloseTo(50, 10);
-  });
-
-  test('Tab key cycles through nodes', async () => {
-    let selectedNode = null;
-    graph.on('nodeSelected', (node) => {
-      selectedNode = node;
-    });
-    
-    // First tab
-    mockInput.simulateKeyDown('Tab');
-    mockInput.simulateKeyUp('Tab');
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(selectedNode?.id).toBe('node1');
-    
-    // Second tab
-    mockInput.simulateKeyDown('Tab');
-    mockInput.simulateKeyUp('Tab');
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(selectedNode?.id).toBe('node2');
-    
-    // Third tab (cycle back)
-    mockInput.simulateKeyDown('Tab');
-    mockInput.simulateKeyUp('Tab');
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(selectedNode?.id).toBe('node1');
-  });
-
-  test('Shift+Tab cycles backwards', async () => {
-    let selectedNode = null;
-    graph.on('nodeSelected', (node) => {
-      selectedNode = node;
-    });
-    
-    // Select first node
-    mockInput.simulateKeyDown('Tab');
-    mockInput.simulateKeyUp('Tab');
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    // Shift+Tab to go backwards
-    mockInput.simulateKeyDown('Shift');
-    mockInput.simulateKeyDown('Tab');
-    mockInput.simulateKeyUp('Tab');
-    mockInput.simulateKeyUp('Shift');
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(selectedNode?.id).toBe('node2');
-  });
-
-  test('Delete key removes selected node', async () => {
-    // Select node
-    graph.selectNode('node1');
-    
-    // Delete
-    mockInput.simulateKeyDown('Delete');
-    mockInput.simulateKeyUp('Delete');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(graph.getNode('node1')).toBeNull();
-    expect(graph.getNodes().length).toBe(1);
-  });
-
-  test('Ctrl+A selects all nodes', async () => {
-    mockInput.simulateKeyDown('Control');
-    mockInput.simulateKeyDown('a');
-    mockInput.simulateKeyUp('a');
-    mockInput.simulateKeyUp('Control');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    const nodes = graph.getNodes();
-    expect(nodes.every(n => n.isSelected())).toBe(true);
-  });
-
-  test('Escape deselects all', async () => {
-    // Select all first
-    graph.selectAll();
-    expect(graph.getSelectedNodes().length).toBe(2);
-    
-    // Escape
-    mockInput.simulateKeyDown('Escape');
-    mockInput.simulateKeyUp('Escape');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    
-    expect(graph.getSelectedNodes().length).toBe(0);
-  });
-
-  test('Space pauses/resumes physics', async () => {
-    graph.updateConfig({ physics: { enabled: true } });
-    
-    expect(graph.isPhysicsEnabled()).toBe(true);
-    
-    // Pause
-    mockInput.simulateKeyDown(' ');
-    mockInput.simulateKeyUp(' ');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    expect(graph.isPhysicsEnabled()).toBe(false);
-    
-    // Resume
-    mockInput.simulateKeyDown(' ');
-    mockInput.simulateKeyUp(' ');
-    
-    await new Promise(resolve => setTimeout(resolve, 16));
-    expect(graph.isPhysicsEnabled()).toBe(true);
-  });
-});
-```
-
-**Validation:**
-- Each key performs expected action
-- Modifier keys work correctly
-- Key repeat is handled properly
-- State changes are verifiable
-
-**Anti-flakiness measures:**
-- Fixed timing for key repeat
-- Clear state before each test
-- No dependency on focus state
-- Predictable initial conditions
-
-## Phase 3: Integration Tests (Weeks 3-4)
-
-### Step 3.1: Playwright Configuration
-
-**What happens:**
-- Set up Playwright projects for different scenarios
-- Configure browser options for Canvas testing
-- Set up trace and video recording
-- Configure for headless server environment
-
-**Implementation:**
-```typescript
-// playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './test/integration',
-  
-  // Fail fast in CI
-  fullyParallel: false, // Sequential for Canvas resource management
-  retries: process.env.CI ? 2 : 0,
-  workers: 1, // Single worker for consistent Canvas performance
-  
-  // Test artifacts
-  use: {
-    baseURL: 'http://dev.ato.ms:9025', // Storybook on allowed port
-    trace: 'on-first-retry',
-    video: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    
-    // Viewport for consistent Canvas size
-    viewport: { width: 1280, height: 720 },
-    
-    // Slow down actions for visual debugging
-    actionTimeout: process.env.PWDEBUG ? 0 : 5000,
-    
-    // Canvas testing options
-    launchOptions: {
-      args: [
-        '--use-gl=swiftshader', // Consistent WebGL rendering
-        '--disable-gpu-sandbox',
-        '--disable-dev-shm-usage', // Prevent OOM on CI
-        '--no-sandbox' // Required for some CI environments
-      ]
-    }
-  },
-  
   projects: [
     {
-      name: 'desktop-chrome',
+      name: 'desktop',
       use: {
         ...devices['Desktop Chrome'],
-        // Enable touch events for testing
-        hasTouch: false,
-        isMobile: false
+        launchOptions: {
+          args: ['--use-gl=swiftshader']
+        }
       }
     },
     {
-      name: 'desktop-chrome-touch',
-      use: {
-        ...devices['Desktop Chrome'],
-        hasTouch: true, // Enable touch simulation
-        isMobile: false
-      }
-    },
-    {
-      name: 'mobile-ios',
+      name: 'mobile',
       use: {
         ...devices['iPhone 13'],
-        // Real mobile viewport
-      }
-    },
-    {
-      name: 'mobile-android',
-      use: {
-        ...devices['Pixel 5']
+        hasTouch: true
       }
     }
   ],
-  
-  // Output configuration
-  reporter: [
-    ['html', { open: 'never' }], // Don't open on headless server
-    ['json', { outputFile: 'test-results/integration-results.json' }],
-    ['junit', { outputFile: 'test-results/integration-junit.xml' }]
-  ],
-  
-  // Global setup/teardown
-  globalSetup: require.resolve('./test/integration/global-setup'),
-  globalTeardown: require.resolve('./test/integration/global-teardown'),
-  
-  // Timeout configuration
-  timeout: 30000, // 30s per test
-  expect: {
-    timeout: 5000 // 5s for assertions
+  use: {
+    baseURL: 'http://dev.ato.ms:9025',
+    trace: 'on-first-retry',
+    video: 'on-first-retry'
   }
 });
 ```
 
+### Step 3.2: Node Dragging Integration Test
+
+**File:** `test/integration/node-dragging.test.ts`
+
 ```typescript
-// test/integration/global-setup.ts
-import { chromium, FullConfig } from '@playwright/test';
-
-async function globalSetup(config: FullConfig) {
-  // Ensure Storybook is running
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  
-  try {
-    await page.goto(config.projects[0].use.baseURL!);
-    await page.waitForSelector('#storybook-root', { timeout: 5000 });
-    console.log('✓ Storybook is running');
-  } catch (error) {
-    console.error('✗ Storybook is not running at', config.projects[0].use.baseURL);
-    console.error('  Run: npm run storybook');
-    process.exit(1);
-  } finally {
-    await browser.close();
-  }
-  
-  // Set up test data server if needed
-  if (process.env.TEST_DATA_SERVER) {
-    // Start test data server on port 9051
-  }
-}
-
-export default globalSetup;
-```
-
-**Validation:**
-- Configuration works with headless server
-- All projects run successfully
-- Artifacts are generated correctly
-- WebGL rendering is consistent
-
-**Anti-flakiness measures:**
-- Sequential execution for Canvas
-- SwiftShader for consistent rendering
-- Fixed viewport sizes
-- Proper resource cleanup
-
-### Step 3.2: CDP Touch Gesture Helpers
-
-**What happens:**
-- Create helper functions for complex touch gestures
-- Implement pinch, rotate, multi-touch pan
-- Add gesture validation utilities
-- Create reusable gesture patterns
-
-**Implementation:**
-```typescript
-// test/integration/helpers/touch-gestures.ts
-import { Page, CDPSession } from '@playwright/test';
-
-export class TouchGestureHelper {
-  private page: Page;
-  private cdpSession: CDPSession | null = null;
-  
-  constructor(page: Page) {
-    this.page = page;
-  }
-  
-  async initialize(): Promise<void> {
-    this.cdpSession = await this.page.context().newCDPSession(this.page);
-  }
-  
-  async dispose(): Promise<void> {
-    if (this.cdpSession) {
-      await this.cdpSession.detach();
-      this.cdpSession = null;
-    }
-  }
-  
-  async tap(x: number, y: number): Promise<void> {
-    if (!this.cdpSession) throw new Error('Not initialized');
-    
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{ x, y }],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-    
-    await this.page.waitForTimeout(50); // Tap duration
-    
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchEnd',
-      touchPoints: [],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-  }
-  
-  async swipe(
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-    duration: number = 300
-  ): Promise<void> {
-    if (!this.cdpSession) throw new Error('Not initialized');
-    
-    const steps = Math.ceil(duration / 16); // 60fps
-    
-    // Start
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [{ x: startX, y: startY }],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-    
-    // Move
-    for (let i = 1; i <= steps; i++) {
-      const progress = i / steps;
-      const x = startX + (endX - startX) * progress;
-      const y = startY + (endY - startY) * progress;
-      
-      await this.cdpSession.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [{ x, y }],
-        modifiers: 0,
-        timestamp: Date.now()
-      });
-      
-      await this.page.waitForTimeout(16);
-    }
-    
-    // End
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchEnd',
-      touchPoints: [],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-  }
-  
-  async pinch(
-    centerX: number,
-    centerY: number,
-    startDistance: number,
-    endDistance: number,
-    duration: number = 300
-  ): Promise<void> {
-    if (!this.cdpSession) throw new Error('Not initialized');
-    
-    const steps = Math.ceil(duration / 16);
-    const startRadius = startDistance / 2;
-    const endRadius = endDistance / 2;
-    
-    // Start two touches
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [
-        { x: centerX - startRadius, y: centerY },
-        { x: centerX + startRadius, y: centerY }
-      ],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-    
-    // Animate pinch
-    for (let i = 1; i <= steps; i++) {
-      const progress = i / steps;
-      const radius = startRadius + (endRadius - startRadius) * progress;
-      
-      await this.cdpSession.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [
-          { x: centerX - radius, y: centerY },
-          { x: centerX + radius, y: centerY }
-        ],
-        modifiers: 0,
-        timestamp: Date.now()
-      });
-      
-      await this.page.waitForTimeout(16);
-    }
-    
-    // End
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchEnd',
-      touchPoints: [],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-  }
-  
-  async rotate(
-    centerX: number,
-    centerY: number,
-    radius: number,
-    startAngle: number,
-    endAngle: number,
-    duration: number = 300
-  ): Promise<void> {
-    if (!this.cdpSession) throw new Error('Not initialized');
-    
-    const steps = Math.ceil(duration / 16);
-    
-    // Calculate initial positions
-    const touch1Start = {
-      x: centerX + radius * Math.cos(startAngle),
-      y: centerY + radius * Math.sin(startAngle)
-    };
-    const touch2Start = {
-      x: centerX + radius * Math.cos(startAngle + Math.PI),
-      y: centerY + radius * Math.sin(startAngle + Math.PI)
-    };
-    
-    // Start
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: [touch1Start, touch2Start],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-    
-    // Rotate
-    for (let i = 1; i <= steps; i++) {
-      const progress = i / steps;
-      const angle = startAngle + (endAngle - startAngle) * progress;
-      
-      await this.cdpSession.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: [
-          {
-            x: centerX + radius * Math.cos(angle),
-            y: centerY + radius * Math.sin(angle)
-          },
-          {
-            x: centerX + radius * Math.cos(angle + Math.PI),
-            y: centerY + radius * Math.sin(angle + Math.PI)
-          }
-        ],
-        modifiers: 0,
-        timestamp: Date.now()
-      });
-      
-      await this.page.waitForTimeout(16);
-    }
-    
-    // End
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchEnd',
-      touchPoints: [],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-  }
-  
-  async multiTouchPan(
-    touches: Array<{ startX: number; startY: number; endX: number; endY: number }>,
-    duration: number = 300
-  ): Promise<void> {
-    if (!this.cdpSession) throw new Error('Not initialized');
-    
-    const steps = Math.ceil(duration / 16);
-    
-    // Start all touches
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchStart',
-      touchPoints: touches.map((t, i) => ({ x: t.startX, y: t.startY })),
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-    
-    // Move all touches
-    for (let i = 1; i <= steps; i++) {
-      const progress = i / steps;
-      
-      await this.cdpSession.send('Input.dispatchTouchEvent', {
-        type: 'touchMove',
-        touchPoints: touches.map(t => ({
-          x: t.startX + (t.endX - t.startX) * progress,
-          y: t.startY + (t.endY - t.startY) * progress
-        })),
-        modifiers: 0,
-        timestamp: Date.now()
-      });
-      
-      await this.page.waitForTimeout(16);
-    }
-    
-    // End
-    await this.cdpSession.send('Input.dispatchTouchEvent', {
-      type: 'touchEnd',
-      touchPoints: [],
-      modifiers: 0,
-      timestamp: Date.now()
-    });
-  }
-}
-
-// Helper to wait for Canvas to be ready
-export async function waitForCanvas(page: Page): Promise<void> {
-  await page.waitForFunction(() => {
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return false;
-    
-    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-    if (!gl) return false;
-    
-    // Check if something is rendered
-    const pixels = new Uint8Array(4);
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    return pixels[3] > 0; // Alpha > 0 means something rendered
-  }, { timeout: 5000 });
-}
-
-// Helper to get Canvas center
-export async function getCanvasCenter(page: Page): Promise<{ x: number; y: number }> {
-  return await page.evaluate(() => {
-    const canvas = document.querySelector('canvas');
-    if (!canvas) throw new Error('Canvas not found');
-    
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
-    };
-  });
-}
-```
-
-**Validation:**
-- All gestures produce expected touch events
-- CDP session management is correct
-- Timing matches real device behavior
-- Helper functions are reusable
-
-**Anti-flakiness measures:**
-- Fixed frame timing (16ms)
-- Proper CDP session lifecycle
-- Canvas readiness checks
-- Coordinate validation
-
-### Step 3.3: Integration Test Implementation
-
-**What happens:**
-- Create real browser tests for all interactions
-- Test visual feedback and animations
-- Validate cross-browser behavior
-- Test mobile device interactions
-
-**Implementation:**
-```typescript
-// test/integration/node-interaction.spec.ts
 import { test, expect } from '@playwright/test';
-import { TouchGestureHelper, waitForCanvas, getCanvasCenter } from './helpers/touch-gestures';
 
-test.describe('Node Interactions', () => {
-  test.beforeEach(async ({ page }) => {
+test.describe('Node Dragging', () => {
+  test('drag node with SixDofDragBehavior', async ({ page }) => {
     await page.goto('/?path=/story/interactions--draggable-nodes');
-    await waitForCanvas(page);
-  });
-  
-  test('drags node with mouse', async ({ page }) => {
+    
+    // Wait for graph to initialize
+    await page.waitForFunction(() => {
+      const graph = document.querySelector('graphty-element')?.graph;
+      return graph?.initialized && graph?.scene?.isReady();
+    });
+    
     // Get initial node position
     const initialPos = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const node = element.graph.getNode('node1');
-      return element.graph.worldToScreen(node.position);
+      const graph = document.querySelector('graphty-element').graph;
+      const node = graph.dataManager.nodes.get('node1');
+      return {
+        x: node.mesh.position.x,
+        y: node.mesh.position.y,
+        z: node.mesh.position.z
+      };
     });
     
-    // Drag node
+    // Drag the node
     const canvas = page.locator('canvas');
-    const bounds = await canvas.boundingBox();
-    
-    await page.mouse.move(bounds.x + initialPos.x, bounds.y + initialPos.y);
-    await page.mouse.down();
-    
-    // Verify drag started
-    await expect(page).toHaveScreenshot('node-drag-start.png', {
-      clip: bounds,
-      maxDiffPixels: 100
+    await canvas.dragTo(canvas, {
+      sourcePosition: { x: 400, y: 300 },
+      targetPosition: { x: 500, y: 400 }
     });
-    
-    // Drag
-    await page.mouse.move(
-      bounds.x + initialPos.x + 100,
-      bounds.y + initialPos.y + 50,
-      { steps: 10 }
-    );
-    
-    await page.mouse.up();
     
     // Verify node moved
     const finalPos = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const node = element.graph.getNode('node1');
-      return node.position;
-    });
-    
-    expect(finalPos.x).toBeGreaterThan(0);
-    expect(finalPos.y).toBeGreaterThan(0);
-    
-    // Visual verification
-    await expect(page).toHaveScreenshot('node-drag-end.png', {
-      clip: bounds,
-      maxDiffPixels: 100
-    });
-  });
-  
-  test('selects multiple nodes with ctrl+click', async ({ page, browserName }) => {
-    // Skip on Safari (different modifier key)
-    test.skip(browserName === 'webkit', 'Safari uses Cmd instead of Ctrl');
-    
-    const canvas = page.locator('canvas');
-    const bounds = await canvas.boundingBox();
-    
-    // Get node positions
-    const nodePositions = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      return ['node1', 'node2', 'node3'].map(id => {
-        const node = element.graph.getNode(id);
-        return {
-          id,
-          screen: element.graph.worldToScreen(node.position)
-        };
-      });
-    });
-    
-    // Select nodes with Ctrl+Click
-    for (const { screen } of nodePositions) {
-      await page.keyboard.down('Control');
-      await page.mouse.click(bounds.x + screen.x, bounds.y + screen.y);
-      await page.keyboard.up('Control');
-    }
-    
-    // Verify all selected
-    const selectedCount = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      return element.graph.getSelectedNodes().length;
-    });
-    
-    expect(selectedCount).toBe(3);
-    
-    // Visual verification
-    await expect(page).toHaveScreenshot('multi-select.png', {
-      clip: bounds,
-      maxDiffPixels: 100
-    });
-  });
-});
-
-test.describe('Touch Interactions', () => {
-  test.use({ hasTouch: true });
-  
-  let touchHelper: TouchGestureHelper;
-  
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/?path=/story/interactions--touch-enabled');
-    await waitForCanvas(page);
-    
-    touchHelper = new TouchGestureHelper(page);
-    await touchHelper.initialize();
-  });
-  
-  test.afterEach(async () => {
-    await touchHelper.dispose();
-  });
-  
-  test('pinch to zoom on mobile', async ({ page }) => {
-    const center = await getCanvasCenter(page);
-    
-    // Get initial zoom
-    const initialZoom = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const camera = element.graph.getCamera();
-      return camera.orthoTop - camera.orthoBottom;
-    });
-    
-    // Pinch out (zoom in)
-    await touchHelper.pinch(center.x, center.y, 100, 200, 300);
-    
-    // Wait for animation
-    await page.waitForTimeout(100);
-    
-    // Verify zoom changed
-    const zoomedIn = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const camera = element.graph.getCamera();
-      return camera.orthoTop - camera.orthoBottom;
-    });
-    
-    expect(zoomedIn).toBeLessThan(initialZoom);
-    
-    // Pinch in (zoom out)
-    await touchHelper.pinch(center.x, center.y, 200, 100, 300);
-    await page.waitForTimeout(100);
-    
-    const zoomedOut = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const camera = element.graph.getCamera();
-      return camera.orthoTop - camera.orthoBottom;
-    });
-    
-    expect(zoomedOut).toBeGreaterThan(zoomedIn);
-  });
-  
-  test('two-finger rotate in 3D', async ({ page }) => {
-    await page.goto('/?path=/story/camera--3d-camera');
-    await waitForCanvas(page);
-    
-    const center = await getCanvasCenter(page);
-    
-    // Get initial camera angle
-    const initialAlpha = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const camera = element.graph.getCamera();
-      return camera.alpha;
-    });
-    
-    // Rotate gesture
-    await touchHelper.rotate(
-      center.x,
-      center.y,
-      100, // radius
-      0, // start angle
-      Math.PI / 2, // end angle (90 degrees)
-      500 // duration
-    );
-    
-    await page.waitForTimeout(100);
-    
-    // Verify rotation
-    const finalAlpha = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const camera = element.graph.getCamera();
-      return camera.alpha;
-    });
-    
-    expect(Math.abs(finalAlpha - initialAlpha)).toBeGreaterThan(0.5);
-  });
-});
-
-test.describe('Performance', () => {
-  test('handles rapid interactions without lag', async ({ page }) => {
-    await page.goto('/?path=/story/performance--large-graph');
-    await waitForCanvas(page);
-    
-    const canvas = page.locator('canvas');
-    const bounds = await canvas.boundingBox();
-    const center = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
-    
-    // Measure interaction performance
-    const metrics = await page.evaluate(async () => {
-      const element = document.querySelector('graphty-element') as any;
-      const timings = [];
-      
-      // Hook into render loop
-      let lastTime = performance.now();
-      const originalRender = element.graph.render.bind(element.graph);
-      element.graph.render = function() {
-        const now = performance.now();
-        timings.push(now - lastTime);
-        lastTime = now;
-        return originalRender();
+      const graph = document.querySelector('graphty-element').graph;
+      const node = graph.dataManager.nodes.get('node1');
+      return {
+        x: node.mesh.position.x,
+        y: node.mesh.position.y,
+        z: node.mesh.position.z,
+        isPinned: !node.meshDragBehavior.enabled
       };
-      
-      return new Promise<{ avgFrameTime: number; maxFrameTime: number }>(resolve => {
-        setTimeout(() => {
-          const avg = timings.reduce((a, b) => a + b, 0) / timings.length;
-          const max = Math.max(...timings);
-          resolve({ avgFrameTime: avg, maxFrameTime: max });
-        }, 2000);
-      });
     });
     
-    // Perform rapid interactions while measuring
-    const interactions = Promise.all([
-      // Rapid panning
-      (async () => {
-        for (let i = 0; i < 10; i++) {
-          await page.mouse.move(center.x, center.y);
-          await page.mouse.down({ button: 'right' });
-          await page.mouse.move(center.x + 50, center.y + 50, { steps: 5 });
-          await page.mouse.up({ button: 'right' });
-        }
-      })(),
-      
-      // Rapid zooming
-      (async () => {
-        for (let i = 0; i < 20; i++) {
-          await page.mouse.wheel({ deltaY: i % 2 === 0 ? -100 : 100 });
-          await page.waitForTimeout(50);
-        }
-      })()
-    ]);
+    expect(finalPos.x).not.toBe(initialPos.x);
+    expect(finalPos.y).not.toBe(initialPos.y);
+    expect(finalPos.isPinned).toBe(true); // pinOnDrag default
+  });
+
+  test('double-click expands node', async ({ page }) => {
+    await page.goto('/?path=/story/interactions--expandable-nodes');
     
-    await interactions;
-    const perf = await metrics;
+    await page.waitForFunction(() => {
+      const graph = document.querySelector('graphty-element')?.graph;
+      return graph?.initialized;
+    });
     
-    // Performance assertions
-    expect(perf.avgFrameTime).toBeLessThan(33); // 30fps average
-    expect(perf.maxFrameTime).toBeLessThan(100); // No major hitches
+    // Count initial nodes
+    const initialNodeCount = await page.evaluate(() => {
+      const graph = document.querySelector('graphty-element').graph;
+      return graph.dataManager.nodes.size;
+    });
+    
+    // Double-click on a node
+    const canvas = page.locator('canvas');
+    await canvas.dblclick({ position: { x: 400, y: 300 } });
+    
+    // Wait for expansion
+    await page.waitForTimeout(500);
+    
+    // Verify new nodes added
+    const finalNodeCount = await page.evaluate(() => {
+      const graph = document.querySelector('graphty-element').graph;
+      return graph.dataManager.nodes.size;
+    });
+    
+    expect(finalNodeCount).toBeGreaterThan(initialNodeCount);
   });
 });
 ```
 
-**Validation:**
-- Visual regression with screenshots
-- Performance metrics collected
-- Cross-browser differences handled
-- Touch and mouse interactions verified
+### Step 3.3: Camera Controls Integration Tests
 
-**Anti-flakiness measures:**
-- Wait for Canvas readiness
-- Allow time for animations
-- Flexible screenshot comparison
-- Skip incompatible browser tests
+**File:** `test/integration/camera-controls.test.ts`
 
-### Step 3.4: Cross-Browser Testing
-
-**What happens:**
-- Run tests on Chrome, Firefox, Safari, Edge
-- Handle browser-specific differences
-- Test on real mobile devices
-- Document browser limitations
-
-**Implementation:**
 ```typescript
-// test/integration/cross-browser.spec.ts
 import { test, expect } from '@playwright/test';
 
-test.describe('Cross-Browser Compatibility', () => {
-  test('WebGL features work across browsers', async ({ page, browserName }) => {
-    await page.goto('/?path=/story/rendering--webgl-features');
-    
-    // Check WebGL support
-    const webglInfo = await page.evaluate(() => {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-      
-      if (!gl) return { supported: false };
-      
-      return {
-        supported: true,
-        version: gl.getParameter(gl.VERSION),
-        vendor: gl.getParameter(gl.VENDOR),
-        renderer: gl.getParameter(gl.RENDERER),
-        maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
-        maxVertexAttributes: gl.getParameter(gl.MAX_VERTEX_ATTRIBS)
-      };
-    });
-    
-    expect(webglInfo.supported).toBe(true);
-    
-    // Browser-specific checks
-    if (browserName === 'webkit') {
-      // Safari-specific limitations
-      test.info().annotations.push({
-        type: 'browser-limit',
-        description: 'Safari may have different WebGL extensions'
-      });
-    }
-    
-    // Test rendering
-    await page.waitForTimeout(1000); // Let scene render
-    
-    const screenshot = await page.locator('canvas').screenshot();
-    expect(screenshot).toMatchSnapshot(`webgl-${browserName}.png`, {
-      maxDiffPixels: 100 // Allow some browser differences
+test.describe('2D Camera Controls', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?path=/story/camera--2d-controls');
+    await page.waitForFunction(() => {
+      const graph = document.querySelector('graphty-element')?.graph;
+      return graph?.initialized && graph?.cameraManager?.activeController;
     });
   });
-  
-  test('touch events work on mobile browsers', async ({ page, isMobile }) => {
-    test.skip(!isMobile, 'Mobile only test');
-    
-    await page.goto('/?path=/story/interactions--touch-enabled');
-    
-    // Test touch support detection
-    const touchSupported = await page.evaluate(() => {
-      return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  test('mouse pan in 2D mode', async ({ page }) => {
+    const initialPos = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { x: cam.position.x, y: cam.position.y };
     });
     
-    expect(touchSupported).toBe(true);
-    
-    // Test actual touch interaction
+    // Pan with mouse
     const canvas = page.locator('canvas');
-    const bounds = await canvas.boundingBox();
-    
-    // Tap
-    await page.tap(`canvas`);
-    
-    // Swipe
-    await page.locator('canvas').swipe({
-      startPosition: { x: 100, y: 100 },
-      endPosition: { x: 200, y: 200 },
-      steps: 10
+    await canvas.dragTo(canvas, {
+      sourcePosition: { x: 400, y: 300 },
+      targetPosition: { x: 300, y: 200 }
     });
     
-    // Verify interactions registered
-    const interactionCount = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      return element.graph.getInteractionCount();
+    const finalPos = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { x: cam.position.x, y: cam.position.y };
     });
     
-    expect(interactionCount).toBeGreaterThan(0);
+    expect(finalPos.x).not.toBe(initialPos.x);
+    expect(finalPos.y).not.toBe(initialPos.y);
   });
-  
-  test('keyboard shortcuts use correct modifiers', async ({ page, browserName, platform }) => {
-    await page.goto('/?path=/story/interactions--keyboard-shortcuts');
+
+  test('keyboard controls in 2D mode', async ({ page }) => {
+    // Focus canvas
+    await page.locator('canvas').click();
     
-    // Determine correct modifier key
-    const modifierKey = platform === 'darwin' ? 'Meta' : 'Control';
-    
-    // Test select all
-    await page.keyboard.press(`${modifierKey}+a`);
-    
-    const selectedCount = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      return element.graph.getSelectedNodes().length;
+    const initialPos = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { x: cam.position.x, y: cam.position.y };
     });
     
-    expect(selectedCount).toBeGreaterThan(0);
+    // Press W key
+    await page.keyboard.press('w', { delay: 100 });
     
-    // Document platform difference
-    test.info().annotations.push({
-      type: 'platform-specific',
-      description: `Uses ${modifierKey} key on ${platform}`
+    // Wait for velocity to apply
+    await page.waitForTimeout(200);
+    
+    const finalPos = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { x: cam.position.x, y: cam.position.y };
     });
+    
+    expect(finalPos.y).toBeGreaterThan(initialPos.y);
+  });
+
+  test('mouse wheel zoom', async ({ page }) => {
+    const initialZoom = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return cam.orthoTop - cam.orthoBottom;
+    });
+    
+    // Zoom in with wheel
+    await page.mouse.wheel(0, -100);
+    await page.waitForTimeout(100);
+    
+    const finalZoom = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return cam.orthoTop - cam.orthoBottom;
+    });
+    
+    expect(finalZoom).toBeLessThan(initialZoom);
   });
 });
 
-// Browser-specific test suites
-test.describe('Chrome-specific features', () => {
-  test.skip(({ browserName }) => browserName !== 'chromium', 'Chrome only');
-  
-  test('uses Chrome DevTools Protocol for advanced touch', async ({ page }) => {
-    const client = await page.context().newCDPSession(page);
-    
-    // Test CDP availability
-    await client.send('Runtime.enable');
-    const { result } = await client.send('Runtime.evaluate', {
-      expression: 'navigator.userAgent'
+test.describe('3D Camera Controls', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?path=/story/camera--3d-controls');
+    await page.waitForFunction(() => {
+      const graph = document.querySelector('graphty-element')?.graph;
+      return graph?.initialized && graph?.cameraManager?.activeController;
+    });
+  });
+
+  test('mouse orbit in 3D mode', async ({ page }) => {
+    const initialCamera = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { alpha: cam.alpha, beta: cam.beta };
     });
     
-    expect(result.value).toContain('Chrome');
+    // Orbit with mouse
+    const canvas = page.locator('canvas');
+    await canvas.dragTo(canvas, {
+      sourcePosition: { x: 400, y: 300 },
+      targetPosition: { x: 500, y: 400 },
+      button: 'left'
+    });
     
-    // Advanced touch through CDP
+    const finalCamera = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return { alpha: cam.alpha, beta: cam.beta };
+    });
+    
+    expect(finalCamera.alpha).not.toBe(initialCamera.alpha);
+    expect(finalCamera.beta).not.toBe(initialCamera.beta);
+  });
+});
+```
+
+### Step 3.4: Touch Gesture Tests
+
+**File:** `test/integration/touch-gestures.test.ts`
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test.describe('Touch Gestures', () => {
+  test.use({ hasTouch: true });
+
+  test('pinch zoom in 2D mode', async ({ page, context }) => {
+    await page.goto('/?path=/story/camera--2d-touch');
+    
+    const client = await context.newCDPSession(page);
+    
+    const initialZoom = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return cam.orthoTop - cam.orthoBottom;
+    });
+    
+    // Simulate pinch
     await client.send('Input.dispatchTouchEvent', {
       type: 'touchStart',
-      touchPoints: [{ x: 100, y: 100 }]
+      touchPoints: [
+        { x: 350, y: 300, id: 0 },
+        { x: 450, y: 300, id: 1 }
+      ]
+    });
+    
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [
+        { x: 300, y: 300, id: 0 },
+        { x: 500, y: 300, id: 1 }
+      ]
     });
     
     await client.send('Input.dispatchTouchEvent', {
       type: 'touchEnd',
       touchPoints: []
     });
-  });
-});
-
-test.describe('Safari-specific handling', () => {
-  test.skip(({ browserName }) => browserName !== 'webkit', 'Safari only');
-  
-  test('handles Safari touch event differences', async ({ page }) => {
-    await page.goto('/?path=/story/interactions--touch-enabled');
     
-    // Safari may handle touch events differently
-    const touchHandling = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      
-      // Check for Safari-specific touch handling
-      const touchEvents = [];
-      const originalAddEventListener = element.addEventListener;
-      element.addEventListener = function(type: string, ...args: any[]) {
-        if (type.startsWith('touch')) {
-          touchEvents.push(type);
-        }
-        return originalAddEventListener.call(this, type, ...args);
-      };
-      
-      // Trigger re-attachment
-      element.graph.reattachInputHandlers();
-      
-      return touchEvents;
+    await page.waitForTimeout(100);
+    
+    const finalZoom = await page.evaluate(() => {
+      const cam = document.querySelector('graphty-element').graph.cameraManager.camera;
+      return cam.orthoTop - cam.orthoBottom;
     });
     
-    // Safari should still register touch events
-    expect(touchHandling).toContain('touchstart');
-    expect(touchHandling).toContain('touchmove');
-    expect(touchHandling).toContain('touchend');
+    expect(finalZoom).toBeLessThan(initialZoom); // Zoomed in
+  });
+
+  test('two-finger rotate in 2D mode', async ({ page, context }) => {
+    await page.goto('/?path=/story/camera--2d-touch');
+    
+    const client = await context.newCDPSession(page);
+    
+    const initialRotation = await page.evaluate(() => {
+      const graph = document.querySelector('graphty-element').graph;
+      return graph.cameraManager.activeController.parent.rotation.z;
+    });
+    
+    // Simulate rotation
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [
+        { x: 300, y: 300, id: 0 },
+        { x: 500, y: 300, id: 1 }
+      ]
+    });
+    
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [
+        { x: 400, y: 200, id: 0 },
+        { x: 400, y: 400, id: 1 }
+      ]
+    });
+    
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchEnd',
+      touchPoints: []
+    });
+    
+    await page.waitForTimeout(100);
+    
+    const finalRotation = await page.evaluate(() => {
+      const graph = document.querySelector('graphty-element').graph;
+      return graph.cameraManager.activeController.parent.rotation.z;
+    });
+    
+    expect(finalRotation).not.toBe(initialRotation);
   });
 });
 ```
 
-**Validation:**
-- Each browser runs successfully
-- Platform differences documented
-- Feature detection works correctly
-- Visual differences are acceptable
+## Test Helpers
 
-**Anti-flakiness measures:**
-- Feature detection before testing
-- Platform-specific test skipping
-- Flexible image comparison
-- Browser capability checks
+**File:** `test/helpers/graph-helpers.ts`
 
-### Step 3.5: Performance Benchmarking
-
-**What happens:**
-- Create performance benchmarks for interactions
-- Measure frame rates during interactions
-- Test with large graphs (1000+ nodes)
-- Set performance regression thresholds
-
-**Implementation:**
 ```typescript
-// test/integration/performance.spec.ts
-import { test, expect } from '@playwright/test';
+export async function waitForGraphReady(page: Page) {
+  await page.waitForFunction(() => {
+    const graph = document.querySelector('graphty-element')?.graph;
+    return graph?.initialized && 
+           graph?.scene?.isReady() &&
+           graph?.cameraManager?.activeController;
+  }, { timeout: 5000 });
+}
 
-test.describe('Interaction Performance', () => {
-  test('maintains 30fps during node dragging', async ({ page }) => {
-    await page.goto('/?path=/story/performance--thousand-nodes');
-    await page.waitForLoadState('networkidle');
-    
-    // Set up performance monitoring
-    await page.evaluate(() => {
-      window.performanceMetrics = {
-        frameTimes: [],
-        interactionTimes: [],
-        lastFrameTime: performance.now()
-      };
-      
-      // Hook into render loop
-      const element = document.querySelector('graphty-element') as any;
-      const originalRender = element.graph.render.bind(element.graph);
-      
-      element.graph.render = function() {
-        const now = performance.now();
-        const frameTime = now - window.performanceMetrics.lastFrameTime;
-        window.performanceMetrics.frameTimes.push(frameTime);
-        window.performanceMetrics.lastFrameTime = now;
-        return originalRender();
-      };
-    });
-    
-    // Find a node to drag
-    const nodePos = await page.evaluate(() => {
-      const element = document.querySelector('graphty-element') as any;
-      const node = element.graph.getNodes()[500]; // Middle node
-      return element.graph.worldToScreen(node.position);
-    });
-    
-    const canvas = page.locator('canvas');
-    const bounds = await canvas.boundingBox();
-    
-    // Start measuring
-    await page.evaluate(() => {
-      window.performanceMetrics.frameTimes = [];
-      window.performanceMetrics.interactionStart = performance.now();
-    });
-    
-    // Perform drag
-    await page.mouse.move(bounds.x + nodePos.x, bounds.y + nodePos.y);
-    await page.mouse.down();
-    
-    // Smooth drag
-    for (let i = 0; i < 50; i++) {
-      await page.mouse.move(
-        bounds.x + nodePos.x + i * 2,
-        bounds.y + nodePos.y + i,
-        { steps: 1 }
-      );
-      await page.waitForTimeout(16); // One frame
-    }
-    
-    await page.mouse.up();
-    
-    // Stop measuring
-    const metrics = await page.evaluate(() => {
-      window.performanceMetrics.interactionEnd = performance.now();
-      
-      const frameTimes = window.performanceMetrics.frameTimes;
-      const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
-      const maxFrameTime = Math.max(...frameTimes);
-      const totalTime = window.performanceMetrics.interactionEnd - window.performanceMetrics.interactionStart;
-      
-      // Calculate percentiles
-      frameTimes.sort((a, b) => a - b);
-      const p95 = frameTimes[Math.floor(frameTimes.length * 0.95)];
-      const p99 = frameTimes[Math.floor(frameTimes.length * 0.99)];
-      
-      return {
-        avgFrameTime,
-        maxFrameTime,
-        p95FrameTime: p95,
-        p99FrameTime: p99,
-        totalTime,
-        frameCount: frameTimes.length,
-        fps: 1000 / avgFrameTime
-      };
-    });
-    
-    // Performance assertions
-    expect(metrics.fps).toBeGreaterThan(30); // Average 30fps
-    expect(metrics.p95FrameTime).toBeLessThan(50); // 95% under 50ms
-    expect(metrics.maxFrameTime).toBeLessThan(100); // No major hitches
-    
-    // Log performance for tracking
-    test.info().annotations.push({
-      type: 'performance',
-      description: JSON.stringify(metrics, null, 2)
-    });
+export async function getActiveCamera(page: Page) {
+  return page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    return graph.cameraManager.camera;
   });
-  
-  test('pinch zoom performs well with complex scene', async ({ page }) => {
-    test.skip(!page.context()._browser._options.channel?.includes('chrome'), 'CDP required');
-    
-    await page.goto('/?path=/story/performance--complex-scene');
-    await page.waitForLoadState('networkidle');
-    
-    const touchHelper = new TouchGestureHelper(page);
-    await touchHelper.initialize();
-    
-    // Monitor performance
-    await page.evaluate(() => {
-      window.zoomMetrics = {
-        startTime: 0,
-        endTime: 0,
-        frameCount: 0
-      };
-      
-      const element = document.querySelector('graphty-element') as any;
-      const originalRender = element.graph.render.bind(element.graph);
-      
-      element.graph.render = function() {
-        if (window.zoomMetrics.startTime && !window.zoomMetrics.endTime) {
-          window.zoomMetrics.frameCount++;
-        }
-        return originalRender();
-      };
-    });
-    
-    const center = await getCanvasCenter(page);
-    
-    // Start monitoring
-    await page.evaluate(() => {
-      window.zoomMetrics.startTime = performance.now();
-    });
-    
-    // Perform pinch zoom
-    await touchHelper.pinch(center.x, center.y, 200, 400, 1000); // 1 second
-    
-    // Stop monitoring
-    const metrics = await page.evaluate(() => {
-      window.zoomMetrics.endTime = performance.now();
-      const duration = window.zoomMetrics.endTime - window.zoomMetrics.startTime;
-      return {
-        duration,
-        frameCount: window.zoomMetrics.frameCount,
-        fps: (window.zoomMetrics.frameCount / duration) * 1000
-      };
-    });
-    
-    expect(metrics.fps).toBeGreaterThan(30);
-    
-    await touchHelper.dispose();
-  });
-  
-  test('measures input latency', async ({ page }) => {
-    await page.goto('/?path=/story/performance--input-latency');
-    
-    // Set up latency measurement
-    await page.evaluate(() => {
-      window.latencyMeasurements = [];
-      
-      const element = document.querySelector('graphty-element') as any;
-      
-      // Override input handler to measure latency
-      const originalPointerDown = element.graph.handlePointerDown;
-      element.graph.handlePointerDown = function(info: any) {
-        const startTime = performance.now();
-        const result = originalPointerDown.call(this, info);
-        const endTime = performance.now();
-        
-        window.latencyMeasurements.push({
-          type: 'pointerDown',
-          latency: endTime - startTime
-        });
-        
-        return result;
-      };
-    });
-    
-    // Perform multiple interactions
-    const canvas = page.locator('canvas');
-    
-    for (let i = 0; i < 20; i++) {
-      await canvas.click({ position: { x: 100 + i * 10, y: 100 + i * 10 } });
-      await page.waitForTimeout(50);
-    }
-    
-    // Get latency metrics
-    const latencies = await page.evaluate(() => window.latencyMeasurements);
-    
-    const avgLatency = latencies.reduce((sum, m) => sum + m.latency, 0) / latencies.length;
-    const maxLatency = Math.max(...latencies.map(m => m.latency));
-    
-    expect(avgLatency).toBeLessThan(16); // Less than one frame
-    expect(maxLatency).toBeLessThan(33); // Less than two frames
-    
-    test.info().annotations.push({
-      type: 'latency',
-      description: `Avg: ${avgLatency.toFixed(2)}ms, Max: ${maxLatency.toFixed(2)}ms`
-    });
-  });
-});
+}
 
-// Dedicated performance regression suite
-test.describe('Performance Regression', () => {
-  // Run against baseline
-  const BASELINE_METRICS = {
-    dragFps: 35,
-    zoomFps: 40,
-    panFps: 45,
-    renderTime: 10
-  };
-  
-  test('prevents performance regressions', async ({ page }) => {
-    await page.goto('/?path=/story/performance--benchmark-scene');
-    
-    const results = await page.evaluate(async () => {
-      const element = document.querySelector('graphty-element') as any;
-      const graph = element.graph;
-      
-      // Benchmark different operations
-      const benchmarks = {
-        drag: async () => {
-          // Simulate drag
-          for (let i = 0; i < 60; i++) {
-            graph.handlePointerMove({ x: i, y: i });
-            await new Promise(r => requestAnimationFrame(r));
-          }
-        },
-        zoom: async () => {
-          // Simulate zoom
-          for (let i = 0; i < 60; i++) {
-            graph.handleWheel({ deltaY: -10 });
-            await new Promise(r => requestAnimationFrame(r));
-          }
-        },
-        pan: async () => {
-          // Simulate pan
-          for (let i = 0; i < 60; i++) {
-            graph.camera.position.x += 1;
-            await new Promise(r => requestAnimationFrame(r));
-          }
-        }
-      };
-      
-      const results: any = {};
-      
-      for (const [name, benchmark] of Object.entries(benchmarks)) {
-        const startTime = performance.now();
-        await benchmark();
-        const duration = performance.now() - startTime;
-        results[name + 'Fps'] = (60 / duration) * 1000;
-      }
-      
-      // Measure render time
-      const renderTimes = [];
-      for (let i = 0; i < 100; i++) {
-        const start = performance.now();
-        graph.render();
-        renderTimes.push(performance.now() - start);
-      }
-      
-      results.renderTime = renderTimes.reduce((a, b) => a + b) / renderTimes.length;
-      
-      return results;
-    });
-    
-    // Compare against baseline
-    expect(results.dragFps).toBeGreaterThan(BASELINE_METRICS.dragFps * 0.9);
-    expect(results.zoomFps).toBeGreaterThan(BASELINE_METRICS.zoomFps * 0.9);
-    expect(results.panFps).toBeGreaterThan(BASELINE_METRICS.panFps * 0.9);
-    expect(results.renderTime).toBeLessThan(BASELINE_METRICS.renderTime * 1.1);
-    
-    // Save results for future comparison
-    test.info().attachments.push({
-      name: 'performance-metrics.json',
-      contentType: 'application/json',
-      body: Buffer.from(JSON.stringify(results, null, 2))
-    });
+export async function getCameraType(page: Page): Promise<'2d' | '3d'> {
+  return page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const cam = graph.cameraManager.camera;
+    return cam.mode === Camera.ORTHOGRAPHIC_CAMERA ? '2d' : '3d';
   });
-});
+}
+
+export async function getNodePosition(page: Page, nodeId: string) {
+  return page.evaluate((id) => {
+    const graph = document.querySelector('graphty-element').graph;
+    const node = graph.dataManager.nodes.get(id);
+    return node ? {
+      x: node.mesh.position.x,
+      y: node.mesh.position.y,
+      z: node.mesh.position.z
+    } : null;
+  }, nodeId);
+}
 ```
 
-**Validation:**
-- FPS metrics are accurate
-- Latency measurements are precise
-- Regression thresholds are reasonable
-- Results are saved for tracking
+## Implementation Timeline
 
-**Anti-flakiness measures:**
-- Multiple measurement samples
-- Statistical percentiles used
-- Warm-up period before measuring
-- Consistent test scenarios
+### Week 1: Fix Infrastructure and Create InputManager
+- [ ] Remove non-existent feature tests
+- [ ] Update Graph helper methods to use real APIs
+- [ ] Create src/input directory structure
+- [ ] Implement InputManager in src/managers
+- [ ] Update BabylonInputSystem and MockDeviceInputSystem to work with manager
+- [ ] Replace IInputSystem interface with direct types
 
-## Phase 4: Advanced Features (Week 5+)
+### Week 2: Unit Tests
+- [ ] InputManager tests (initialization, event bridging, recording/playback)
+- [ ] Node behavior tests (drag, double-click)
+- [ ] 2D camera controller tests
+- [ ] 3D camera controller tests
 
-### Step 4.1: Selection System Tests
+### Week 3: Integration Tests
+- [ ] Node dragging in browser
+- [ ] Camera controls (2D and 3D)
+- [ ] Touch gesture validation
+- [ ] Cross-browser testing
+- [ ] Input recording/playback integration tests
 
-**What happens:**
-- Test click to select node/edge
-- Test box selection (drag to select)
-- Test multi-select with modifiers
-- Test selection state management
+### Week 4: Polish and Documentation
+- [ ] Add visual regression tests
+- [ ] Performance benchmarks
+- [ ] Update documentation
+- [ ] CI/CD integration
+- [ ] Create example input recording files for automated testing
 
-**Implementation will follow same pattern:**
-- Unit tests with mock input system
-- Integration tests with real browser
-- Visual verification
-- Performance validation
+## Architectural Benefits of InputManager
 
-### Step 4.2: Hover and Tooltip Tests
+The InputManager provides several key benefits over the previous IInputSystem interface approach:
 
-**What happens:**
-- Test hover state changes
-- Test tooltip display timing
-- Test hover performance with many elements
-- Test touch-based hover alternatives
+1. **Consistency**: Follows the established manager pattern used throughout the codebase
+2. **Integration**: Works seamlessly with EventManager for centralized event handling
+3. **Lifecycle Management**: Proper init/dispose hooks managed by LifecycleManager
+4. **Testing**: Built-in support for input recording and playback
+5. **Configuration**: Centralized input configuration with runtime updates
+6. **Extensibility**: Easy to add new features like pointer lock, gamepad support, etc.
+7. **Error Handling**: Standardized error emission through EventManager
 
-### Step 4.3: Context Menu Tests
+### Key Features
 
-**What happens:**
-- Test right-click context menus
-- Test long-press for touch devices
-- Test menu positioning
-- Test keyboard navigation in menus
-
-### Step 4.4: Future-Proofing
-
-**What happens:**
-- Add WebXR input simulation stubs
-- Create expandable test architecture
-- Document extension points
-- Prepare for new interaction types
-
-## Validation Strategy
-
-### Unit Test Validation
-1. **Deterministic Behavior**: All tests produce same results every run
-2. **Fast Execution**: Total suite runs in < 5 seconds
-3. **Complete Coverage**: All interaction code paths tested
-4. **Clear Failures**: Error messages pinpoint exact issues
-
-### Integration Test Validation
-1. **Visual Correctness**: Screenshots match expected results
-2. **Cross-Browser**: Tests pass on all target browsers
-3. **Performance**: No regression from baselines
-4. **Real-World**: Tests reflect actual user interactions
-
-### Anti-Flakiness Checklist
-- [ ] No time-dependent assertions
-- [ ] Proper wait strategies for animations
-- [ ] Resource cleanup after each test
-- [ ] Isolated test environments
-- [ ] Deterministic initial states
-- [ ] Flexible comparison thresholds
-- [ ] Retry logic for network operations
-- [ ] Clear error messages for debugging
+- **Event Bridging**: All input events are automatically bridged to the EventManager
+- **State Management**: Enable/disable input globally with proper cleanup
+- **Recording/Playback**: Record user interactions and replay them for automated testing
+- **Mock Support**: Seamlessly switch between real and mock input for testing
+- **Keyboard Shortcuts**: Automatic detection and emission of common shortcuts
+- **Touch Support**: Full multi-touch support with gesture helpers
 
 ## Success Criteria
 
-1. **Test Suite Performance**
-   - Unit tests: < 5 seconds total
-   - Integration tests: < 30 seconds total
-   - No flaky tests in CI
-
-2. **Coverage Metrics**
-   - Line coverage: > 80%
-   - Branch coverage: > 75%
-   - All user interactions tested
-
-3. **Browser Support**
-   - Chrome: 100% pass
-   - Firefox: 100% pass
-   - Safari: 95% pass (documented exceptions)
-   - Edge: 100% pass
-
-4. **Maintenance**
-   - New tests easy to add
-   - Clear patterns established
-   - Well-documented helpers
-   - Debugging tools available
-
-## Conclusion
-
-This implementation plan provides a complete roadmap for adding comprehensive interaction testing to graphty-element. The two-tier approach ensures both fast development cycles with unit tests and real-world validation with integration tests. Each step builds on the previous one, creating a robust and maintainable test suite that will catch regressions and ensure quality as the project evolves.
+1. **All real features tested**: Every implemented input method has tests
+2. **No phantom tests**: No tests for non-existent features
+3. **Fast execution**: Unit tests < 5s, integration < 30s total
+4. **Reliable**: <1% flaky test rate
+5. **Maintainable**: Tests match actual implementation
+6. **InputManager integrated**: New manager fully integrated with existing architecture
+7. **Recording/Playback working**: Can record and replay complex interaction sequences

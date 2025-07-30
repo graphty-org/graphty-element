@@ -286,4 +286,24 @@ export class Node {
                 return 0.5; // Standard offset for top/bottom positions
         }
     }
+
+    // Test helper methods
+    getPosition(): {x: number, y: number, z: number} {
+        return {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y,
+            z: this.mesh.position.z,
+        };
+    }
+
+    isPinned(): boolean {
+        // For now, nodes are not pinned unless drag behavior is disabled
+        return false;
+    }
+
+    isSelected(): boolean {
+        // Check if node is in selection - this is a simplified version
+        // In reality, selection state would be managed by a selection manager
+        return this.mesh.isPickable && this.mesh.metadata?.selected === true;
+    }
 }

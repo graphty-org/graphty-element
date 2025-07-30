@@ -4,15 +4,17 @@ import "./layout/index"; // register all internal layouts
 import "./algorithms/index"; // register all internal algorithms
 
 import {
+    AbstractMesh,
     Color4,
     Engine,
     PhotoDome,
     Scene,
+    Vector3,
     WebGPUEngine,
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
-import {CameraManager} from "./cameras/CameraManager";
+import {type CameraController, CameraManager} from "./cameras/CameraManager";
 import {
     AdHocData,
     FetchEdgesFn,
@@ -23,7 +25,7 @@ import {
     EventCallbackType,
     EventType,
 } from "./events";
-import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, LayoutManager, LifecycleManager, type Manager, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
+import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Styles} from "./Styles";
 // import {createXrButton} from "./xr-button";
@@ -64,11 +66,12 @@ export class Graph implements GraphContext {
     private statsManager: StatsManager;
     private updateManager: UpdateManager;
     private algorithmManager: AlgorithmManager;
+    private inputManager: InputManager;
 
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
-    constructor(element: Element | string) {
+    constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
         this.eventManager = new EventManager();
 
@@ -139,6 +142,24 @@ export class Graph implements GraphContext {
         // Initialize AlgorithmManager
         this.algorithmManager = new AlgorithmManager(this.eventManager, this);
 
+        // Initialize InputManager
+        const inputConfig: InputManagerConfig = {
+            useMockInput: useMockInput,
+            touchEnabled: true,
+            keyboardEnabled: true,
+            pointerLockEnabled: false,
+            recordInput: false,
+        };
+        this.inputManager = new InputManager(
+            {
+                scene: this.scene,
+                engine: this.engine,
+                canvas: this.canvas,
+                eventManager: this.eventManager,
+            },
+            inputConfig,
+        );
+
         // Initialize GraphContext
         const contextConfig: GraphContextConfig = {
             pinOnDrag: this.pinOnDrag,
@@ -168,11 +189,12 @@ export class Graph implements GraphContext {
             ["layout", this.layoutManager],
             ["update", this.updateManager],
             ["algorithm", this.algorithmManager],
+            ["input", this.inputManager],
         ]);
         this.lifecycleManager = new LifecycleManager(
             managers,
             this.eventManager,
-            ["event", "style", "stats", "render", "data", "layout", "update", "algorithm"],
+            ["event", "style", "stats", "render", "data", "layout", "update", "algorithm", "input"],
         );
 
         // Listen for data-added events to manage running state
@@ -481,5 +503,85 @@ export class Graph implements GraphContext {
 
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
+    }
+
+    // Input manager access
+    /**
+     * Get the input manager
+     */
+    get input(): InputManager {
+        return this.inputManager;
+    }
+
+    /**
+     * Enable or disable input
+     */
+    setInputEnabled(enabled: boolean): void {
+        this.inputManager.setEnabled(enabled);
+    }
+
+    /**
+     * Start recording input for testing/automation
+     */
+    startInputRecording(): void {
+        this.inputManager.startRecording();
+    }
+
+    /**
+     * Stop recording and get recorded events
+     */
+    stopInputRecording(): RecordedInputEvent[] {
+        return this.inputManager.stopRecording();
+    }
+
+    worldToScreen(worldPos: {x: number, y: number, z: number}): {x: number, y: number} {
+        const engine = this.scene.getEngine();
+        const viewport = this.scene.activeCamera?.viewport;
+        const view = this.scene.getViewMatrix();
+        const projection = this.scene.getProjectionMatrix();
+
+        if (!viewport) {
+            return {x: 0, y: 0};
+        }
+
+        // Create transformation matrix manually
+        const viewProjection = view.multiply(projection);
+        const worldVec = new Vector3(worldPos.x, worldPos.y, worldPos.z);
+
+        // Transform to clip space
+        const clipSpace = Vector3.TransformCoordinates(worldVec, viewProjection);
+
+        // Convert to screen space
+        const screenX = (clipSpace.x + 1) * 0.5 * engine.getRenderWidth();
+        const screenY = (1 - clipSpace.y) * 0.5 * engine.getRenderHeight();
+
+        return {x: screenX, y: screenY};
+    }
+
+    screenToWorld(screenPos: {x: number, y: number}): {x: number, y: number, z: number} | null {
+        const pickInfo = this.scene.pick(screenPos.x, screenPos.y);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (pickInfo?.pickedPoint) {
+            return {
+                x: pickInfo.pickedPoint.x,
+                y: pickInfo.pickedPoint.y,
+                z: pickInfo.pickedPoint.z,
+            };
+        }
+
+        return null;
+    }
+
+    getCameraController(): CameraController | null {
+        return this.camera.getActiveController();
+    }
+
+    getNodeMesh(nodeId: string): AbstractMesh | null {
+        const node = this.dataManager.nodes.get(nodeId);
+        return node?.mesh ?? null;
+    }
+
+    dispose(): void {
+        this.shutdown();
     }
 }

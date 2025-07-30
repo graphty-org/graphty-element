@@ -2,575 +2,564 @@
 
 ## Executive Summary
 
-This document outlines a comprehensive interaction testing strategy for graphty-element, a Canvas-based 3D/2D graph visualization Web Component built with Babylon.js. After analyzing multiple frameworks and approaches, **I recommend adopting Babylon.js's two-tier testing strategy** using:
+This document outlines a comprehensive interaction testing strategy for graphty-element, based on the actual input handling implementations found in the codebase. After analyzing the existing code, we will test the following implemented features:
 
-1. **Unit-level testing** with a mock device input system for fast, isolated interaction tests
-2. **Integration-level testing** with Playwright for real browser interaction validation
+1. **Node interactions** via Babylon.js behaviors (dragging, double-click expansion)
+2. **2D camera controls** (mouse pan/zoom, keyboard WASD/arrows/+−/QE, touch gestures)
+3. **3D camera controls** (mouse orbit, keyboard arrows/WS/AD, touch pinch/rotate)
+4. **Canvas focus management** and input system architecture
 
-This approach provides the best balance of test speed, reliability, and coverage for Canvas-based applications.
+## Existing Input Implementations
 
-## Table of Contents
+### 1. Node Interactions (`src/NodeBehavior.ts`)
+- **Drag Behavior**: 
+  - Uses `SixDofDragBehavior` for 3D dragging
+  - `pinOnDrag` option (default: true)
+  - Drag start/end observable events
+  - Position synchronization with layout engine
+- **Double-click Expansion**:
+  - Uses `ActionManager.OnDoublePickTrigger`
+  - Fetches and displays connected nodes (if fetchNodes/fetchEdges provided)
 
-1. [Framework Evaluation](#framework-evaluation)
-2. [Recommended Approach](#recommended-approach)
-3. [Implementation Plan](#implementation-plan)
-4. [Test Scenarios](#test-scenarios)
-5. [Technical Architecture](#technical-architecture)
-6. [Headless Server Considerations](#headless-server-considerations)
-7. [Timeline and Phases](#timeline-and-phases)
+### 2. 2D Camera Controls
+**Files**: `src/cameras/TwoDInputController.ts`, `src/cameras/TwoDCameraController.ts`
+- **Mouse**:
+  - Left button drag: Pan camera
+  - Wheel: Zoom (configurable speed)
+- **Keyboard** (velocity-based with inertia):
+  - `W`/`ArrowUp`: Pan up
+  - `S`/`ArrowDown`: Pan down
+  - `A`/`ArrowLeft`: Pan left
+  - `D`/`ArrowRight`: Pan right
+  - `+`/`=`: Zoom in
+  - `-`/`_`: Zoom out
+  - `Q`: Rotate counter-clockwise
+  - `E`: Rotate clockwise
+- **Touch** (via Hammer.js):
+  - Single finger: Pan
+  - Pinch: Zoom
+  - Two-finger rotate: Rotate view
 
-## Framework Evaluation
+### 3. 3D Camera Controls  
+**Files**: `src/cameras/OrbitInputController.ts`, `src/cameras/OrbitCameraController.ts`
+- **Mouse**:
+  - Left button drag: Orbit camera
+  - Pointer down focuses canvas
+- **Keyboard** (with inertia damping):
+  - `ArrowLeft`/`ArrowRight`: Rotate horizontally
+  - `ArrowUp`/`ArrowDown`: Rotate vertically
+  - `W`: Zoom in
+  - `S`: Zoom out
+  - `A`: Yaw left
+  - `D`: Yaw right
+- **Touch** (via Hammer.js):
+  - Pinch: Zoom
+  - Two-finger rotate: Yaw
 
-### Comparison of Testing Frameworks
+### 4. Input System Architecture
+**Files**: `src/graph/input/babylon-input-system.ts`, `src/graph/input/input-system.interface.ts`
+- Observable-based event system
+- Pointer, wheel, keyboard, touch event handling
+- Device type detection (mouse vs touch)
+- Already includes mock system (`src/test/mock-device-input-system.ts`)
 
-| Framework | Canvas Support | Touch Gestures | Performance | Browser Support | Learning Curve |
-|-----------|---------------|----------------|-------------|-----------------|----------------|
-| **Playwright + CDP** | Excellent | Good (via CDP) | Fast (4.5s avg) | All major | Medium |
-| Cypress | Limited | Basic only | Slower (9.4s avg) | Chrome/Firefox/Edge | Easy |
-| Puppeteer | Good | Good (via CDP) | Fast (4.8s avg) | Chrome only | Medium |
-| TestCafe | Basic | Limited | Medium | All major | Easy |
-| Custom Mock System | Excellent | Excellent | Fastest (<1s) | N/A (unit tests) | High |
+### 5. Canvas Configuration (`src/Graph.ts`)
+- `touch-action: none` - Prevents default touch behaviors
+- `tabindex="0"` - Makes canvas focusable
+- `autofocus="true"` - Auto-focuses for keyboard input
 
-### Framework Strengths and Use Cases
+### 6. XR/VR Support (`src/xr-button.ts`)
+- WebXR integration with VR/AR buttons
+- Teleportation disabled for graph interaction
 
-#### **Playwright (Recommended for Integration Tests)**
-**Pros:**
-- Best performance among browser automation tools
-- Chrome DevTools Protocol (CDP) access for touch gestures
-- Multi-browser support (critical for Canvas rendering differences)
-- Active development and growing adoption
-- Excellent debugging tools (trace viewer, video recording)
+## Test Scenarios (Based on Actual Features)
 
-**Cons:**
-- Touch events require CDP workarounds
-- Steeper learning curve than Cypress
-- CDP features only work with Chromium
+### Priority 1: Node Interactions
 
-**Best for:** Integration tests, visual regression, cross-browser validation
+1. **Node Dragging (SixDofDragBehavior)**
+   - Test drag start/end events fire correctly
+   - Verify `pinOnDrag` setting works
+   - Test position updates during drag
+   - Verify physics pauses during drag
+   - Test with multiple nodes (performance)
 
-#### **Mock Device System (Recommended for Unit Tests)**
-**Pros:**
-- Fastest test execution (no browser overhead)
-- Complete control over input simulation
-- Can test edge cases easily
-- No flakiness from browser timing
-- Works in any environment
+2. **Node Double-Click Expansion**
+   - Test double-click triggers expansion
+   - Verify fetchNodes/fetchEdges are called
+   - Test new nodes/edges are added to graph
+   - Verify expansion only works when fetch functions exist
 
-**Cons:**
-- Requires initial development effort
-- Won't catch browser-specific issues
-- No visual validation
+### Priority 2: 2D Camera Controls
 
-**Best for:** Core interaction logic, gesture detection, input handling
+1. **Mouse Controls**
+   - Left drag pans camera
+   - Wheel zooms in/out
+   - Test pan scale configuration
+   - Test zoom speed configuration
 
-#### **Cypress (Not Recommended)**
-**Pros:**
-- Easier to learn and use
-- Good documentation
-- Built-in test runner UI
+2. **Keyboard Controls**
+   - WASD/Arrow keys pan camera with velocity
+   - +/- keys zoom
+   - Q/E keys rotate view
+   - Test acceleration and inertia
+   - Verify keyboard state tracking
 
-**Cons:**
-- Limited Canvas support (coordinate clicking only)
-- No multi-touch support
-- Slower performance
-- No CDP access
+3. **Touch Gestures**
+   - Single finger pan
+   - Pinch to zoom
+   - Two-finger rotation
+   - Test gesture recognition via Hammer.js
 
-**Best for:** Simple click interactions only
+### Priority 3: 3D Camera Controls
 
-### Examples from Other Canvas-Based Projects
+1. **Mouse Controls**
+   - Left drag orbits camera
+   - Test orbit sensitivity
+   - Verify canvas gets focus on pointer down
 
-1. **Babylon.js**: Two-tier approach with TestDeviceInputSystem + Playwright
-2. **Three.js**: Jest with mock canvas + manual testing
-3. **Pixi.js**: Custom "floss" framework + visual regression with canvas-visual-bugs-testbed
-4. **Konva.js**: Mocha + browser-based test runner
-5. **MapboxGL**: Unit tests with mock canvas + Playwright for integration
+2. **Keyboard Controls**
+   - Arrow keys rotate with inertia
+   - W/S zoom in/out
+   - A/D yaw left/right
+   - Test rotation velocity and damping
 
-## Recommended Approach
+3. **Touch Gestures**
+   - Pinch zoom with configurable sensitivity
+   - Two-finger rotate for yaw
+   - Test multi-touch state management
 
-### Two-Tier Testing Strategy
+### Priority 4: Input System Integration
 
-Based on extensive research and Babylon.js's proven approach, I recommend:
+1. **Focus Management**
+   - Canvas gains focus on interaction
+   - Keyboard input only works when focused
+   - Test tabindex functionality
 
-#### **Tier 1: Unit Tests with Mock Device System**
-- Create a `MockDeviceInputSystem` similar to Babylon.js's approach
-- Test interaction logic without browser overhead
-- Cover all input combinations and edge cases
-- Run in milliseconds, not seconds
+2. **Input System Architecture**
+   - BabylonInputSystem correctly converts events
+   - Observable pattern works for all event types
+   - Device type detection (mouse vs touch)
+   - Mock system matches real system behavior
 
-#### **Tier 2: Integration Tests with Playwright**
-- Validate real browser behavior
-- Test visual feedback and rendering
+## Implementation Approach
+
+### Use Existing Infrastructure
+
+The project already has:
+1. `MockDeviceInputSystem` implementation
+2. `IInputSystem` interface
+3. `BabylonInputSystem` for real input
+4. Observable-based event system
+
+### Testing Strategy
+
+#### Unit Tests with MockDeviceInputSystem
+- Test input handling logic in isolation
+- Verify camera controllers respond correctly
+- Test node behavior state changes
+- No browser required, runs fast
+
+#### Integration Tests with Playwright
+- Test real browser input
+- Verify Hammer.js touch gestures work
 - Cross-browser validation
-- Touch gestures via CDP
-
-### Why This Approach?
-
-1. **Speed**: Unit tests run in <100ms, integration tests only for critical paths
-2. **Reliability**: Mock system eliminates browser flakiness
-3. **Coverage**: Can test complex multi-touch scenarios easily
-4. **Debugging**: Headless server compatible with clear test isolation
-5. **Proven**: Successfully used by Babylon.js for years
+- Visual feedback verification
 
 ## Implementation Plan
 
-### Phase 1: Mock Device System (Week 1-2)
+### Phase 1: Unit Tests for Existing Features (Week 1)
 
-#### 1.1 Create Core Infrastructure
-
+#### 1.1 Node Behavior Tests
 ```typescript
-// src/test/mock-device-input-system.ts
-export interface MockDeviceInputSystem {
-  // Device management
-  connectDevice(deviceType: DeviceType, slot: number): void;
-  disconnectDevice(deviceType: DeviceType, slot: number): void;
+// test/unit/node-behavior.test.ts
+test('node dragging with pinOnDrag', async () => {
+  const graph = new Graph(container, mockInput);
+  const node = graph.addNode({ id: 'test-node', position: { x: 0, y: 0, z: 0 } });
   
-  // Input simulation
-  simulateMouseMove(x: number, y: number): void;
-  simulateMouseDown(button: MouseButton): void;
-  simulateMouseUp(button: MouseButton): void;
-  simulateMouseWheel(deltaY: number): void;
-  
-  // Touch simulation
-  simulateTouchStart(touches: TouchPoint[]): void;
-  simulateTouchMove(touches: TouchPoint[]): void;
-  simulateTouchEnd(touchIds: number[]): void;
-  
-  // Keyboard simulation
-  simulateKeyDown(key: string, modifiers?: KeyModifiers): void;
-  simulateKeyUp(key: string): void;
-  
-  // State queries
-  getPointerPosition(): { x: number; y: number };
-  isPointerDown(button: MouseButton): boolean;
-  getActiveTouches(): TouchPoint[];
-}
-```
-
-#### 1.2 Integration with Graph Class
-
-```typescript
-// Modify Graph class to accept input system
-export class Graph {
-  constructor(config: GraphConfig, inputSystem?: IInputSystem) {
-    this.inputSystem = inputSystem || new BabylonInputSystem();
-  }
-}
-```
-
-### Phase 2: Unit Test Implementation (Week 2-3)
-
-#### 2.1 Node Dragging Tests
-
-```typescript
-// test/interactions/node-drag.test.ts
-import { test, expect } from 'vitest';
-import { Graph } from '../../src/graph/graph';
-import { MockDeviceInputSystem } from '../mock-device-input-system';
-
-test('respects pinOnDrag setting', async () => {
-  const mockInput = new MockDeviceInputSystem();
-  const graph = new Graph({ pinOnDrag: true }, mockInput);
-  
-  // Add test node
-  const nodeId = 'test-node';
-  graph.addNode({ id: nodeId, x: 0, y: 0, z: 0 });
-  
-  // Simulate drag
-  mockInput.simulateMouseMove(0, 0);
-  mockInput.simulateMouseDown('left');
-  mockInput.simulateMouseMove(100, 100);
-  mockInput.simulateMouseUp('left');
-  
-  // Verify node is pinned
-  const node = graph.getNode(nodeId);
-  expect(node.isPinned).toBe(true);
-  expect(node.position).toEqual({ x: 100, y: 100, z: 0 });
-});
-```
-
-#### 2.2 Camera Control Tests
-
-```typescript
-// test/interactions/camera-controls.test.ts
-test('2D camera pan with mouse', async () => {
-  const mockInput = new MockDeviceInputSystem();
-  const graph = new Graph({ cameraType: '2d' }, mockInput);
-  
-  const initialPosition = graph.camera.position.clone();
-  
-  // Simulate pan
-  mockInput.simulateMouseMove(100, 100);
-  mockInput.simulateMouseDown('right'); // Right-click pan
-  mockInput.simulateMouseMove(200, 200);
-  mockInput.simulateMouseUp('right');
-  
-  expect(graph.camera.position).not.toEqual(initialPosition);
-});
-
-test('3D camera zoom with wheel', async () => {
-  const mockInput = new MockDeviceInputSystem();
-  const graph = new Graph({ cameraType: '3d' }, mockInput);
-  
-  const initialRadius = graph.camera.radius;
-  
-  // Simulate zoom
-  mockInput.simulateMouseWheel(-100); // Zoom in
-  
-  expect(graph.camera.radius).toBeLessThan(initialRadius);
-});
-```
-
-#### 2.3 Touch Gesture Tests
-
-```typescript
-// test/interactions/touch-gestures.test.ts
-test('pinch to zoom gesture', async () => {
-  const mockInput = new MockDeviceInputSystem();
-  const graph = new Graph({ cameraType: '3d' }, mockInput);
-  
-  const initialRadius = graph.camera.radius;
-  
-  // Simulate pinch
-  mockInput.simulateTouchStart([
-    { id: 0, x: 100, y: 100 },
-    { id: 1, x: 200, y: 200 }
-  ]);
-  
-  mockInput.simulateTouchMove([
-    { id: 0, x: 50, y: 50 },   // Fingers moving closer
-    { id: 1, x: 250, y: 250 }
-  ]);
-  
-  mockInput.simulateTouchEnd([0, 1]);
-  
-  expect(graph.camera.radius).toBeGreaterThan(initialRadius); // Zoomed out
-});
-```
-
-### Phase 3: Playwright Integration Tests (Week 3-4)
-
-#### 3.1 Test Configuration
-
-```typescript
-// playwright.config.ts
-export default defineConfig({
-  testDir: './test/integration',
-  projects: [
-    {
-      name: 'interaction',
-      use: {
-        ...devices['Desktop Chrome'],
-        launchOptions: {
-          args: ['--use-gl=swiftshader'] // Consistent rendering
-        }
-      }
-    },
-    {
-      name: 'touch',
-      use: {
-        ...devices['iPhone 13'],
-        hasTouch: true
-      }
-    }
-  ],
-  use: {
-    baseURL: 'http://dev.ato.ms:9025', // Your Storybook server
-    trace: 'on-first-retry',
-    video: 'on-first-retry'
-  }
-});
-```
-
-#### 3.2 Integration Test Helpers
-
-```typescript
-// test/integration/helpers.ts
-export async function setupGraphTest(page: Page, story: string) {
-  await page.goto(`/?path=/story/${story}`);
-  await page.waitForSelector('graphty-element');
-  
-  // Wait for graph to initialize
-  await page.evaluate(() => {
-    return new Promise(resolve => {
-      const element = document.querySelector('graphty-element');
-      if (element.graph) {
-        resolve(true);
-      } else {
-        element.addEventListener('graph-ready', () => resolve(true));
-      }
-    });
+  // Simulate drag via SixDofDragBehavior events
+  node.meshDragBehavior.onDragStartObservable.notifyObservers({});
+  node.meshDragBehavior.onPositionChangedObservable.notifyObservers({ 
+    position: new Vector3(10, 10, 0) 
   });
-}
-
-export async function simulatePinchGesture(page: Page, startDistance: number, endDistance: number) {
-  const cdpSession = await page.context().newCDPSession(page);
-  const centerX = 400, centerY = 300;
+  node.meshDragBehavior.onDragEndObservable.notifyObservers({});
   
-  // Calculate touch points
-  const startOffset = startDistance / 2;
-  const endOffset = endDistance / 2;
+  expect(node.dragging).toBe(false);
+  expect(node.isPinned()).toBe(true);
+});
+
+test('double-click node expansion', async () => {
+  const fetchNodes = jest.fn();
+  const fetchEdges = jest.fn();
+  const graph = new Graph(container, mockInput, { fetchNodes, fetchEdges });
+  
+  const node = graph.addNode({ id: 'test-node' });
+  
+  // Trigger double-click action
+  node.mesh.actionManager._processTrigger(
+    ActionManager.OnDoublePickTrigger,
+    ActionEvent.CreateNew(node.mesh)
+  );
+  
+  expect(fetchEdges).toHaveBeenCalledWith(node, graph);
+  expect(fetchNodes).toHaveBeenCalled();
+});
+```
+
+#### 1.2 2D Camera Controller Tests
+```typescript
+// test/unit/2d-camera-controls.test.ts
+test('2D camera pan with mouse', async () => {
+  const controller = new TwoDCameraController(scene, canvas, config);
+  const inputController = new TwoDInputController(controller, canvas, config);
+  
+  const initialPos = controller.camera.position.clone();
+  
+  // Simulate mouse pan
+  scene.onPointerObservable.notifyObservers({
+    type: PointerEventTypes.POINTERDOWN,
+    event: { clientX: 100, clientY: 100, buttons: 1 }
+  });
+  
+  scene.onPointerObservable.notifyObservers({
+    type: PointerEventTypes.POINTERMOVE,
+    event: { clientX: 200, clientY: 200, buttons: 1 }
+  });
+  
+  scene.onPointerObservable.notifyObservers({
+    type: PointerEventTypes.POINTERUP
+  });
+  
+  expect(controller.camera.position).not.toEqual(initialPos);
+});
+
+test('2D camera keyboard controls', async () => {
+  const controller = new TwoDCameraController(scene, canvas, config);
+  const inputController = new TwoDInputController(controller, canvas, config);
+  
+  // Simulate W key press
+  inputController.keyState['w'] = true;
+  inputController.applyKeyboardInertia();
+  
+  expect(controller.velocity.y).toBeGreaterThan(0);
+});
+```
+
+#### 1.3 3D Camera Controller Tests
+```typescript
+// test/unit/3d-camera-controls.test.ts  
+test('3D camera orbit with mouse', async () => {
+  const controller = new OrbitCameraController(scene, canvas, config);
+  const inputController = new OrbitInputController(canvas, controller);
+  
+  const initialAlpha = controller.camera.alpha;
+  
+  // Simulate mouse orbit
+  inputController.pointerDownHandler({ clientX: 100, clientY: 100, button: 0 });
+  inputController.pointerMoveHandler({ clientX: 200, clientY: 200 });
+  inputController.pointerUpHandler();
+  
+  expect(controller.camera.alpha).not.toBe(initialAlpha);
+});
+```
+
+### Phase 2: Integration Tests (Week 2)
+
+#### 2.1 Real Browser Node Dragging
+```typescript
+// test/integration/node-drag.test.ts
+test('drag node in real browser', async ({ page }) => {
+  await page.goto('/?path=/story/interactions--draggable-nodes');
+  
+  // Wait for graph
+  await page.waitForSelector('graphty-element');
+  await page.waitForFunction(() => {
+    const el = document.querySelector('graphty-element');
+    return el?.graph?.initialized;
+  });
+  
+  // Get node position
+  const nodePos = await page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const node = graph.dataManager.nodes.get('node1');
+    return graph.worldToScreen(node.mesh.position);
+  });
+  
+  // Drag node
+  const canvas = page.locator('canvas');
+  const box = await canvas.boundingBox();
+  
+  await page.mouse.move(box.x + nodePos.x, box.y + nodePos.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + nodePos.x + 100, box.y + nodePos.y + 100, { steps: 10 });
+  await page.mouse.up();
+  
+  // Verify node moved and is pinned
+  const result = await page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const node = graph.dataManager.nodes.get('node1');
+    return {
+      position: node.mesh.position,
+      isPinned: !node.meshDragBehavior.enabled
+    };
+  });
+  
+  expect(result.isPinned).toBe(true);
+});
+```
+
+#### 2.2 Touch Gesture Tests
+```typescript
+// test/integration/touch-gestures.test.ts
+test('pinch to zoom in 2D mode', async ({ page, context }) => {
+  // Use mobile viewport
+  await context.setViewportSize({ width: 375, height: 812 });
+  
+  await page.goto('/?path=/story/camera--2d-touch-controls');
+  
+  const canvas = page.locator('canvas');
+  const box = await canvas.boundingBox();
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+  
+  // Get initial zoom
+  const initialZoom = await page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const cam = graph.cameraManager.camera;
+    return cam.orthoTop - cam.orthoBottom;
+  });
+  
+  // Simulate pinch via CDP
+  const client = await page.context().newCDPSession(page);
   
   // Start touches
-  await cdpSession.send('Input.dispatchTouchEvent', {
+  await client.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
     touchPoints: [
-      { x: centerX - startOffset, y: centerY },
-      { x: centerX + startOffset, y: centerY }
+      { x: centerX - 50, y: centerY, id: 0 },
+      { x: centerX + 50, y: centerY, id: 1 }
     ]
   });
   
-  // Move touches
-  await cdpSession.send('Input.dispatchTouchEvent', {
+  // Pinch out
+  await client.send('Input.dispatchTouchEvent', {
     type: 'touchMove',
     touchPoints: [
-      { x: centerX - endOffset, y: centerY },
-      { x: centerX + endOffset, y: centerY }
+      { x: centerX - 100, y: centerY, id: 0 },
+      { x: centerX + 100, y: centerY, id: 1 }
     ]
   });
   
   // End touches
-  await cdpSession.send('Input.dispatchTouchEvent', {
+  await client.send('Input.dispatchTouchEvent', {
     type: 'touchEnd',
     touchPoints: []
   });
-}
-```
-
-#### 3.3 Real Browser Tests
-
-```typescript
-// test/integration/node-drag.test.ts
-test('node dragging with visual feedback', async ({ page }) => {
-  await setupGraphTest(page, 'interactions--draggable-nodes');
   
-  // Get canvas bounds
-  const canvas = page.locator('canvas');
-  const bounds = await canvas.boundingBox();
-  
-  // Find node position (you'll need to expose this via the element API)
-  const nodePosition = await page.evaluate(() => {
-    const element = document.querySelector('graphty-element');
-    const node = element.graph.getNode('node1');
-    return element.graph.worldToScreen(node.position);
+  // Verify zoom changed
+  const finalZoom = await page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const cam = graph.cameraManager.camera;
+    return cam.orthoTop - cam.orthoBottom;
   });
   
-  // Drag node
-  await page.mouse.move(bounds.x + nodePosition.x, bounds.y + nodePosition.y);
-  await page.mouse.down();
-  await page.mouse.move(bounds.x + nodePosition.x + 100, bounds.y + nodePosition.y + 100, { steps: 10 });
-  await page.mouse.up();
-  
-  // Verify node moved
-  const newPosition = await page.evaluate(() => {
-    const element = document.querySelector('graphty-element');
-    const node = element.graph.getNode('node1');
-    return node.position;
-  });
-  
-  expect(newPosition.x).not.toBe(nodePosition.x);
+  expect(finalZoom).toBeLessThan(initialZoom); // Zoomed in
 });
 ```
 
-## Test Scenarios
-
-### Priority 1: Core Interactions
-
-1. **Node Dragging**
-   - Single node drag with pinOnDrag setting
-   - Multi-node selection and drag
-   - Drag constraints and boundaries
-   - Drag performance with 1000+ nodes
-
-2. **Camera Controls - 2D**
-   - Pan with mouse (right-click/middle-click)
-   - Pan with touch (single finger)
-   - Zoom with wheel
-   - Zoom with pinch gesture
-   - Keyboard navigation (arrow keys)
-
-3. **Camera Controls - 3D**
-   - Orbit with mouse (left-click drag)
-   - Pan with mouse (right-click drag)
-   - Zoom with wheel
-   - Multi-touch orbit and zoom
-   - Reset camera position
-
-### Priority 2: Advanced Interactions
-
-1. **Selection**
-   - Click to select node/edge
-   - Box selection (drag to select)
-   - Multi-select with Ctrl/Cmd
-   - Deselect on background click
-
-2. **Hover Effects**
-   - Node hover highlighting
-   - Edge hover highlighting
-   - Tooltip display on hover
-   - Performance with many hoverable elements
-
-3. **Context Menus**
-   - Right-click on node
-   - Right-click on edge
-   - Right-click on background
-   - Touch long-press for context menu
-
-### Priority 3: Future Features
-
-1. **Click to Expand**
-   - Expand/collapse node clusters
-   - Animated transitions
-   - State persistence
-
-2. **WebXR Support**
-   - Controller ray casting
-   - Hand tracking gestures
-   - Spatial UI interactions
-
-## Technical Architecture
-
-### Input System Interface
+## Test Data and Helpers
 
 ```typescript
-// src/graph/input/input-system.interface.ts
-export interface IInputSystem {
-  // Observable events
-  onPointerMove: Observable<PointerInfo>;
-  onPointerDown: Observable<PointerInfo>;
-  onPointerUp: Observable<PointerInfo>;
-  onPointerWheel: Observable<WheelInfo>;
-  
-  // Touch events
-  onTouchStart: Observable<TouchInfo>;
-  onTouchMove: Observable<TouchInfo>;
-  onTouchEnd: Observable<TouchInfo>;
-  
-  // Keyboard events
-  onKeyDown: Observable<KeyboardInfo>;
-  onKeyUp: Observable<KeyboardInfo>;
-  
-  // Utility methods
-  getPointerPosition(): Vector2;
-  isPointerLocked(): boolean;
+// test/helpers/graph-helpers.ts
+export async function waitForGraph(page: Page) {
+  await page.waitForFunction(() => {
+    const element = document.querySelector('graphty-element');
+    return element?.graph?.initialized && element?.graph?.scene?.isReady();
+  });
+}
+
+export async function getNodeScreenPosition(page: Page, nodeId: string) {
+  return page.evaluate((id) => {
+    const graph = document.querySelector('graphty-element').graph;
+    const node = graph.dataManager.nodes.get(id);
+    if (!node) return null;
+    
+    const worldPos = node.mesh.position;
+    return graph.worldToScreen(worldPos);
+  }, nodeId);
+}
+
+export async function getCameraState(page: Page) {
+  return page.evaluate(() => {
+    const graph = document.querySelector('graphty-element').graph;
+    const cam = graph.cameraManager.camera;
+    
+    if (cam.orthoTop !== undefined) {
+      // 2D camera
+      return {
+        type: '2d',
+        position: { x: cam.position.x, y: cam.position.y },
+        zoom: cam.orthoTop - cam.orthoBottom,
+        rotation: cam.parent.rotation.z
+      };
+    } else {
+      // 3D camera
+      return {
+        type: '3d',
+        alpha: cam.alpha,
+        beta: cam.beta,
+        radius: cam.radius,
+        target: { x: cam.target.x, y: cam.target.y, z: cam.target.z }
+      };
+    }
+  });
 }
 ```
 
-### Test Data Management
-
-```typescript
-// test/fixtures/interaction-scenarios.ts
-export const InteractionScenarios = {
-  smallGraph: {
-    nodes: 10,
-    edges: 15,
-    layout: 'force'
-  },
-  largeGraph: {
-    nodes: 1000,
-    edges: 2000,
-    layout: 'circular'
-  },
-  clusteredGraph: {
-    nodes: 100,
-    edges: 150,
-    clusters: 5,
-    layout: 'hierarchical'
-  }
-};
-```
-
-## Headless Server Considerations
-
-### Development Workflow
-
-1. **Local HTTP Server for Testing**
-   ```bash
-   # Run on port 9050 (within allowed range)
-   npm run test:server -- --port 9050
-   ```
-
-2. **Remote Browser Connection**
-   - Access tests at `http://dev.ato.ms:9050`
-   - Use browser DevTools for debugging
-   - Playwright trace viewer for test replay
-
-3. **CI/CD Integration**
-   ```yaml
-   # .github/workflows/interaction-tests.yml
-   - name: Run interaction tests
-     run: |
-       npm run test:interaction:unit  # Fast unit tests
-       npm run test:interaction:integration -- --headed=false
-   ```
-
-### Debugging Strategies
-
-1. **Visual Debugging**
-   ```typescript
-   // Save screenshots during test failures
-   test.afterEach(async ({ page }, testInfo) => {
-     if (testInfo.status !== 'passed') {
-       await page.screenshot({ 
-         path: `test-results/${testInfo.title}-failure.png` 
-       });
-     }
-   });
-   ```
-
-2. **Trace Recording**
-   ```typescript
-   // Enable traces for debugging
-   await page.context().tracing.start({ 
-     screenshots: true, 
-     snapshots: true 
-   });
-   ```
-
-3. **Remote Debugging**
-   ```bash
-   # Start Playwright with remote debugging
-   PWDEBUG=1 npm run test:interaction
-   ```
-
-## Timeline and Phases
-
-### Phase 1: Foundation (Weeks 1-2)
-- [ ] Implement MockDeviceInputSystem
-- [ ] Create input system interface
-- [ ] Integrate with Graph class
-- [ ] Set up test infrastructure
-
-### Phase 2: Unit Tests (Weeks 2-3)
-- [ ] Node dragging tests
-- [ ] 2D camera control tests
-- [ ] 3D camera control tests
-- [ ] Touch gesture tests
-- [ ] Keyboard navigation tests
-
-### Phase 3: Integration Tests (Weeks 3-4)
-- [ ] Playwright configuration
-- [ ] CDP touch gesture helpers
-- [ ] Visual regression tests
-- [ ] Cross-browser validation
-- [ ] Performance benchmarks
-
-### Phase 4: Advanced Features (Week 5+)
-- [ ] Selection system tests
-- [ ] Hover interaction tests
-- [ ] Context menu tests
-- [ ] Expand/collapse tests
-- [ ] WebXR preparation
-
 ## Success Metrics
 
-1. **Test Coverage**: >80% of interaction code paths
-2. **Test Speed**: Unit tests < 5s total, integration < 30s
-3. **Reliability**: <1% flaky test rate
-4. **Browser Coverage**: Chrome, Firefox, Safari, Edge
-5. **Device Coverage**: Desktop, tablet, mobile touch
+1. **Coverage**: Test all implemented input methods
+2. **Reliability**: No flaky tests due to proper wait conditions
+3. **Performance**: Unit tests < 100ms each, integration < 2s each
+4. **Maintainability**: Tests reflect actual implementation, not hypothetical features
 
-## Conclusion
+## Future Enhancements for Camera Control Testing
 
-The recommended two-tier approach combining a mock device system for unit tests with Playwright for integration tests provides the optimal balance of speed, reliability, and coverage for testing Canvas-based interactions in graphty-element. This approach is proven by Babylon.js and addresses all the specific requirements including headless server constraints and complex touch gesture testing.
+### Current Limitation
+The existing camera control tests verify internal state changes (position, velocity) but cannot visually confirm camera movement because tests run on empty scenes. Without visible content, it's impossible to visually verify that:
+- The camera moved in the correct direction
+- The movement amount is appropriate
+- The visual result matches expectations
 
-The phased implementation plan allows for incremental progress while maintaining a working test suite throughout development. The architecture is extensible for future features like WebXR support and provides excellent debugging capabilities for the headless server environment.
+### Potential Enhancement Options
+
+#### Option 1: Add Reference Objects
+Add visible nodes/objects to the scene so camera movement can be visually verified:
+
+```typescript
+beforeEach(async() => {
+    graph = await createTestGraph();
+    
+    // Add reference objects at known positions for visual verification
+    const dataManager = graph.getDataManager();
+    dataManager.addNode({id: "ref1", label: "North", x: 0, y: 10});
+    dataManager.addNode({id: "ref2", label: "South", x: 0, y: -10});
+    dataManager.addNode({id: "ref3", label: "East", x: 10, y: 0});
+    dataManager.addNode({id: "ref4", label: "West", x: -10, y: 0});
+    dataManager.addNode({id: "center", label: "Center", x: 0, y: 0});
+    
+    // Add edges to create a visual grid
+    dataManager.addEdge({src: "center", dst: "ref1"});
+    dataManager.addEdge({src: "center", dst: "ref2"});
+    dataManager.addEdge({src: "center", dst: "ref3"});
+    dataManager.addEdge({src: "center", dst: "ref4"});
+    
+    // Switch to 2D/3D mode...
+});
+```
+
+#### Option 2: Test View Matrix and Projection
+Instead of just testing position values, verify the camera's view matrix and what's actually visible in the viewport:
+
+```typescript
+test("camera pan changes view matrix correctly", () => {
+    const initialViewMatrix = cameraController.camera.getViewMatrix();
+    const initialProjectionMatrix = cameraController.camera.getProjectionMatrix();
+    
+    // Perform pan operation...
+    
+    const newViewMatrix = cameraController.camera.getViewMatrix();
+    assert.notDeepEqual(initialViewMatrix, newViewMatrix);
+    
+    // Test specific matrix elements that should change with pan
+    // For 2D pan, translation components should change
+    assert.notEqual(newViewMatrix.m[12], initialViewMatrix.m[12]); // X translation
+    assert.notEqual(newViewMatrix.m[13], initialViewMatrix.m[13]); // Y translation
+});
+
+test("objects move correctly in screen space after camera pan", () => {
+    // Add node at origin
+    const node = dataManager.addNode({id: "test", x: 0, y: 0});
+    
+    // Get initial screen position
+    const initialScreenPos = graph.worldToScreen(node.mesh.position);
+    
+    // Pan camera right
+    // ...pan operation...
+    
+    // Node should appear to move left on screen
+    const newScreenPos = graph.worldToScreen(node.mesh.position);
+    assert.isTrue(newScreenPos.x < initialScreenPos.x);
+});
+```
+
+#### Option 3: Raycast Testing
+Use raycasting to verify the camera is pointing at expected locations after movement:
+
+```typescript
+test("camera points at correct location after pan", () => {
+    // Add nodes at known positions
+    const centerNode = dataManager.addNode({id: "center", x: 0, y: 0});
+    const targetNode = dataManager.addNode({id: "target", x: 10, y: 0});
+    
+    // Pan camera to center on target node
+    const panDistance = 10;
+    // ...perform pan operation...
+    
+    // Raycast from camera center should hit the target node
+    const ray = graph.scene.createPickingRay(
+        canvas.width / 2, 
+        canvas.height / 2, 
+        null, 
+        cameraController.camera
+    );
+    
+    const hit = graph.scene.pickWithRay(ray);
+    assert.equal(hit?.pickedMesh?.id, targetNode.mesh.id);
+});
+```
+
+#### Option 4: Visual Regression Testing
+Capture screenshots and compare them to ensure camera movements produce expected visual results:
+
+```typescript
+test("camera pan produces expected visual result", async () => {
+    // Add reference content
+    setupReferenceGrid();
+    
+    // Capture initial state
+    const beforeScreenshot = await page.screenshot();
+    
+    // Pan camera
+    await performCameraPan(100, 0); // Pan 100 pixels right
+    
+    // Capture after state
+    const afterScreenshot = await page.screenshot();
+    
+    // Compare screenshots (using visual regression tool)
+    expect(afterScreenshot).toMatchSnapshot('camera-pan-right');
+});
+```
+
+### Implementation Considerations
+
+1. **Performance**: Adding reference objects increases test setup time but provides better verification
+2. **Maintainability**: Visual tests may need updates when rendering changes
+3. **Test Purpose**: Consider whether the test goal is to verify input handling (current approach) or visual output (enhancement)
+4. **Coverage Balance**: Not all camera tests need visual verification - mix approaches based on test goals
+
+### Recommendation
+
+For now, the current approach of testing internal state is sufficient for verifying input handling logic. These visual verification enhancements should be considered when:
+- Implementing visual regression testing
+- Debugging camera-related rendering issues  
+- Creating integration tests that verify end-to-end behavior
+- Building demo/example content that showcases camera controls
+
+## Next Steps
+
+1. Remove hypothetical tests created in Phase 2 that test non-existent features
+2. Implement unit tests for actual input handlers
+3. Create integration tests for real browser validation
+4. Add visual regression tests for input feedback
+5. Document any missing features discovered during testing
+6. Consider implementing visual verification enhancements for camera tests when needed
