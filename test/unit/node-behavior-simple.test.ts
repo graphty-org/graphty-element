@@ -7,32 +7,33 @@ import {NodeBehavior} from "../../src/NodeBehavior";
 vi.mock("@babylonjs/core", async() => {
     const actual = await vi.importActual("@babylonjs/core");
     return {
-        ...actual,
-        ActionManager: vi.fn().mockImplementation(function(scene) {
+        ... actual,
+        ActionManager: vi.fn().mockImplementation(function(this: {scene: unknown, actions: unknown[], registerAction: (action: unknown) => void}, scene: unknown) {
             this.scene = scene;
             this.actions = [];
             this.registerAction = vi.fn((action) => {
                 this.actions.push(action);
             });
         }),
-        SixDofDragBehavior: vi.fn().mockImplementation(function() {
+        SixDofDragBehavior: vi.fn().mockImplementation(function(this: {onDragStartObservable: {add: unknown}, onDragEndObservable: {add: unknown}, onPositionChangedObservable: {add: unknown}}) {
             this.onDragStartObservable = {add: vi.fn()};
             this.onDragEndObservable = {add: vi.fn()};
             this.onPositionChangedObservable = {add: vi.fn()};
         }),
-        ExecuteCodeAction: vi.fn().mockImplementation(function(triggerOrOptions, func) {
-            if (typeof triggerOrOptions === 'object' && triggerOrOptions.trigger) {
-                this._trigger = triggerOrOptions.trigger;
+        ExecuteCodeAction: vi.fn().mockImplementation(function(this: {_trigger: unknown, _func: unknown}, triggerOrOptions: {trigger?: unknown}, func: unknown) {
+            if (typeof triggerOrOptions === "object" && (triggerOrOptions as {trigger?: unknown}).trigger) {
+                this._trigger = (triggerOrOptions as {trigger: unknown}).trigger;
             } else {
                 this._trigger = triggerOrOptions;
             }
+
             this._func = func;
         }),
     };
 });
 
 // Make sure ActionManager constants are available
-(ActionManager as any).OnDoublePickTrigger = 1;
+(ActionManager as {OnDoublePickTrigger: number}).OnDoublePickTrigger = 1;
 
 describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors makes node pickable", () => {
@@ -44,7 +45,7 @@ describe("NodeBehavior Unit Tests", () => {
             },
             parentGraph: {
                 getStyles: vi.fn(),
-                getScene: () => ({} as any),
+                getScene: () => ({} as Record<string, unknown>),
                 setRunning: vi.fn(),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
@@ -54,7 +55,7 @@ describe("NodeBehavior Unit Tests", () => {
                     addEdges: vi.fn(),
                 }),
             },
-        } as any;
+        } as Parameters<typeof NodeBehavior.addDefaultBehaviors>[0];
 
         NodeBehavior.addDefaultBehaviors(mockNode);
 
@@ -70,7 +71,7 @@ describe("NodeBehavior Unit Tests", () => {
             },
             parentGraph: {
                 getStyles: vi.fn(),
-                getScene: () => ({} as any),
+                getScene: () => ({} as Record<string, unknown>),
                 setRunning: vi.fn(),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
@@ -80,25 +81,25 @@ describe("NodeBehavior Unit Tests", () => {
                     addEdges: vi.fn(),
                 }),
             },
-        } as any;
+        } as Parameters<typeof NodeBehavior.addDefaultBehaviors>[0];
 
         // Test with pinOnDrag true
         NodeBehavior.addDefaultBehaviors(mockNode, {pinOnDrag: true});
         expect(mockNode.pinOnDrag).toBe(true);
 
         // Test with pinOnDrag false
-        mockNode.pinOnDrag = undefined;
+        (mockNode as {pinOnDrag?: boolean}).pinOnDrag = undefined;
         NodeBehavior.addDefaultBehaviors(mockNode, {pinOnDrag: false});
-        expect(mockNode.pinOnDrag).toBe(false);
+        expect((mockNode as {pinOnDrag?: boolean}).pinOnDrag).toBe(false);
 
         // Test default (should be true)
-        mockNode.pinOnDrag = undefined;
+        (mockNode as {pinOnDrag?: boolean}).pinOnDrag = undefined;
         NodeBehavior.addDefaultBehaviors(mockNode, {});
-        expect(mockNode.pinOnDrag).toBe(true);
+        expect((mockNode as {pinOnDrag?: boolean}).pinOnDrag).toBe(true);
     });
 
     test("addDefaultBehaviors creates action manager for click behavior", () => {
-        const mockScene = {} as any;
+        const mockScene = {} as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
         const mockNode = {
             mesh: {
                 isPickable: false,
@@ -120,22 +121,22 @@ describe("NodeBehavior Unit Tests", () => {
                 fetchNodes: vi.fn(),
                 fetchEdges: vi.fn(),
             },
-        } as any;
+        } as Parameters<typeof NodeBehavior.addDefaultBehaviors>[0];
 
         NodeBehavior.addDefaultBehaviors(mockNode);
 
         expect(mockNode.mesh.actionManager).toBeDefined();
-        expect(mockNode.mesh.actionManager.registerAction).toHaveBeenCalled();
+        expect(mockNode.mesh.actionManager?.registerAction).toHaveBeenCalled();
 
         // Check that double-click action was registered
-        const doubleClickAction = mockNode.mesh.actionManager.actions.find(
-            (action: any) => action._trigger === ActionManager.OnDoublePickTrigger,
+        const doubleClickAction = mockNode.mesh.actionManager?.actions.find(
+            (action: {_trigger: number}) => action._trigger === ActionManager.OnDoublePickTrigger,
         );
         expect(doubleClickAction).toBeDefined();
     });
 
     test("addDefaultBehaviors does not add double-click when no fetch functions", () => {
-        const mockScene = {} as any;
+        const mockScene = {} as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
         const mockNode = {
             mesh: {
                 isPickable: false,
@@ -155,7 +156,7 @@ describe("NodeBehavior Unit Tests", () => {
                 }),
                 // NO fetch functions
             },
-        } as any;
+        } as Parameters<typeof NodeBehavior.addDefaultBehaviors>[0];
 
         NodeBehavior.addDefaultBehaviors(mockNode);
 

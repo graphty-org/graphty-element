@@ -1,4 +1,4 @@
-import {PointerEventTypes, Vector3} from "@babylonjs/core";
+import {PointerEventTypes, PointerInfo, PointerInfoPre, Vector3} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
 import {TwoDCameraController} from "../../src/cameras/TwoDCameraController";
@@ -23,6 +23,32 @@ describe("2D Camera Controls", () => {
                 twoD: true,
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
+                startingCameraDistance: 30,
+                layout: "ngraph",
+            },
+            layers: [],
+            data: {
+                knownFields: {
+                    nodeIdPath: "id",
+                    nodeWeightPath: null,
+                    nodeTimePath: null,
+                    edgeSrcIdPath: "src",
+                    edgeDstIdPath: "dst",
+                    edgeWeightPath: null,
+                    edgeTimePath: null,
+                },
+            },
+            behavior: {
+                layout: {
+                    type: "ngraph",
+                    preSteps: 0,
+                    stepMultiplier: 1,
+                    minDelta: 0.001,
+                    zoomStepInterval: 5,
+                },
+                node: {
+                    pinOnDrag: true,
+                },
             },
         });
 
@@ -31,11 +57,11 @@ describe("2D Camera Controls", () => {
 
         // Get the camera controller
         const cameraManager = graph.camera;
-        cameraController = cameraManager.activeCameraController as TwoDCameraController;
+        cameraController = (cameraManager as unknown as {activeCameraController: TwoDCameraController}).activeCameraController;
         assert.isDefined(cameraController, "Camera controller should be defined after switching to 2D mode");
 
         // Access the input controller through camera manager
-        inputController = cameraManager.activeInputHandler as InputController;
+        inputController = (cameraManager as unknown as {activeInputHandler: InputController}).activeInputHandler;
         assert.isDefined(inputController, "Input controller should be defined");
     });
 
@@ -62,7 +88,7 @@ describe("2D Camera Controls", () => {
                 buttons: 1,
                 button: 0,
             } as PointerEvent,
-        } as any);
+        } as unknown as PointerInfo);
 
         // Pointer move (drag)
         scene.onPointerObservable.notifyObservers({
@@ -73,7 +99,7 @@ describe("2D Camera Controls", () => {
                 buttons: 1,
                 button: 0,
             } as PointerEvent,
-        } as any);
+        } as unknown as PointerInfo);
 
         // Pointer up
         scene.onPointerObservable.notifyObservers({
@@ -84,7 +110,7 @@ describe("2D Camera Controls", () => {
                 buttons: 0,
                 button: 0,
             } as PointerEvent,
-        } as any);
+        } as unknown as PointerInfo);
 
         // Camera position should have changed
         assert.notEqual(cameraController.camera.position.x, initialPos.x);
@@ -228,7 +254,7 @@ describe("2D Camera Controls", () => {
                 deltaY: -100,
                 preventDefault: vi.fn(),
             } as unknown as WheelEvent,
-        } as any, PointerEventTypes.POINTERWHEEL);
+        } as unknown as PointerInfoPre, PointerEventTypes.POINTERWHEEL);
 
         const newZoom = (cameraController.camera.orthoTop ?? 1) - (cameraController.camera.orthoBottom ?? -1);
         assert.isTrue(newZoom < initialZoom, "Negative wheel delta should zoom in (decrease ortho range)");
@@ -239,7 +265,7 @@ describe("2D Camera Controls", () => {
         const scene = graph.getScene();
 
         // Mock focus method
-        const focusSpy = vi.spyOn(canvas, "focus").mockImplementation(() => {});
+        const focusSpy = vi.spyOn(canvas, "focus").mockImplementation(() => undefined);
 
         // Simulate pointer down
         scene.onPointerObservable.notifyObservers({
@@ -250,7 +276,7 @@ describe("2D Camera Controls", () => {
                 buttons: 1,
                 button: 0,
             } as PointerEvent,
-        } as any);
+        } as unknown as PointerInfo);
 
         // Canvas should have been focused
         assert.equal(focusSpy.mock.calls.length, 1);
@@ -264,13 +290,13 @@ describe("2D Camera Controls", () => {
     });
 
     test("input controller can be enabled and disabled", () => {
-        assert.isTrue(inputController.enabled, "Input controller should start enabled");
+        assert.isTrue((inputController as unknown as {enabled: boolean}).enabled, "Input controller should start enabled");
 
         inputController.disable();
-        assert.isFalse(inputController.enabled, "Input controller should be disabled");
+        assert.isFalse((inputController as unknown as {enabled: boolean}).enabled, "Input controller should be disabled");
 
         inputController.enable();
-        assert.isTrue(inputController.enabled, "Input controller should be re-enabled");
+        assert.isTrue((inputController as unknown as {enabled: boolean}).enabled, "Input controller should be re-enabled");
     });
 
     test("keyboard input has no effect when disabled", () => {

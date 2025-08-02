@@ -1,7 +1,7 @@
 import {Engine, NullEngine, Scene} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
-import {DeviceType, MouseButton} from "../../src/input/types";
+import {MouseButton} from "../../src/input/types";
 import {EventManager} from "../../src/managers/EventManager";
 import {InputManager} from "../../src/managers/InputManager";
 
@@ -38,7 +38,7 @@ describe("InputManager", () => {
 
         const eventSpy = vi.fn();
         eventManager.onGraphEvent.add((event) => {
-            if (event.type === "input:pointer-move") {
+            if ((event as {type: string}).type === "input:pointer-move") {
                 eventSpy(event);
             }
         });
@@ -47,11 +47,11 @@ describe("InputManager", () => {
         mockSystem.simulateMouseMove(100, 200);
 
         assert.equal(eventSpy.mock.calls.length, 1, "Event spy should have been called");
-        
+
         // The event has the event data as properties directly
         const event = eventSpy.mock.calls[0][0];
         assert.isDefined(event, "Event should be defined");
-        
+
         // Since InputManager bridges events through EventManager,
         // the structure might be different. Let's just verify it was called.
     });
@@ -61,7 +61,7 @@ describe("InputManager", () => {
 
         let eventReceived = false;
         eventManager.onGraphEvent.add((event) => {
-            if (event.type === "input:pointer-move") {
+            if ((event as {type: string}).type === "input:pointer-move") {
                 eventReceived = true;
             }
         });
@@ -114,9 +114,9 @@ describe("InputManager", () => {
             const timeout = setTimeout(() => {
                 reject(new Error("Playback timeout - event not received"));
             }, 5000);
-            
+
             eventManager.onGraphEvent.add((event) => {
-                if (event.type === "input-playback-completed") {
+                if ((event as {type: string}).type === "input-playback-completed") {
                     clearTimeout(timeout);
                     resolve();
                 }
@@ -204,7 +204,7 @@ describe("InputManager", () => {
 
         let configUpdated = false;
         eventManager.onGraphEvent.add((event) => {
-            if (event.type === "input-config-updated") {
+            if ((event as {type: string}).type === "input-config-updated") {
                 configUpdated = true;
             }
         });
@@ -218,7 +218,7 @@ describe("InputManager", () => {
     });
 
     test.skip("handles initialization errors gracefully", async() => {
-        // Skip this test as the InputManager implementation doesn't handle 
+        // Skip this test as the InputManager implementation doesn't handle
         // null canvas errors the way the test expects
         const badCanvas = null as unknown as HTMLCanvasElement;
         const badContext = {scene, engine, canvas: badCanvas, eventManager};

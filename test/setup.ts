@@ -1,5 +1,5 @@
 import {Vector2, Vector3} from "@babylonjs/core/Maths/math.vector";
-import {afterEach} from "vitest";
+import {afterEach, expect} from "vitest";
 
 import type {Graph} from "../src/Graph";
 import {MockDeviceInputSystem} from "../src/input/mock-device-input-system";

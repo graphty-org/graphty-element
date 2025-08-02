@@ -1,4 +1,4 @@
-import {Engine, KeyboardEventTypes, NullEngine, PointerEventTypes, Scene} from "@babylonjs/core";
+import {KeyboardEventTypes, PointerEventTypes, PointerInfo, Scene} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
 import {Graph} from "../../src/Graph";
@@ -15,7 +15,7 @@ describe("Input System Architecture", () => {
     beforeEach(async() => {
         graph = await createTestGraph();
         scene = graph.getScene();
-        canvas = graph.canvas;
+        ({canvas} = graph);
     });
 
     afterEach(() => {
@@ -57,7 +57,7 @@ describe("Input System Architecture", () => {
         });
 
         test("converts Babylon.js pointer events", () => {
-            const pointerEvents: any[] = [];
+            const pointerEvents: Array<{type: string, info: unknown}> = [];
             inputSystem.onPointerDown.add((info) => pointerEvents.push({type: "down", info}));
             inputSystem.onPointerMove.add((info) => pointerEvents.push({type: "move", info}));
             inputSystem.onPointerUp.add((info) => pointerEvents.push({type: "up", info}));
@@ -74,7 +74,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 1.0,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             scene.onPointerObservable.notifyObservers({
                 type: PointerEventTypes.POINTERMOVE,
@@ -87,7 +87,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 0.5,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             scene.onPointerObservable.notifyObservers({
                 type: PointerEventTypes.POINTERUP,
@@ -100,7 +100,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 0,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             // Verify events were converted and emitted
             assert.equal(pointerEvents.length, 3, "Should have received 3 pointer events");
@@ -123,7 +123,7 @@ describe("Input System Architecture", () => {
         });
 
         test("converts Babylon.js keyboard events", () => {
-            const keyboardEvents: any[] = [];
+            const keyboardEvents: Array<{type: string, info: unknown}> = [];
             inputSystem.onKeyDown.add((info) => keyboardEvents.push({type: "down", info}));
             inputSystem.onKeyUp.add((info) => keyboardEvents.push({type: "up", info}));
 
@@ -138,7 +138,7 @@ describe("Input System Architecture", () => {
                     altKey: false,
                     metaKey: false,
                 } as KeyboardEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             scene.onKeyboardObservable.notifyObservers({
                 type: KeyboardEventTypes.KEYUP,
@@ -150,7 +150,7 @@ describe("Input System Architecture", () => {
                     altKey: false,
                     metaKey: false,
                 } as KeyboardEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             // Verify events were converted and emitted
             assert.equal(keyboardEvents.length, 2, "Should have received 2 keyboard events");
@@ -167,7 +167,7 @@ describe("Input System Architecture", () => {
         });
 
         test("handles wheel events", () => {
-            const wheelEvents: any[] = [];
+            const wheelEvents: Array<{info: unknown}> = [];
             inputSystem.onWheel.add((info) => wheelEvents.push(info));
 
             // Simulate wheel event
@@ -178,7 +178,7 @@ describe("Input System Architecture", () => {
                     deltaY: -100,
                     deltaMode: 0,
                 } as WheelEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             assert.equal(wheelEvents.length, 1, "Should have received 1 wheel event");
             assert.equal(wheelEvents[0].deltaX, 10, "Wheel deltaX should be correct");
@@ -204,7 +204,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 1.0,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             assert.isTrue(inputSystem.isPointerDown(), "Some pointer should be down after pointer down event");
             assert.isTrue(inputSystem.isPointerDown(MouseButton.Left), "Left button should be down after pointer down event");
@@ -222,7 +222,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 0,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             assert.isFalse(inputSystem.isPointerDown(), "No pointer should be down after pointer up event");
             assert.isFalse(inputSystem.isPointerDown(MouseButton.Left), "Left button should not be down after pointer up event");
@@ -245,7 +245,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 0.5,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             const newPosition = inputSystem.getPointerPosition();
             assert.equal(newPosition.x, 300, "Pointer X should be updated");
@@ -312,7 +312,7 @@ describe("Input System Architecture", () => {
         });
 
         test("simulates mouse events", () => {
-            const events: any[] = [];
+            const events: Array<{button: MouseButton, screenX: number, screenY: number}> = [];
             mockInputSystem.onPointerMove.add((info) => events.push({type: "move", info}));
             mockInputSystem.onPointerDown.add((info) => events.push({type: "down", info}));
             mockInputSystem.onPointerUp.add((info) => events.push({type: "up", info}));
@@ -342,7 +342,7 @@ describe("Input System Architecture", () => {
         });
 
         test("simulates keyboard events", () => {
-            const events: any[] = [];
+            const events: Array<{button: MouseButton, screenX: number, screenY: number}> = [];
             mockInputSystem.onKeyDown.add((info) => events.push({type: "down", info}));
             mockInputSystem.onKeyUp.add((info) => events.push({type: "up", info}));
 
@@ -367,7 +367,7 @@ describe("Input System Architecture", () => {
         });
 
         test("simulates wheel events", () => {
-            const events: any[] = [];
+            const events: Array<{button: MouseButton, screenX: number, screenY: number}> = [];
             mockInputSystem.onWheel.add((info) => events.push(info));
 
             mockInputSystem.simulateWheel(-100, 10);
@@ -380,9 +380,9 @@ describe("Input System Architecture", () => {
         });
 
         test("simulates touch events", () => {
-            const touchStartEvents: any[] = [];
-            const touchMoveEvents: any[] = [];
-            const touchEndEvents: any[] = [];
+            const touchStartEvents: Array<{identifier: number, screenX: number, screenY: number}> = [];
+            const touchMoveEvents: Array<{identifier: number, screenX: number, screenY: number}> = [];
+            const touchEndEvents: Array<{identifier: number}> = [];
 
             mockInputSystem.onTouchStart.add((touches) => touchStartEvents.push(touches));
             mockInputSystem.onTouchMove.add((touches) => touchMoveEvents.push(touches));
@@ -440,7 +440,7 @@ describe("Input System Architecture", () => {
         });
 
         test("helper methods for common gestures", () => {
-            const events: any[] = [];
+            const events: Array<{button: MouseButton, screenX: number, screenY: number}> = [];
             mockInputSystem.onPointerMove.add((info) => events.push({type: "move", info}));
             mockInputSystem.onPointerDown.add((info) => events.push({type: "down", info}));
             mockInputSystem.onPointerUp.add((info) => events.push({type: "up", info}));
@@ -504,7 +504,7 @@ describe("Input System Architecture", () => {
             const babylonSystem = new BabylonInputSystem(scene);
             const mockSystem = new MockDeviceInputSystem();
 
-            const testInterfaceCompliance = (system: BabylonInputSystem | MockDeviceInputSystem) => {
+            const testInterfaceCompliance = (system: BabylonInputSystem | MockDeviceInputSystem): void => {
                 // Test that both systems can be used interchangeably
                 assert.isDefined(system.onPointerMove, "Should have onPointerMove");
                 assert.isDefined(system.onPointerDown, "Should have onPointerDown");
@@ -536,8 +536,8 @@ describe("Input System Architecture", () => {
             const mockSystem = new MockDeviceInputSystem();
             mockSystem.attach(canvas);
 
-            let babylonPointerInfo: any = null;
-            let mockPointerInfo: any = null;
+            let babylonPointerInfo: {button: MouseButton, screenX: number, screenY: number} | null = null;
+            let mockPointerInfo: {button: MouseButton, screenX: number, screenY: number} | null = null;
 
             babylonSystem.onPointerDown.add((info) => {
                 babylonPointerInfo = info;
@@ -559,7 +559,7 @@ describe("Input System Architecture", () => {
                     isPrimary: true,
                     pressure: 1.0,
                 } as PointerEvent,
-            } as any);
+            } as unknown as PointerInfo);
 
             mockSystem.simulateMouseDown(MouseButton.Left);
 

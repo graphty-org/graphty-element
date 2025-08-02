@@ -1,10 +1,12 @@
-import {Axis, Space} from "@babylonjs/core";
+import {} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
 import {OrbitCameraController} from "../../src/cameras/OrbitCameraController";
 import {OrbitInputController} from "../../src/cameras/OrbitInputController";
 import {Graph} from "../../src/Graph";
 import {cleanupTestGraph, createTestGraph} from "../helpers/testSetup";
+
+// Type for accessing private properties in tests
 
 describe("3D Camera Controls", () => {
     let graph: Graph;
@@ -23,6 +25,32 @@ describe("3D Camera Controls", () => {
                 twoD: false, // 3D mode
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
+                startingCameraDistance: 30,
+                layout: "ngraph",
+            },
+            layers: [],
+            data: {
+                knownFields: {
+                    nodeIdPath: "id",
+                    nodeWeightPath: null,
+                    nodeTimePath: null,
+                    edgeSrcIdPath: "src",
+                    edgeDstIdPath: "dst",
+                    edgeWeightPath: null,
+                    edgeTimePath: null,
+                },
+            },
+            behavior: {
+                layout: {
+                    type: "ngraph",
+                    preSteps: 0,
+                    stepMultiplier: 1,
+                    minDelta: 0.001,
+                    zoomStepInterval: 5,
+                },
+                node: {
+                    pinOnDrag: true,
+                },
             },
         });
 
@@ -31,11 +59,11 @@ describe("3D Camera Controls", () => {
 
         // Get the camera controller
         const cameraManager = graph.camera;
-        cameraController = cameraManager.activeCameraController as OrbitCameraController;
+        cameraController = (cameraManager as unknown as {activeCameraController: OrbitCameraController}).activeCameraController;
         assert.isDefined(cameraController, "Camera controller should be defined after switching to 3D mode");
 
         // Access the input controller through camera manager
-        inputController = cameraManager.activeInputHandler as OrbitInputController;
+        inputController = (cameraManager as unknown as {activeInputHandler: OrbitInputController}).activeInputHandler;
         assert.isDefined(inputController, "Input controller should be defined");
 
         // Verify input controller is enabled
@@ -138,8 +166,6 @@ describe("3D Camera Controls", () => {
         canvas.focus();
 
         // Test A key registration and spin method call
-        const initialPivotZ = cameraController.pivot.rotation.z;
-
         canvas.dispatchEvent(new KeyboardEvent("keydown", {key: "a", bubbles: true}));
 
         const {keysDown} = (inputController as any);
@@ -192,7 +218,7 @@ describe("3D Camera Controls", () => {
         const {canvas} = graph;
 
         // Mock focus method
-        const focusSpy = vi.spyOn(canvas, "focus").mockImplementation(() => {});
+        const focusSpy = vi.spyOn(canvas, "focus").mockImplementation(() => undefined);
 
         // Simulate pointer down
         canvas.dispatchEvent(new PointerEvent("pointerdown", {
