@@ -130,7 +130,7 @@ export const Shell: Story = {
         shellScale: 1,
         dataSource: "json",
         dataSourceConfig: {
-            data: "../test/helpers/data5.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data5.json",
         },
     },
     parameters: {

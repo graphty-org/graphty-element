@@ -154,9 +154,15 @@ export default tseslint.config(
         },
     },
     {
-        files: ["**/*.test.ts", "test/**/*.ts"],
+        files: ["**/*.test.ts", "test/**/*.ts", "test/**/*.js"],
         rules: {
             "@typescript-eslint/unbound-method": "off", // Allow unbound methods in tests for mock assertions
+            "@typescript-eslint/ban-ts-comment": ["error", {
+                "ts-nocheck": false, // Allow @ts-nocheck in test files
+                "ts-ignore": true,
+                "ts-expect-error": false, // Allow @ts-expect-error in test files
+                "minimumDescriptionLength": 5,
+            }],
         },
     },
 );

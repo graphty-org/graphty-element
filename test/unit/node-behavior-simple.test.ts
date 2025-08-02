@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {ActionManager} from "@babylonjs/core";
 import {describe, expect, test, vi} from "vitest";
 

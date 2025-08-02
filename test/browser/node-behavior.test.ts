@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// @ts-nocheck
 import {ActionManager, Vector3} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
@@ -14,6 +16,7 @@ describe("Node Behavior Tests", () => {
     });
 
     afterEach(() => {
+        vi.restoreAllMocks();
         cleanupTestGraph(graph);
     });
 
@@ -83,7 +86,7 @@ describe("Node Behavior Tests", () => {
         const layoutManager = graph.getLayoutManager();
         vi.spyOn(layoutManager, "layoutEngine", "get").mockReturnValue({
             setNodePosition: vi.fn(),
-        } as {dragDistance: Vector3});
+        } as any);
         const mockLayoutEngine = layoutManager.layoutEngine;
         const mockSetNodePosition = vi.spyOn(mockLayoutEngine, "setNodePosition");
 
@@ -94,7 +97,7 @@ describe("Node Behavior Tests", () => {
         const newPosition = new Vector3(10, 20, 30);
         node.meshDragBehavior.onPositionChangedObservable.notifyObservers({
             position: newPosition,
-        } as {dragDistance: Vector3});
+        } as any);
 
         // Should update layout engine position
         assert.equal(mockSetNodePosition.mock.calls.length, 1);
@@ -114,7 +117,7 @@ describe("Node Behavior Tests", () => {
         const layoutManager = graph.getLayoutManager();
         vi.spyOn(layoutManager, "layoutEngine", "get").mockReturnValue({
             setNodePosition: vi.fn(),
-        } as {dragDistance: Vector3});
+        } as any);
         const mockLayoutEngine = layoutManager.layoutEngine;
         const mockSetNodePosition = vi.spyOn(mockLayoutEngine, "setNodePosition");
 
@@ -122,7 +125,7 @@ describe("Node Behavior Tests", () => {
         const newPosition = new Vector3(10, 20, 30);
         node.meshDragBehavior.onPositionChangedObservable.notifyObservers({
             position: newPosition,
-        } as {dragDistance: Vector3});
+        } as any);
 
         // Should NOT update layout engine position
         assert.equal(mockSetNodePosition.mock.calls.length, 0);

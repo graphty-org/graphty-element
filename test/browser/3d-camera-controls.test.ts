@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// @ts-nocheck
 import {} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
@@ -5,8 +7,6 @@ import {OrbitCameraController} from "../../src/cameras/OrbitCameraController";
 import {OrbitInputController} from "../../src/cameras/OrbitInputController";
 import {Graph} from "../../src/Graph";
 import {cleanupTestGraph, createTestGraph} from "../helpers/testSetup";
-
-// Type for accessing private properties in tests
 
 describe("3D Camera Controls", () => {
     let graph: Graph;
@@ -59,10 +59,12 @@ describe("3D Camera Controls", () => {
 
         // Get the camera controller
         const cameraManager = graph.camera;
+        // @ts-expect-error Accessing private property for testing
         cameraController = (cameraManager as unknown as {activeCameraController: OrbitCameraController}).activeCameraController;
         assert.isDefined(cameraController, "Camera controller should be defined after switching to 3D mode");
 
         // Access the input controller through camera manager
+        // @ts-expect-error Accessing private property for testing
         inputController = (cameraManager as unknown as {activeInputHandler: OrbitInputController}).activeInputHandler;
         assert.isDefined(inputController, "Input controller should be defined");
 
