@@ -25,7 +25,6 @@ export const JsonDataSourceConfig = z.object({
 export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>;
 export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigType, "node" | "edge">;
 
-// @DataSource.register
 export class JsonDataSource extends DataSource {
     static type = "json";
     url: string;
