@@ -1,10 +1,11 @@
 import "../index.ts";
 import "../src/layout/index.ts"; // Ensure all layouts are registered
+import "../src/data/index.ts"; // Ensure all data sources are registered
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/3D",
@@ -57,7 +58,9 @@ const meta: Meta = {
     parameters: {
         controls: {exclude: /^(#|_)/},
         chromatic: {
-            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
+            // Using event-based waiting via play function instead of delay
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.3, // Reduced threshold since we wait for actual settling
         },
     },
     args: {
@@ -109,6 +112,10 @@ export const ngraph: Story = {
                 "graph.layoutOptions.timeStep",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -296,5 +303,67 @@ export const ForceAtlas2: Story = {
                 "graph.layoutOptions.seed",
             ],
         },
+    },
+};
+
+export const Fixed: Story = {
+    args: {
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "/test/helpers/data3-fixed-positions.json",
+        },
+        layout: "fixed",
+        layoutConfig: {
+            dim: 3,
+        },
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: [], // No controls for fixed layout
+        },
+    },
+    play: async({canvasElement}) => {
+        console.log("[Fixed Story] Play function called");
+        
+        // Wait a moment for data loading to start
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Wait for data to be loaded
+        console.log("[Fixed Story] Waiting for data to load...");
+        await new Promise<void>((resolve) => {
+            const checkData = () => {
+                const element = canvasElement as any;
+                if (element?.graph?.nodes?.size > 0) {
+                    console.log("[Fixed Story] Data loaded, nodes:", element.graph.nodes.size);
+                    resolve();
+                } else {
+                    setTimeout(checkData, 100);
+                }
+            };
+            checkData();
+        });
+        
+        // Now wait for graph to settle
+        console.log("[Fixed Story] Data loaded, waiting for graph to settle");
+        await waitForGraphSettled(canvasElement);
+        console.log("[Fixed Story] Graph settled");
+        
+        // Log the final state
+        const element = canvasElement as any;
+        if (element?.graph) {
+            console.log("[Fixed Story] Final graph state:", {
+                nodes: element.graph.nodes?.size || 0,
+                edges: element.graph.edges?.size || 0,
+                layout: element.graph.layout,
+                layoutEngine: element.graph.layoutManager?.layoutEngine?.constructor.name,
+                dataSource: element.dataSource,
+                dataSourceConfig: element.dataSourceConfig
+            });
+        }
     },
 };
