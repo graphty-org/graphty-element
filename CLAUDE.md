@@ -259,7 +259,36 @@ Common warnings during visual tests:
 
 - **URL Requirements**:
   - All URLs accessed by stories (e.g. data URLs) must be fully qualified, non-local URLs so that they work in Chromatic
+  - When loading data in storybook stories, make sure to use absolute urls since relative urls will break chromatic
 
 ## Debugging and Testing Notes
 
 - Do not increase playwright timeout times to try and address timeout issues. The timeout is probably due to another problem
+
+## Debugging Tools
+
+### Capturing Layout Positions
+
+When you need to capture the settled positions from a layout engine (useful for creating fixed layout data):
+
+```bash
+npx tsx scripts/capture-with-actual-engine.ts
+```
+
+This script (`scripts/capture-with-actual-engine.ts`):
+- Uses the actual NGraphEngine implementation (not a recreation)
+- Runs with the same configuration as stories (seed: 42, dim: 3)
+- Captures node positions when the engine reports it has settled
+- Outputs to `test/helpers/cat-social-network-2-fixed-positions-actual-engine.json`
+
+Use cases:
+- Creating pre-calculated positions for performance testing
+- Ensuring consistent layouts across different stories
+- Debugging layout settling behavior
+- Creating fixed position datasets from force-directed layouts
+
+To use the captured positions:
+1. Run the script to generate the positions file
+2. Copy the output file to your desired location (e.g., `cp test/helpers/cat-social-network-2-fixed-positions-actual-engine.json test/helpers/my-fixed-positions.json`)
+3. Use the fixed layout type in your story/test with the generated data
+```
