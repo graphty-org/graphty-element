@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled, waitForSkyboxLoaded} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Graph",
@@ -50,17 +50,31 @@ export const Default: Story = {
 
 export const Skybox: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {background: {backgroundType: "skybox", data: "https://raw.githubusercontent.com/graphty-org/graphty-element/master/examples/assets/rolling_hills_equirectangular_skybox.png"}}}),
+        dataSource: "json",
+        dataSourceConfig: {
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2-fixed-positions-actual-engine.json",
+        },
+        layout: "fixed",
+        layoutConfig: {
+            dim: 3,
+        },
+        styleTemplate: templateCreator({
+            graph: {background: {backgroundType: "skybox", data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/rolling_hills_equirectangular_skybox.png"}},
+        }),
     },
     parameters: {
         controls: {
             include: ["graph.background.skybox"],
         },
         chromatic: {
-            delay: 3000, // Wait 3 seconds for skybox image to fully load
             diffIncludeAntiAliasing: true,
             diffThreshold: 0.3,
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the skybox to fully load before taking the screenshot
+        await waitForSkyboxLoaded(canvasElement);
+        await waitForGraphSettled(canvasElement);
     },
 };
 

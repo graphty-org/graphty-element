@@ -362,15 +362,23 @@ export class Graph implements GraphContext {
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
                 typeof this.styles.config.graph.background.data === "string") {
-            new PhotoDome(
+            const skyboxUrl = this.styles.config.graph.background.data;
+            const photoDome = new PhotoDome(
                 "testdome",
-                this.styles.config.graph.background.data,
+                skyboxUrl,
                 {
                     resolution: 32,
                     size: 500,
                 },
                 this.scene,
             );
+                // Emit event when skybox texture is loaded
+            photoDome.texture.onLoadObservable.addOnce(() => {
+                this.eventManager.emitGraphEvent("skybox-loaded", {
+                    graph: this,
+                    url: skyboxUrl,
+                });
+            });
         }
 
         // background color - always set a default

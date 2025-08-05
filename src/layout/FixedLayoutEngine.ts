@@ -31,7 +31,7 @@ export class FixedLayout extends SimpleLayoutEngine {
 
         for (const node of this._nodes) {
             const nodeData = node.data as Record<string, unknown>;
-            const position = nodeData?.position as {x?: number; y?: number; z?: number} | undefined;
+            const position = nodeData.position as {x?: number, y?: number, z?: number} | undefined;
             if (position) {
                 positions[node.id] = [
                     position.x ?? 0,

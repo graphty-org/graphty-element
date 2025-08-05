@@ -1,8 +1,10 @@
+import "../src/data/index.ts"; // Ensure all data sources are registered
+
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import isChromatic from "chromatic/isChromatic";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Label",
@@ -257,7 +259,7 @@ export const FontSize: Story = {
     args: {
         dataSource: "json",
         dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2-fixed-positions-actual-engine.json",
         },
         styleTemplate: templateCreator({
             nodeStyle: {
@@ -267,15 +269,10 @@ export const FontSize: Story = {
                     fontSize: 96,
                 },
             },
-            behavior: {
-                layout: {
-                    preSteps: 6000, // Extra steps for large font (96px) physics settling
-                },
-            },
         }),
-        layout: "ngraph",
+        layout: "fixed",
         layoutConfig: {
-            seed: 42,
+            dim: 3,
         },
     },
     parameters: {
@@ -283,9 +280,14 @@ export const FontSize: Story = {
             include: ["label.fontSize"],
         },
         chromatic: {
+            // Using event-based waiting via play function instead of delay
             diffIncludeAntiAliasing: true,
-            diffThreshold: 0.3,
+            diffThreshold: 0.3, // Reduced threshold since we wait for actual settling
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 

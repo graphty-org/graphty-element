@@ -92,6 +92,11 @@ describe("LayoutManager", () => {
                         stepCount++;
                         originalStep();
                     };
+                    // Ensure the layout doesn't settle during pre-steps
+                    Object.defineProperty(engine, "isSettled", {
+                        get: () => stepCount >= 10,
+                        configurable: true,
+                    });
                 }
 
                 return engine;

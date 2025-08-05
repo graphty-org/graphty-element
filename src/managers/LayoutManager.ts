@@ -114,6 +114,11 @@ export class LayoutManager implements Manager {
                 // run layout presteps
                 const {preSteps} = this.styles.config.behavior.layout;
                 for (let i = 0; i < preSteps; i++) {
+                    // Stop if layout has settled
+                    if (this.layoutEngine.isSettled) {
+                        break;
+                    }
+
                     this.layoutEngine.step();
                 }
 
@@ -164,7 +169,7 @@ export class LayoutManager implements Manager {
      * Step the layout engine forward
      */
     step(): void {
-        if (this.layoutEngine && this.running) {
+        if (this.layoutEngine && this.running && !this.layoutEngine.isSettled) {
             this.layoutEngine.step();
         }
     }

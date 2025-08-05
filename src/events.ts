@@ -54,7 +54,7 @@ export interface GraphLayoutInitializedEvent {
 
 // Generic events for internal manager communication
 export interface GraphGenericEvent {
-    type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed";
+    type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded";
     [key: string]: unknown;
 }
 

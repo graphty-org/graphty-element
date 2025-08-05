@@ -84,6 +84,23 @@ export class UpdateManager implements Manager {
     }
 
     /**
+     * Get the current render frame count
+     */
+    getRenderFrameCount(): number {
+        return this.frameCount;
+    }
+
+    /**
+     * Render a fixed number of frames (for testing)
+     * This ensures deterministic rendering similar to Babylon.js testing approach
+     */
+    renderFixedFrames(count: number): void {
+        for (let i = 0; i < count; i++) {
+            this.update();
+        }
+    }
+
+    /**
      * Main update method - called by RenderManager each frame
      */
     private frameCount = 0;

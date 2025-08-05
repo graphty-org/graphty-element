@@ -10,28 +10,77 @@ import type {Graphty} from "../src/graphty-element";
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
+        console.warn("No graphty-element found in canvas element");
         return;
     }
 
+    // Waiting for graph-settled event...
+
     await new Promise<void>((resolve) => {
         let settled = false;
+
         const timeout = setTimeout(() => {
             if (!settled) {
+                console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
                 settled = true;
                 resolve();
             }
         }, 10000);
 
+        const handleDataLoaded = (): void => {
+            // data-loaded event fired
+        };
+
         const handleSettled = (): void => {
             if (!settled) {
+                // graph-settled event fired
                 settled = true;
                 clearTimeout(timeout);
                 resolve();
             }
         };
 
+        graphtyElement.addEventListener("data-loaded", handleDataLoaded, {once: true});
         graphtyElement.addEventListener("graph-settled", handleSettled, {once: true});
     });
+
+    // Graph settled event fired - graph should now be stable
+
+    // Render a fixed number of frames after settling to ensure Babylon.js completes rendering
+    // This matches the Babylon.js testing approach of using fixed render counts
+    const graph = (graphtyElement as Graphty & {["#graph"]?: {updateManager?: {renderFixedFrames: (count: number) => void}}})["#graph"];
+    if (graph?.updateManager) {
+        // Rendering 30 fixed frames for deterministic output
+        graph.updateManager.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
+    }
+}
+
+// Helper to wait for skybox to load
+export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<void> {
+    const graphtyElement = canvasElement.querySelector("graphty-element");
+    if (!graphtyElement) {
+        console.warn("No graphty-element found in canvas element");
+        return;
+    }
+
+    // Waiting for skybox-loaded event...
+
+    await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => {
+            console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
+            resolve();
+        }, 15000);
+
+        const handleSkyboxLoaded = (): void => {
+            // skybox-loaded event fired
+            clearTimeout(timeout);
+            resolve();
+        };
+
+        graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
+    });
+
+    // Skybox loaded event fired - skybox texture should now be ready
 }
 
 export interface TemplateOpts {

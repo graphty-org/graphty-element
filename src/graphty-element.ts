@@ -49,6 +49,14 @@ export class Graphty extends LitElement {
                 composed: true,
             }));
         });
+
+        this.#graph.addListener("skybox-loaded", (event) => {
+            this.dispatchEvent(new CustomEvent("skybox-loaded", {
+                detail: event,
+                bubbles: true,
+                composed: true,
+            }));
+        });
         // Set runAlgorithmsOnLoad BEFORE setting style template
         if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
             this.#graph.runAlgorithmsOnLoad = true;

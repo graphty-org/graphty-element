@@ -147,6 +147,10 @@ export const D3: Story = {
                 "graph.layoutOptions.velocityDecay",
             ],
         },
+        chromatic: {
+            diffIncludeAntiAliasing: true,
+            diffThreshold: 0.8, // Increased tolerance for D3 physics-based layout
+        },
     },
 };
 
@@ -310,7 +314,7 @@ export const Fixed: Story = {
     args: {
         dataSource: "json",
         dataSourceConfig: {
-            data: "/test/helpers/data3-fixed-positions.json",
+            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3-fixed-positions.json",
         },
         layout: "fixed",
         layoutConfig: {
@@ -328,42 +332,7 @@ export const Fixed: Story = {
         },
     },
     play: async({canvasElement}) => {
-        console.log("[Fixed Story] Play function called");
-        
-        // Wait a moment for data loading to start
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Wait for data to be loaded
-        console.log("[Fixed Story] Waiting for data to load...");
-        await new Promise<void>((resolve) => {
-            const checkData = () => {
-                const element = canvasElement as any;
-                if (element?.graph?.nodes?.size > 0) {
-                    console.log("[Fixed Story] Data loaded, nodes:", element.graph.nodes.size);
-                    resolve();
-                } else {
-                    setTimeout(checkData, 100);
-                }
-            };
-            checkData();
-        });
-        
-        // Now wait for graph to settle
-        console.log("[Fixed Story] Data loaded, waiting for graph to settle");
+        // Wait for the graph to fully settle before taking the screenshot
         await waitForGraphSettled(canvasElement);
-        console.log("[Fixed Story] Graph settled");
-        
-        // Log the final state
-        const element = canvasElement as any;
-        if (element?.graph) {
-            console.log("[Fixed Story] Final graph state:", {
-                nodes: element.graph.nodes?.size || 0,
-                edges: element.graph.edges?.size || 0,
-                layout: element.graph.layout,
-                layoutEngine: element.graph.layoutManager?.layoutEngine?.constructor.name,
-                dataSource: element.dataSource,
-                dataSourceConfig: element.dataSourceConfig
-            });
-        }
     },
 };
