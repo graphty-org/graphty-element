@@ -1,11 +1,12 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {templateCreator} from "./helpers";
+import {templateCreator, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Calculated",
     component: "graphty-element",
+    decorators: [eventWaitingDecorator],
     parameters: {
         controls: {exclude: /^(#|_)/},
         chromatic: {

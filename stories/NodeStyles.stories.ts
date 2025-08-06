@@ -1,13 +1,14 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {nodeShapes, renderFn, templateCreator} from "./helpers";
+import {nodeShapes, renderFn, templateCreator, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Node",
     component: "graphty-element",
     // XXX: https://github.com/storybookjs/storybook/issues/23343
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         nodeColor: {control: "color", table: {category: "Texture"}, name: "texture.color"},
         nodeShape: {control: "select", options: nodeShapes, table: {category: "Shape"}, name: "shape.type"},

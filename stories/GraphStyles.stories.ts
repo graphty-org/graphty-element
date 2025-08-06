@@ -1,12 +1,13 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator, waitForGraphSettled, waitForSkyboxLoaded} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled, waitForSkyboxLoaded, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Graph",
     component: "graphty-element",
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         skybox: {control: "text", table: {category: "Background"}, name: "graph.background.skybox"},
         background: {control: "color", table: {category: "Background"}, name: "graph.background.color"},

@@ -4,12 +4,13 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import isChromatic from "chromatic/isChromatic";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator, waitForGraphSettled} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Label",
     component: "graphty-element",
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         // Basic
         labelEnabled: {control: "boolean", table: {category: "Basic"}, name: "label.enabled"},

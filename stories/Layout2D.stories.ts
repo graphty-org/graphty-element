@@ -3,12 +3,13 @@ import "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {renderFn, templateCreator, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/2D",
     component: "graphty-element",
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         // Spring layout controls
         springK: {control: {type: "number"}, table: {category: "Spring Layout"}, name: "graph.layoutOptions.k"},

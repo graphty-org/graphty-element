@@ -4,11 +4,12 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
-import {edgeData, nodeData} from "./helpers";
+import {edgeData, nodeData, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Data",
     component: "graphty-element",
+    decorators: [eventWaitingDecorator],
     parameters: {
         controls: {exclude: /^(#|_)/},
         chromatic: {

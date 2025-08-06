@@ -1,13 +1,14 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator} from "./helpers";
+import {renderFn, templateCreator, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Edge",
     component: "graphty-element",
     // XXX: https://github.com/storybookjs/storybook/issues/23343
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         edgeLineWidth: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Line"}, name: "line.width"},
     },

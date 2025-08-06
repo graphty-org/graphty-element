@@ -1,3 +1,8 @@
+/**
+ * Enhanced helpers that integrate loader-based event waiting
+ * This approach prevents race conditions while maintaining backwards compatibility
+ */
+
 import type {Meta} from "@storybook/web-components-vite";
 import lodash from "lodash";
 // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -6,7 +11,65 @@ const {set: deepSet, merge} = lodash;
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";
 import type {Graphty} from "../src/graphty-element";
 
-// Helper to wait for graph to settle
+// Global storage for event promises set up by decorators
+const eventWaitingState = new WeakMap<HTMLElement, {
+    promises: Map<string, Promise<void>>;
+    resolvers: Map<string, () => void>;
+}>();
+
+/**
+ * Enhanced decorator that sets up event listeners before elements are rendered
+ * This decorator should be added to the meta configuration
+ */
+export const eventWaitingDecorator = (story: () => Element): Element => {
+    // Set up mutation observer to catch graphty-element creation
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeName === "GRAPHTY-ELEMENT") {
+                    const element = node as HTMLElement;
+
+                    // Create promise infrastructure for this element
+                    const promises = new Map<string, Promise<void>>();
+                    const resolvers = new Map<string, () => void>();
+
+                    // Set up promises for common events
+                    const events = ["graph-settled", "data-loaded", "skybox-loaded"];
+                    events.forEach((eventName) => {
+                        let resolver: () => void;
+                        const promise = new Promise<void>((resolve) => {
+                            resolver = resolve;
+                        });
+                        promises.set(eventName, promise);
+                        resolvers.set(eventName, resolver as () => void);
+
+                        // Attach listener immediately
+                        element.addEventListener(eventName, () => {
+                            (resolver as () => void)();
+                        }, {once: true});
+                    });
+
+                    // Store state for this element
+                    eventWaitingState.set(element, {promises, resolvers});
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, {childList: true, subtree: true});
+
+    // Run the story
+    const result = story();
+
+    // Clean up observer after a short delay
+    setTimeout(() => {
+        observer.disconnect();
+    }, 100);
+
+    return result;
+};
+
+// Helper to wait for graph to settle - now uses pre-attached listeners
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
@@ -14,48 +77,54 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
         return;
     }
 
-    // Waiting for graph-settled event...
-
-    await new Promise<void>((resolve) => {
-        let settled = false;
-
-        const timeout = setTimeout(() => {
-            if (!settled) {
+    // Check if we have pre-attached promises
+    const state = eventWaitingState.get(graphtyElement);
+    if (state?.promises.has("graph-settled")) {
+        // Use the pre-attached promise with timeout
+        const settledPromise = state.promises.get("graph-settled") as Promise<void>;
+        const timeoutPromise = new Promise<void>((resolve) => {
+            setTimeout(() => {
                 console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
-                settled = true;
                 resolve();
-            }
-        }, 10000);
+            }, 10000);
+        });
 
-        const handleDataLoaded = (): void => {
-            // data-loaded event fired
-        };
+        await Promise.race([settledPromise, timeoutPromise]);
+    } else {
+        // Fallback to original implementation if decorator wasn't used
+        console.warn("Event waiting decorator not active, using fallback approach");
 
-        const handleSettled = (): void => {
-            if (!settled) {
-                // graph-settled event fired
-                settled = true;
-                clearTimeout(timeout);
-                resolve();
-            }
-        };
+        await new Promise<void>((resolve) => {
+            let settled = false;
 
-        graphtyElement.addEventListener("data-loaded", handleDataLoaded, {once: true});
-        graphtyElement.addEventListener("graph-settled", handleSettled, {once: true});
-    });
+            const timeout = setTimeout(() => {
+                if (!settled) {
+                    console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
+                    settled = true;
+                    resolve();
+                }
+            }, 10000);
 
-    // Graph settled event fired - graph should now be stable
+            const handleSettled = (): void => {
+                if (!settled) {
+                    settled = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            };
+
+            graphtyElement.addEventListener("graph-settled", handleSettled, {once: true});
+        });
+    }
 
     // Render a fixed number of frames after settling to ensure Babylon.js completes rendering
-    // This matches the Babylon.js testing approach of using fixed render counts
     const graph = (graphtyElement as Graphty & {["#graph"]?: {updateManager?: {renderFixedFrames: (count: number) => void}}})["#graph"];
     if (graph?.updateManager) {
-        // Rendering 30 fixed frames for deterministic output
         graph.updateManager.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
     }
 }
 
-// Helper to wait for skybox to load
+// Helper to wait for skybox to load - now uses pre-attached listeners
 export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
@@ -63,26 +132,40 @@ export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<v
         return;
     }
 
-    // Waiting for skybox-loaded event...
+    // Check if we have pre-attached promises
+    const state = eventWaitingState.get(graphtyElement);
+    if (state?.promises.has("skybox-loaded")) {
+        // Use the pre-attached promise with timeout
+        const skyboxPromise = state.promises.get("skybox-loaded") as Promise<void>;
+        const timeoutPromise = new Promise<void>((resolve) => {
+            setTimeout(() => {
+                console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
+                resolve();
+            }, 15000);
+        });
 
-    await new Promise<void>((resolve) => {
-        const timeout = setTimeout(() => {
-            console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
-            resolve();
-        }, 15000);
+        await Promise.race([skyboxPromise, timeoutPromise]);
+    } else {
+        // Fallback to original implementation
+        console.warn("Event waiting decorator not active, using fallback approach");
 
-        const handleSkyboxLoaded = (): void => {
-            // skybox-loaded event fired
-            clearTimeout(timeout);
-            resolve();
-        };
+        await new Promise<void>((resolve) => {
+            const timeout = setTimeout(() => {
+                console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
+                resolve();
+            }, 15000);
 
-        graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
-    });
+            const handleSkyboxLoaded = (): void => {
+                clearTimeout(timeout);
+                resolve();
+            };
 
-    // Skybox loaded event fired - skybox texture should now be ready
+            graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
+        });
+    }
 }
 
+// Re-export all the original helpers unchanged
 export interface TemplateOpts {
     nodeStyle?: Record<string, unknown>;
     nodeSelector?: string;
@@ -269,3 +352,4 @@ export const nodeShapes = [
     "icosphere",
     "geodesic",
 ];
+

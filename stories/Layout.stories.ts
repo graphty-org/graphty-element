@@ -5,12 +5,13 @@ import "../src/data/index.ts"; // Ensure all data sources are registered
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator, waitForGraphSettled} from "./helpers";
+import {renderFn, templateCreator, waitForGraphSettled, eventWaitingDecorator} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/3D",
     component: "graphty-element",
     render: renderFn,
+    decorators: [eventWaitingDecorator],
     argTypes: {
         // D3 layout controls
         d3AlphaMin: {control: {type: "range", min: 0.001, max: 0.5, step: 0.001}, table: {category: "D3 Layout"}, name: "graph.layoutOptions.alphaMin"},
