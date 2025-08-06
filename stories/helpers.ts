@@ -21,7 +21,8 @@ const eventWaitingState = new WeakMap<HTMLElement, {
  * Enhanced decorator that sets up event listeners before elements are rendered
  * This decorator should be added to the meta configuration
  */
-export const eventWaitingDecorator = (story: () => Element): Element => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const eventWaitingDecorator = (story: any): any => {
     // Set up mutation observer to catch graphty-element creation
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -36,7 +37,7 @@ export const eventWaitingDecorator = (story: () => Element): Element => {
                     // Set up promises for common events
                     const events = ["graph-settled", "data-loaded", "skybox-loaded"];
                     events.forEach((eventName) => {
-                        let resolver: () => void;
+                        let resolver: (() => void) | undefined;
                         const promise = new Promise<void>((resolve) => {
                             resolver = resolve;
                         });
@@ -45,7 +46,9 @@ export const eventWaitingDecorator = (story: () => Element): Element => {
 
                         // Attach listener immediately
                         element.addEventListener(eventName, () => {
-                            (resolver as () => void)();
+                            if (resolver) {
+                                resolver();
+                            }
                         }, {once: true});
                     });
 
@@ -78,10 +81,14 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
     }
 
     // Check if we have pre-attached promises
-    const state = eventWaitingState.get(graphtyElement);
+    const state = eventWaitingState.get(graphtyElement as HTMLElement);
     if (state?.promises.has("graph-settled")) {
         // Use the pre-attached promise with timeout
-        const settledPromise = state.promises.get("graph-settled") as Promise<void>;
+        const settledPromise = state.promises.get("graph-settled");
+        if (!settledPromise) {
+            return;
+        } // This should never happen
+
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
@@ -133,10 +140,14 @@ export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<v
     }
 
     // Check if we have pre-attached promises
-    const state = eventWaitingState.get(graphtyElement);
+    const state = eventWaitingState.get(graphtyElement as HTMLElement);
     if (state?.promises.has("skybox-loaded")) {
         // Use the pre-attached promise with timeout
-        const skyboxPromise = state.promises.get("skybox-loaded") as Promise<void>;
+        const skyboxPromise = state.promises.get("skybox-loaded");
+        if (!skyboxPromise) {
+            return;
+        } // This should never happen
+
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");

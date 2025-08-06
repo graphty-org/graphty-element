@@ -4,7 +4,7 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
-import {edgeData, nodeData, eventWaitingDecorator} from "./helpers";
+import {edgeData, eventWaitingDecorator, nodeData} from "./helpers";
 
 const meta: Meta = {
     title: "Graphty",

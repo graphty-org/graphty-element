@@ -4,7 +4,7 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import isChromatic from "chromatic/isChromatic";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator, waitForGraphSettled, eventWaitingDecorator} from "./helpers";
+import {eventWaitingDecorator, renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Label",

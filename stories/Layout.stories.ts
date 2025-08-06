@@ -5,7 +5,7 @@ import "../src/data/index.ts"; // Ensure all data sources are registered
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {renderFn, templateCreator, waitForGraphSettled, eventWaitingDecorator} from "./helpers";
+import {eventWaitingDecorator, renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/3D",
