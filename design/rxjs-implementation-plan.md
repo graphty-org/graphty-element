@@ -289,6 +289,46 @@ test('RxDataManager emits changes on node addition', () => {
 
 **Implementation:**
 Create layout coordination that reacts to data changes:
+
+**Important Note on Style Updates:**
+When styles change, we do NOT need to:
+- Reload data
+- Recalculate layout positions
+- Re-run layout algorithms
+
+Instead, style changes only trigger:
+- Recomputation of computed styles for affected elements
+- Recreation/update of meshes (shapes, colors, textures) based on new styles
+- Render updates to display the new meshes
+
+This ensures that position information is preserved when only visual properties change.
+
+**Operation Priority and Dependencies:**
+When multiple operations are triggered in the same tick, they are processed in this order:
+1. **Style changes** (priority 1) - Ensures new nodes/edges use correct styles
+2. **Data changes** (priority 2) - Creates nodes/edges with current styles
+3. **Layout changes** (priority 3) - Positions the nodes/edges
+
+This priority system ensures:
+- When style and data are updated simultaneously, nodes and edges are created with the new styles rather than being created with old styles and then immediately updated.
+- When data and layout are specified together, data loading completes fully (including async operations) before layout calculations begin.
+- The system uses `concat` operator to ensure each phase completes before the next begins, while using `forkJoin` within each phase for parallel processing of similar operations.
+
+**Data Loading Cancellation:**
+- When a new data source is specified while previous data is still loading, the system automatically cancels the in-progress load.
+- This prevents race conditions where old data might arrive after new data has been requested.
+- The cancellation is implemented using RxJS's `switchMap` operator on a dedicated data loading stream.
+- Any dependent operations (layout, render) associated with the cancelled data load are also cancelled.
+
+**Layout Cancellation:**
+- Layout calculations can be expensive and long-running, especially for force-directed layouts.
+- When new data arrives or a different layout is requested, any in-progress layout calculation is immediately cancelled.
+- This ensures responsive UI where users don't have to wait for old layouts to complete before seeing new ones.
+- Cancellation scenarios:
+  - New data load → cancels current layout (data has changed, layout needs recalculation)
+  - New layout type → cancels current layout (user wants different algorithm)
+  - New data addition → cancels current layout (graph structure has changed)
+- Implemented using a dedicated `currentLayout$` stream with `switchMap` for automatic cancellation.
 ```typescript
 // src/rx/coordinators/layout-coordinator.ts
 export class LayoutCoordinator {
@@ -316,8 +356,9 @@ export class LayoutCoordinator {
   
   private updateLayout(): Observable<void> {
     return defer(() => {
+      // Always ensure a layout engine is set, default to ngraph
       if (!this.layoutManager.hasEngine()) {
-        return EMPTY;
+        this.layoutManager.setLayout('ngraph');
       }
       return from(this.layoutManager.updatePositions());
     });
@@ -327,8 +368,9 @@ export class LayoutCoordinator {
 
 **Verification:**
 - Add nodes to data manager
-- Verify layout update is triggered automatically
+- Verify layout update is triggered automatically with ngraph as default
 - Test debouncing of rapid additions
+- Verify ngraph is set if no layout engine exists
 
 **Testing:**
 ```typescript
@@ -350,6 +392,24 @@ test('auto-triggers layout on data change', async () => {
   
   // Should batch into single update
   assert.equal(layoutUpdateCount, 1);
+});
+
+test('sets ngraph as default layout when none exists', async () => {
+  const dataManager = new RxDataManager();
+  const layoutManager = new MockLayoutManager();
+  const coordinator = new LayoutCoordinator(dataManager, layoutManager);
+  
+  // Initially no layout engine
+  assert.equal(layoutManager.hasEngine(), false);
+  
+  // Add nodes to trigger layout
+  dataManager.addNodes([{ id: '1' }]);
+  
+  // Wait for debounce
+  await delay(100);
+  
+  // Should have set ngraph as default
+  assert.equal(layoutManager.getEngineType(), 'ngraph');
 });
 ```
 
@@ -532,23 +592,190 @@ export class RxGraphOperationManager {
     private renderManager: RenderManager
   ) {
     this.setupReactivePipeline();
+    this.setupCancellationStreams();
   }
   
   private setupReactivePipeline(): void {
-    // Implement full pipeline from design
-    // ... (copy from design doc)
+    // Merge all commands with priority ordering
+    const prioritizedCommands$ = merge(
+      this.styleCommands$.pipe(map(cmd => ({ ...cmd, priority: 1, type: cmd.type }))),
+      this.dataCommands$.pipe(map(cmd => ({ ...cmd, priority: 2, type: cmd.type }))),
+      this.layoutCommands$.pipe(map(cmd => ({ ...cmd, priority: 3, type: cmd.type })))
+    ).pipe(
+      // Buffer commands in the same tick
+      bufferTime(0),
+      filter(commands => commands.length > 0),
+      // Process batched commands with dependency awareness
+      concatMap(commands => this.processBatchedCommands(commands)),
+      takeUntil(this.destroy$)
+    ).subscribe();
+  }
+  
+  private processBatchedCommands(commands: Array<Command & { priority: number }>): Observable<void> {
+    // Sort by priority
+    const sorted = commands.sort((a, b) => a.priority - b.priority);
+    
+    // Group by type
+    const groups = {
+      style: sorted.filter(cmd => cmd.type.startsWith('style:')),
+      data: sorted.filter(cmd => cmd.type.startsWith('data:')),
+      layout: sorted.filter(cmd => cmd.type.startsWith('layout:'))
+    };
+    
+    // Process in dependency order with proper completion handling
+    return concat(
+      // First: all style commands (in parallel)
+      groups.style.length > 0 
+        ? forkJoin(groups.style.map(cmd => this.processStyleCommand(cmd))).pipe(map(() => void 0))
+        : of(void 0),
+      
+      // Second: all data commands (must complete before layout)
+      groups.data.length > 0
+        ? forkJoin(groups.data.map(cmd => this.processDataCommand(cmd))).pipe(map(() => void 0))
+        : of(void 0),
+      
+      // Third: layout commands (only after data is fully loaded)
+      groups.layout.length > 0
+        ? forkJoin(groups.layout.map(cmd => this.processLayoutCommand(cmd))).pipe(map(() => void 0))
+        : of(void 0)
+    );
+  }
+  
+  private processStyleCommand(cmd: Command): Observable<void> {
+    return this.updateStyles(cmd).pipe(
+      switchMap(() => this.updateMeshes())
+    );
+  }
+  
+  // Track current operations for cancellation
+  private currentDataLoad$ = new Subject<Observable<void>>();
+  private currentLayout$ = new Subject<Observable<void>>();
+  
+  private processDataCommand(cmd: Command): Observable<void> {
+    // Cancel any in-progress data loading AND layout
+    const dataLoad$ = this.updateData(cmd).pipe(
+      // Note: Layout update happens separately if layout command exists
+      // Otherwise, auto-trigger layout after data load
+      switchMap(() => {
+        // Check if layout command exists in current batch
+        // This info would be passed via context in real implementation
+        return this.shouldAutoTriggerLayout() 
+          ? this.triggerLayout()
+          : this.updateRender();
+      }),
+      // Share to prevent multiple executions
+      share()
+    );
+    
+    // Push to subject to enable cancellation
+    this.currentDataLoad$.next(dataLoad$);
+    return dataLoad$;
+  }
+  
+  private processLayoutCommand(cmd: Command): Observable<void> {
+    const layout$ = this.updateLayout(cmd).pipe(
+      switchMap(() => this.updateRender()),
+      share()
+    );
+    
+    // Push to subject to enable cancellation
+    this.currentLayout$.next(layout$);
+    return layout$;
+  }
+  
+  private triggerLayout(): Observable<void> {
+    const layout$ = this.updateLayout().pipe(
+      switchMap(() => this.updateRender()),
+      share()
+    );
+    
+    // Push to subject to enable cancellation
+    this.currentLayout$.next(layout$);
+    return layout$;
+  }
+  
+  private setupCancellationStreams(): void {
+    // Cancel previous data loads when new data arrives
+    this.currentDataLoad$.pipe(
+      switchMap(dataLoad$ => dataLoad$),
+      takeUntil(this.destroy$)
+    ).subscribe();
+    
+    // Cancel previous layouts when new layout or data arrives
+    merge(
+      this.currentLayout$,
+      this.currentDataLoad$.pipe(map(() => EMPTY)) // Data changes cancel layout
+    ).pipe(
+      switchMap(layout$ => layout$),
+      takeUntil(this.destroy$)
+    ).subscribe();
+  }
+  
+  private updateStyles(cmd: StyleCommand): Observable<void> {
+    return defer(() => {
+      this.styleManager.applyStyle(cmd.payload);
+      this.styleState$.next({ template: cmd.payload });
+      return of(void 0);
+    });
+  }
+  
+  private updateMeshes(): Observable<void> {
+    return defer(() => {
+      // Update all node and edge meshes based on new styles
+      const updates: Observable<void>[] = [];
+      
+      // Update node meshes
+      for (const node of this.dataManager.getNodes()) {
+        const style = this.styleManager.getComputedStyle(node);
+        updates.push(from(node.updateMesh(style)));
+      }
+      
+      // Update edge meshes
+      for (const edge of this.dataManager.getEdges()) {
+        const style = this.styleManager.getComputedStyle(edge);
+        updates.push(from(edge.updateMesh(style)));
+      }
+      
+      return forkJoin(updates).pipe(map(() => void 0));
+    });
   }
 }
 ```
 
 **Verification:**
-- Test complete flow: style → data → layout → render
-- Verify automatic triggers work
-- Test state consistency
+- Test style changes only update meshes, not layout
+- Test data changes trigger layout and render
+- Test layout changes trigger render only
 
 **Testing:**
 ```typescript
-test('complete operation flow', async () => {
+test('style changes only update meshes', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  // First add some nodes
+  manager.addNodes([{ id: '1' }, { id: '2' }]);
+  await delay(100);
+  
+  const events: string[] = [];
+  manager.allOperations$.subscribe(op => events.push(op.type));
+  
+  // Change style
+  manager.setStyleTemplate(newMockStyle);
+  
+  await delay(100);
+  
+  // Should only update meshes, not trigger layout
+  assert.equal(events.includes('style:init'), true);
+  assert.equal(events.includes('mesh:update'), true);
+  assert.equal(events.includes('layout:update'), false);
+});
+
+test('data changes trigger full pipeline', async () => {
   const manager = new RxGraphOperationManager(
     mockStyleManager,
     mockDataManager,
@@ -557,21 +784,202 @@ test('complete operation flow', async () => {
   );
   
   const events: string[] = [];
-  
-  // Track all operations
   manager.allOperations$.subscribe(op => events.push(op.type));
   
-  // Trigger full flow
-  manager.setStyleTemplate(mockStyle);
+  // Add nodes
   manager.addNodes(mockNodes);
   
   await delay(100);
   
   // Verify order
-  assert.equal(events[0], 'style:init');
-  assert.equal(events[1], 'data:add');
-  assert.equal(events[2], 'layout:update'); // Auto-triggered
-  assert.equal(events[3], 'render:update'); // Auto-triggered
+  assert.equal(events[0], 'data:add');
+  assert.equal(events[1], 'layout:update'); // Auto-triggered
+  assert.equal(events[2], 'render:update'); // Auto-triggered
+});
+
+test('style changes are processed before data changes', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  const events: string[] = [];
+  manager.allOperations$.subscribe(op => events.push(op.type));
+  
+  // Emit both style and data changes in the same tick
+  manager.setStyleTemplate(newMockStyle);
+  manager.addNodes(mockNodes);
+  
+  await delay(100);
+  
+  // Verify style operations happen first
+  const styleIndex = events.findIndex(e => e.includes('style'));
+  const dataIndex = events.findIndex(e => e.includes('data'));
+  
+  assert.equal(styleIndex < dataIndex, true, 'Style should be processed before data');
+  
+  // Verify that nodes were created with the new style
+  const nodeStyles = mockDataManager.getCreatedNodeStyles();
+  assert.equal(nodeStyles[0], newMockStyle.nodeStyle);
+});
+
+test('data loading completes before layout starts', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  const events: { type: string, timestamp: number }[] = [];
+  manager.allOperations$.subscribe(op => 
+    events.push({ type: op.type, timestamp: Date.now() })
+  );
+  
+  // Simulate async data loading
+  let dataLoadComplete = false;
+  mockDataManager.loadData = () => {
+    return timer(50).pipe(
+      tap(() => dataLoadComplete = true),
+      map(() => mockNodes)
+    );
+  };
+  
+  // Emit both data and layout changes in the same tick
+  manager.loadData('remote-source');
+  manager.setLayout('force');
+  
+  await delay(150);
+  
+  // Find when operations completed
+  const dataComplete = events.find(e => e.type === 'data:loaded');
+  const layoutStart = events.find(e => e.type === 'layout:start');
+  
+  assert.isDefined(dataComplete);
+  assert.isDefined(layoutStart);
+  assert.equal(dataComplete.timestamp < layoutStart.timestamp, true, 
+    'Data loading should complete before layout starts');
+  assert.equal(dataLoadComplete, true, 'Data load should have completed');
+});
+
+test('new data load cancels previous data load', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  const loadedFiles: string[] = [];
+  let firstLoadCancelled = false;
+  
+  // Simulate slow async data loading
+  mockDataManager.loadData = (file: string) => {
+    return timer(100).pipe(
+      tap(() => loadedFiles.push(file)),
+      finalize(() => {
+        if (file === 'first-file.json' && loadedFiles.length === 0) {
+          firstLoadCancelled = true;
+        }
+      }),
+      map(() => mockNodes)
+    );
+  };
+  
+  // Start loading first file
+  manager.loadData('first-file.json');
+  
+  // After 50ms, request a different file (should cancel first)
+  await delay(50);
+  manager.loadData('second-file.json');
+  
+  // Wait for operations to complete
+  await delay(200);
+  
+  // Verify only second file was loaded
+  assert.equal(loadedFiles.length, 1);
+  assert.equal(loadedFiles[0], 'second-file.json');
+  assert.equal(firstLoadCancelled, true, 'First load should have been cancelled');
+});
+
+test('layout operations are cancelled when new data or layout arrives', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  const layoutsCompleted: string[] = [];
+  let forceLayoutCancelled = false;
+  
+  // Simulate slow layout calculations
+  mockLayoutManager.runLayout = (type: string) => {
+    return timer(100).pipe(
+      tap(() => layoutsCompleted.push(type)),
+      finalize(() => {
+        if (type === 'force' && !layoutsCompleted.includes('force')) {
+          forceLayoutCancelled = true;
+        }
+      }),
+      map(() => ({ positions: {} }))
+    );
+  };
+  
+  // Add some initial data
+  manager.addNodes([{ id: '1' }, { id: '2' }]);
+  await delay(10);
+  
+  // Start force layout
+  manager.setLayout('force');
+  
+  // After 50ms, change to circular layout (should cancel force)
+  await delay(50);
+  manager.setLayout('circular');
+  
+  await delay(200);
+  
+  // Verify force was cancelled and circular completed
+  assert.equal(layoutsCompleted.length, 1);
+  assert.equal(layoutsCompleted[0], 'circular');
+  assert.equal(forceLayoutCancelled, true);
+});
+
+test('new data cancels in-progress layout', async () => {
+  const manager = new RxGraphOperationManager(
+    mockStyleManager,
+    mockDataManager,
+    mockLayoutManager,
+    mockRenderManager
+  );
+  
+  let layoutCancelled = false;
+  let layoutCompleted = false;
+  
+  // Simulate slow layout
+  mockLayoutManager.runLayout = () => {
+    return timer(100).pipe(
+      tap(() => layoutCompleted = true),
+      finalize(() => {
+        if (!layoutCompleted) layoutCancelled = true;
+      }),
+      map(() => ({ positions: {} }))
+    );
+  };
+  
+  // Add initial data and start layout
+  manager.addNodes([{ id: '1' }]);
+  
+  // After 50ms, add new data (should cancel layout)
+  await delay(50);
+  manager.addNodes([{ id: '2' }]);
+  
+  await delay(200);
+  
+  // Verify first layout was cancelled
+  assert.equal(layoutCancelled, true, 'First layout should have been cancelled');
 });
 ```
 
@@ -589,9 +997,12 @@ export class ObsolescenceManager {
   }>();
   
   private obsolescenceRules: Record<string, string[]> = {
-    'data:add': ['layout:update', 'algorithm:run'],
-    'layout:set': ['layout:update'],
-    'style:init': ['style:apply']
+    'data:load': ['data:load', 'layout:update', 'algorithm:run'],  // New data cancels previous data load and layout
+    'data:add': ['layout:update', 'algorithm:run'],  // Data changes cancel in-progress layout
+    'layout:set': ['layout:update'],  // New layout cancels previous layout
+    'layout:update': ['layout:update'],  // Layout updates cancel previous layout updates
+    'style:init': ['mesh:update'],  // Style changes cancel mesh updates
+    'mesh:update': []  // Mesh updates don't cancel anything
   };
   
   executeWithObsolescence<T>(
