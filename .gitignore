@@ -52,5 +52,5 @@ test-results/
 
 # PUPT
 .pt-config.json.backup
-./.pthistory
+.pthistory
 .git-prompts

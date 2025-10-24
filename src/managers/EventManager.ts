@@ -173,7 +173,14 @@ export class EventManager implements Manager {
             case "data-loaded":
             case "data-added":
             case "layout-initialized":
-            case "skybox-loaded": {
+            case "skybox-loaded":
+            case "operation-queue-active":
+            case "operation-queue-idle":
+            case "operation-batch-complete":
+            case "operation-start":
+            case "operation-complete":
+            case "operation-progress":
+            case "operation-obsoleted": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {
                         callback(event);

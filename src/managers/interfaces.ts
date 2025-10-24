@@ -1,6 +1,7 @@
 import type {Engine, Scene, WebGPUEngine} from "@babylonjs/core";
 
 import type {EventManager} from "./EventManager";
+import type {OperationCategory} from "./OperationQueueManager";
 
 /**
  * Base interface for all manager classes
@@ -15,6 +16,19 @@ export interface Manager {
      * Dispose of all resources held by the manager
      */
     dispose(): void;
+}
+
+/**
+ * Interface for managers that can queue operations
+ */
+export interface QueueableManager extends Manager {
+    /**
+     * Queue an operation for execution
+     * @param category The category of operation
+     * @param fn The function to execute
+     * @returns The operation ID
+     */
+    queueOperation?(category: OperationCategory, fn: () => void | Promise<void>): string;
 }
 
 /**
