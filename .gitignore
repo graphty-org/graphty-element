@@ -48,3 +48,9 @@ test/playwright/visual/screenshots-actual/
 test/playwright/generated/*.visual.spec.ts
 playwright-report/
 test-results/
+
+
+# PUPT
+.pt-config.json.backup
+./.pthistory
+.git-prompts

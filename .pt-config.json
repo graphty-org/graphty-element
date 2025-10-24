@@ -1,11 +1,21 @@
 {
+  "autoReview": true,
+  "gitPromptDir": ".git-prompts",
+  "handlebarsExtensions": [],
+  "version": "4.0.0",
   "promptDirs": [
-    "/home/apowers/.pt/prompts",
+    "./.prompts",
     "node_modules/pupt/prompts"
   ],
-  "autoReview": true,
-  "autoRun": false,
-  "gitPromptDir": "/home/apowers/Projects/graphty-monorepo/graphty-element/.git-prompts",
-  "handlebarsExtensions": [],
-  "version": "4.0.0"
+  "historyDir": "./.pthistory",
+  "annotationDir": "./.pthistory",
+  "defaultCmd": "claude",
+  "defaultCmdArgs": [
+    "--permission-mode",
+    "acceptEdits"
+  ],
+  "defaultCmdOptions": {
+    "Continue with last context?": "--continue"
+  },
+  "autoRun": true
 }
