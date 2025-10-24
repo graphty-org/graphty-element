@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/graphty-org/graphty-element/compare/v1.0.5...v1.1.0) (2025-10-24)
+
+
+### Features
+
+* add fixed layout ([3208b22](https://github.com/graphty-org/graphty-element/commit/3208b222143513e8411f54a69a4dac03bf4f25cf))
+
 ## [1.0.5](https://github.com/graphty-org/graphty-element/compare/v1.0.4...v1.0.5) (2025-07-28)
 
 
