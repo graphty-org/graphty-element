@@ -204,7 +204,7 @@ describe("OperationQueueManager", () => {
     });
 
     it("should execute operations with context", async() => {
-        let contextReceived: OperationContext | null = null;
+        let contextReceived: OperationContext | undefined;
 
         queueManager.queueOperation("data-add", (context: OperationContext) => {
             contextReceived = context;
@@ -212,7 +212,7 @@ describe("OperationQueueManager", () => {
 
         await queueManager.waitForCompletion();
 
-        assert.isNotNull(contextReceived);
+        assert.isDefined(contextReceived);
         assert.isDefined(contextReceived.signal);
         assert.isDefined(contextReceived.progress);
         assert.isDefined(contextReceived.id);

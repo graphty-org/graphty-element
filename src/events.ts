@@ -54,8 +54,8 @@ export interface GraphLayoutInitializedEvent {
 
 // Generic events for internal manager communication
 export interface GraphGenericEvent {
-    type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded" 
-        | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete" 
+    type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded"
+        | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
         | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted";
     [key: string]: unknown;
 }

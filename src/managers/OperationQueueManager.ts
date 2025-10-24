@@ -101,14 +101,15 @@ export class OperationQueueManager implements Manager {
             concurrency: options.concurrency ?? 1, // Sequential by default
             autoStart: options.autoStart ?? true,
         };
-        
+
         if (options.intervalCap !== undefined) {
             queueOptions.intervalCap = options.intervalCap;
         }
+
         if (options.interval !== undefined) {
             queueOptions.interval = options.interval;
         }
-        
+
         this.queue = new PQueue(queueOptions);
 
         // Listen for queue events
@@ -177,7 +178,7 @@ export class OperationQueueManager implements Manager {
         // Schedule batch execution on next microtask
         if (this.batchingEnabled && this.currentBatch.size === 1) {
             queueMicrotask(() => {
-                void this.executeBatch();
+                this.executeBatch();
             });
         }
 
@@ -208,7 +209,8 @@ export class OperationQueueManager implements Manager {
 
         // Add to queue with p-queue's signal support
         for (const operation of sortedOperations) {
-            const promise = this.queue.add(
+            // queue.add always returns a promise
+            void this.queue.add(
                 async({signal}) => {
                     try {
                         const context: OperationContext = {
@@ -227,10 +229,7 @@ export class OperationQueueManager implements Manager {
                 {
                     signal: operation.abortController?.signal,
                 },
-            );
-
-            // Handle cancellation
-            promise?.catch((error: unknown) => {
+            ).catch((error: unknown) => {
                 if (error && (error as Error).name === "AbortError") {
                     this.eventManager.emitGraphEvent("operation-obsoleted", {
                         id: operation.id,
@@ -396,7 +395,7 @@ export class OperationQueueManager implements Manager {
     async waitForCompletion(): Promise<void> {
         // First, ensure any pending batch is queued
         if (this.currentBatch.size > 0) {
-            await this.executeBatch();
+            this.executeBatch();
         }
 
         // Then wait for queue to be idle
