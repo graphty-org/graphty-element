@@ -48,7 +48,7 @@ jobs:
           retention-days: 1
 
       - name: Run tests
-        run: npm run test:all
+        run: npm test
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 

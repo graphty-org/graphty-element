@@ -71,7 +71,7 @@
     "chromatic": "npx chromatic --exit-zero-on-changes",
     "prepare": "husky",
     "build-storybook": "storybook build",
-    "ready:commit": "npm run build && npm run lint && npm run test:all",
+    "ready:commit": "npm run build && npm run lint && npm test",
     "merge:upstream": "git pull origin master --no-rebase"
   },
   "devDependencies": {
