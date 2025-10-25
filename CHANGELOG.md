@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/graphty-org/graphty-element/compare/v1.1.0...v1.1.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* implement phase 1 of dependency and batching to prevent race conditions ([443f18a](https://github.com/graphty-org/graphty-element/commit/443f18ae951f8db6fb6c0aaf3e082f614494a005))
+
 # [1.1.0](https://github.com/graphty-org/graphty-element/compare/v1.0.5...v1.1.0) (2025-10-24)
 
 
