@@ -271,6 +271,7 @@ describe("Operation Cancellation", () => {
                 await new Promise((resolve) => setTimeout(resolve, 50));
                 results.push("op1");
             },
+            {skipTriggers: true},
         );
 
         queueManager.queueOperation(

@@ -32,14 +32,14 @@ describe("Graph Batch Integration - Deferred Promises", () => {
         it("should enter and exit batch mode correctly", async() => {
             // Test the batch mode mechanism itself
             expect(graph.operationQueue.isInBatchMode()).toBe(false);
-            
+
             let insideBatch = false;
             await graph.batchOperations(async() => {
                 insideBatch = graph.operationQueue.isInBatchMode();
                 // Queue some operations (they may or may not execute properly)
                 await graph.addNodes([{id: "1", label: "Node 1"}], "id");
             });
-            
+
             // Should have been in batch mode inside the callback
             expect(insideBatch).toBe(true);
             // Should have exited batch mode after

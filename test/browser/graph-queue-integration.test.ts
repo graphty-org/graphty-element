@@ -257,8 +257,9 @@ describe("Graph Queue Integration", () => {
             {source: "1", target: "2", label: "Edge 1"},
         ], "source", "target");
 
-        // Should have queued both data-add operations
-        expect(queueSpy).toHaveBeenCalledTimes(2);
+        // Should have queued both data-add operations plus their triggered layout-updates
+        // (2 data-add operations + 2 triggered layout-update operations = 4 total)
+        expect(queueSpy).toHaveBeenCalledTimes(4);
         expect(queueSpy).toHaveBeenCalledWith(
             "data-add",
             expect.any(Function),

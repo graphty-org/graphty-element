@@ -63,6 +63,19 @@ export class OperationQueueManager implements Manager {
     }>();
     private batchOperations = new Set<string>();
 
+    // Trigger system
+    private triggers = new Map<OperationCategory, ((metadata?: OperationMetadata) => {
+        category: OperationCategory;
+        execute: (context: OperationContext) => Promise<void> | void;
+        description?: string;
+    } | null)[]>();
+
+    // Callback for when operations are queued (for testing)
+    onOperationQueued?: (category: OperationCategory, description?: string) => void;
+
+    // Check if layout engine exists (will be set by Graph)
+    hasLayoutEngine?: () => boolean;
+
     // Dependency graph based on actual manager dependencies
     private static readonly CATEGORY_DEPENDENCIES: [OperationCategory, OperationCategory][] = [
         // Style must be initialized before applying
@@ -87,6 +100,13 @@ export class OperationQueueManager implements Manager {
         ["render-update", "data-add"],
         ["render-update", "layout-update"],
     ];
+
+    // Post-execution triggers: operations that automatically trigger after other operations
+    private static readonly POST_EXECUTION_TRIGGERS: Partial<Record<OperationCategory, OperationCategory[]>> = {
+        "data-add": ["layout-update"],
+        "data-remove": ["layout-update"],
+        "data-update": ["layout-update"],
+    };
 
     constructor(
         private eventManager: EventManager,
@@ -456,6 +476,11 @@ export class OperationQueueManager implements Manager {
                 category: operation.category,
                 duration,
             });
+
+            // Trigger post-execution operations if not skipped
+            if (!operation.metadata?.skipTriggers) {
+                this.triggerPostExecutionOperations(operation);
+            }
         } catch (error) {
             if (error && (error as Error).name === "AbortError") {
                 // Remove from running on abort
@@ -743,6 +768,103 @@ export class OperationQueueManager implements Manager {
      */
     getActiveOperations(): string[] {
         return Array.from(this.activeControllers.keys());
+    }
+
+    /**
+     * Register a custom trigger for a specific operation category
+     */
+    registerTrigger(
+        category: OperationCategory,
+        trigger: (metadata?: OperationMetadata) => {
+            category: OperationCategory;
+            execute: (context: OperationContext) => Promise<void> | void;
+            description?: string;
+        } | null,
+    ): void {
+        if (!this.triggers.has(category)) {
+            this.triggers.set(category, []);
+        }
+
+        const triggerArray = this.triggers.get(category);
+        if (triggerArray) {
+            triggerArray.push(trigger);
+        }
+    }
+
+    /**
+     * Trigger post-execution operations based on the completed operation
+     */
+    private triggerPostExecutionOperations(operation: Operation): void {
+        // Check for default triggers
+        const defaultTriggers = OperationQueueManager.POST_EXECUTION_TRIGGERS[operation.category];
+
+        // Check for custom triggers
+        const customTriggers = this.triggers.get(operation.category) ?? [];
+
+        // Process default triggers
+        if (defaultTriggers) {
+            for (const triggerCategory of defaultTriggers) {
+                // Check prerequisites
+                if (triggerCategory === "layout-update" && this.hasLayoutEngine && !this.hasLayoutEngine()) {
+                    continue; // Skip if no layout engine
+                }
+
+                // Queue the triggered operation
+                void this.queueTriggeredOperation(triggerCategory, operation.metadata);
+            }
+        }
+
+        // Process custom triggers
+        for (const trigger of customTriggers) {
+            const result = trigger(operation.metadata);
+            if (result) {
+                // Queue the custom triggered operation
+                void this.queueTriggeredOperation(
+                    result.category,
+                    operation.metadata,
+                    result.execute,
+                    result.description,
+                );
+            }
+        }
+    }
+
+    /**
+     * Queue a triggered operation
+     */
+    private async queueTriggeredOperation(
+        category: OperationCategory,
+        sourceMetadata?: OperationMetadata,
+        execute?: (context: OperationContext) => Promise<void> | void,
+        description?: string,
+    ): Promise<void> {
+        // Notify test callback if set
+        if (this.onOperationQueued) {
+            this.onOperationQueued(category, description);
+        }
+
+        // Default execute function for layout-update
+        if (!execute && category === "layout-update") {
+            execute = (context: OperationContext) => {
+                // This will be implemented by the Graph/LayoutManager
+                context.progress.setMessage("Updating layout positions");
+            };
+        }
+
+        if (!execute) {
+            return; // No execute function provided
+        }
+
+        // Queue the operation
+        await this.queueOperationAsync(
+            category,
+            execute,
+            {
+                description: description ?? `Triggered ${category}`,
+                source: "trigger",
+                skipTriggers: true, // Prevent trigger loops
+            },
+        );
     }
 }
 

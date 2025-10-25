@@ -341,4 +341,43 @@ export class LayoutManager implements Manager {
             edgeCount,
         };
     }
+
+    /**
+     * Check if layout engine is currently set
+     */
+    hasLayoutEngine(): boolean {
+        return this.layoutEngine !== undefined;
+    }
+
+    /**
+     * Update positions for newly added nodes
+     * This is called when nodes are added to an existing layout
+     */
+    async updatePositions(nodes: Node[]): Promise<void> {
+        if (!this.layoutEngine || nodes.length === 0) {
+            return;
+        }
+
+        // If the layout engine has an updatePositions method, use it
+        if ("updatePositions" in this.layoutEngine && typeof this.layoutEngine.updatePositions === "function") {
+            const engineWithUpdate = this.layoutEngine as LayoutEngine & {updatePositions: (nodes: Node[]) => Promise<void>};
+            await engineWithUpdate.updatePositions(nodes);
+        } else {
+            // Otherwise, just run a few steps to position new nodes
+            const updateSteps = 10; // Run a few steps to position new nodes
+            for (let i = 0; i < updateSteps; i++) {
+                if (this.layoutEngine.isSettled) {
+                    break;
+                }
+
+                this.layoutEngine.step();
+            }
+        }
+
+        // Emit event that layout was updated
+        this.eventManager.emitGraphEvent("layout-updated", {
+            nodeCount: nodes.length,
+            type: "incremental",
+        });
+    }
 }

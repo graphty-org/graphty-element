@@ -188,12 +188,12 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
 
             let errorEmitted = false;
             const error = new Error("Test error");
-            
+
             // In simplified mode, errors are handled through event emission
             mockEventManager.emitGraphError = vi.fn(() => {
                 errorEmitted = true;
             });
-            
+
             void manager.queueOperationAsync(
                 "data-add",
                 () => {
@@ -202,10 +202,10 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             );
 
             manager.exitBatchMode();
-            
+
             // Wait for operations to complete
             await manager.waitForCompletion();
-            
+
             // Error should have been emitted through event system
             expect(errorEmitted).toBe(true);
         });
