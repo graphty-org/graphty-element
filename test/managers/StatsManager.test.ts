@@ -141,7 +141,7 @@ describe("StatsManager", () => {
 
             const stats = statsManager.getStats();
             assert.equal(stats.totalUpdates, 0);
-            // Note: node/edge counts are not reset by reset()
+            // TODO: node/edge counts are not reset by reset()
         });
     });
 

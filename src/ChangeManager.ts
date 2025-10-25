@@ -33,7 +33,7 @@ export class ChangeManager {
             }
         });
 
-        // TODO: do we need to pass schema here, or can we just use it from local context
+        // TODO: Consider whether schema should be passed here or obtained from local context
         return this.addData(dataType, watchedData, schema);
     }
 

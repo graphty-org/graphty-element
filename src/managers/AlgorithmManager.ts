@@ -110,7 +110,7 @@ export class AlgorithmManager implements Manager {
 
     /**
      * Get list of available algorithms
-     * Note: This depends on the Algorithm registry implementation
+     * TODO: This depends on the Algorithm registry implementation
      */
     getAvailableAlgorithms(): string[] {
         // This would need to be implemented in the Algorithm class

@@ -64,7 +64,7 @@ export class Node {
         this.styleId = styleId;
 
         // create graph node
-        // Note: Node is added to layout engine by DataManager, not here
+        // TODO: Node is added to layout engine by DataManager, not here
 
         // create mesh
         const o = Styles.getStyleForNodeStyleId(styleId);

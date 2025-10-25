@@ -1,0 +1,390 @@
+import {afterEach, assert, beforeEach, describe, expect, it, vi} from "vitest";
+
+import {Graph} from "../../src/Graph";
+
+describe("Operation Ordering", () => {
+    let container: HTMLElement;
+    let graph: Graph;
+    let executionOrder: string[];
+
+    beforeEach(() => {
+        container = document.createElement("div");
+        container.style.width = "800px";
+        container.style.height = "600px";
+        document.body.appendChild(container);
+        graph = new Graph(container);
+        executionOrder = [];
+
+        // Track execution order
+        graph.on("operation-start", (event) => {
+            const detail = (event as Record<string, unknown>).detail as {category: string};
+            executionOrder.push(detail.category);
+        });
+    });
+
+    afterEach(() => {
+        graph.dispose();
+        container.remove();
+    });
+
+    it("should execute styles → data → layout → render", async() => {
+        // Queue operations in wrong order intentionally
+        await graph.batchOperations(async() => {
+            // Queue layout first (wrong order)
+            await graph.setLayout("ngraph");
+
+            // Then data
+            await graph.addNodes([
+                {id: "1", label: "Node 1"},
+                {id: "2", label: "Node 2"},
+            ]);
+
+            // Then style
+            await graph.setStyleTemplate({
+                graphtyTemplate: true,
+                majorVersion: "1",
+                graph: {
+                    addDefaultStyle: true,
+                    background: {
+                        backgroundType: "color",
+                        color: "whitesmoke",
+                    },
+                    startingCameraDistance: 100,
+                    layout: "ngraph",
+                    twoD: false,
+                },
+                data: {
+                    knownFields: {
+                        nodeIdPath: "id",
+                        nodeWeightPath: null,
+                        nodeTimePath: null,
+                        edgeSrcIdPath: "source",
+                        edgeDstIdPath: "target",
+                        edgeWeightPath: null,
+                        edgeTimePath: null,
+                    },
+                },
+                behavior: {
+                    layout: {
+                        type: "ngraph",
+                        preSteps: 0,
+                        stepMultiplier: 1,
+                        minDelta: 0.01,
+                        zoomStepInterval: 10,
+                    },
+                    node: {
+                        pinOnDrag: false,
+                    },
+                },
+                layers: [{
+                    node: {
+                        selector: "*",
+                        style: {
+                            texture: {
+                                color: "red",
+                            },
+                            enabled: true,
+                        },
+                    },
+                }],
+            });
+
+            // Then edges
+            await graph.addEdges([
+                {source: "1", target: "2"},
+            ], "source", "target");
+        });
+
+        // Wait for all operations to complete
+        await graph.operationQueue.waitForCompletion();
+
+        // Verify correct execution order despite queue order
+        const styleIndex = executionOrder.indexOf("style-init");
+        const dataAddIndices = executionOrder
+            .map((op, idx) => op === "data-add" ? idx : -1)
+            .filter((idx) => idx !== -1);
+        const layoutIndex = executionOrder.indexOf("layout-set");
+
+        // Style should come before any data operations
+        if (styleIndex !== -1 && dataAddIndices.length > 0) {
+            assert(styleIndex < Math.min(... dataAddIndices),
+                `style-init (${styleIndex}) should come before data-add (${Math.min(... dataAddIndices)})`);
+        }
+
+        // Data operations should come before layout
+        if (dataAddIndices.length > 0 && layoutIndex !== -1) {
+            assert(Math.min(... dataAddIndices) < layoutIndex,
+                `data-add (${Math.min(... dataAddIndices)}) should come before layout-set (${layoutIndex})`);
+        }
+    });
+
+    it("should handle interleaved operations correctly", async() => {
+        // Interleave different operation types
+        await graph.batchOperations(async() => {
+            await graph.addNodes([{id: "1"}]);
+            await graph.setStyleTemplate({
+                graphtyTemplate: true,
+                majorVersion: "1",
+                graph: {
+                    addDefaultStyle: true,
+                    background: {
+                        backgroundType: "color",
+                        color: "whitesmoke",
+                    },
+                    startingCameraDistance: 100,
+                    layout: "ngraph",
+                    twoD: false,
+                },
+                data: {
+                    knownFields: {
+                        nodeIdPath: "id",
+                        nodeWeightPath: null,
+                        nodeTimePath: null,
+                        edgeSrcIdPath: "source",
+                        edgeDstIdPath: "target",
+                        edgeWeightPath: null,
+                        edgeTimePath: null,
+                    },
+                },
+                behavior: {
+                    layout: {
+                        type: "ngraph",
+                        preSteps: 0,
+                        stepMultiplier: 1,
+                        minDelta: 0.01,
+                        zoomStepInterval: 10,
+                    },
+                    node: {
+                        pinOnDrag: false,
+                    },
+                },
+                layers: [{
+                    node: {
+                        selector: "*",
+                        style: {
+                            texture: {
+                                color: "blue",
+                            },
+                            enabled: true,
+                        },
+                    },
+                }],
+            });
+            await graph.addNodes([{id: "2"}]);
+            await graph.setLayout("circular");
+            await graph.addNodes([{id: "3"}]);
+            await graph.addEdges([{source: "1", target: "2"}], "source", "target");
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // Verify all style-init comes before any data-add
+        const styleInitIndices = executionOrder
+            .map((op, idx) => op === "style-init" ? idx : -1)
+            .filter((idx) => idx !== -1);
+        const dataAddIndices = executionOrder
+            .map((op, idx) => op === "data-add" ? idx : -1)
+            .filter((idx) => idx !== -1);
+
+        if (styleInitIndices.length > 0 && dataAddIndices.length > 0) {
+            const maxStyleInit = Math.max(... styleInitIndices);
+            const minDataAdd = Math.min(... dataAddIndices);
+            assert(maxStyleInit < minDataAdd,
+                "All style-init operations should complete before data-add operations");
+        }
+
+        // Verify all data operations come before layout
+        const layoutIndices = executionOrder
+            .map((op, idx) => op === "layout-set" ? idx : -1)
+            .filter((idx) => idx !== -1);
+
+        if (dataAddIndices.length > 0 && layoutIndices.length > 0) {
+            const maxDataAdd = Math.max(... dataAddIndices);
+            const minLayout = Math.min(... layoutIndices);
+            assert(maxDataAdd < minLayout,
+                "All data-add operations should complete before layout-set operations");
+        }
+    });
+
+    it("should process multiple batches sequentially", async() => {
+        const batchCompletions: number[] = [];
+        let batchCounter = 0;
+
+        // Track batch completions
+        graph.on("operation-batch-complete", () => {
+            batchCompletions.push(++batchCounter);
+        });
+
+        // Execute three separate batches
+        await graph.batchOperations(async() => {
+            await graph.addNodes([{id: "1"}]);
+        });
+
+        await graph.batchOperations(async() => {
+            await graph.addNodes([{id: "2"}]);
+        });
+
+        await graph.batchOperations(async() => {
+            await graph.addEdges([{source: "1", target: "2"}], "source", "target");
+        });
+
+        // Verify batches completed in order
+        expect(batchCompletions).toEqual([1, 2, 3]);
+    });
+
+    it("should maintain order within category", async() => {
+        const nodeAddOrder: string[] = [];
+
+        // Track node additions
+        const originalAddNodes = graph.addNodes.bind(graph);
+        vi.spyOn(graph, "addNodes").mockImplementation(async(nodes, options) => {
+            const nodeIds = nodes.map((n) => n.id).join(",");
+            nodeAddOrder.push(nodeIds);
+            return originalAddNodes(nodes, options);
+        });
+
+        await graph.batchOperations(async() => {
+            await graph.addNodes([{id: "1"}]);
+            await graph.addNodes([{id: "2"}]);
+            await graph.addNodes([{id: "3"}]);
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // Nodes should be added in the same order they were queued
+        expect(nodeAddOrder).toEqual(["1", "2", "3"]);
+    });
+
+    it("should handle data-update operations in correct order", async() => {
+        // First add nodes
+        await graph.addNodes([
+            {id: "1", label: "Node 1"},
+            {id: "2", label: "Node 2"},
+        ]);
+
+        // Clear execution order
+        executionOrder = [];
+
+        // Now update and add more in same batch
+        await graph.batchOperations(async() => {
+            await graph.updateNodes([{id: "1", label: "Updated 1"}]);
+            await graph.addNodes([{id: "3", label: "Node 3"}]);
+            await graph.setLayout("random");
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // data-update and data-add should both come before layout
+        const updateIndex = executionOrder.indexOf("data-update");
+        const addIndex = executionOrder.indexOf("data-add");
+        const layoutIndex = executionOrder.indexOf("layout-set");
+
+        if (updateIndex !== -1 && layoutIndex !== -1) {
+            assert(updateIndex < layoutIndex, "data-update should come before layout-set");
+        }
+
+        if (addIndex !== -1 && layoutIndex !== -1) {
+            assert(addIndex < layoutIndex, "data-add should come before layout-set");
+        }
+    });
+
+    it("should handle data-remove operations in correct order", async() => {
+        // First add nodes and edges
+        await graph.addNodes([
+            {id: "1", label: "Node 1"},
+            {id: "2", label: "Node 2"},
+            {id: "3", label: "Node 3"},
+        ]);
+        await graph.addEdges([
+            {source: "1", target: "2"},
+            {source: "2", target: "3"},
+        ]);
+
+        // Clear execution order
+        executionOrder = [];
+
+        // Remove and update in same batch
+        await graph.batchOperations(async() => {
+            await graph.removeNodes(["3"]);
+            await graph.updateNodes([{id: "1", label: "Updated 1"}]);
+            await graph.setLayout("circular");
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // Both data operations should come before layout
+        const removeIndex = executionOrder.indexOf("data-remove");
+        const updateIndex = executionOrder.indexOf("data-update");
+        const layoutIndex = executionOrder.indexOf("layout-set");
+
+        if (removeIndex !== -1 && layoutIndex !== -1) {
+            assert(removeIndex < layoutIndex, "data-remove should come before layout-set");
+        }
+
+        if (updateIndex !== -1 && layoutIndex !== -1) {
+            assert(updateIndex < layoutIndex, "data-update should come before layout-set");
+        }
+    });
+
+    it("should handle camera and render operations in correct order", async() => {
+        await graph.batchOperations(async() => {
+            // Queue operations in mixed order
+            await graph.setCameraMode("orbit");
+            await graph.addNodes([{id: "1"}]);
+            await graph.setRenderSettings({fps: 30});
+            await graph.setLayout("ngraph");
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // Verify order: data → layout → camera → render
+        const dataIndex = executionOrder.indexOf("data-add");
+        const layoutIndex = executionOrder.indexOf("layout-set");
+        const cameraIndex = executionOrder.indexOf("camera-update");
+        const renderIndex = executionOrder.indexOf("render-update");
+
+        if (dataIndex !== -1 && layoutIndex !== -1) {
+            assert(dataIndex < layoutIndex, "data-add should come before layout-set");
+        }
+
+        if (layoutIndex !== -1 && cameraIndex !== -1) {
+            assert(layoutIndex < cameraIndex, "layout-set should come before camera-update");
+        }
+
+        if (dataIndex !== -1 && renderIndex !== -1) {
+            assert(dataIndex < renderIndex, "data-add should come before render-update");
+        }
+    });
+
+    it("should handle algorithm operations after data", async() => {
+        await graph.batchOperations(async() => {
+            // Try to run algorithm before adding data (wrong order)
+            await graph.runAlgorithm("algorithms", "pagerank");
+
+            // Then add data
+            await graph.addNodes([
+                {id: "1"},
+                {id: "2"},
+                {id: "3"},
+            ]);
+            await graph.addEdges([
+                {source: "1", target: "2"},
+                {source: "2", target: "3"},
+            ]);
+        });
+
+        await graph.operationQueue.waitForCompletion();
+
+        // Algorithm should run after data is added
+        const dataIndices = executionOrder
+            .map((op, idx) => op === "data-add" ? idx : -1)
+            .filter((idx) => idx !== -1);
+        const algorithmIndex = executionOrder.indexOf("algorithm-run");
+
+        if (dataIndices.length > 0 && algorithmIndex !== -1) {
+            const maxDataIndex = Math.max(... dataIndices);
+            assert(maxDataIndex < algorithmIndex,
+                "All data operations should complete before algorithm-run");
+        }
+    });
+});

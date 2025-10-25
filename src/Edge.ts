@@ -92,7 +92,7 @@ export class Edge {
         this.styleId = styleId;
 
         // create ngraph link
-        // Note: Edge is added to layout engine by DataManager, not here
+        // TODO: Edge is added to layout engine by DataManager, not here
 
         // create mesh
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
@@ -235,7 +235,7 @@ export class Edge {
 
             const style = Styles.getStyleForEdgeStyleId(e.styleId);
             if (style.arrowHead?.type === undefined || style.arrowHead.type === "none") {
-                // TODO: this could be faster
+                // Performance: this could be optimized
                 continue;
             }
 

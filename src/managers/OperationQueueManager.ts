@@ -1,6 +1,8 @@
 import PQueue from "p-queue";
 import toposort from "toposort";
 
+import {OBSOLESCENCE_RULES} from "../constants/obsolescence-rules";
+import type {OperationMetadata, OperationProgress} from "../types/operations";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
@@ -21,11 +23,7 @@ export interface Operation {
     category: OperationCategory;
     execute: (context: OperationContext) => Promise<void> | void;
     abortController?: AbortController;
-    metadata?: {
-        description?: string;
-        timestamp?: number;
-        source?: string;
-    };
+    metadata?: OperationMetadata;
 }
 
 export type OperationCategory =
@@ -40,14 +38,6 @@ export type OperationCategory =
     | "camera-update" // Update camera position/mode
     | "render-update"; // Update rendering settings
 
-export interface OperationProgress {
-    percent: number;
-    message?: string;
-    phase?: string;
-    startTime: number;
-    lastUpdate: number;
-}
-
 export class OperationQueueManager implements Manager {
     private queue: PQueue;
     private pendingOperations = new Map<string, Operation>();
@@ -57,6 +47,21 @@ export class OperationQueueManager implements Manager {
 
     // Progress tracking
     private operationProgress = new Map<string, OperationProgress>();
+
+    // Active operation controllers for cancellation
+    private activeControllers = new Map<string, AbortController>();
+
+    // Track running vs queued operations
+    private runningOperations = new Map<string, Operation>();
+    private queuedOperations = new Map<string, Operation>();
+
+    // Deferred promise batching support
+    private batchMode = false;
+    private deferredPromises = new Map<string, {
+        resolve: (value: void | PromiseLike<void>) => void;
+        reject: (reason?: unknown) => void;
+    }>();
+    private batchOperations = new Set<string>();
 
     // Dependency graph based on actual manager dependencies
     private static readonly CATEGORY_DEPENDENCIES: [OperationCategory, OperationCategory][] = [
@@ -130,28 +135,37 @@ export class OperationQueueManager implements Manager {
     }
 
     dispose(): void {
+        // Cancel all active operations
+        this.activeControllers.forEach((controller) => {
+            controller.abort();
+        });
+
         this.queue.clear();
         this.pendingOperations.clear();
         this.operationProgress.clear();
         this.currentBatch.clear();
+        this.activeControllers.clear();
+        this.runningOperations.clear();
+        this.queuedOperations.clear();
     }
 
     /**
      * Queue an operation for execution
+     * Returns the operation ID
      */
     queueOperation(
         category: OperationCategory,
         execute: (context: OperationContext) => Promise<void> | void,
-        options?: {
-            description?: string;
-        },
+        options?: Partial<OperationMetadata>,
     ): string {
         const id = `op-${this.operationCounter++}`;
         const controller = new AbortController();
 
-        // Initialize progress tracking
+        // Initialize progress tracking with all fields
         this.operationProgress.set(id, {
             percent: 0,
+            message: undefined,
+            phase: undefined,
             startTime: Date.now(),
             lastUpdate: Date.now(),
         });
@@ -167,22 +181,134 @@ export class OperationQueueManager implements Manager {
             },
             abortController: controller,
             metadata: {
-                description: options?.description,
+                ... options,
                 timestamp: Date.now(),
             },
         };
 
         this.pendingOperations.set(id, operation);
-        this.currentBatch.add(id);
+        this.activeControllers.set(id, controller);
 
-        // Schedule batch execution on next microtask
-        if (this.batchingEnabled && this.currentBatch.size === 1) {
-            queueMicrotask(() => {
-                this.executeBatch();
+        // Handle batch mode differently
+        if (this.batchMode) {
+            // In batch mode: queue but don't execute yet
+            this.batchOperations.add(id);
+
+            // Store deferred promise handlers for later resolution
+            // These will be resolved when exitBatchMode is called
+            this.deferredPromises.set(id, {
+                resolve: () => { /* Placeholder */ },
+                reject: () => { /* Placeholder */ },
             });
+        } else {
+            // Normal mode: add to current batch for immediate execution
+            this.currentBatch.add(id);
+
+            // Apply obsolescence rules before scheduling
+            this.applyObsolescenceRules(operation);
+
+            // Schedule batch execution
+            if (this.batchingEnabled) {
+                // When batching is enabled, schedule batch execution on next microtask
+                if (this.currentBatch.size === 1) {
+                    queueMicrotask(() => {
+                        this.executeBatch();
+                    });
+                }
+            } else {
+                // When batching is disabled, execute immediately
+                queueMicrotask(() => {
+                    this.executeBatch();
+                });
+            }
         }
 
         return id;
+    }
+
+    /**
+     * Apply obsolescence rules for a new operation
+     */
+    private applyObsolescenceRules(newOperation: Operation): void {
+        const {metadata} = newOperation;
+        const defaultRule = OBSOLESCENCE_RULES[newOperation.category];
+        // Only apply obsolescence if explicitly requested via metadata or default rules
+        if (!metadata?.obsoletes &&
+            !metadata?.shouldObsolete &&
+            !metadata?.respectProgress &&
+            !metadata?.skipRunning &&
+            !defaultRule?.obsoletes) {
+            return;
+        }
+
+        // Get obsolescence rules from metadata or defaults
+        const customObsoletes = metadata?.obsoletes ?? [];
+        const defaultObsoletes = defaultRule?.obsoletes ?? [];
+
+        const categoriesToObsolete = [... new Set([... customObsoletes, ... defaultObsoletes])];
+        const shouldObsolete = metadata?.shouldObsolete;
+        const skipRunning = (metadata?.skipRunning ?? defaultRule?.skipRunning) ?? false;
+        const respectProgress = (metadata?.respectProgress ?? defaultRule?.respectProgress) ?? true;
+
+        // Check all operations for obsolescence
+        const allOperations = [
+            ... this.pendingOperations.values(),
+            ... this.queuedOperations.values(),
+            ... (skipRunning ? [] : this.runningOperations.values()),
+        ];
+
+        for (const operation of allOperations) {
+            // Skip if it's the same operation
+            if (operation.id === newOperation.id) {
+                continue;
+            }
+
+            let shouldCancel = false;
+
+            // Check category-based obsolescence
+            if (categoriesToObsolete.includes(operation.category)) {
+                shouldCancel = true;
+            }
+
+            // Check custom shouldObsolete function
+            if (!shouldCancel && shouldObsolete) {
+                shouldCancel = shouldObsolete({
+                    category: operation.category,
+                    id: operation.id,
+                    metadata: operation.metadata,
+                });
+            }
+
+            if (shouldCancel) {
+                // Check progress if respectProgress is enabled
+                if (respectProgress && this.runningOperations.has(operation.id)) {
+                    const progress = this.operationProgress.get(operation.id);
+                    if (progress && progress.percent > 90) {
+                        // Don't cancel near-complete operations
+                        continue;
+                    }
+                }
+
+                // Cancel the operation
+                const controller = this.activeControllers.get(operation.id);
+                if (controller && !controller.signal.aborted) {
+                    controller.abort();
+
+                    // Emit obsolescence event
+                    this.eventManager.emitGraphEvent("operation-obsoleted", {
+                        id: operation.id,
+                        category: operation.category,
+                        reason: `Obsoleted by ${newOperation.category} operation`,
+                        obsoletedBy: newOperation.id,
+                    });
+
+                    // Remove from pending/queued
+                    this.pendingOperations.delete(operation.id);
+                    this.queuedOperations.delete(operation.id);
+                    this.currentBatch.delete(operation.id);
+                }
+            }
+        }
     }
 
     /**
@@ -197,8 +323,15 @@ export class OperationQueueManager implements Manager {
             .map((id) => this.pendingOperations.get(id))
             .filter((op): op is Operation => op !== undefined);
 
-        // Remove from pending
-        batchIds.forEach((id) => this.pendingOperations.delete(id));
+        // Remove from pending and add to queued
+        batchIds.forEach((id) => {
+            const op = this.pendingOperations.get(id);
+            if (op) {
+                this.queuedOperations.set(id, op);
+            }
+
+            this.pendingOperations.delete(id);
+        });
 
         if (operations.length === 0) {
             return;
@@ -220,9 +353,10 @@ export class OperationQueueManager implements Manager {
                         };
                         await this.executeOperation(operation, context);
                     } finally {
-                        // Cleanup progress after delay
+                        // Cleanup progress and controller after delay
                         setTimeout(() => {
                             this.operationProgress.delete(operation.id);
+                            this.activeControllers.delete(operation.id);
                         }, 1000);
                     }
                 },
@@ -298,6 +432,10 @@ export class OperationQueueManager implements Manager {
      * Execute a single operation
      */
     private async executeOperation(operation: Operation, context: OperationContext): Promise<void> {
+        // Move from queued to running
+        this.queuedOperations.delete(operation.id);
+        this.runningOperations.set(operation.id, operation);
+
         this.eventManager.emitGraphEvent("operation-start", {
             id: operation.id,
             category: operation.category,
@@ -320,10 +458,15 @@ export class OperationQueueManager implements Manager {
             });
         } catch (error) {
             if (error && (error as Error).name === "AbortError") {
+                // Remove from running on abort
+                this.runningOperations.delete(operation.id);
                 throw error; // Let p-queue handle abort errors
             }
 
             this.handleOperationError(operation, error);
+        } finally {
+            // Always remove from running operations
+            this.runningOperations.delete(operation.id);
         }
     }
 
@@ -432,9 +575,22 @@ export class OperationQueueManager implements Manager {
      * Clear all pending operations
      */
     clear(): void {
+        // Cancel all active operations
+        this.activeControllers.forEach((controller, id) => {
+            if (!controller.signal.aborted) {
+                controller.abort();
+                this.eventManager.emitGraphEvent("operation-cancelled", {
+                    id,
+                    reason: "Queue cleared",
+                });
+            }
+        });
+
         this.queue.clear();
         this.pendingOperations.clear();
         this.currentBatch.clear();
+        this.runningOperations.clear();
+        this.queuedOperations.clear();
     }
 
     /**
@@ -446,6 +602,147 @@ export class OperationQueueManager implements Manager {
 
     enableBatching(): void {
         this.batchingEnabled = true;
+        // TODO: Operations queued while batching was disabled will be executed
+        // when waitForCompletion() is called
+    }
+
+    /**
+     * Enter batch mode - operations will be queued but not executed
+     */
+    enterBatchMode(): void {
+        this.batchMode = true;
+        this.batchOperations.clear();
+    }
+
+    /**
+     * Exit batch mode - execute all batched operations in dependency order
+     */
+    exitBatchMode(): void {
+        if (!this.batchMode) {
+            return;
+        }
+
+        this.batchMode = false;
+
+        // Move all batched operations to currentBatch
+        this.batchOperations.forEach((id) => {
+            this.currentBatch.add(id);
+        });
+
+        // Clear batch operations set
+        this.batchOperations.clear();
+
+        // Clear deferred promises - no longer needed with simplified approach
+        this.deferredPromises.clear();
+
+        // Execute the batch normally
+        this.executeBatch();
+    }
+
+    /**
+     * Check if currently in batch mode
+     */
+    isInBatchMode(): boolean {
+        return this.batchMode;
+    }
+
+    /**
+     * Get count of deferred promises (for testing)
+     */
+    getDeferredPromiseCount(): number {
+        return this.deferredPromises.size;
+    }
+
+    /**
+     * Queue an operation and get a promise for its completion
+     * Used for batch mode operations
+     */
+    queueOperationAsync(
+        category: OperationCategory,
+        execute: (context: OperationContext) => Promise<void> | void,
+        options?: Partial<OperationMetadata>,
+    ): Promise<void> {
+        const id = this.queueOperation(category, execute, options);
+
+        // In batch mode, return immediately - operations will execute when batch exits
+        if (this.batchMode) {
+            return Promise.resolve();
+        }
+
+        // In normal mode, wait for operation completion
+        return this.waitForOperation(id);
+    }
+
+    /**
+     * Wait for a specific operation to complete
+     */
+    private async waitForOperation(id: string): Promise<void> {
+        while (
+            this.pendingOperations.has(id) ||
+            this.queuedOperations.has(id) ||
+            this.runningOperations.has(id)
+        ) {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+    }
+
+    /**
+     * Get the AbortController for a specific operation
+     */
+    getOperationController(operationId: string): AbortController | undefined {
+        return this.activeControllers.get(operationId);
+    }
+
+    /**
+     * Cancel a specific operation
+     */
+    cancelOperation(operationId: string): boolean {
+        const controller = this.activeControllers.get(operationId);
+        if (controller && !controller.signal.aborted) {
+            controller.abort();
+
+            // Emit cancellation event
+            this.eventManager.emitGraphEvent("operation-cancelled", {
+                id: operationId,
+                reason: "Manual cancellation",
+            });
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Cancel all operations of a specific category
+     */
+    cancelByCategory(category: OperationCategory): number {
+        let cancelledCount = 0;
+
+        // Cancel pending operations
+        this.pendingOperations.forEach((operation) => {
+            if (operation.category === category) {
+                if (this.cancelOperation(operation.id)) {
+                    cancelledCount++;
+                }
+            }
+        });
+
+        return cancelledCount;
+    }
+
+    /**
+     * Get current progress for an operation
+     */
+    getOperationProgress(operationId: string): OperationProgress | undefined {
+        return this.operationProgress.get(operationId);
+    }
+
+    /**
+     * Get all active operation IDs
+     */
+    getActiveOperations(): string[] {
+        return Array.from(this.activeControllers.keys());
     }
 }
 

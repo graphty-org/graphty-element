@@ -14,7 +14,7 @@ import {
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
-import {type CameraController, CameraManager} from "./cameras/CameraManager";
+import {type CameraController, type CameraKey, CameraManager} from "./cameras/CameraManager";
 import {
     AdHocData,
     FetchEdgesFn,
@@ -25,9 +25,10 @@ import {
     EventCallbackType,
     EventType,
 } from "./events";
-import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
+import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Styles} from "./Styles";
+import type {QueueableOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
@@ -67,6 +68,7 @@ export class Graph implements GraphContext {
     private updateManager: UpdateManager;
     private algorithmManager: AlgorithmManager;
     private inputManager: InputManager;
+    operationQueue: OperationQueueManager;
 
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
@@ -74,6 +76,12 @@ export class Graph implements GraphContext {
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
         this.eventManager = new EventManager();
+
+        // Initialize OperationQueueManager
+        this.operationQueue = new OperationQueueManager(this.eventManager, {
+            concurrency: 1, // Sequential execution
+            autoStart: true,
+        });
 
         // Initialize StyleManager
         this.styleManager = new StyleManager(this.eventManager);
@@ -182,6 +190,7 @@ export class Graph implements GraphContext {
         // Setup lifecycle manager
         const managers = new Map<string, Manager>([
             ["event", this.eventManager],
+            ["queue", this.operationQueue],
             ["style", this.styleManager],
             ["stats", this.statsManager],
             ["render", this.renderManager],
@@ -194,7 +203,7 @@ export class Graph implements GraphContext {
         this.lifecycleManager = new LifecycleManager(
             managers,
             this.eventManager,
-            ["event", "style", "stats", "render", "data", "layout", "update", "algorithm", "input"],
+            ["event", "queue", "style", "stats", "render", "data", "layout", "update", "algorithm", "input"],
         );
 
         // Listen for data-added events to manage running state
@@ -338,9 +347,40 @@ export class Graph implements GraphContext {
         }
     }
 
-    async setStyleTemplate(t: StyleSchema): Promise<Styles> {
-        // TODO: if t is a URL, fetch URL
+    async setStyleTemplate(t: StyleSchema, options?: QueueableOptions): Promise<Styles> {
+        // Future enhancement: if t is a URL, fetch URL
 
+        // Skip queue if requested
+        if (options?.skipQueue) {
+            return this._setStyleTemplateInternal(t);
+        }
+
+        // Queue the operation
+        return new Promise<Styles>((resolve, reject) => {
+            this.operationQueue.queueOperation(
+                "style-init",
+                async(context) => {
+                    if (context.signal.aborted) {
+                        reject(new Error("Operation cancelled"));
+                        return;
+                    }
+
+                    try {
+                        const result = await this._setStyleTemplateInternal(t);
+                        resolve(result);
+                    } catch (error) {
+                        reject(error instanceof Error ? error : new Error(String(error)));
+                    }
+                },
+                {
+                    description: "Setting style template",
+                    ... options,
+                },
+            );
+        });
+    }
+
+    private async _setStyleTemplateInternal(t: StyleSchema): Promise<Styles> {
         const previousTwoD = this.styles.config.graph.twoD;
 
         // Use StyleManager to load the new styles
@@ -425,28 +465,244 @@ export class Graph implements GraphContext {
         return this.dataManager.addDataFromSource(type, opts);
     }
 
-    addNode(node: AdHocData, idPath?: string): void {
-        this.dataManager.addNode(node, idPath);
+    async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
+        await this.addNodes([node], idPath, options);
     }
 
-    addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
-        this.dataManager.addNodes(nodes, idPath);
+    async addNodes(nodes: Record<string | number, unknown>[], idPath?: string, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            this.dataManager.addNodes(nodes, idPath);
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "data-add",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                this.dataManager.addNodes(nodes, idPath);
+            },
+            {
+                description: `Adding ${nodes.length} nodes`,
+                ... options,
+            },
+        );
     }
 
-    addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string): void {
-        this.dataManager.addEdge(edge, srcIdPath, dstIdPath);
+    async addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string, options?: QueueableOptions): Promise<void> {
+        await this.addEdges([edge], srcIdPath, dstIdPath, options);
     }
 
-    addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
-        this.dataManager.addEdges(edges, srcIdPath, dstIdPath);
+    async addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            this.dataManager.addEdges(edges, srcIdPath, dstIdPath);
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "data-add",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                this.dataManager.addEdges(edges, srcIdPath, dstIdPath);
+            },
+            {
+                description: `Adding ${edges.length} edges`,
+                ... options,
+            },
+        );
     }
 
-    async setLayout(type: string, opts: object = {}): Promise<void> {
-        await this.layoutManager.setLayout(type, opts);
+    async setLayout(type: string, opts: object = {}, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            await this.layoutManager.setLayout(type, opts);
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "layout-set",
+            async(context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                await this.layoutManager.setLayout(type, opts);
+            },
+            {
+                description: `Setting layout to ${type}`,
+                ... options,
+            },
+        );
     }
 
-    async runAlgorithm(namespace: string, type: string): Promise<void> {
-        await this.algorithmManager.runAlgorithm(namespace, type);
+    async runAlgorithm(namespace: string, type: string, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            await this.algorithmManager.runAlgorithm(namespace, type);
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "algorithm-run",
+            async(context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                await this.algorithmManager.runAlgorithm(namespace, type);
+            },
+            {
+                description: `Running ${namespace}:${type} algorithm`,
+                ... options,
+            },
+        );
+    }
+
+    async removeNodes(nodeIds: (string | number)[], options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            nodeIds.forEach((id) => this.dataManager.removeNode(id));
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "data-remove",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                nodeIds.forEach((id) => this.dataManager.removeNode(id));
+            },
+            {
+                description: `Removing ${nodeIds.length} nodes`,
+                ... options,
+            },
+        );
+    }
+
+    async updateNodes(updates: {id: string | number, [key: string]: unknown}[], options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            updates.forEach((update) => {
+                const node = this.dataManager.getNode(update.id);
+                if (node) {
+                    Object.assign(node.data, update);
+                    // Recompute style after data update
+                    const styleId = this.styles.getStyleForNode(node.data);
+                    node.updateStyle(styleId);
+                }
+            });
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "data-update",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                updates.forEach((update) => {
+                    const node = this.dataManager.getNode(update.id);
+                    if (node) {
+                        Object.assign(node.data, update);
+                        // Recompute style after data update
+                        const styleId = this.styles.getStyleForNode(node.data);
+                        node.updateStyle(styleId);
+                    }
+                });
+            },
+            {
+                description: `Updating ${updates.length} nodes`,
+                ... options,
+            },
+        );
+    }
+
+    async setCameraMode(mode: CameraKey, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            this.camera.activateCamera(mode);
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "camera-update",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                this.camera.activateCamera(mode);
+            },
+            {
+                description: `Setting camera mode to ${mode}`,
+                ... options,
+            },
+        );
+    }
+
+    async setRenderSettings(settings: Record<string, unknown>, options?: QueueableOptions): Promise<void> {
+        if (options?.skipQueue) {
+            // Apply render settings directly
+            // TODO: Add render settings support when available
+            return;
+        }
+
+        await this.operationQueue.queueOperationAsync(
+            "render-update",
+            (context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                // TODO: Add render settings support when available
+            },
+            {
+                description: "Updating render settings",
+                ... options,
+            },
+        );
+    }
+
+    /**
+     * Execute multiple operations as a batch
+     * Operations will be queued and executed in dependency order
+     */
+    async batchOperations(fn: () => Promise<void> | void): Promise<void> {
+        // Enter batch mode - operations will be queued but not executed
+        this.operationQueue.enterBatchMode();
+
+        try {
+            // Execute the function - operations return deferred promises
+            const result = fn();
+            if (result instanceof Promise) {
+                await result; // Wait for all operations to be queued
+            }
+        } finally {
+            // Exit batch mode - this executes all operations in dependency order
+            // and resolves the deferred promises
+            this.operationQueue.exitBatchMode();
+        }
+
+        // Wait for all operations in the batch to complete
+        await this.operationQueue.waitForCompletion();
+    }
+
+    getNodeCount(): number {
+        return this.dataManager.nodes.size;
+    }
+
+    getEdgeCount(): number {
+        return this.dataManager.edges.size;
+    }
+
+    /**
+     * Alias for addEventListener
+     */
+    on(type: EventType, cb: EventCallbackType): void {
+        this.addListener(type, cb);
     }
 
     addListener(type: EventType, cb: EventCallbackType): void {

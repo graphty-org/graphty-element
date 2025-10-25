@@ -3,11 +3,53 @@
 ## Overview
 Build a robust command batching and dependency management system using `p-queue` and `toposort` libraries to ensure deterministic execution order of graph operations regardless of how they're called. The system will be implemented as a separate `OperationQueueManager` that integrates seamlessly with existing managers.
 
+## Critical Design Decision: Deferred Promise Resolution for Batching
+
+### The Problem
+The Graph API methods (like `addNodes`, `setLayout`) return Promises that resolve when operations complete. However, in a batched system, operations shouldn't execute until the entire batch is ready. This creates a deadlock when using `await` inside batch callbacks:
+
+```typescript
+// DEADLOCK SCENARIO (without deferred promises):
+await graph.batchOperations(async () => {
+  await graph.addNodes([{id: "1"}]); // Waits for operation to complete
+                                      // But operation won't run until batch ends
+                                      // But batch won't end until this resolves
+                                      // DEADLOCK!
+});
+```
+
+### The Solution: Deferred Promise Resolution
+We implement a two-phase approach:
+1. **Queue Phase (Batch Mode)**: Operations are queued and return deferred promises immediately
+2. **Execution Phase**: Operations execute in dependency order, then promises resolve
+
+This allows natural `await` syntax while maintaining proper batching:
+
+```typescript
+// WORKS with deferred promises:
+await graph.batchOperations(async () => {
+  await graph.addNodes([{id: "1"}]);     // Returns deferred promise immediately
+  await graph.setLayout("ngraph");       // Returns deferred promise immediately
+  await graph.setStyleTemplate({...});   // Returns deferred promise immediately
+});
+// After callback completes:
+// 1. Operations are sorted by dependency (style → data → layout)
+// 2. Operations execute in correct order
+// 3. Promises resolve in dependency order
+```
+
+### Key Benefits
+- **No API Changes**: Existing code continues to work
+- **Natural Async/Await**: Developers can use familiar patterns
+- **Proper Ordering**: Operations execute in dependency order, not call order
+- **Atomic Batches**: All operations in a batch succeed or fail together
+- **Performance**: Obsolescence rules and coalescing still apply
+
 ## Phase Breakdown
 
-### Phase 1: Core Queue Infrastructure
-**Objective**: Establish the foundation with basic queue management and dependency ordering
-**Duration**: 2 days
+### Phase 1: Core Queue Infrastructure with Deferred Promise Resolution
+**Objective**: Establish the foundation with basic queue management, dependency ordering, and deferred promise resolution for proper batching
+**Duration**: 2-3 days
 
 **Tests to Write First**:
 - `test/managers/OperationQueueManager.test.ts`: Core queue functionality
@@ -31,12 +73,98 @@ Build a robust command batching and dependency management system using `p-queue`
   });
   ```
 
+- `test/managers/OperationQueueManager.batching.test.ts`: Deferred promise batching
+  ```typescript
+  describe('Deferred Promise Batching', () => {
+    it('should defer promise resolution when in batch mode');
+    it('should resolve promises after batch execution in dependency order');
+    it('should handle promise rejection for failed operations');
+    it('should clean up deferred promises after batch completion');
+    it('should allow await within batchOperations callbacks');
+  });
+  ```
+
 **Implementation**:
-- `src/managers/OperationQueueManager.ts`: Core queue manager
+- `src/managers/OperationQueueManager.ts`: Core queue manager with deferred promises
   ```typescript
   // Core interfaces: Operation, OperationCategory, OperationContext
   // Basic queue with p-queue, dependency sorting with toposort
   // Event emission for operation lifecycle
+  
+  // NEW: Deferred promise resolution for batching
+  interface DeferredPromise {
+    resolve: (value: void | PromiseLike<void>) => void;
+    reject: (reason?: any) => void;
+    operationId: string;
+  }
+  
+  class OperationQueueManager {
+    private batchMode = false;
+    private deferredPromises = new Map<string, DeferredPromise>();
+    private batchOperations = new Set<string>();
+    
+    queueOperation(category, execute, options): Promise<void> {
+      const id = `op-${this.operationCounter++}`;
+      
+      if (this.batchMode) {
+        // In batch mode: queue but defer execution
+        this.pendingOperations.set(id, operation);
+        this.batchOperations.add(id);
+        
+        // Return deferred promise
+        return new Promise((resolve, reject) => {
+          this.deferredPromises.set(id, { resolve, reject, operationId: id });
+        });
+      } else {
+        // Normal mode: execute in next microtask
+        this.currentBatch.add(id);
+        if (this.currentBatch.size === 1) {
+          queueMicrotask(() => this.executeBatch());
+        }
+        // Return promise that resolves when operation completes
+        return operation.promise;
+      }
+    }
+    
+    enterBatchMode(): void {
+      this.batchMode = true;
+      this.batchOperations.clear();
+    }
+    
+    exitBatchMode(): void {
+      this.batchMode = false;
+      // Execute all batched operations in dependency order
+      this.executeBatchedOperations();
+    }
+    
+    private executeBatchedOperations(): void {
+      const operations = Array.from(this.batchOperations)
+        .map(id => this.pendingOperations.get(id))
+        .filter(op => op !== undefined);
+      
+      // Sort by dependency order
+      const sorted = this.sortOperations(operations);
+      
+      // Execute and resolve deferred promises
+      sorted.forEach(op => {
+        this.executeOperation(op).then(() => {
+          const deferred = this.deferredPromises.get(op.id);
+          if (deferred) {
+            deferred.resolve();
+            this.deferredPromises.delete(op.id);
+          }
+        }).catch(error => {
+          const deferred = this.deferredPromises.get(op.id);
+          if (deferred) {
+            deferred.reject(error);
+            this.deferredPromises.delete(op.id);
+          }
+        });
+      });
+      
+      this.batchOperations.clear();
+    }
+  }
   ```
 
 - `src/managers/interfaces.ts`: Update with queue-aware interfaces
@@ -158,7 +286,7 @@ Build a robust command batching and dependency management system using `p-queue`
 3. Expected: Only latest relevant operations execute
 
 ### Phase 4: Graph Integration - Core Methods
-**Objective**: Integrate queue with Graph class core methods (data, layout, styles)
+**Objective**: Integrate queue with Graph class core methods (data, layout, styles) using deferred promise pattern
 **Duration**: 2-3 days
 
 **Tests to Write First**:
@@ -173,12 +301,16 @@ Build a robust command batching and dependency management system using `p-queue`
   });
   ```
 
-- `test/integration/operation-ordering.test.ts`: Order verification
+- `test/integration/operation-ordering.test.ts`: Order verification with batching
   ```typescript
   describe('Operation Ordering', () => {
     it('should execute styles → data → layout → render');
     it('should handle interleaved operations correctly');
     it('should process multiple batches sequentially');
+    // NEW: Test deferred promise resolution
+    it('should allow await inside batchOperations callback');
+    it('should resolve promises in dependency order, not call order');
+    it('should maintain operation atomicity within batch');
   });
   ```
 
@@ -190,7 +322,44 @@ Build a robust command batching and dependency management system using `p-queue`
   // - setStyleTemplate → style-init
   // - addNodes/addEdges → data-add
   // - setLayout → layout-set
-  // Add batchOperations method for explicit batching
+  
+  // NEW: batchOperations with deferred promise support
+  async batchOperations(fn: () => Promise<void> | void): Promise<void> {
+    // Enter batch mode - operations will queue but not execute
+    this.operationQueue.enterBatchMode();
+    
+    try {
+      // Execute callback - operations return deferred promises
+      const result = fn();
+      if (result instanceof Promise) {
+        await result; // Wait for all operations to be queued
+      }
+    } finally {
+      // Exit batch mode - executes all operations in dependency order
+      // and resolves deferred promises
+      this.operationQueue.exitBatchMode();
+      
+      // Wait for all operations in the batch to complete
+      await this.operationQueue.waitForBatchCompletion();
+    }
+  }
+  
+  // Example of wrapped method that works with deferred promises:
+  async addNodes(nodes: any[], idPath?: string): Promise<void> {
+    return this.operationQueue.queueOperation(
+      'data-add',
+      (context) => {
+        // Original addNodes logic
+        this.dataManager.addNodes(nodes, idPath);
+      },
+      {
+        description: `Adding ${nodes.length} nodes`,
+        skipQueue: options?.skipQueue
+      }
+    );
+    // Returns immediately with deferred promise in batch mode,
+    // or executes and returns completion promise in normal mode
+  }
   ```
 
 - Create migration helpers in `src/utils/queue-migration.ts`:
@@ -372,3 +541,6 @@ Build a robust command batching and dependency management system using `p-queue`
 - Performance benchmarks show no regression
 - Progress tracking works for all long operations
 - Obsolescence rules reduce unnecessary computation by 50%+
+- **Batching works correctly**: Operations can be awaited inside `batchOperations` callbacks
+- **Dependency ordering maintained**: Operations execute in dependency order regardless of call order
+- **No deadlocks**: Deferred promise resolution prevents await deadlocks in batch callbacks

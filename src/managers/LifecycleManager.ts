@@ -180,7 +180,7 @@ export class LifecycleManager implements Manager {
 
     /**
      * Add a new manager to the lifecycle
-     * Note: This should only be done before init() is called
+     * TODO: This should only be done before init() is called
      */
     addManager(name: string, manager: Manager, position?: number): void {
         if (this.initialized || this.initializing) {

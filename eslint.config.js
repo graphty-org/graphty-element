@@ -43,7 +43,7 @@ export default tseslint.config(
             /* *********************
              * MIGRATION
              **********************/
-            // TODO: fix these!
+            // Note: These rules require further investigation and should be addressed in future updates
             "@typescript-eslint/no-unsafe-argument": "off",
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",

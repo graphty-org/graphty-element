@@ -486,7 +486,7 @@ describe("Simple Real Mesh Tests", () => {
 
             // Test animation control
             label.startAnimation();
-            // Note: RichTextLabel doesn't have stopAnimation method, only dispose stops it
+            // TODO: RichTextLabel doesn't have stopAnimation method, only dispose stops it
 
             assert.isNotNull(label.labelMesh);
         });

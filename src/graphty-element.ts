@@ -95,11 +95,11 @@ export class Graphty extends LitElement {
 
         // Load data BEFORE initialization (original working order)
         if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {
-            this.#graph.addNodes(this.nodeData);
+            void this.#graph.addNodes(this.nodeData);
         }
 
         if (changedProperties.has("edgeData") && Array.isArray(this.edgeData)) {
-            this.#graph.addEdges(this.edgeData);
+            void this.#graph.addEdges(this.edgeData);
         }
 
         // Initialize the graph AFTER loading data

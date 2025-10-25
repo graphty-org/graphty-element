@@ -22,7 +22,7 @@ export class StyleManager implements Manager {
         this.styles = styles ?? Styles.default();
 
         // Listen for style change events
-        // Note: "style-changed" is a custom event type, not in the standard EventType enum
+        // TODO: "style-changed" is a custom event type, not in the standard EventType enum
         // We use the graph observable directly for now
         // TODO: Add proper event type when EventManager is extended
     }
