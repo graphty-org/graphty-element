@@ -27,6 +27,10 @@ export default defineConfig({
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         // Browser-only tests
                         "test/browser/**/*.test.ts",
+                        // Performance tests need DOM and should run in browser
+                        "test/performance/**/*.test.ts",
+                        // Examples that need browser environment
+                        "test/examples/**/*.test.ts",
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",
@@ -49,6 +53,8 @@ export default defineConfig({
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
+                        "test/performance/**/*.test.ts",
+                        "test/examples/**/*.test.ts",
                     ],
                     exclude: [
                         // Exclude experimental/temporary folders ending with ~
@@ -97,7 +103,7 @@ export default defineConfig({
                     },
                     setupFiles: [".storybook/vitest.setup.ts"],
                     // Reduce parallelism to prevent browser resource contention
-                    fileParallelism: false, // Run test files sequentially
+                    // Note: Use pool: 'forks' and poolOptions.forks.singleFork for sequential execution
                 },
             },
         ],

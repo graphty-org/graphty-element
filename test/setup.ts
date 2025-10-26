@@ -5,14 +5,24 @@ import {afterEach, expect} from "vitest";
 import type {Graph} from "../src/Graph";
 import {MockDeviceInputSystem} from "../src/input/mock-device-input-system";
 
+// Type augmentation for Chrome-specific performance.memory API
+declare global {
+    interface Performance {
+        memory?: {
+            usedJSHeapSize: number;
+            totalJSHeapSize: number;
+            jsHeapSizeLimit: number;
+        };
+    }
+}
+
 // Suppress Babylon.js logs during tests
 Logger.LogLevels = Logger.ErrorLogLevel;
 
 // Suppress Lit dev mode warnings by setting production mode
-// @ts-expect-error - Global window modification for test environment
 if (typeof window !== "undefined") {
-    // @ts-expect-error - Global window modification for test environment
-    window.litIssuedWarnings = new Set(); // Prevent duplicate warnings
+    // Global window modification for test environment
+    (window as typeof window & {litIssuedWarnings?: Set<unknown>}).litIssuedWarnings = new Set(); // Prevent duplicate warnings
     // Suppress console warnings from Lit during tests
     const originalWarn = console.warn;
     console.warn = (... args: unknown[]) => {

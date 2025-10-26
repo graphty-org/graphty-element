@@ -1,5 +1,21 @@
 # Implementation Plan for Dependency Management and Batching System
 
+## Change Summary - 2025-10-26
+
+### New Requirements Added:
+- **Phase 7 Simplification**: Remove migration guides and user documentation - this is an internal feature not exposed to external users
+- **Determinism Testing**: Add comprehensive Storybook stories to verify property setting order independence
+
+### Sections Modified:
+- **Phase 7 (Documentation and Migration Support)**: Removed migration guides and user documentation tasks; refocused on internal documentation and debug tools only
+- **Phase 7 (NEW)**: Added new section for determinism testing with Storybook stories
+- **Success Metrics**: Removed migration-related metrics; added determinism verification metric
+
+### Impact Assessment:
+- Breaking changes: No - these are additive/reductive changes to implementation plan only
+- Implementation effort: Reduced overall (less documentation), but added focused testing effort (~1 day for new stories)
+- Risk factors: None - simplification reduces scope and testing stories increase confidence in core functionality
+
 ## Overview
 Build a robust command batching and dependency management system using `p-queue` and `toposort` libraries to ensure deterministic execution order of graph operations regardless of how they're called. The system will be implemented as a separate `OperationQueueManager` that integrates seamlessly with existing managers.
 
@@ -476,40 +492,121 @@ await graph.batchOperations(async () => {
 2. Test with large dataset (10k+ nodes)
 3. Expected: Smooth performance, operations complete in dependency order
 
-### Phase 7: Documentation and Migration Support
-**Objective**: Complete documentation, migration guides, and developer tools
-**Duration**: 1 day
+### Phase 7: Internal Documentation and Determinism Testing **[UPDATED]**
+**Objective**: Complete internal documentation, debug tools, and comprehensive determinism verification
+**Duration**: 2 days
+
+**Rationale for Changes**:
+- Removed migration guides and user documentation since this is an internal feature
+- Added extensive determinism testing to verify core requirement: operations should converge to same result regardless of call order
 
 **Tests to Write First**:
-- `test/examples/queue-examples.test.ts`: Usage examples
+- `test/examples/queue-examples.test.ts`: Internal usage examples
   ```typescript
-  describe('Queue Usage Examples', () => {
-    it('should demonstrate basic usage');
+  describe('Queue Usage Examples - Internal', () => {
+    it('should demonstrate basic queue integration');
     it('should show bulk operations pattern');
-    it('should illustrate progress tracking');
+    it('should illustrate progress tracking for debugging');
     it('should show cancellation patterns');
   });
   ```
 
-**Implementation**:
-- Create `docs/queue-system.md`: Complete documentation
-- Create `examples/queue-progress.html`: Interactive progress example
-- Update `MIGRATION.md`: Migration guide from old patterns
-- Add debug utilities in `src/utils/queue-debug.ts`:
+**[NEW] Storybook Determinism Stories**:
+- Create `stories/Determinism.stories.ts`: Property order independence verification
   ```typescript
-  // Queue visualization helpers
-  // Operation history tracking
-  // Performance profiling tools
+  /**
+   * Stories that verify graph operations produce identical results
+   * regardless of the order properties are set.
+   *
+   * Each story tests the same final state achieved through different
+   * property setting orders. Visual regression tests will verify
+   * all variants produce identical output.
+   */
+
+  describe('Property Order Independence', () => {
+    // Test scenario 1: Layout → Styles → Data vs Data → Layout → Styles
+    it('layout-styles-data order produces same result');
+    it('data-layout-styles order produces same result');
+    it('styles-data-layout order produces same result');
+
+    // Test scenario 2: Multiple property types interleaved
+    it('layout→camera→styles→data→algorithm produces same result');
+    it('data→algorithm→camera→layout→styles produces same result');
+    it('camera→styles→algorithm→data→layout produces same result');
+
+    // Test scenario 3: Partial updates in different orders
+    it('partial style update before layout produces same result');
+    it('partial style update after layout produces same result');
+
+    // Test scenario 4: Complex scenarios
+    it('all properties set simultaneously produces same result');
+    it('properties set sequentially in various orders produce same result');
+  });
+
+  // Story structure example:
+  export const LayoutStylesData = {
+    render: () => {
+      const graph = document.createElement('graphty-element');
+      await graph.setLayout('ngraph');
+      await graph.setStyleTemplate({ nodeSize: 10 });
+      await graph.addNodes([{id: '1'}, {id: '2'}]);
+      return graph;
+    }
+  };
+
+  export const DataLayoutStyles = {
+    render: () => {
+      const graph = document.createElement('graphty-element');
+      await graph.addNodes([{id: '1'}, {id: '2'}]);
+      await graph.setLayout('ngraph');
+      await graph.setStyleTemplate({ nodeSize: 10 });
+      return graph;
+    }
+  };
+
+  // Both stories should produce visually identical output
   ```
 
-**Dependencies**: 
+**Implementation**:
+- Create `docs/internal/queue-system.md`: Internal documentation for maintainers **[UPDATED]**
+  ```markdown
+  # Queue System Internal Documentation
+
+  This document describes the internal operation queue system.
+  NOT for external user consumption.
+
+  ## Architecture
+  ## Operation Categories and Dependencies
+  ## Deferred Promise Resolution
+  ## Debugging and Troubleshooting
+  ```
+
+- Create `examples/queue-progress.html`: Interactive progress example for testing/debugging
+- Add debug utilities in `src/utils/queue-debug.ts`:
+  ```typescript
+  // Queue visualization helpers for internal debugging
+  // Operation history tracking
+  // Performance profiling tools
+  // Determinism verification helpers
+  ```
+
+- **[NEW]** Create comprehensive determinism test suite in `stories/Determinism.stories.ts`:
+  - Test all combinations of property setting orders
+  - Each story variant should produce identical visual output
+  - Use visual regression tests to verify pixel-perfect matching
+  - Cover: layout, styles, data, camera, algorithms, and their combinations
+  - Include edge cases: empty graph, single node, large graphs (100+ nodes)
+
+**Dependencies**:
 - External: None
 - Internal: All previous phases
 
 **Verification**:
-1. Run all examples successfully
-2. Documentation review by team
-3. Successful migration of existing codebase
+1. Run all internal examples successfully
+2. **[NEW]** Run visual regression tests on all Determinism stories - all variants must match
+3. **[NEW]** Verify determinism with: `npm run test:storybook -- Determinism`
+4. Internal code review by maintainers
+5. Performance profiling shows no regression
 
 ## Common Utilities Needed
 - **Dependency Graph Builder**: Convert category dependencies to toposort format
@@ -532,7 +629,263 @@ await graph.batchOperations(async () => {
 - **Complex Debugging**: Add comprehensive logging and queue visualization tools
 - **Long-Running Operations**: Implement chunking for operations over 1000 items
 
-## Success Metrics
+### Phase 8: Eventual Consistency and Reactive Property Updates **[NEW]**
+**Objective**: Enable properties to be set at any time (including after initialization) and eventually converge to the specified configuration
+**Duration**: 2-3 days
+
+**Architectural Principle**:
+The Graph class and its managers must handle all batching and dependency ordering logic. The web component (`graphty-element`) should be a thin, framework-agnostic wrapper that simply forwards property changes to the Graph. This ensures the system can work with any web component framework (or no framework at all) in the future.
+
+**Problem Statement**:
+Currently, `graphty-element.ts` only processes properties during `firstUpdated()` lifecycle. Properties set after initialization (e.g., via `setTimeout` or async user code) are not applied to the Graph instance. This breaks the determinism stories Variants 3-6 (async variants) and prevents users from dynamically updating graph properties.
+
+**Root Cause**:
+- The web component uses Lit's `@property` decorator which only triggers `firstUpdated()` once
+- Subsequent property changes on the web component are not forwarded to Graph methods
+- Need property setters on the web component that forward to Graph at any time
+- Graph already has methods (addNodes, setLayout, etc.) that use the operation queue
+- The forwarding mechanism needs to work continuously, not just during initialization
+
+**Tests to Write First**:
+- `test/graphty-element/reactive-updates.test.ts`: Reactive property handling
+  ```typescript
+  describe('Reactive Property Updates', () => {
+    it('should apply nodeData set after initialization');
+    it('should apply styleTemplate set after initialization');
+    it('should apply layout changes after initialization');
+    it('should handle multiple sequential property updates');
+    it('should handle rapid property changes (debouncing)');
+    it('should maintain state during async property updates');
+  });
+  ```
+
+- `test/graphty-element/eventual-consistency.test.ts`: Convergence verification
+  ```typescript
+  describe('Eventual Consistency', () => {
+    it('should converge to same state regardless of timing');
+    it('should handle properties set via setTimeout');
+    it('should handle properties set via Promise.then');
+    it('should handle interleaved sync and async updates');
+    it('should complete all operations before firing settled event');
+  });
+  ```
+
+- `test/integration/async-property-scenarios.test.ts`: Real-world async scenarios
+  ```typescript
+  describe('Async Property Scenarios', () => {
+    it('should handle data loaded from fetch API');
+    it('should handle user-triggered property changes');
+    it('should handle multiple components with async updates');
+    it('should handle property updates during animation');
+  });
+  ```
+
+**Implementation**:
+
+**Key Insight**: Graph already has the correct methods (from Phase 4):
+- `this.#graph.addNodes(data)` - queues data-add operation
+- `this.#graph.addEdges(data)` - queues data-add operation
+- `this.#graph.setLayout(type, config)` - queues layout-set operation
+- `this.#graph.setStyleTemplate(template)` - queues style-init operation
+
+**The Problem**: Currently these methods are ONLY called from `asyncFirstUpdated()` lifecycle. When properties change later (e.g., via setTimeout), Lit detects the change but there's no code path that calls the Graph methods again.
+
+**The Solution**: Add custom property setters that call the existing Graph methods immediately when properties change.
+
+- Update `src/graphty-element.ts` with custom property setters:
+  ```typescript
+  /**
+   * Add custom getters/setters for reactive properties.
+   * Setters forward to existing Graph methods immediately.
+   * No changes needed to Graph - its methods already queue operations correctly.
+   */
+
+  // Private backing fields
+  #nodeData?: Record<string, unknown>[];
+  #edgeData?: Record<string, unknown>[];
+  #styleTemplate?: StyleSchema;
+  #layout?: string;
+  #layoutConfig?: Record<string, unknown>;
+
+  // Custom setter for nodeData - forwards to existing Graph.addNodes() method
+  @property({attribute: "node-data"})
+  get nodeData(): Record<string, unknown>[] | undefined {
+    return this.#nodeData;
+  }
+  set nodeData(value: Record<string, unknown>[] | undefined) {
+    const oldValue = this.#nodeData;
+    this.#nodeData = value;
+
+    // Call existing Graph method (which already queues operation)
+    if (value && Array.isArray(value)) {
+      void this.#graph.addNodes(value);  // Graph.addNodes already exists and queues correctly
+    }
+
+    this.requestUpdate('nodeData', oldValue);
+  }
+
+  // Custom setter for edgeData - forwards to existing Graph.addEdges() method
+  @property({attribute: "edge-data"})
+  get edgeData(): Record<string, unknown>[] | undefined {
+    return this.#edgeData;
+  }
+  set edgeData(value: Record<string, unknown>[] | undefined) {
+    const oldValue = this.#edgeData;
+    this.#edgeData = value;
+
+    // Call existing Graph method (which already queues operation)
+    if (value && Array.isArray(value)) {
+      void this.#graph.addEdges(value);  // Graph.addEdges already exists and queues correctly
+    }
+
+    this.requestUpdate('edgeData', oldValue);
+  }
+
+  // Custom setter for styleTemplate - forwards to existing Graph.setStyleTemplate() method
+  @property({attribute: "style-template"})
+  get styleTemplate(): StyleSchema | undefined {
+    return this.#styleTemplate;
+  }
+  set styleTemplate(value: StyleSchema | undefined) {
+    const oldValue = this.#styleTemplate;
+    this.#styleTemplate = value;
+
+    // Call existing Graph method (which already queues operation)
+    if (value) {
+      void this.#graph.setStyleTemplate(value);  // Graph.setStyleTemplate already exists and queues correctly
+    }
+
+    this.requestUpdate('styleTemplate', oldValue);
+  }
+
+  // Custom setter for layout - forwards to existing Graph.setLayout() method
+  @property()
+  get layout(): string | undefined {
+    return this.#layout;
+  }
+  set layout(value: string | undefined) {
+    const oldValue = this.#layout;
+    this.#layout = value;
+
+    // Call existing Graph method (which already queues operation)
+    if (value) {
+      const templateLayoutOptions = this.#graph.styles?.config.graph.layoutOptions ?? {};
+      const mergedConfig = {...templateLayoutOptions, ...(this.#layoutConfig ?? {})};
+      void this.#graph.setLayout(value, mergedConfig);  // Graph.setLayout already exists and queues correctly
+    }
+
+    this.requestUpdate('layout', oldValue);
+  }
+
+  // Add similar custom setters for:
+  // - layoutConfig → Graph.setLayout()
+  // - layout2d → setDeep(this.#graph.styles.config, "graph.twoD", value)
+  // - dataSource → Graph.addDataFromSource()
+  // - nodeIdPath, edgeSrcIdPath, edgeDstIdPath → setDeep() calls
+  ```
+
+- Simplify `asyncFirstUpdated` in `src/graphty-element.ts`:
+  ```typescript
+  /**
+   * First update only needs to:
+   * 1. Set up event forwarding
+   * 2. Initialize the graph
+   *
+   * Property forwarding now happens automatically via custom setters above,
+   * not in this lifecycle method.
+   */
+  async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
+    // Forward internal graph events as DOM events
+    this.#graph.addListener("graph-settled", (event) => {
+      this.dispatchEvent(new CustomEvent("graph-settled", {
+        detail: event,
+        bubbles: true,
+        composed: true,
+      }));
+    });
+
+    this.#graph.addListener("skybox-loaded", (event) => {
+      this.dispatchEvent(new CustomEvent("skybox-loaded", {
+        detail: event,
+        bubbles: true,
+        composed: true,
+      }));
+    });
+
+    // Initialize the graph (only needs to happen once)
+    await this.#graph.init();
+
+    // Wait for first render frame to ensure graph is visible
+    await new Promise((resolve) => requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    }));
+
+    this.#graph.engine.resize();
+  }
+  ```
+
+- **No changes needed to `src/Graph.ts`**:
+  ```typescript
+  // Graph methods already exist and already queue operations (from Phase 4)
+  // Custom setters above simply call these existing methods
+
+  async addNodes(nodes: any[], idPath?: string): Promise<void> {
+    // ✅ Already implemented, already uses operation queue
+    return this.operationQueue.queueOperation('data-add', ...);
+  }
+
+  async setLayout(layoutType: string, config?: any): Promise<void> {
+    // ✅ Already implemented, already uses operation queue
+    return this.operationQueue.queueOperation('layout-set', ...);
+  }
+
+  async setStyleTemplate(template: StyleSchema): Promise<void> {
+    // ✅ Already implemented, already uses operation queue
+    return this.operationQueue.queueOperation('style-init', ...);
+  }
+
+  // NO CHANGES NEEDED - methods already queue operations correctly
+  ```
+
+**Dependencies**:
+- External: None
+- Internal: Phase 1-7 (requires operation queue system)
+
+**Verification**:
+1. Run: `npm test -- reactive-updates`
+2. Run: `npm test -- eventual-consistency`
+3. **Critical**: Re-run all Determinism stories - Variants 3-6 should now PASS
+4. Run: `npm run test:storybook -- Determinism`
+5. Expected: All 6 determinism variants produce identical visual output
+6. Test interactive property changes in Storybook
+7. Verify no performance regression with rapid property updates
+8. Test that Graph methods work identically whether called directly or via web component properties
+
+**Edge Cases to Handle**:
+- Properties set before Graph.init() completes (Graph should queue operations)
+- Multiple rapid property changes (Graph's operation queue handles this automatically)
+- Properties set while previous operations are still executing (queued automatically)
+- Graph disposed while property updates are in flight (cleanup in Graph.shutdown())
+- Properties reverted before operations complete (newest operation obsoletes older ones via Phase 3 rules)
+
+**Key Simplification**:
+Unlike the original approach, there's no need for Lit lifecycle management of batching/ordering. The web component is now truly a thin wrapper:
+- Custom property setters forward to Graph methods immediately
+- Graph methods automatically queue operations (from Phase 4)
+- Operation queue handles all dependency ordering and batching (from Phase 1-3)
+- No framework-specific lifecycle dependency for core logic
+
+**Breaking Changes**: None (purely additive)
+
+**Success Criteria**:
+- ✅ All Determinism story variants (1-6) pass visual regression tests
+- ✅ Properties can be set via setTimeout and work correctly
+- ✅ Async data loading scenarios work
+- ✅ Graph converges to correct state regardless of property timing
+- ✅ No memory leaks from pending operations
+- ✅ Performance remains within acceptable bounds (<10ms overhead per update)
+
+## Success Metrics **[UPDATED]**
 - All existing tests pass without modification
 - Operation execution order is deterministic
 - <10ms overhead per operation
@@ -544,3 +897,7 @@ await graph.batchOperations(async () => {
 - **Batching works correctly**: Operations can be awaited inside `batchOperations` callbacks
 - **Dependency ordering maintained**: Operations execute in dependency order regardless of call order
 - **No deadlocks**: Deferred promise resolution prevents await deadlocks in batch callbacks
+- **[NEW] Determinism verified**: All Determinism.stories.ts variants produce pixel-perfect identical visual output regardless of property setting order
+- **[NEW] Comprehensive order testing**: Minimum 12 story variants covering different property setting order combinations all pass visual regression
+- **[PHASE 8] Eventual consistency**: Properties can be set at any time (sync or async) and graph converges to correct state
+- **[PHASE 8] Reactive updates**: All property changes after initialization are applied correctly via operation queue

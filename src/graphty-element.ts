@@ -20,10 +20,10 @@ export class Graphty extends LitElement {
         this.#graph = new Graph(this.#element);
     }
 
-    // connectedCallback() {
-    //     super.connectedCallback();
-    //     this.renderRoot.appendChild(this.#element);
-    // }
+    connectedCallback(): void {
+        super.connectedCallback();
+        this.renderRoot.appendChild(this.#element);
+    }
 
     // update(changedProperties: Map<string, unknown>) {
     //     super.update(changedProperties);
@@ -40,7 +40,7 @@ export class Graphty extends LitElement {
             });
     }
 
-    async asyncFirstUpdated(changedProperties: Map<string, unknown>): Promise<void> {
+    async asyncFirstUpdated(_changedProperties: Map<string, unknown>): Promise<void> {
         // Forward internal graph events as DOM events
         this.#graph.addListener("graph-settled", (event) => {
             this.dispatchEvent(new CustomEvent("graph-settled", {
@@ -57,66 +57,18 @@ export class Graphty extends LitElement {
                 composed: true,
             }));
         });
-        // Set runAlgorithmsOnLoad BEFORE setting style template
-        if (changedProperties.has("runAlgorithmsOnLoad") && this.runAlgorithmsOnLoad !== undefined) {
-            this.#graph.runAlgorithmsOnLoad = true;
-        }
 
-        // Set style template after runAlgorithmsOnLoad so algorithms can run
-        if (changedProperties.has("styleTemplate") && this.styleTemplate) {
-            await this.#graph.setStyleTemplate(this.styleTemplate);
-        }
+        // Note: Property setters now forward to Graph methods automatically,
+        // so we don't need to check changedProperties here. The setters have
+        // already been called by the time we reach this lifecycle method.
 
-        if (changedProperties.has("layout2d") && this.layout2d !== undefined) {
-            setDeep(this.#graph.styles.config, "graph.twoD", this.layout2d);
-        }
-
-        // Set layout AFTER styleTemplate, merging layoutOptions from template with layoutConfig
-        // Only set layout if explicitly provided via the layout property
-        if ((changedProperties.has("layout") || changedProperties.has("layoutConfig")) && this.layout !== undefined) {
-            // Get layoutOptions from styleTemplate if available
-            const templateLayoutOptions = this.#graph.styles.config.graph.layoutOptions ?? {};
-            // Merge template options with provided layoutConfig (layoutConfig takes precedence)
-            const mergedConfig = {... templateLayoutOptions, ... (this.layoutConfig ?? {})};
-            await this.#graph.setLayout(this.layout, mergedConfig);
-        }
-
-        if (changedProperties.has("nodeIdPath") && this.nodeIdPath) {
-            setDeep(this.#graph.styles.config, "data.knownFields.nodeIdPath", this.nodeIdPath);
-        }
-
-        if (changedProperties.has("edgeSrcIdPath") && this.edgeSrcIdPath) {
-            setDeep(this.#graph.styles.config, "data.knownFields.edgeSrcIdPath", this.edgeSrcIdPath);
-        }
-
-        if (changedProperties.has("edgeDstIdPath") && this.edgeDstIdPath) {
-            setDeep(this.#graph.styles.config, "data.knownFields.edgeDstIdPath", this.edgeDstIdPath);
-        }
-
-        // Load data BEFORE initialization (original working order)
-        if (changedProperties.has("nodeData") && Array.isArray(this.nodeData)) {
-            void this.#graph.addNodes(this.nodeData);
-        }
-
-        if (changedProperties.has("edgeData") && Array.isArray(this.edgeData)) {
-            void this.#graph.addEdges(this.edgeData);
-        }
-
-        // Initialize the graph AFTER loading data
+        // Initialize the graph (only needs to happen once)
         await this.#graph.init();
 
         // Wait for first render frame to ensure graph is visible
         await new Promise((resolve) => requestAnimationFrame(() => {
             requestAnimationFrame(resolve);
         }));
-
-        if (changedProperties.has("dataSource") && this.dataSource) {
-            const sourceOpts = this.dataSourceConfig ?? {};
-            await this.#graph.addDataFromSource(this.dataSource, sourceOpts);
-        }
-
-        // Run algorithms after all data has been loaded
-        await this.#graph.runAlgorithmsFromTemplate();
 
         this.#graph.engine.resize();
     }
@@ -129,13 +81,40 @@ export class Graphty extends LitElement {
         this.#graph.shutdown();
     }
 
+    // Private backing fields for reactive properties
+    #nodeData?: Record<string, unknown>[];
+    #edgeData?: Record<string, unknown>[];
+    #dataSource?: string;
+    #dataSourceConfig?: Record<string, unknown>;
+    #nodeIdPath?: string;
+    #edgeSrcIdPath?: string;
+    #edgeDstIdPath?: string;
+    #layout?: string;
+    #layoutConfig?: Record<string, unknown>;
+    #layout2d?: boolean;
+    #styleTemplate?: StyleSchema;
+    #runAlgorithmsOnLoad?: boolean;
+
     /**
      * An array of objects describing the node data.
      * The path to the unique ID for the node is `.id` unless
      * otherwise specified in `known-properties`.
      */
     @property({attribute: "node-data"})
-    nodeData?: Record<string, unknown>[];
+    get nodeData(): Record<string, unknown>[] | undefined {
+        return this.#nodeData;
+    }
+    set nodeData(value: Record<string, unknown>[] | undefined) {
+        const oldValue = this.#nodeData;
+        this.#nodeData = value;
+
+        // Forward to Graph method (which queues operation)
+        if (value && Array.isArray(value)) {
+            void this.#graph.addNodes(value);
+        }
+
+        this.requestUpdate("nodeData", oldValue);
+    }
 
     /**
      * An array of objects describing the edge data.
@@ -143,21 +122,55 @@ export class Graphty extends LitElement {
      * `dst` (respectively) unless otherwise specified in `known-properties`.
      */
     @property({attribute: "edge-data"})
-    edgeData?: Record<string, unknown>[];
+    get edgeData(): Record<string, unknown>[] | undefined {
+        return this.#edgeData;
+    }
+    set edgeData(value: Record<string, unknown>[] | undefined) {
+        const oldValue = this.#edgeData;
+        this.#edgeData = value;
+
+        // Forward to Graph method (which queues operation)
+        if (value && Array.isArray(value)) {
+            void this.#graph.addEdges(value);
+        }
+
+        this.requestUpdate("edgeData", oldValue);
+    }
 
     /**
      * The type of data source (e.g. "json"). See documentation for
      * data sources for more information.
      */
     @property({attribute: "data-source"})
-    dataSource?: string;
+    get dataSource(): string | undefined {
+        return this.#dataSource;
+    }
+    set dataSource(value: string | undefined) {
+        const oldValue = this.#dataSource;
+        this.#dataSource = value;
+
+        // Forward to Graph method (which queues operation)
+        if (value) {
+            const sourceOpts = this.#dataSourceConfig ?? {};
+            void this.#graph.addDataFromSource(value, sourceOpts);
+        }
+
+        this.requestUpdate("dataSource", oldValue);
+    }
 
     /**
      * The configuration for the data source. See documentation for
      * data sources for more information.
      */
     @property({attribute: "data-source-config"})
-    dataSourceConfig?: Record<string, unknown>;
+    get dataSourceConfig(): Record<string, unknown> | undefined {
+        return this.#dataSourceConfig;
+    }
+    set dataSourceConfig(value: Record<string, unknown> | undefined) {
+        const oldValue = this.#dataSourceConfig;
+        this.#dataSourceConfig = value;
+        this.requestUpdate("dataSourceConfig", oldValue);
+    }
 
     /**
      * A jmespath string that can be used to select the unique node identifier
@@ -165,7 +178,19 @@ export class Graphty extends LitElement {
      * the node.
      */
     @property({attribute: "node-id-path"})
-    nodeIdPath?: string;
+    get nodeIdPath(): string | undefined {
+        return this.#nodeIdPath;
+    }
+    set nodeIdPath(value: string | undefined) {
+        const oldValue = this.#nodeIdPath;
+        this.#nodeIdPath = value;
+
+        if (value) {
+            setDeep(this.#graph.styles.config, "data.knownFields.nodeIdPath", value);
+        }
+
+        this.requestUpdate("nodeIdPath", oldValue);
+    }
 
     /**
      * Similar to the nodeIdPath property / node-id-path attribute, this is a
@@ -173,7 +198,19 @@ export class Graphty extends LitElement {
      * Defaults to "src", as in `{src: 42, dst: 31337}`
      */
     @property({attribute: "edge-src-id-path"})
-    edgeSrcIdPath?: string;
+    get edgeSrcIdPath(): string | undefined {
+        return this.#edgeSrcIdPath;
+    }
+    set edgeSrcIdPath(value: string | undefined) {
+        const oldValue = this.#edgeSrcIdPath;
+        this.#edgeSrcIdPath = value;
+
+        if (value) {
+            setDeep(this.#graph.styles.config, "data.knownFields.edgeSrcIdPath", value);
+        }
+
+        this.requestUpdate("edgeSrcIdPath", oldValue);
+    }
 
     /**
      * Similar to the nodeIdPath property / node-id-path attribute, this is a
@@ -181,42 +218,121 @@ export class Graphty extends LitElement {
      * Defaults to "dst", as in `{src: 42, dst: 31337}`
      */
     @property({attribute: "edge-dst-id-path"})
-    edgeDstIdPath?: string;
+    get edgeDstIdPath(): string | undefined {
+        return this.#edgeDstIdPath;
+    }
+    set edgeDstIdPath(value: string | undefined) {
+        const oldValue = this.#edgeDstIdPath;
+        this.#edgeDstIdPath = value;
+
+        if (value) {
+            setDeep(this.#graph.styles.config, "data.knownFields.edgeDstIdPath", value);
+        }
+
+        this.requestUpdate("edgeDstIdPath", oldValue);
+    }
 
     /**
      * Specifies which type of layout to use. See the layout documentation for
      * more information.
      */
     @property()
-    layout?: string;
+    get layout(): string | undefined {
+        return this.#layout;
+    }
+    set layout(value: string | undefined) {
+        const oldValue = this.#layout;
+        this.#layout = value;
+
+        // Forward to Graph method (which queues operation)
+        if (value) {
+            const templateLayoutOptions = this.#graph.styles.config.graph.layoutOptions ?? {};
+            const mergedConfig = {... templateLayoutOptions, ... (this.#layoutConfig ?? {})};
+            void this.#graph.setLayout(value, mergedConfig);
+        }
+
+        this.requestUpdate("layout", oldValue);
+    }
 
     /**
      * Specifies which type of layout to use. See the layout documentation for
      * more information.
      */
     @property({attribute: "layout-config"})
-    layoutConfig?: Record<string, unknown>;
+    get layoutConfig(): Record<string, unknown> | undefined {
+        return this.#layoutConfig;
+    }
+    set layoutConfig(value: Record<string, unknown> | undefined) {
+        const oldValue = this.#layoutConfig;
+        this.#layoutConfig = value;
+
+        // If layout is already set, update it with new config
+        if (this.#layout) {
+            const templateLayoutOptions = this.#graph.styles.config.graph.layoutOptions ?? {};
+            const mergedConfig = {... templateLayoutOptions, ... (value ?? {})};
+            void this.#graph.setLayout(this.#layout, mergedConfig);
+        }
+
+        this.requestUpdate("layoutConfig", oldValue);
+    }
 
     /**
      * Specifies that the layout should be rendered in two dimensions (as
      * opposed to 3D)
      */
     @property({attribute: "layout-2d"})
-    layout2d?: boolean;
+    get layout2d(): boolean | undefined {
+        return this.#layout2d;
+    }
+    set layout2d(value: boolean | undefined) {
+        const oldValue = this.#layout2d;
+        this.#layout2d = value;
+
+        if (value !== undefined) {
+            setDeep(this.#graph.styles.config, "graph.twoD", value);
+        }
+
+        this.requestUpdate("layout2d", oldValue);
+    }
 
     /**
      * Specifies that the layout should be rendered in two dimensions (as
      * opposed to 3D)
      */
     @property({attribute: "style-template"})
-    styleTemplate?: StyleSchema;
+    get styleTemplate(): StyleSchema | undefined {
+        return this.#styleTemplate;
+    }
+    set styleTemplate(value: StyleSchema | undefined) {
+        const oldValue = this.#styleTemplate;
+        this.#styleTemplate = value;
+
+        // Forward to Graph method (which queues operation)
+        if (value) {
+            void this.#graph.setStyleTemplate(value);
+        }
+
+        this.requestUpdate("styleTemplate", oldValue);
+    }
 
     /**
      * Whether or not to run all algorithims in a style template when the
      * template is loaded
      */
     @property({attribute: "run-algorithms-on-load"})
-    runAlgorithmsOnLoad?: boolean;
+    get runAlgorithmsOnLoad(): boolean | undefined {
+        return this.#runAlgorithmsOnLoad;
+    }
+    set runAlgorithmsOnLoad(value: boolean | undefined) {
+        const oldValue = this.#runAlgorithmsOnLoad;
+        this.#runAlgorithmsOnLoad = value;
+
+        if (value !== undefined) {
+            this.#graph.runAlgorithmsOnLoad = value;
+        }
+
+        this.requestUpdate("runAlgorithmsOnLoad", oldValue);
+    }
 
     /**
      * Get the underlying Graph instance for debugging purposes

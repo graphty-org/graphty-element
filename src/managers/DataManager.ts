@@ -44,6 +44,13 @@ export class DataManager implements Manager {
     private shouldStartLayout = false;
     private shouldZoomToFit = false;
 
+    // Buffer for edges added before their nodes exist
+    private bufferedEdges: Array<{
+        edge: Record<string | number, unknown>;
+        srcIdPath?: string;
+        dstIdPath?: string;
+    }> = [];
+
     constructor(
         private eventManager: EventManager,
         private styles: Styles,
@@ -160,9 +167,76 @@ export class DataManager implements Manager {
             // Request layout start and zoom to fit
             this.shouldStartLayout = true;
             this.shouldZoomToFit = true;
+
+            // Process any buffered edges whose nodes now exist
+            this.processBufferedEdges();
+
             // Emit event to notify graph that data has been added
             this.eventManager.emitDataAdded("nodes", nodes.length, true, true);
         }
+    }
+
+    /**
+     * Process buffered edges whose nodes now exist
+     * Called after nodes are added to retry edge creation
+     */
+    private processBufferedEdges(): void {
+        if (this.bufferedEdges.length === 0) {
+            return;
+        }
+
+        // Try to process all buffered edges
+        const stillBuffered: typeof this.bufferedEdges = [];
+
+        for (const {edge, srcIdPath, dstIdPath} of this.bufferedEdges) {
+            // get paths
+            const srcQuery = srcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath;
+            const dstQuery = dstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath;
+
+            const srcNodeId = jmespath.search(edge, srcQuery) as NodeIdType;
+            const dstNodeId = jmespath.search(edge, dstQuery) as NodeIdType;
+
+            // Check if both nodes now exist
+            const srcNode = this.nodeCache.get(srcNodeId);
+            const dstNode = this.nodeCache.get(dstNodeId);
+
+            if (!srcNode || !dstNode) {
+                // Nodes still don't exist, keep in buffer
+                stillBuffered.push({edge, srcIdPath, dstIdPath});
+                continue;
+            }
+
+            // Check if edge already exists
+            if (this.edgeCache.get(srcNodeId, dstNodeId)) {
+                continue;
+            }
+
+            // Create the edge now that both nodes exist
+            const style = this.styles.getStyleForEdge(edge as AdHocData);
+            const opts = {};
+            if (!this.graphContext) {
+                throw new Error("GraphContext not set. Call setGraphContext before adding edges.");
+            }
+
+            const e = new Edge(this.graphContext, srcNodeId, dstNodeId, style, edge as AdHocData, opts);
+            this.edgeCache.set(srcNodeId, dstNodeId, e);
+            this.edges.set(e.id, e);
+
+            // Add to layout engine if it exists
+            if (this.layoutEngine) {
+                this.layoutEngine.addEdge(e);
+            }
+
+            // Emit edge added event
+            this.eventManager.emitEdgeEvent("edge-add-before", {
+                srcNodeId,
+                dstNodeId,
+                metadata: edge,
+            });
+        }
+
+        // Update buffer with edges that still couldn't be processed
+        this.bufferedEdges = stillBuffered;
     }
 
     getNode(nodeId: NodeIdType): Node | undefined {
@@ -206,6 +280,16 @@ export class DataManager implements Manager {
             const dstNodeId = jmespath.search(edge, dstQuery) as NodeIdType;
 
             if (this.edgeCache.get(srcNodeId, dstNodeId)) {
+                continue;
+            }
+
+            // Check if both nodes exist before creating edge
+            const srcNode = this.nodeCache.get(srcNodeId);
+            const dstNode = this.nodeCache.get(dstNodeId);
+
+            if (!srcNode || !dstNode) {
+                // Buffer this edge to be processed later when nodes exist
+                this.bufferedEdges.push({edge, srcIdPath, dstIdPath});
                 continue;
             }
 

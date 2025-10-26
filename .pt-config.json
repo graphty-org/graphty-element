@@ -17,5 +17,14 @@
   "defaultCmdOptions": {
     "Continue with last context?": "--continue"
   },
-  "autoRun": true
+  "autoRun": true,
+  "outputCapture": {
+    "enabled": true,
+    "directory": "./.pthistory",
+    "maxSizeMB": 150
+  },
+  "autoAnnotate": {
+    "enabled": false,
+    "analysisPrompt": "analyze-execution"
+  }
 }

@@ -21,12 +21,15 @@ import {
     FetchNodesFn,
     StyleSchema,
 } from "./config";
+import {UpdateDebugger} from "./debug/update-debugger";
 import {
     EventCallbackType,
     EventType,
 } from "./events";
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
+import {Node} from "./Node";
+import {type PerformanceReport, UpdateProfiler} from "./performance/update-profiler";
 import {Styles} from "./Styles";
 import type {QueueableOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
@@ -70,6 +73,9 @@ export class Graph implements GraphContext {
     private inputManager: InputManager;
     operationQueue: OperationQueueManager;
 
+    // Performance tracking
+    private profiler: UpdateProfiler;
+
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
@@ -82,6 +88,9 @@ export class Graph implements GraphContext {
             concurrency: 1, // Sequential execution
             autoStart: true,
         });
+
+        // Initialize performance profiler
+        this.profiler = new UpdateProfiler();
 
         // Initialize StyleManager
         this.styleManager = new StyleManager(this.eventManager);
@@ -206,6 +215,21 @@ export class Graph implements GraphContext {
             ["event", "queue", "style", "stats", "render", "data", "layout", "update", "algorithm", "input"],
         );
 
+        // Queue default layout early so user-specified layouts can obsolete it
+        // This is queued now (in constructor) rather than in init() to ensure
+        // it's the FIRST layout operation queued, allowing user operations to cancel it
+        void this.setLayout("ngraph")
+            .catch((e: unknown) => {
+                console.error("ERROR setting default layout:", e);
+                // Emit error event for default layout failure
+                this.eventManager.emitGraphError(
+                    this,
+                    e instanceof Error ? e : new Error(String(e)),
+                    "layout",
+                    {layoutType: "ngraph", isDefault: true},
+                );
+            });
+
         // Listen for data-added events to manage running state
         this.eventManager.addListener("data-added", (event) => {
             if (event.type === "data-added") {
@@ -228,19 +252,7 @@ export class Graph implements GraphContext {
             }
         });
 
-        // setup default layout - but don't wait for it
-        // The layout will be properly configured when needed
-        this.setLayout("ngraph")
-            .catch((e: unknown) => {
-                console.error("ERROR setting default layout:", e);
-                // Emit error event for default layout failure
-                this.eventManager.emitGraphError(
-                    this,
-                    e instanceof Error ? e : new Error(String(e)),
-                    "layout",
-                    {layoutType: "ngraph", isDefault: true},
-                );
-            });
+        // Default layout is now queued in constructor to ensure proper obsolescence ordering
     }
 
     private cleanup(): void {
@@ -843,6 +855,96 @@ export class Graph implements GraphContext {
     getNodeMesh(nodeId: string): AbstractMesh | null {
         const node = this.dataManager.nodes.get(nodeId);
         return node?.mesh ?? null;
+    }
+
+    // Performance tracking methods
+
+    /**
+     * Enable performance profiling
+     */
+    enableProfiling(): void {
+        this.profiler.enable();
+        UpdateDebugger.enable();
+    }
+
+    /**
+     * Disable performance profiling
+     */
+    disableProfiling(): void {
+        this.profiler.disable();
+        UpdateDebugger.disable();
+    }
+
+    /**
+     * Get performance metrics report
+     */
+    getPerformanceMetrics(): PerformanceReport | null {
+        if (!this.profiler.isEnabled()) {
+            return null;
+        }
+
+        return this.profiler.getReport();
+    }
+
+    /**
+     * Async method to wait for graph operations to settle
+     * Waits for operation queue to drain
+     */
+    async waitForSettled(): Promise<void> {
+        // Wait for operation queue to complete all operations
+        await this.operationQueue.waitForCompletion();
+    }
+
+    /**
+     * Set graph data (delegates to data manager)
+     */
+    setData(data: {nodes: Record<string, unknown>[], edges: Record<string, unknown>[]}): void {
+        const profiling = this.profiler.isEnabled();
+
+        if (profiling) {
+            this.profiler.startMeasure("setData");
+        }
+
+        // Add nodes
+        for (const nodeData of data.nodes) {
+            this.addNode(nodeData as AdHocData)
+                .catch((e: unknown) => {
+                    console.error("Error adding node:", e);
+                });
+        }
+
+        // Add edges
+        for (const edgeData of data.edges) {
+            this.addEdge(edgeData as AdHocData)
+                .catch((e: unknown) => {
+                    console.error("Error adding edge:", e);
+                });
+        }
+
+        if (profiling) {
+            this.profiler.endMeasure("setData");
+        }
+    }
+
+    /**
+     * Get a specific node
+     */
+    getNode(nodeId: string | number): Node | undefined {
+        return this.dataManager.getNode(nodeId);
+    }
+
+    /**
+     * Get all nodes
+     */
+    getNodes(): Node[] {
+        return Array.from(this.dataManager.nodes.values());
+    }
+
+    /**
+     * Render method (public for testing)
+     */
+    render(): void {
+        this.scene.render();
     }
 
     dispose(): void {

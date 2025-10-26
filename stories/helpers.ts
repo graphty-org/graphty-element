@@ -89,24 +89,7 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
     // Check if we have pre-attached promises
     const state = eventWaitingState.get(graphtyElement as HTMLElement);
     if (state?.promises.has("graph-settled")) {
-        // Check if the promise is already resolved (for static layouts)
-        let isResolved = false;
-        const checkPromise = state.promises.get("graph-settled")?.then(() => {
-            isResolved = true;
-        });
-
-        // Give it a moment to resolve if it's going to
-        await Promise.race([
-            checkPromise,
-            new Promise((resolve) => setTimeout(resolve, 50))
-        ]);
-
-        if (isResolved) {
-            // Event already fired (static layout)
-            return;
-        }
-
-        // Otherwise wait for the event with a timeout
+        // Get the settled promise
         const settledPromise = state.promises.get("graph-settled");
         if (!settledPromise) {
             return;
@@ -173,7 +156,7 @@ export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<v
     // Since skybox-loaded is not in the default decorator events, we always use direct listener
     await new Promise<void>((resolve) => {
         let resolved = false;
-        
+
         // Short timeout - if skybox hasn't loaded quickly, it's probably not configured
         const timeout = setTimeout(() => {
             if (!resolved) {
@@ -194,7 +177,7 @@ export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<v
         };
 
         graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
-        
+
         // Check if the skybox might have already loaded
         // Give it a tiny delay to see if the event fires immediately
         setTimeout(() => {
@@ -356,8 +339,8 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 if (val !== undefined) {
                     deepSet(t, `graph.layoutOptions.${configKey}`, val);
                 }
-            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData"].includes(arg)) {
-                // For other properties, apply directly (but skip component-level props)
+            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData", "onGraphSettled", "onSkyboxLoaded"].includes(arg)) {
+                // For other properties, apply directly (but skip component-level props and event handlers)
                 deepSet(t, name, val);
             }
         }

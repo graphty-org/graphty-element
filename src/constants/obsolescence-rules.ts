@@ -41,7 +41,7 @@ export const OBSOLESCENCE_RULES: Partial<Record<OperationCategory, ObsolescenceR
 
     // Style changes obsolete renders
     "style-init": {
-        obsoletes: ["style-apply", "render-update"],
+        obsoletes: ["style-init", "style-apply", "render-update"],
         respectProgress: false, // Style init is critical
     },
 
@@ -52,7 +52,7 @@ export const OBSOLESCENCE_RULES: Partial<Record<OperationCategory, ObsolescenceR
 
     // Layout changes obsolete dependent operations
     "layout-set": {
-        obsoletes: ["layout-update", "camera-update"],
+        obsoletes: ["layout-set", "layout-update", "camera-update"],
         respectProgress: false, // New layout engine is important
     },
 

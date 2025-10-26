@@ -385,7 +385,7 @@ export class RichTextLabel {
             const isTest = typeof globalThis !== "undefined" &&
                           (("__vitest_worker__" in globalThis) ||
                            ("__vitest_environment__" in globalThis) ||
-                           Boolean(typeof window !== "undefined" && window.location?.href?.includes("vitest")));
+                           Boolean(typeof window !== "undefined" && window.location.href.includes("vitest")));
 
             if (!isTest) {
                 console.warn(`RichTextLabel: Texture size clamped to ${textureWidth}x${textureHeight} (max: ${MAX_TEXTURE_SIZE})`);
