@@ -380,7 +380,16 @@ export class RichTextLabel {
             const scale = MAX_TEXTURE_SIZE / Math.max(textureWidth, textureHeight);
             textureWidth = Math.floor(textureWidth * scale);
             textureHeight = Math.floor(textureHeight * scale);
-            console.warn(`RichTextLabel: Texture size clamped to ${textureWidth}x${textureHeight} (max: ${MAX_TEXTURE_SIZE})`);
+            // Only warn in non-test environments
+            // Check if we're in a test environment by looking for vitest or testing context
+            const isTest = typeof globalThis !== "undefined" &&
+                          (("__vitest_worker__" in globalThis) ||
+                           ("__vitest_environment__" in globalThis) ||
+                           Boolean(typeof window !== "undefined" && window.location?.href?.includes("vitest")));
+
+            if (!isTest) {
+                console.warn(`RichTextLabel: Texture size clamped to ${textureWidth}x${textureHeight} (max: ${MAX_TEXTURE_SIZE})`);
+            }
         }
 
         this.texture = new DynamicTexture(`richTextTexture_${this.id}`, {

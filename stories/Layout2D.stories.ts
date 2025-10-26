@@ -3,7 +3,7 @@ import "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {eventWaitingDecorator, renderFn, templateCreator} from "./helpers";
+import {eventWaitingDecorator, renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Layout/2D",
@@ -94,6 +94,10 @@ export const Spiral: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Circular: Story = {
@@ -107,6 +111,10 @@ export const Circular: Story = {
                 "graph.layoutOptions.scale",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -142,6 +150,10 @@ export const Shell: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Random: Story = {
@@ -155,6 +167,10 @@ export const Random: Story = {
                 "graph.layoutOptions.seed",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -176,6 +192,10 @@ export const Spring: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Planar: Story = {
@@ -193,6 +213,10 @@ export const Planar: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const KamadaKawai: Story = {
@@ -206,6 +230,10 @@ export const KamadaKawai: Story = {
                 "graph.layoutOptions.scale",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -233,6 +261,10 @@ export const ForceAtlas2: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Arf: Story = {
@@ -250,6 +282,10 @@ export const Arf: Story = {
                 "graph.layoutOptions.seed",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -269,6 +305,10 @@ export const Bfs: Story = {
                 "graph.layoutOptions.scale",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -290,6 +330,10 @@ export const Bipartite: Story = {
                 "graph.layoutOptions.aspectRatio",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -322,5 +366,9 @@ export const Multipartite: Story = {
                 "graph.layoutOptions.scale",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };

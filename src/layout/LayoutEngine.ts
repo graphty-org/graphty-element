@@ -176,7 +176,7 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         return this._edges;
     };
 
-    readonly isSettled = true; ;
+    readonly isSettled = true;
 
     abstract doLayout(): void;
 }

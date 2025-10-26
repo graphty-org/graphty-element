@@ -1,8 +1,31 @@
+import {Logger} from "@babylonjs/core";
 import {Vector2, Vector3} from "@babylonjs/core/Maths/math.vector";
 import {afterEach, expect} from "vitest";
 
 import type {Graph} from "../src/Graph";
 import {MockDeviceInputSystem} from "../src/input/mock-device-input-system";
+
+// Suppress Babylon.js logs during tests
+Logger.LogLevels = Logger.ErrorLogLevel;
+
+// Suppress Lit dev mode warnings by setting production mode
+// @ts-expect-error - Global window modification for test environment
+if (typeof window !== "undefined") {
+    // @ts-expect-error - Global window modification for test environment
+    window.litIssuedWarnings = new Set(); // Prevent duplicate warnings
+    // Suppress console warnings from Lit during tests
+    const originalWarn = console.warn;
+    console.warn = (... args: unknown[]) => {
+        const message = args[0];
+        if (typeof message === "string" &&
+            (message.includes("Lit is in dev mode") ||
+             message.includes("Multiple versions of Lit loaded"))) {
+            return; // Suppress Lit warnings
+        }
+
+        originalWarn.apply(console, args);
+    };
+}
 
 // Global test utilities
 export function createMockInputSystem(): MockDeviceInputSystem {

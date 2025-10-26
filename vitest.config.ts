@@ -96,6 +96,8 @@ export default defineConfig({
                         instances: [{browser: "chromium"}],
                     },
                     setupFiles: [".storybook/vitest.setup.ts"],
+                    // Reduce parallelism to prevent browser resource contention
+                    fileParallelism: false, // Run test files sequentially
                 },
             },
         ],

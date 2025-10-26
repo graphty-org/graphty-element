@@ -3,6 +3,7 @@ import "../src/layout/index.ts"; // Ensure all layouts are registered
 import "../src/data/index.ts"; // Ensure all data sources are registered
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
+import isChromatic from "chromatic/isChromatic";
 
 import {Graphty} from "../src/graphty-element";
 import {eventWaitingDecorator, renderFn, templateCreator, waitForGraphSettled} from "./helpers";
@@ -88,7 +89,9 @@ export const ngraph: Story = {
             },
             behavior: {
                 layout: {
-                    preSteps: 15000, // Maximum steps for data3.json (77 nodes) with ngraph physics
+                    // Physics-based layouts need preSteps for visual stability
+                    // Chromatic needs more steps for consistent snapshots, regular tests need minimal steps
+                    preSteps: isChromatic() ? 15000 : 200,
                 },
             },
         }),
@@ -153,6 +156,10 @@ export const D3: Story = {
             diffThreshold: 0.8, // Increased tolerance for D3 physics-based layout
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Circular: Story = {
@@ -180,6 +187,10 @@ export const Circular: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Random: Story = {
@@ -199,6 +210,10 @@ export const Random: Story = {
                 "graph.layoutOptions.seed",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -225,6 +240,10 @@ export const Spring: Story = {
                 "graph.layoutOptions.seed",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -255,6 +274,10 @@ export const KamadaKawai: Story = {
                 "graph.layoutOptions.weightProperty",
             ],
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -309,6 +332,10 @@ export const ForceAtlas2: Story = {
             ],
         },
     },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Fixed: Story = {
@@ -324,6 +351,11 @@ export const Fixed: Story = {
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
+            },
+            behavior: {
+                layout: {
+                    preSteps: 0, // Fixed layout doesn't need preSteps since positions are pre-calculated
+                },
             },
         }),
     },

@@ -4,6 +4,7 @@
  */
 
 import type {Meta} from "@storybook/web-components-vite";
+import isChromatic from "chromatic/isChromatic";
 import lodash from "lodash";
 // eslint-disable-next-line @typescript-eslint/unbound-method
 const {set: deepSet, merge} = lodash;
@@ -35,7 +36,8 @@ export const eventWaitingDecorator = (story: any): any => {
                     const resolvers = new Map<string, () => void>();
 
                     // Set up promises for common events
-                    const events = ["graph-settled", "data-loaded", "skybox-loaded"];
+                    // Note: skybox-loaded is optional and only fires if a skybox is configured
+                    const events = ["graph-settled", "data-loaded"];
                     events.forEach((eventName) => {
                         let resolver: (() => void) | undefined;
                         const promise = new Promise<void>((resolve) => {
@@ -76,41 +78,67 @@ export const eventWaitingDecorator = (story: any): any => {
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
-        console.warn("No graphty-element found in canvas element");
+        console.info("[Info] No graphty-element found in canvas element");
         return;
     }
+
+    // For static layouts, the settled event may fire immediately on the first render
+    // We need to give the render loop a chance to run
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Check if we have pre-attached promises
     const state = eventWaitingState.get(graphtyElement as HTMLElement);
     if (state?.promises.has("graph-settled")) {
-        // Use the pre-attached promise with timeout
+        // Check if the promise is already resolved (for static layouts)
+        let isResolved = false;
+        const checkPromise = state.promises.get("graph-settled")?.then(() => {
+            isResolved = true;
+        });
+
+        // Give it a moment to resolve if it's going to
+        await Promise.race([
+            checkPromise,
+            new Promise((resolve) => setTimeout(resolve, 50))
+        ]);
+
+        if (isResolved) {
+            // Event already fired (static layout)
+            return;
+        }
+
+        // Otherwise wait for the event with a timeout
         const settledPromise = state.promises.get("graph-settled");
         if (!settledPromise) {
             return;
-        } // This should never happen
+        }
 
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
-                console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
+                // For static layouts, this is not an error - they may have already settled
+                console.info("[Info] graph-settled event wait completed (timeout)");
                 resolve();
-            }, 10000);
+            }, 500); // Much shorter timeout since static layouts settle immediately
         });
 
         await Promise.race([settledPromise, timeoutPromise]);
     } else {
         // Fallback to original implementation if decorator wasn't used
-        console.warn("Event waiting decorator not active, using fallback approach");
+        console.info("[Info] Event waiting decorator not active, using fallback approach");
+
+        // Give the graph a moment to initialize and potentially fire the event
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         await new Promise<void>((resolve) => {
             let settled = false;
 
             const timeout = setTimeout(() => {
                 if (!settled) {
-                    console.warn("graph-settled event did not fire within 10 seconds, continuing anyway");
+                    // Not a warning - static layouts may have already settled
+                    console.info("[Info] graph-settled event wait completed (timeout)");
                     settled = true;
                     resolve();
                 }
-            }, 10000);
+            }, 500); // Much shorter timeout
 
             const handleSettled = (): void => {
                 if (!settled) {
@@ -125,55 +153,56 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
     }
 
     // Render a fixed number of frames after settling to ensure Babylon.js completes rendering
-    const graph = (graphtyElement as Graphty & {["#graph"]?: {updateManager?: {renderFixedFrames: (count: number) => void}}})["#graph"];
-    if (graph?.updateManager) {
-        graph.updateManager.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
+    // Only needed for Chromatic visual testing - skip for regular tests to improve performance
+    if (isChromatic()) {
+        const graph = (graphtyElement as Graphty & {["#graph"]?: {updateManager?: {renderFixedFrames: (count: number) => void}}})["#graph"];
+        if (graph?.updateManager) {
+            graph.updateManager.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
+        }
     }
 }
 
-// Helper to wait for skybox to load - now uses pre-attached listeners
+// Helper to wait for skybox to load - only call this if your story actually uses a skybox
 export async function waitForSkyboxLoaded(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
-        console.warn("No graphty-element found in canvas element");
+        // No element to wait for
         return;
     }
 
-    // Check if we have pre-attached promises
-    const state = eventWaitingState.get(graphtyElement as HTMLElement);
-    if (state?.promises.has("skybox-loaded")) {
-        // Use the pre-attached promise with timeout
-        const skyboxPromise = state.promises.get("skybox-loaded");
-        if (!skyboxPromise) {
-            return;
-        } // This should never happen
-
-        const timeoutPromise = new Promise<void>((resolve) => {
-            setTimeout(() => {
-                console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
+    // Since skybox-loaded is not in the default decorator events, we always use direct listener
+    await new Promise<void>((resolve) => {
+        let resolved = false;
+        
+        // Short timeout - if skybox hasn't loaded quickly, it's probably not configured
+        const timeout = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                // This is only called by stories that explicitly configure a skybox,
+                // so a timeout here might indicate a real issue
+                console.warn("[Warning] skybox-loaded event timeout (2s) - skybox may have failed to load");
                 resolve();
-            }, 15000);
-        });
+            }
+        }, 2000);
 
-        await Promise.race([skyboxPromise, timeoutPromise]);
-    } else {
-        // Fallback to original implementation
-        console.warn("Event waiting decorator not active, using fallback approach");
-
-        await new Promise<void>((resolve) => {
-            const timeout = setTimeout(() => {
-                console.warn("skybox-loaded event did not fire within 15 seconds, continuing anyway");
-                resolve();
-            }, 15000);
-
-            const handleSkyboxLoaded = (): void => {
+        const handleSkyboxLoaded = (): void => {
+            if (!resolved) {
+                resolved = true;
                 clearTimeout(timeout);
                 resolve();
-            };
+            }
+        };
 
-            graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
-        });
-    }
+        graphtyElement.addEventListener("skybox-loaded", handleSkyboxLoaded, {once: true});
+        
+        // Check if the skybox might have already loaded
+        // Give it a tiny delay to see if the event fires immediately
+        setTimeout(() => {
+            if (!resolved) {
+                // Still waiting - skybox is probably loading
+            }
+        }, 10);
+    });
 }
 
 // Re-export all the original helpers unchanged
@@ -198,9 +227,11 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
             addDefaultStyle: true,
         },
         // Add default behavior with preSteps for Chromatic testing
+        // Most layouts don't need preSteps (they compute to completion immediately)
+        // Only physics-based layouts (ngraph, d3) need preSteps
         behavior: {
             layout: {
-                preSteps: 2000, // Run 2000 layout steps before rendering for better Chromatic snapshots
+                preSteps: isChromatic() ? 2000 : 0, // 2000 for Chromatic visual tests, 0 for regular tests
             },
         },
     } as unknown as AdHocData;

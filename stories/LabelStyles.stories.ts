@@ -106,9 +106,6 @@ const meta: Meta = {
                 "label.fontWeight",
             ],
         },
-        chromatic: {
-            delay: 500, // Allow Babylon.js render frames to complete (30 frames at 60fps)
-        },
     },
     args: {
         dataSource: "json",
@@ -268,6 +265,11 @@ export const FontSize: Story = {
                     enabled: true,
                     textPath: "id",
                     fontSize: 96,
+                },
+            },
+            behavior: {
+                layout: {
+                    preSteps: 0, // Fixed layout doesn't need preSteps since positions are pre-calculated
                 },
             },
         }),
