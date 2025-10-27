@@ -40,6 +40,8 @@ export const OBSOLESCENCE_RULES: Partial<Record<OperationCategory, ObsolescenceR
     },
 
     // Style changes obsolete renders
+    // Note: style-init does NOT obsolete layout-set to support stateless design
+    // where layout can be set before or after style template
     "style-init": {
         obsoletes: ["style-init", "style-apply", "render-update"],
         respectProgress: false, // Style init is critical

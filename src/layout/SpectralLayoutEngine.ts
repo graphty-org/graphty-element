@@ -23,6 +23,10 @@ export class SpectralLayout extends SimpleLayoutEngine {
         this.config = SpectralLayoutConfig.parse(opts);
     }
 
+    static getOptionsForDimension(dimension: 2 | 3): object {
+        return {dim: dimension};
+    }
+
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

@@ -54,6 +54,13 @@ export class LayoutManager implements Manager {
         this.graphContext = context;
     }
 
+    /**
+     * Update the styles reference when a new style template is loaded
+     */
+    updateStyles(styles: Styles): void {
+        this.styles = styles;
+    }
+
     async init(): Promise<void> {
         // LayoutManager doesn't need async initialization
         return Promise.resolve();
@@ -357,6 +364,9 @@ export class LayoutManager implements Manager {
         if (!this.layoutEngine || nodes.length === 0) {
             return;
         }
+
+        // Mark layout as running again (it may have been settled with no nodes)
+        this.running = true;
 
         // If the layout engine has an updatePositions method, use it
         if ("updatePositions" in this.layoutEngine && typeof this.layoutEngine.updatePositions === "function") {

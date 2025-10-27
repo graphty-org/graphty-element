@@ -115,12 +115,17 @@ export class Node {
     }
 
     updateStyle(styleId: NodeStyleId): void {
-        if (styleId === this.styleId) {
+        // Only skip update if styleId is the same AND mesh is not disposed
+        // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
+        if (styleId === this.styleId && !this.mesh.isDisposed()) {
             return;
         }
 
         this.styleId = styleId;
-        this.mesh.dispose();
+        // Only dispose if not already disposed
+        if (!this.mesh.isDisposed()) {
+            this.mesh.dispose();
+        }
 
         const o = Styles.getStyleForNodeStyleId(styleId);
         this.size = o.shape?.size ?? 0;

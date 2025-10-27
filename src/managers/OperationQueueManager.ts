@@ -55,6 +55,9 @@ export class OperationQueueManager implements Manager {
     private runningOperations = new Map<string, Operation>();
     private queuedOperations = new Map<string, Operation>();
 
+    // Track completed operation categories for cross-batch dependency resolution
+    private completedCategories = new Set<OperationCategory>();
+
     // Deferred promise batching support
     private batchMode = false;
     private deferredPromises = new Map<string, {
@@ -85,12 +88,18 @@ export class OperationQueueManager implements Manager {
         ["data-add", "style-init"],
         ["data-update", "style-init"],
 
-        // Layout depends on data existing
-        ["layout-set", "data-add"],
+        // Layout-set does NOT depend on data - it can create an empty layout engine
+        // Data will be added to the layout engine when data-add runs later
+        // ["layout-set", "data-add"], // REMOVED for stateless design
+
+        // Layout-update DOES depend on data existing
         ["layout-update", "data-add"],
 
         // Algorithms depend on data
         ["algorithm-run", "data-add"],
+
+        // Style application depends on algorithms (for calculated styles)
+        ["style-apply", "algorithm-run"],
 
         // Camera updates may depend on layout for zoom-to-fit
         ["camera-update", "layout-set"],
@@ -106,6 +115,7 @@ export class OperationQueueManager implements Manager {
         "data-add": ["layout-update"],
         "data-remove": ["layout-update"],
         "data-update": ["layout-update"],
+        "algorithm-run": ["style-apply"],
     };
 
     constructor(
@@ -423,8 +433,19 @@ export class OperationQueueManager implements Manager {
         // Build dependency edges for toposort
         const edges: [OperationCategory, OperationCategory][] = [];
         OperationQueueManager.CATEGORY_DEPENDENCIES.forEach(([dependent, dependency]) => {
-            if (categories.includes(dependent) && categories.includes(dependency)) {
-                edges.push([dependency, dependent]); // toposort expects [from, to]
+            // Only add edge if:
+            // 1. The dependent operation is in this batch
+            // 2. The dependency hasn't already been completed in a previous batch
+            // 3. The dependency is either in this batch OR needs to be waited for
+            if (categories.includes(dependent) && !this.completedCategories.has(dependency)) {
+                if (categories.includes(dependency)) {
+                    // Both are in this batch - normal dependency
+                    edges.push([dependency, dependent]); // toposort expects [from, to]
+                }
+                // If dependency is not in this batch and not completed, the dependent operation
+                // may fail or produce incorrect results. In a truly stateless system, we should
+                // either wait for the dependency or auto-queue it. For now, we allow it to proceed
+                // and rely on the manager's internal checks (e.g., DataManager checking for styles).
             }
         });
 
@@ -469,6 +490,9 @@ export class OperationQueueManager implements Manager {
 
             // Mark as complete
             context.progress.setProgress(100);
+
+            // Mark category as completed for cross-batch dependency resolution
+            this.completedCategories.add(operation.category);
 
             const duration = performance.now() - startTime;
             this.eventManager.emitGraphEvent("operation-complete", {
@@ -736,6 +760,15 @@ export class OperationQueueManager implements Manager {
         }
 
         return false;
+    }
+
+    /**
+     * Mark a category as completed (for satisfying cross-batch dependencies)
+     * This is useful when a category's requirements are met through other means
+     * (e.g., style-init is satisfied by constructor initialization)
+     */
+    markCategoryCompleted(category: OperationCategory): void {
+        this.completedCategories.add(category);
     }
 
     /**

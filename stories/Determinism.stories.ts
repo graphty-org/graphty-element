@@ -73,6 +73,25 @@ const STYLE_TEMPLATE = templateCreator({
     },
 });
 
+// Base style properties for reuse in variants
+const BASE_STYLE_PROPS = {
+    nodeStyle: {
+        texture: {
+            color: "#4CAF50",
+        },
+        shape: {
+            type: "sphere",
+            size: 10,
+        },
+    },
+    edgeStyle: {
+        line: {
+            color: "#666666",
+            width: 3,
+        },
+    },
+};
+
 // =============================================================================
 // Scenario 1: Deterministic Output Despite Property Order
 // =============================================================================
@@ -282,7 +301,7 @@ export const DeterministicVariant5: Story = {
 
         // Fix style
         setTimeout(() => {
-            //g.styleTemplate = STYLE_TEMPLATE; // FINAL: matches Variant 1
+            g.styleTemplate = STYLE_TEMPLATE; // FINAL: matches Variant 1
         }, 20);
 
         // Load complete node data
@@ -545,9 +564,11 @@ export const DeterministicVariant10: Story = {
 
         // Set style with algorithms configured (but no data yet)
         const styleWithAlgorithm = {
-            ...STYLE_TEMPLATE,
+            ... STYLE_TEMPLATE,
             data: {
-                algorithms: ["pagerank"], // Algorithm configured but won't run until data exists
+                ... STYLE_TEMPLATE.data,
+                // Algorithm configured but won't run until data exists
+                algorithms: ["pagerank"],
             },
         };
 
@@ -975,6 +996,876 @@ export const DeterministicVariant20: Story = {
             g.nodeData = TEST_NODES; // FINAL: matches Variant 1
             g.edgeData = TEST_EDGES; // FINAL: matches Variant 1
         }, 50);
+
+        return g;
+    },
+};
+
+// =============================================================================
+// Scenario 9: Algorithm Re-execution After Data Changes
+// =============================================================================
+
+/**
+ * Variant 21: Load data → run algorithm → add more data → verify algorithm re-runs
+ *
+ * Tests that algorithms automatically re-run when new data is added:
+ * 1. Load initial data
+ * 2. Set style with algorithm configured
+ * 3. Add more data incrementally
+ * 4. Algorithm should re-run automatically after each data addition
+ *
+ * This verifies the algorithm dependency system works correctly.
+ */
+export const DeterministicVariant21: Story = {
+    name: "Variant 21 (Algorithm Re-run on Data Add)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Set layout
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Configure algorithm via style
+        const styleWithAlgorithm = {
+            ... STYLE_TEMPLATE,
+            data: {
+                ... STYLE_TEMPLATE.data,
+                algorithms: ["pagerank"], // Algorithm will run on initial data
+            },
+        };
+
+        // Load initial data (3 nodes)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 3);
+            g.edgeData = TEST_EDGES.slice(0, 2);
+        }, 10);
+
+        setTimeout(() => {
+            g.styleTemplate = styleWithAlgorithm;
+        }, 15);
+
+        // Add more data - algorithm should automatically re-run
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 5); // Add 2 more nodes
+            g.edgeData = TEST_EDGES.slice(0, 4); // Add 2 more edges
+        }, 20);
+
+        // Add final data - algorithm should re-run again
+        setTimeout(() => {
+            g.nodeData = TEST_NODES; // FINAL: all nodes
+            g.edgeData = TEST_EDGES; // FINAL: all edges
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 22: Configure algorithm → load data → replace data → verify algorithm re-runs
+ *
+ * Tests that algorithms re-run when data is completely replaced:
+ * 1. Configure algorithm before any data exists
+ * 2. Load initial data (algorithm runs)
+ * 3. Completely replace data (algorithm should re-run)
+ *
+ * This tests that algorithm operations are properly queued based on data changes.
+ */
+export const DeterministicVariant22: Story = {
+    name: "Variant 22 (Algorithm Re-run on Data Replace)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Configure algorithm and layout before data
+        const styleWithAlgorithm = {
+            ... STYLE_TEMPLATE,
+            data: {
+                ... STYLE_TEMPLATE.data,
+                algorithms: ["pagerank"],
+            },
+        };
+
+        g.styleTemplate = styleWithAlgorithm;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Load initial data
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 3); // Partial data
+            g.edgeData = TEST_EDGES.slice(0, 2);
+        }, 10);
+
+        // Replace with different data (algorithm should re-run)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 4); // Different partial data
+            g.edgeData = TEST_EDGES.slice(0, 3);
+        }, 20);
+
+        // Replace with final complete data (algorithm should re-run)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES; // FINAL: all nodes
+            g.edgeData = TEST_EDGES; // FINAL: all edges
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 23: Multiple algorithms with incremental data
+ *
+ * Tests that multiple algorithms all re-run when data changes:
+ * 1. Configure multiple algorithms
+ * 2. Add data incrementally
+ * 3. Each data addition should trigger re-runs of ALL algorithms
+ *
+ * Final state MUST match Variant 1 exactly.
+ */
+export const DeterministicVariant23: Story = {
+    name: "Variant 23 (Multiple Algorithms Re-run)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Configure multiple algorithms
+        const styleWithAlgorithms = {
+            ... STYLE_TEMPLATE,
+            data: {
+                ... STYLE_TEMPLATE.data,
+                algorithms: ["pagerank", "betweenness"], // Multiple algorithms
+            },
+        };
+
+        g.styleTemplate = styleWithAlgorithms;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Add data incrementally - algorithms should re-run each time
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 2);
+            g.edgeData = [TEST_EDGES[0]];
+        }, 10);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 4);
+            g.edgeData = TEST_EDGES.slice(0, 3);
+        }, 20);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES; // FINAL: all nodes
+            g.edgeData = TEST_EDGES; // FINAL: all edges
+        }, 30);
+
+        return g;
+    },
+};
+
+// =============================================================================
+// Scenario 10: Camera Mode (2D/3D) with Style Updates
+// =============================================================================
+
+/**
+ * Variant 24: Set 2D camera → load data → change styles → verify 2D rendering
+ *
+ * Tests that style updates work correctly in 2D camera mode:
+ * 1. Configure 2D camera via styleTemplate
+ * 2. Load data
+ * 3. Update style properties
+ * 4. Everything should render correctly in 2D
+ *
+ * Final state MUST match Variant 1 exactly (but in 2D).
+ */
+export const DeterministicVariant24: Story = {
+    name: "Variant 24 (2D Camera + Style Updates)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Configure 2D camera from the start
+        const style2D = templateCreator({
+            ... BASE_STYLE_PROPS,
+            graph: {
+                twoD: true, // 2D camera mode
+            },
+        });
+
+        g.styleTemplate = style2D;
+
+        // Load data
+        setTimeout(() => {
+            g.nodeData = TEST_NODES;
+            g.edgeData = TEST_EDGES;
+        }, 10);
+
+        // Change layout
+        setTimeout(() => {
+            g.layout = "circular"; // FINAL: matches Variant 1
+        }, 20);
+
+        // Update style properties (while in 2D mode)
+        setTimeout(() => {
+            const updatedStyle = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+            });
+            g.styleTemplate = updatedStyle;
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 25: Load data in 3D → switch to 2D → change styles
+ *
+ * Tests that camera mode switching works with style updates:
+ * 1. Start with default 3D camera
+ * 2. Load data
+ * 3. Switch to 2D camera
+ * 4. Update styles
+ * 5. Should render correctly in 2D mode
+ *
+ * Final state should be correctly rendered in 2D.
+ */
+export const DeterministicVariant25: Story = {
+    name: "Variant 25 (3D → 2D + Style Update)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Start in 3D (default)
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Set initial 3D style
+        setTimeout(() => {
+            g.styleTemplate = STYLE_TEMPLATE;
+        }, 10);
+
+        // Switch to 2D camera
+        setTimeout(() => {
+            const style2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true, // Switch to 2D
+                },
+            });
+            g.styleTemplate = style2D;
+        }, 20);
+
+        // Update styles in 2D mode
+        setTimeout(() => {
+            const updatedStyle2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+            });
+            g.styleTemplate = updatedStyle2D;
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 26: Rapid camera mode switching with style updates
+ *
+ * Tests that rapid camera switching doesn't break style updates:
+ * 1. Load data
+ * 2. Rapidly switch between 2D and 3D multiple times
+ * 3. Update styles during switches
+ * 4. Final state should be correct
+ *
+ * This tests the camera dependency system under stress.
+ */
+export const DeterministicVariant26: Story = {
+    name: "Variant 26 (Rapid Camera Switch)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Load data first
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Initial 3D style
+        g.styleTemplate = STYLE_TEMPLATE;
+
+        // Switch to 2D
+        setTimeout(() => {
+            const style2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+            });
+            g.styleTemplate = style2D;
+        }, 5);
+
+        // Switch back to 3D
+        setTimeout(() => {
+            g.styleTemplate = STYLE_TEMPLATE;
+        }, 10);
+
+        // Switch to 2D again
+        setTimeout(() => {
+            const style2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+            });
+            g.styleTemplate = style2D;
+        }, 15);
+
+        // Final: back to 3D (to match Variant 1)
+        setTimeout(() => {
+            g.styleTemplate = STYLE_TEMPLATE;
+        }, 20);
+
+        return g;
+    },
+};
+
+// =============================================================================
+// Scenario 11: Algorithm + Camera Combinations
+// =============================================================================
+
+/**
+ * Variant 27: Run algorithm in 3D → switch to 2D → verify results visible
+ *
+ * Tests that algorithm results persist when switching camera modes:
+ * 1. Load data in 3D
+ * 2. Run algorithm
+ * 3. Switch to 2D camera
+ * 4. Algorithm results should still be visible
+ */
+export const DeterministicVariant27: Story = {
+    name: "Variant 27 (Algorithm 3D → 2D)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Load data in 3D with algorithm
+        const styleWithAlgorithm = templateCreator({
+            ... BASE_STYLE_PROPS,
+            data: {
+                algorithms: ["pagerank"],
+            },
+        });
+
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+        g.styleTemplate = styleWithAlgorithm;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Switch to 2D camera after algorithm runs
+        setTimeout(() => {
+            const style2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style2D;
+        }, 20);
+
+        // Switch back to 3D (to match Variant 1)
+        setTimeout(() => {
+            g.styleTemplate = styleWithAlgorithm;
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 28: Set 2D camera → load data → run algorithms
+ *
+ * Tests that algorithms work correctly when camera is already in 2D mode:
+ * 1. Configure 2D camera first
+ * 2. Load data
+ * 3. Run algorithms
+ * 4. Should work correctly in 2D
+ */
+export const DeterministicVariant28: Story = {
+    name: "Variant 28 (2D Camera + Algorithm)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Configure 2D camera with algorithm
+        const style2DWithAlgorithm = templateCreator({
+            ... BASE_STYLE_PROPS,
+            graph: {
+                twoD: true,
+            },
+            data: {
+                algorithms: ["pagerank"],
+            },
+        });
+
+        g.styleTemplate = style2DWithAlgorithm;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Load data (algorithm will run in 2D mode)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES;
+            g.edgeData = TEST_EDGES;
+        }, 10);
+
+        // Switch to 3D (to match Variant 1)
+        setTimeout(() => {
+            const style3DWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style3DWithAlgorithm;
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 29: Algorithm + layout + camera all changing
+ *
+ * Tests that algorithm, layout, and camera can all change together:
+ * 1. Load data
+ * 2. Change layout
+ * 3. Change camera mode
+ * 4. Run algorithm
+ * 5. All should coordinate correctly
+ */
+export const DeterministicVariant29: Story = {
+    name: "Variant 29 (Algorithm + Layout + Camera)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Load data first
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+
+        // Wrong layout initially
+        g.layout = "random";
+
+        // Wrong camera mode initially (2D)
+        setTimeout(() => {
+            const style2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+            });
+            g.styleTemplate = style2D;
+        }, 10);
+
+        // Fix layout
+        setTimeout(() => {
+            g.layout = "circular"; // FINAL: matches Variant 1
+        }, 20);
+
+        // Add algorithm
+        setTimeout(() => {
+            const style2DWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style2DWithAlgorithm;
+        }, 30);
+
+        // Fix camera to 3D (to match Variant 1)
+        setTimeout(() => {
+            const style3DWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style3DWithAlgorithm;
+        }, 40);
+
+        return g;
+    },
+};
+
+// =============================================================================
+// Scenario 12: Complex Multi-Property Combinations
+// =============================================================================
+
+/**
+ * Variant 30: Data → Algorithm → Layout → Camera → Style (all delayed)
+ *
+ * Tests a realistic complex scenario with all properties changing:
+ * 1. Load initial data
+ * 2. Run algorithm after delay
+ * 3. Change layout after delay
+ * 4. Switch camera mode after delay
+ * 5. Update style after delay
+ * 6. All should work correctly
+ */
+export const DeterministicVariant30: Story = {
+    name: "Variant 30 (Complex Delayed Updates)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // 1. Load data
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+
+        // 2. Run algorithm
+        setTimeout(() => {
+            const styleWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = styleWithAlgorithm;
+        }, 10);
+
+        // 3. Change layout
+        setTimeout(() => {
+            g.layout = "circular"; // FINAL: matches Variant 1
+        }, 20);
+
+        // 4. Switch to 2D camera
+        setTimeout(() => {
+            const style2DWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style2DWithAlgorithm;
+        }, 30);
+
+        // 5. Update style and switch back to 3D (to match Variant 1)
+        setTimeout(() => {
+            const finalStyle = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = finalStyle;
+        }, 40);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 31: Interleaved data/algorithm/camera/style updates
+ *
+ * Tests the most complex realistic scenario:
+ * 1. Add some data
+ * 2. Run algorithm
+ * 3. Add more data (algorithm should re-run)
+ * 4. Switch camera mode
+ * 5. Update style
+ * 6. Add final data (algorithm should re-run again)
+ */
+export const DeterministicVariant31: Story = {
+    name: "Variant 31 (Interleaved Complex)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // 1. Add initial data
+        g.nodeData = TEST_NODES.slice(0, 3);
+        g.edgeData = TEST_EDGES.slice(0, 2);
+
+        // 2. Run algorithm on initial data
+        setTimeout(() => {
+            const styleWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = styleWithAlgorithm;
+        }, 10);
+
+        // 3. Add more data (algorithm should re-run)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 5);
+            g.edgeData = TEST_EDGES.slice(0, 4);
+        }, 20);
+
+        // 4. Switch to 2D camera
+        setTimeout(() => {
+            const style2DWithAlgorithm = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = style2DWithAlgorithm;
+        }, 30);
+
+        // 5. Update style (still in 2D)
+        setTimeout(() => {
+            const updatedStyle2D = templateCreator({
+                ... BASE_STYLE_PROPS,
+                graph: {
+                    twoD: true,
+                },
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = updatedStyle2D;
+        }, 40);
+
+        // 6. Add final data (algorithm should re-run) and set layout
+        setTimeout(() => {
+            g.nodeData = TEST_NODES; // FINAL: all nodes
+            g.edgeData = TEST_EDGES; // FINAL: all edges
+        }, 50);
+
+        setTimeout(() => {
+            g.layout = "circular"; // FINAL: matches Variant 1
+        }, 60);
+
+        // Switch back to 3D (to match Variant 1)
+        setTimeout(() => {
+            const finalStyle = templateCreator({
+                ... BASE_STYLE_PROPS,
+                data: {
+                    algorithms: ["pagerank"],
+                },
+            });
+            g.styleTemplate = finalStyle;
+        }, 70);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 32: Manual node addition → algorithm → more manual additions
+ *
+ * Tests that algorithms re-run with manual incremental node additions:
+ * 1. Manually add nodes one by one
+ * 2. Configure algorithm
+ * 3. Continue adding more nodes manually
+ * 4. Algorithm should run after each addition
+ */
+export const DeterministicVariant32: Story = {
+    name: "Variant 32 (Manual Add + Algorithm)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Set layout first
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Manually add first node
+        g.nodeData = [TEST_NODES[0]];
+
+        // Configure algorithm
+        setTimeout(() => {
+            const styleWithAlgorithm = {
+                ... STYLE_TEMPLATE,
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["pagerank"],
+                },
+            };
+            g.styleTemplate = styleWithAlgorithm;
+        }, 5);
+
+        // Continue adding nodes manually (algorithm should re-run each time)
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 2);
+        }, 10);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 3);
+            g.edgeData = [TEST_EDGES[0]];
+        }, 15);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 4);
+            g.edgeData = TEST_EDGES.slice(0, 2);
+        }, 20);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES.slice(0, 5);
+            g.edgeData = TEST_EDGES.slice(0, 4);
+        }, 25);
+
+        setTimeout(() => {
+            g.nodeData = TEST_NODES; // FINAL: all nodes
+            g.edgeData = TEST_EDGES; // FINAL: all edges
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 33: 2D layout + 2D camera + algorithm + style updates
+ *
+ * Tests everything working together in 2D mode:
+ * 1. Set 2D layout (circular can work in 2D)
+ * 2. Set 2D camera
+ * 3. Load data
+ * 4. Run algorithm
+ * 5. Update styles
+ * 6. Everything should render correctly in 2D
+ */
+export const DeterministicVariant33: Story = {
+    name: "Variant 33 (Full 2D Setup)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Set 2D layout
+        g.layout = "circular"; // Works in 2D
+
+        // Set 2D camera with algorithm
+        const style2DWithAlgorithm = {
+            ... STYLE_TEMPLATE,
+            graph: {
+                ... STYLE_TEMPLATE.graph,
+                twoD: true,
+            },
+            data: {
+                ... STYLE_TEMPLATE.data,
+                algorithms: ["pagerank"],
+            },
+        };
+
+        g.styleTemplate = style2DWithAlgorithm;
+
+        // Load data
+        setTimeout(() => {
+            g.nodeData = TEST_NODES;
+            g.edgeData = TEST_EDGES;
+        }, 10);
+
+        // Update styles (still in 2D)
+        setTimeout(() => {
+            const updatedStyle2D = {
+                ... STYLE_TEMPLATE,
+                graph: {
+                    ... STYLE_TEMPLATE.graph,
+                    twoD: true,
+                },
+                nodeStyle: {
+                    ... STYLE_TEMPLATE.nodeStyle,
+                    texture: {
+                        color: "#4CAF50",
+                    },
+                },
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["pagerank"],
+                },
+            };
+            g.styleTemplate = updatedStyle2D;
+        }, 20);
+
+        // Switch to 3D to match Variant 1
+        setTimeout(() => {
+            const finalStyle = {
+                ... STYLE_TEMPLATE,
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["pagerank"],
+                },
+            };
+            g.styleTemplate = finalStyle;
+        }, 30);
+
+        return g;
+    },
+};
+
+/**
+ * Variant 34: Cancel algorithm mid-run → change camera → run new algorithm
+ *
+ * Tests that camera changes properly coordinate with algorithm cancellation:
+ * 1. Start expensive algorithm
+ * 2. Switch camera mode (should trigger camera update)
+ * 3. Cancel algorithm
+ * 4. Run different algorithm
+ * 5. Should work correctly
+ */
+export const DeterministicVariant34: Story = {
+    name: "Variant 34 (Cancel Algorithm + Camera)",
+    render: () => {
+        const g = document.createElement("graphty-element") as Graphty;
+
+        // Load data
+        g.nodeData = TEST_NODES;
+        g.edgeData = TEST_EDGES;
+        g.layout = "circular"; // FINAL: matches Variant 1
+
+        // Start with betweenness (can be expensive)
+        const styleWithBetweenness = {
+            ... STYLE_TEMPLATE,
+            data: {
+                ... STYLE_TEMPLATE.data,
+                algorithms: ["betweenness"],
+            },
+        };
+
+        g.styleTemplate = styleWithBetweenness;
+
+        // Switch camera mode
+        setTimeout(() => {
+            const style2D = {
+                ... STYLE_TEMPLATE,
+                graph: {
+                    ... STYLE_TEMPLATE.graph,
+                    twoD: true,
+                },
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["betweenness"],
+                },
+            };
+            g.styleTemplate = style2D;
+        }, 5);
+
+        // Cancel betweenness and run pagerank instead
+        setTimeout(() => {
+            const style2DWithPagerank = {
+                ... STYLE_TEMPLATE,
+                graph: {
+                    ... STYLE_TEMPLATE.graph,
+                    twoD: true,
+                },
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["pagerank"], // Different algorithm
+                },
+            };
+            g.styleTemplate = style2DWithPagerank;
+        }, 10);
+
+        // Switch back to 3D (to match Variant 1)
+        setTimeout(() => {
+            const finalStyle = {
+                ... STYLE_TEMPLATE,
+                data: {
+                    ... STYLE_TEMPLATE.data,
+                    algorithms: ["pagerank"],
+                },
+            };
+            g.styleTemplate = finalStyle;
+        }, 20);
 
         return g;
     },

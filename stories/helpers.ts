@@ -288,24 +288,14 @@ type RenderArg2 = Parameters<NonNullable<Meta["render"]>>[1];
 
 export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => {
     const g = document.createElement("graphty-element") as Graphty;
-    if (args.dataSource) {
-        g.dataSource = args.dataSource;
-        g.dataSourceConfig = args.dataSourceConfig;
-    } else {
-        // Use story-specific data if provided, otherwise use defaults
-        g.nodeData = args.nodeData ?? nodeData;
-        g.edgeData = args.edgeData ?? edgeData;
+
+    // Set runAlgorithmsOnLoad BEFORE setting data, because data loading triggers
+    // the algorithm-run operation which checks this property
+    if (args.runAlgorithmsOnLoad !== undefined) {
+        g.runAlgorithmsOnLoad = args.runAlgorithmsOnLoad;
     }
 
-    // Set layout properties if provided
-    if (args.layout) {
-        g.layout = args.layout;
-    }
-
-    if (args.layoutConfig) {
-        g.layoutConfig = args.layoutConfig;
-    }
-
+    // Process styleTemplate to apply argTypes modifications
     const t = args.styleTemplate;
 
     // if argTypes have a name like "texture.color", apply that value to the node style
@@ -339,14 +329,36 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 if (val !== undefined) {
                     deepSet(t, `graph.layoutOptions.${configKey}`, val);
                 }
-            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData", "onGraphSettled", "onSkyboxLoaded"].includes(arg)) {
+            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData", "runAlgorithmsOnLoad", "onGraphSettled", "onSkyboxLoaded"].includes(arg)) {
                 // For other properties, apply directly (but skip component-level props and event handlers)
                 deepSet(t, name, val);
             }
         }
     }
 
+    // Set styleTemplate BEFORE adding data, because the trigger checks algorithms in the template
     g.styleTemplate = t;
+
+    // Now add data - this will trigger data-add operation which checks for algorithms
+    if (args.dataSource) {
+        // Set dataSourceConfig BEFORE dataSource, because setting dataSource
+        // triggers addDataFromSource which needs the config
+        g.dataSourceConfig = args.dataSourceConfig;
+        g.dataSource = args.dataSource;
+    } else {
+        // Use story-specific data if provided, otherwise use defaults
+        g.nodeData = args.nodeData ?? nodeData;
+        g.edgeData = args.edgeData ?? edgeData;
+    }
+
+    // Set layout properties if provided
+    if (args.layout) {
+        g.layout = args.layout;
+    }
+
+    if (args.layoutConfig) {
+        g.layoutConfig = args.layoutConfig;
+    }
 
     return g;
 };

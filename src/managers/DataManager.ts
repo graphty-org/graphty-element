@@ -45,11 +45,11 @@ export class DataManager implements Manager {
     private shouldZoomToFit = false;
 
     // Buffer for edges added before their nodes exist
-    private bufferedEdges: Array<{
+    private bufferedEdges: {
         edge: Record<string | number, unknown>;
         srcIdPath?: string;
         dstIdPath?: string;
-    }> = [];
+    }[] = [];
 
     constructor(
         private eventManager: EventManager,

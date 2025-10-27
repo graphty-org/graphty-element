@@ -34,13 +34,13 @@ export class Graphty extends LitElement {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
 
-        this.asyncFirstUpdated(changedProperties)
+        this.asyncFirstUpdated()
             .catch((e: unknown) => {
                 throw e;
             });
     }
 
-    async asyncFirstUpdated(_changedProperties: Map<string, unknown>): Promise<void> {
+    async asyncFirstUpdated(): Promise<void> {
         // Forward internal graph events as DOM events
         this.#graph.addListener("graph-settled", (event) => {
             this.dispatchEvent(new CustomEvent("graph-settled", {
@@ -149,11 +149,8 @@ export class Graphty extends LitElement {
         const oldValue = this.#dataSource;
         this.#dataSource = value;
 
-        // Forward to Graph method (which queues operation)
-        if (value) {
-            const sourceOpts = this.#dataSourceConfig ?? {};
-            void this.#graph.addDataFromSource(value, sourceOpts);
-        }
+        // Try to initialize data source if both dataSource and dataSourceConfig are set
+        this.#tryInitializeDataSource();
 
         this.requestUpdate("dataSource", oldValue);
     }
@@ -169,7 +166,23 @@ export class Graphty extends LitElement {
     set dataSourceConfig(value: Record<string, unknown> | undefined) {
         const oldValue = this.#dataSourceConfig;
         this.#dataSourceConfig = value;
+
+        // Try to initialize data source if both dataSource and dataSourceConfig are set
+        this.#tryInitializeDataSource();
+
         this.requestUpdate("dataSourceConfig", oldValue);
+    }
+
+    /**
+     * Helper method to initialize data source only when both properties are set
+     */
+    #dataSourceInitialized = false;
+    #tryInitializeDataSource(): void {
+        // Only initialize once, and only if both dataSource and dataSourceConfig are set
+        if (!this.#dataSourceInitialized && this.#dataSource && this.#dataSourceConfig) {
+            this.#dataSourceInitialized = true;
+            void this.#graph.addDataFromSource(this.#dataSource, this.#dataSourceConfig);
+        }
     }
 
     /**

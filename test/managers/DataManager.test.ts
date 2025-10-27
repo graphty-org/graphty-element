@@ -190,28 +190,34 @@ describe("DataManager", () => {
             assert.equal(edge.dstId, "node2");
         });
 
-        it("should throw error if source node doesn't exist", () => {
+        it("should defer edge creation if source node doesn't exist", () => {
             const edgeData = {
                 id: "edge1",
                 src: "non-existent",
                 dst: "node2",
             } as unknown as AdHocData;
 
-            assert.throws(() => {
-                dataManager.addEdge(edgeData);
-            }, /Node 'non-existent' hasn't been created yet/);
+            // Should not throw - edge is deferred until nodes exist
+            dataManager.addEdge(edgeData);
+
+            // Edge should not be created yet
+            const edge = dataManager.getEdge("non-existent:node2");
+            assert.isUndefined(edge);
         });
 
-        it("should throw error if target node doesn't exist", () => {
+        it("should defer edge creation if target node doesn't exist", () => {
             const edgeData = {
                 id: "edge1",
                 src: "node1",
                 dst: "non-existent",
             } as unknown as AdHocData;
 
-            assert.throws(() => {
-                dataManager.addEdge(edgeData);
-            }, /Node 'non-existent' hasn't been created yet/);
+            // Should not throw - edge is deferred until nodes exist
+            dataManager.addEdge(edgeData);
+
+            // Edge should not be created yet
+            const edge = dataManager.getEdge("node1:non-existent");
+            assert.isUndefined(edge);
         });
 
         it("should remove an edge", () => {

@@ -163,17 +163,22 @@ export class Edge {
     }
 
     updateStyle(styleId: EdgeStyleId): void {
-        if (styleId === this.styleId) {
+        // Only skip update if styleId is the same AND mesh is not disposed
+        // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
+        if (styleId === this.styleId && !this.mesh.isDisposed()) {
             return;
         }
 
         this.styleId = styleId;
-        this.mesh.dispose();
+        // Only dispose if not already disposed
+        if (!this.mesh.isDisposed()) {
+            this.mesh.dispose();
+        }
 
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
-        if (this.arrowMesh) {
+        if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
             this.arrowMesh.dispose();
         }
 

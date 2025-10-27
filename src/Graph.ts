@@ -21,7 +21,6 @@ import {
     FetchNodesFn,
     StyleSchema,
 } from "./config";
-import {UpdateDebugger} from "./debug/update-debugger";
 import {
     EventCallbackType,
     EventType,
@@ -29,7 +28,6 @@ import {
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
-import {type PerformanceReport, UpdateProfiler} from "./performance/update-profiler";
 import {Styles} from "./Styles";
 import type {QueueableOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
@@ -73,9 +71,6 @@ export class Graph implements GraphContext {
     private inputManager: InputManager;
     operationQueue: OperationQueueManager;
 
-    // Performance tracking
-    private profiler: UpdateProfiler;
-
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
@@ -88,9 +83,6 @@ export class Graph implements GraphContext {
             concurrency: 1, // Sequential execution
             autoStart: true,
         });
-
-        // Initialize performance profiler
-        this.profiler = new UpdateProfiler();
 
         // Initialize StyleManager
         this.styleManager = new StyleManager(this.eventManager);
@@ -140,6 +132,19 @@ export class Graph implements GraphContext {
 
         // Initialize LayoutManager
         this.layoutManager = new LayoutManager(this.eventManager, this.dataManager, this.styles);
+
+        // Register layout-update trigger to handle positioning nodes when data is added
+        this.operationQueue.registerTrigger("data-add", () => ({
+            category: "layout-update",
+            execute: async() => {
+                // Get all nodes for positioning
+                const nodes = Array.from(this.dataManager.nodes.values());
+                if (nodes.length > 0 && this.layoutManager.layoutEngine) {
+                    await this.layoutManager.updatePositions(nodes);
+                }
+            },
+            description: "Update layout positions after data add",
+        }));
 
         // Initialize UpdateManager
         this.updateManager = new UpdateManager(
@@ -230,6 +235,10 @@ export class Graph implements GraphContext {
                 );
             });
 
+        // Note: Algorithm running is handled in the data-added event listener below
+        // rather than through operation queue triggers, because data sources bypass
+        // the operation queue when adding data
+
         // Listen for data-added events to manage running state
         this.eventManager.addListener("data-added", (event) => {
             if (event.type === "data-added") {
@@ -239,6 +248,19 @@ export class Graph implements GraphContext {
 
                 if (event.shouldZoomToFit) {
                     this.updateManager.enableZoomToFit();
+                }
+
+                // Run algorithms if runAlgorithmsOnLoad is true
+                const {algorithms} = this.styles.config.data;
+                if (this.runAlgorithmsOnLoad && algorithms && algorithms.length > 0) {
+                    void this.algorithmManager.runAlgorithmsFromTemplate(algorithms)
+                        .then(() => {
+                            // Re-apply styles after algorithms complete to update calculated styles
+                            this.dataManager.updateStyles(this.styles);
+                        })
+                        .catch((error) => {
+                            console.error("[Graph] Error running algorithms:", error);
+                        });
                 }
             }
         });
@@ -290,6 +312,10 @@ export class Graph implements GraphContext {
         }
 
         try {
+            // Mark style-init as completed since styles are initialized in constructor
+            // This satisfies cross-batch dependencies for operations like data-add
+            this.operationQueue.markCategoryCompleted("style-init");
+
             // Initialize all managers through lifecycle manager
             await this.lifecycleManager.init();
 
@@ -410,6 +436,9 @@ export class Graph implements GraphContext {
         // IMPORTANT: DataManager needs to be updated after this.styles is set because
         // Node.updateStyle() calls this.parentGraph.styles
         this.dataManager.updateStyles(this.styles);
+
+        // Update LayoutManager with new styles reference
+        this.layoutManager.updateStyles(this.styles);
 
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
@@ -857,35 +886,6 @@ export class Graph implements GraphContext {
         return node?.mesh ?? null;
     }
 
-    // Performance tracking methods
-
-    /**
-     * Enable performance profiling
-     */
-    enableProfiling(): void {
-        this.profiler.enable();
-        UpdateDebugger.enable();
-    }
-
-    /**
-     * Disable performance profiling
-     */
-    disableProfiling(): void {
-        this.profiler.disable();
-        UpdateDebugger.disable();
-    }
-
-    /**
-     * Get performance metrics report
-     */
-    getPerformanceMetrics(): PerformanceReport | null {
-        if (!this.profiler.isEnabled()) {
-            return null;
-        }
-
-        return this.profiler.getReport();
-    }
-
     /**
      * Async method to wait for graph operations to settle
      * Waits for operation queue to drain
@@ -899,12 +899,6 @@ export class Graph implements GraphContext {
      * Set graph data (delegates to data manager)
      */
     setData(data: {nodes: Record<string, unknown>[], edges: Record<string, unknown>[]}): void {
-        const profiling = this.profiler.isEnabled();
-
-        if (profiling) {
-            this.profiler.startMeasure("setData");
-        }
-
         // Add nodes
         for (const nodeData of data.nodes) {
             this.addNode(nodeData as AdHocData)
@@ -919,10 +913,6 @@ export class Graph implements GraphContext {
                 .catch((e: unknown) => {
                     console.error("Error adding edge:", e);
                 });
-        }
-
-        if (profiling) {
-            this.profiler.endMeasure("setData");
         }
     }
 
