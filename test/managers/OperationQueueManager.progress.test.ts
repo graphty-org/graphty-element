@@ -235,7 +235,7 @@ describe("Progress Tracking", () => {
         );
 
         const op2Id = queueManager.queueOperation(
-            "layout-update",
+            "camera-update",
             async(context) => {
                 for (let i = 0; i <= 100; i += 33) {
                     context.progress.setProgress(i);

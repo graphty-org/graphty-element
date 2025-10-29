@@ -6,6 +6,11 @@ import type {OperationMetadata, OperationProgress} from "../types/operations";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
+// Constants for operation queue management
+const PROGRESS_CANCELLATION_THRESHOLD = 90; // Progress threshold for respecting in-progress operations
+const CLEANUP_DELAY_MS = 1000; // Delay before cleaning up operation progress tracking
+const OPERATION_POLL_INTERVAL_MS = 10; // Polling interval for waitForCompletion
+
 export interface ProgressContext {
     setProgress(percent: number): void;
     setMessage(message: string): void;
@@ -24,6 +29,8 @@ export interface Operation {
     execute: (context: OperationContext) => Promise<void> | void;
     abortController?: AbortController;
     metadata?: OperationMetadata;
+    resolve?: (value: void | PromiseLike<void>) => void;
+    reject?: (reason?: unknown) => void;
 }
 
 export type OperationCategory =
@@ -58,13 +65,10 @@ export class OperationQueueManager implements Manager {
     // Track completed operation categories for cross-batch dependency resolution
     private completedCategories = new Set<OperationCategory>();
 
-    // Deferred promise batching support
+    // Batch mode support
     private batchMode = false;
-    private deferredPromises = new Map<string, {
-        resolve: (value: void | PromiseLike<void>) => void;
-        reject: (reason?: unknown) => void;
-    }>();
     private batchOperations = new Set<string>();
+    private batchPromises = new Map<string, Promise<void>>();
 
     // Trigger system
     private triggers = new Map<OperationCategory, ((metadata?: OperationMetadata) => {
@@ -94,6 +98,8 @@ export class OperationQueueManager implements Manager {
 
         // Layout-update DOES depend on data existing
         ["layout-update", "data-add"],
+        // Layout-update depends on layout being set first
+        ["layout-update", "layout-set"],
 
         // Algorithms depend on data
         ["algorithm-run", "data-add"],
@@ -223,13 +229,6 @@ export class OperationQueueManager implements Manager {
         if (this.batchMode) {
             // In batch mode: queue but don't execute yet
             this.batchOperations.add(id);
-
-            // Store deferred promise handlers for later resolution
-            // These will be resolved when exitBatchMode is called
-            this.deferredPromises.set(id, {
-                resolve: () => { /* Placeholder */ },
-                reject: () => { /* Placeholder */ },
-            });
         } else {
             // Normal mode: add to current batch for immediate execution
             this.currentBatch.add(id);
@@ -313,7 +312,7 @@ export class OperationQueueManager implements Manager {
                 // Check progress if respectProgress is enabled
                 if (respectProgress && this.runningOperations.has(operation.id)) {
                     const progress = this.operationProgress.get(operation.id);
-                    if (progress && progress.percent > 90) {
+                    if (progress && progress.percent > PROGRESS_CANCELLATION_THRESHOLD) {
                         // Don't cancel near-complete operations
                         continue;
                     }
@@ -387,7 +386,7 @@ export class OperationQueueManager implements Manager {
                         setTimeout(() => {
                             this.operationProgress.delete(operation.id);
                             this.activeControllers.delete(operation.id);
-                        }, 1000);
+                        }, CLEANUP_DELAY_MS);
                     }
                 },
                 {
@@ -454,8 +453,13 @@ export class OperationQueueManager implements Manager {
         try {
             sortedCategories = toposort.array(categories, edges);
         } catch (error) {
-            // Circular dependency detected
-            console.error("Circular dependency detected:", error);
+            // Circular dependency detected - emit error event
+            this.eventManager.emitGraphError(
+                null,
+                error instanceof Error ? error : new Error("Circular dependency detected"),
+                "other",
+                {categories, edges},
+            );
             sortedCategories = categories; // Fallback to original order
         }
 
@@ -501,15 +505,30 @@ export class OperationQueueManager implements Manager {
                 duration,
             });
 
+            // Resolve the operation's promise
+            if (operation.resolve) {
+                operation.resolve();
+            }
+
             // Trigger post-execution operations if not skipped
             if (!operation.metadata?.skipTriggers) {
                 this.triggerPostExecutionOperations(operation);
             }
         } catch (error) {
             if (error && (error as Error).name === "AbortError") {
+                // Reject the operation's promise
+                if (operation.reject) {
+                    operation.reject(error);
+                }
+
                 // Remove from running on abort
                 this.runningOperations.delete(operation.id);
                 throw error; // Let p-queue handle abort errors
+            }
+
+            // Reject the operation's promise
+            if (operation.reject) {
+                operation.reject(error);
             }
 
             this.handleOperationError(operation, error);
@@ -666,7 +685,7 @@ export class OperationQueueManager implements Manager {
     /**
      * Exit batch mode - execute all batched operations in dependency order
      */
-    exitBatchMode(): void {
+    async exitBatchMode(): Promise<void> {
         if (!this.batchMode) {
             return;
         }
@@ -678,14 +697,20 @@ export class OperationQueueManager implements Manager {
             this.currentBatch.add(id);
         });
 
-        // Clear batch operations set
+        // Collect all batch promises
+        const promises = Array.from(this.batchPromises.values());
+
+        // Clear batch tracking
         this.batchOperations.clear();
+        this.batchPromises.clear();
 
-        // Clear deferred promises - no longer needed with simplified approach
-        this.deferredPromises.clear();
-
-        // Execute the batch normally
+        // Execute the batch
         this.executeBatch();
+
+        // Wait for all operations to complete
+        // Use allSettled to handle both resolved and rejected promises
+        // Individual operation errors are already handled via handleOperationError
+        await Promise.allSettled(promises);
     }
 
     /**
@@ -693,13 +718,6 @@ export class OperationQueueManager implements Manager {
      */
     isInBatchMode(): boolean {
         return this.batchMode;
-    }
-
-    /**
-     * Get count of deferred promises (for testing)
-     */
-    getDeferredPromiseCount(): number {
-        return this.deferredPromises.size;
     }
 
     /**
@@ -713,13 +731,27 @@ export class OperationQueueManager implements Manager {
     ): Promise<void> {
         const id = this.queueOperation(category, execute, options);
 
-        // In batch mode, return immediately - operations will execute when batch exits
+        // Create promise that resolves when this specific operation completes
+        const promise = new Promise<void>((resolve, reject) => {
+            // Store resolvers with the operation
+            const operation = this.pendingOperations.get(id);
+            if (operation) {
+                operation.resolve = resolve;
+                operation.reject = reject;
+            }
+        });
+
         if (this.batchMode) {
+            // In batch mode, track the promise for later
+            this.batchPromises.set(id, promise);
+            // Return immediately resolved promise to avoid deadlock
+            // The actual operation will execute when exitBatchMode is called
             return Promise.resolve();
         }
 
-        // In normal mode, wait for operation completion
-        return this.waitForOperation(id);
+        // Not in batch mode, execute normally
+        this.executeBatch();
+        return promise;
     }
 
     /**
@@ -731,7 +763,7 @@ export class OperationQueueManager implements Manager {
             this.queuedOperations.has(id) ||
             this.runningOperations.has(id)
         ) {
-            await new Promise((resolve) => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, OPERATION_POLL_INTERVAL_MS));
         }
     }
 
@@ -769,6 +801,15 @@ export class OperationQueueManager implements Manager {
      */
     markCategoryCompleted(category: OperationCategory): void {
         this.completedCategories.add(category);
+    }
+
+    /**
+     * Clear completed status for a category
+     * This is useful when a category needs to be re-executed
+     * (e.g., setStyleTemplate is called explicitly, overriding initial styles)
+     */
+    clearCategoryCompleted(category: OperationCategory): void {
+        this.completedCategories.delete(category);
     }
 
     /**

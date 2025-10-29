@@ -200,6 +200,7 @@ export interface TemplateOpts {
     graph?: Record<string, unknown>;
     layers?: StyleLayerType[];
     behavior?: Record<string, unknown>;
+    data?: Record<string, unknown>;
 }
 
 export function templateCreator(opts: TemplateOpts): StyleSchema {
@@ -258,6 +259,11 @@ export function templateCreator(opts: TemplateOpts): StyleSchema {
         // Merge behavior options instead of replacing them entirely
         // This preserves the default preSteps setting for Chromatic
         config.behavior = merge({}, config.behavior, opts.behavior);
+    }
+
+    if (opts.data) {
+        // Merge with any existing data config
+        config.data = {... config.data, ... opts.data};
     }
 
     const template = StyleTemplate.parse(config);

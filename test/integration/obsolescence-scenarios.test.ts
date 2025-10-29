@@ -88,6 +88,18 @@ describe("Obsolescence Scenarios", () => {
     it("should not cancel near-complete operations (>90% progress)", async() => {
         const results: string[] = [];
 
+        // First queue a layout-set so layout-update has its dependency satisfied
+        queueManager.queueOperation(
+            "layout-set",
+            () => {
+                results.push("layout-set");
+            },
+            {description: "Set layout"},
+        );
+
+        // Wait for layout-set to start
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
         // Start a layout operation that will be near completion
         const layoutOp = queueManager.queueOperation(
             "layout-update",

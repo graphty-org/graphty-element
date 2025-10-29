@@ -99,6 +99,20 @@ export class Graphty extends LitElement {
      * An array of objects describing the node data.
      * The path to the unique ID for the node is `.id` unless
      * otherwise specified in `known-properties`.
+     *
+     * @remarks
+     * **Important**: Setting this property REPLACES all existing nodes with the new data.
+     * To add nodes incrementally without replacing existing ones, use the
+     * `graph.addNodes()` method instead.
+     *
+     * @example
+     * ```typescript
+     * // Replace all nodes (this is what the property setter does)
+     * element.nodeData = [{id: "1"}, {id: "2"}];
+     *
+     * // Add nodes incrementally (use the API method)
+     * await element.graph.addNodes([{id: "3"}, {id: "4"}]);
+     * ```
      */
     @property({attribute: "node-data"})
     get nodeData(): Record<string, unknown>[] | undefined {
@@ -120,6 +134,20 @@ export class Graphty extends LitElement {
      * An array of objects describing the edge data.
      * The path to the source node ID and destination node ID are `src` and
      * `dst` (respectively) unless otherwise specified in `known-properties`.
+     *
+     * @remarks
+     * **Important**: Setting this property REPLACES all existing edges with the new data.
+     * To add edges incrementally without replacing existing ones, use the
+     * `graph.addEdges()` method instead.
+     *
+     * @example
+     * ```typescript
+     * // Replace all edges (this is what the property setter does)
+     * element.edgeData = [{src: "1", dst: "2"}];
+     *
+     * // Add edges incrementally (use the API method)
+     * await element.graph.addEdges([{source: "2", target: "3"}], "source", "target");
+     * ```
      */
     @property({attribute: "edge-data"})
     get edgeData(): Record<string, unknown>[] | undefined {

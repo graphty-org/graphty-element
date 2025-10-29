@@ -251,16 +251,22 @@ export class Graph implements GraphContext {
                 }
 
                 // Run algorithms if runAlgorithmsOnLoad is true
+                // Queue algorithms instead of running them directly
                 const {algorithms} = this.styles.config.data;
                 if (this.runAlgorithmsOnLoad && algorithms && algorithms.length > 0) {
-                    void this.algorithmManager.runAlgorithmsFromTemplate(algorithms)
-                        .then(() => {
-                            // Re-apply styles after algorithms complete to update calculated styles
-                            this.dataManager.updateStyles(this.styles);
-                        })
-                        .catch((error) => {
-                            console.error("[Graph] Error running algorithms:", error);
-                        });
+                    // Parse and queue each algorithm through the public API
+                    for (const algName of algorithms) {
+                        const trimmedName = algName.trim();
+                        const [namespace, type] = trimmedName.split(":");
+
+                        if (namespace && type) {
+                            // Queue through public API which handles queueing
+                            void this.runAlgorithm(namespace.trim(), type.trim())
+                                .catch((error: unknown) => {
+                                    console.error(`[Graph] Error running algorithm ${trimmedName}:`, error);
+                                });
+                        }
+                    }
                 }
             }
         });
@@ -393,29 +399,25 @@ export class Graph implements GraphContext {
             return this._setStyleTemplateInternal(t);
         }
 
-        // Queue the operation
-        return new Promise<Styles>((resolve, reject) => {
-            this.operationQueue.queueOperation(
-                "style-init",
-                async(context) => {
-                    if (context.signal.aborted) {
-                        reject(new Error("Operation cancelled"));
-                        return;
-                    }
+        // Clear completed status for style-init since we're explicitly re-initializing styles
+        // This ensures dependency ordering works correctly in batch mode
+        this.operationQueue.clearCategoryCompleted("style-init");
 
-                    try {
-                        const result = await this._setStyleTemplateInternal(t);
-                        resolve(result);
-                    } catch (error) {
-                        reject(error instanceof Error ? error : new Error(String(error)));
-                    }
-                },
-                {
-                    description: "Setting style template",
-                    ... options,
-                },
-            );
-        });
+        // Queue the operation using queueOperationAsync to properly handle batch mode
+        return this.operationQueue.queueOperationAsync(
+            "style-init",
+            async(context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                await this._setStyleTemplateInternal(t);
+            },
+            {
+                description: "Setting style template",
+                ... options,
+            },
+        ).then(() => this.styles);
     }
 
     private async _setStyleTemplateInternal(t: StyleSchema): Promise<Styles> {
@@ -510,6 +512,26 @@ export class Graph implements GraphContext {
         await this.addNodes([node], idPath, options);
     }
 
+    /**
+     * Add nodes to the graph incrementally.
+     *
+     * @remarks
+     * This method ADDS nodes to the existing graph. It does not replace
+     * existing nodes. If you want to replace all nodes, use the
+     * `nodeData` property on the web component instead.
+     *
+     * @param nodes - Array of node data to add
+     * @param idPath - Key to use for node IDs (default: "id")
+     * @param options - Queue options
+     *
+     * @example
+     * ```typescript
+     * // Add nodes incrementally
+     * await graph.addNodes([{id: "1"}, {id: "2"}]);
+     * await graph.addNodes([{id: "3"}, {id: "4"}]);
+     * // Graph now has 4 nodes
+     * ```
+     */
     async addNodes(nodes: Record<string | number, unknown>[], idPath?: string, options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             this.dataManager.addNodes(nodes, idPath);
@@ -712,23 +734,17 @@ export class Graph implements GraphContext {
      * Operations will be queued and executed in dependency order
      */
     async batchOperations(fn: () => Promise<void> | void): Promise<void> {
-        // Enter batch mode - operations will be queued but not executed
         this.operationQueue.enterBatchMode();
 
         try {
-            // Execute the function - operations return deferred promises
-            const result = fn();
-            if (result instanceof Promise) {
-                await result; // Wait for all operations to be queued
-            }
-        } finally {
-            // Exit batch mode - this executes all operations in dependency order
-            // and resolves the deferred promises
-            this.operationQueue.exitBatchMode();
+            await fn();
+        } catch (error) {
+            await this.operationQueue.exitBatchMode();
+            throw error;
         }
 
-        // Wait for all operations in the batch to complete
-        await this.operationQueue.waitForCompletion();
+        // Exit batch mode and wait for all operations to complete
+        await this.operationQueue.exitBatchMode();
     }
 
     getNodeCount(): number {
@@ -752,7 +768,19 @@ export class Graph implements GraphContext {
     }
 
     /**
-     * Manually trigger zoom to fit the content
+     * Zoom the camera to fit all nodes in view.
+     *
+     * @remarks
+     * This operation executes immediately and does not go through the
+     * operation queue. It may race with queued camera updates.
+     *
+     * For better coordination, consider using:
+     * ```typescript
+     * await graph.batchOperations(async () => {
+     *     await graph.setStyleTemplate({graph: {twoD: true}});
+     *     graph.zoomToFit(); // Will execute after camera update
+     * });
+     * ```
      */
     zoomToFit(): void {
         this.updateManager.enableZoomToFit();

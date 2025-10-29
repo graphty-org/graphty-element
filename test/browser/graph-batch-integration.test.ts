@@ -18,8 +18,10 @@ describe("Graph Batch Integration - Deferred Promises", () => {
 
         // Track operation execution order
         graph.on("operation-start", (event) => {
-            const detail = (event as Record<string, unknown>).detail as {category: string};
-            executionOrder.push(detail.category);
+            const category = (event as Record<string, unknown>).category as string;
+            if (category) {
+                executionOrder.push(category);
+            }
         });
     });
 
@@ -46,7 +48,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             expect(graph.operationQueue.isInBatchMode()).toBe(false);
         });
 
-        it.skip("should execute operations in dependency order despite call order", async() => {
+        it("should execute operations in dependency order despite call order", async() => {
             await graph.batchOperations(async() => {
                 // Call in wrong order intentionally
                 await graph.setLayout("ngraph");
@@ -104,20 +106,20 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             // Check execution order
             const styleIndex = executionOrder.findIndex((op) => op === "style-init");
             const dataIndex = executionOrder.findIndex((op) => op === "data-add");
-            const layoutIndex = executionOrder.findIndex((op) => op === "layout-set");
 
+            // Verify dependency: data-add depends on style-init
             if (styleIndex !== -1 && dataIndex !== -1) {
                 expect(styleIndex).toBeLessThan(dataIndex);
             }
 
-            if (dataIndex !== -1 && layoutIndex !== -1) {
-                expect(dataIndex).toBeLessThan(layoutIndex);
-            }
+            // Note: layout-set does NOT depend on data-add in stateless design
+            // So we don't check dataIndex < layoutIndex
+            // They can execute in any order relative to each other
         });
     });
 
     describe("Sequential Batches", () => {
-        it.skip("should handle multiple sequential batches correctly", async() => {
+        it("should handle multiple sequential batches correctly", async() => {
             // First batch
             await graph.batchOperations(async() => {
                 await graph.addNodes([{id: "1"}]);
@@ -149,8 +151,10 @@ describe("Graph Batch Integration - Deferred Promises", () => {
 
             await graph.batchOperations(async() => {
                 graph.on("operation-start", (event) => {
-                    const detail = (event as Record<string, unknown>).detail as {category: string};
-                    batch1Order.push(detail.category);
+                    const category = (event as Record<string, unknown>).category as string;
+                    if (category) {
+                        batch1Order.push(category);
+                    }
                 });
                 await graph.addNodes([{id: "1"}]);
                 await graph.setLayout("random");
@@ -160,8 +164,10 @@ describe("Graph Batch Integration - Deferred Promises", () => {
 
             await graph.batchOperations(async() => {
                 graph.on("operation-start", (event) => {
-                    const detail = (event as Record<string, unknown>).detail as {category: string};
-                    batch2Order.push(detail.category);
+                    const category = (event as Record<string, unknown>).category as string;
+                    if (category) {
+                        batch2Order.push(category);
+                    }
                 });
                 await graph.addNodes([{id: "2"}]);
                 await graph.setLayout("circular");
@@ -176,7 +182,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
     });
 
     describe("Error Handling", () => {
-        it.skip("should handle errors in batch operations gracefully", async() => {
+        it("should handle errors in batch operations gracefully", async() => {
             const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* Ignore */ });
 
             try {
@@ -196,7 +202,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             consoleSpy.mockRestore();
         });
 
-        it.skip("should maintain atomicity within reasonable limits", async() => {
+        it("should maintain atomicity within reasonable limits", async() => {
             const initialNodeCount = graph.getNodeCount();
 
             await graph.batchOperations(async() => {
@@ -211,7 +217,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
     });
 
     describe("Complex Operations", () => {
-        it.skip("should handle mixed synchronous and asynchronous operations", async() => {
+        it("should handle mixed synchronous and asynchronous operations", async() => {
             await graph.batchOperations(async() => {
                 // Sync operation
                 await graph.addNodes([{id: "1"}]);
@@ -230,7 +236,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             expect(graph.getNodeCount()).toBe(3);
         });
 
-        it.skip("should work with conditional logic inside batch", async() => {
+        it("should work with conditional logic inside batch", async() => {
             // Test condition is always true for this test case
             const shouldAddEdge = true;
 
@@ -250,7 +256,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             expect(graph.getEdgeCount()).toBe(1);
         });
 
-        it.skip("should handle loops inside batch operations", async() => {
+        it("should handle loops inside batch operations", async() => {
             const nodeIds = ["1", "2", "3", "4", "5"];
 
             await graph.batchOperations(async() => {
@@ -273,7 +279,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
     });
 
     describe("Backwards Compatibility", () => {
-        it.skip("should maintain backwards compatibility with skipQueue option", async() => {
+        it("should maintain backwards compatibility with skipQueue option", async() => {
             await graph.batchOperations(async() => {
                 // With skipQueue, operations should execute immediately
                 await graph.addNodes([{id: "1"}], undefined, {skipQueue: true});
@@ -283,7 +289,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             expect(graph.getNodeCount()).toBeGreaterThanOrEqual(1);
         });
 
-        it.skip("should work with operations called outside batchOperations", async() => {
+        it("should work with operations called outside batchOperations", async() => {
             // Normal operation
             await graph.addNodes([{id: "1"}]);
 
@@ -301,7 +307,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
     });
 
     describe("Performance", () => {
-        it.skip("should handle large batches efficiently", async() => {
+        it("should handle large batches efficiently", async() => {
             const startTime = Date.now();
             const nodeCount = 100;
 
@@ -319,12 +325,12 @@ describe("Graph Batch Integration - Deferred Promises", () => {
             expect(duration).toBeLessThan(2000);
         });
 
-        it.skip("should benefit from operation coalescing in batches", async() => {
+        it("should benefit from operation coalescing in batches", async() => {
             let layoutUpdateCount = 0;
 
             graph.on("operation-complete", (event) => {
-                const detail = (event as Record<string, unknown>).detail as {category: string};
-                if (detail.category === "layout-update") {
+                const category = (event as Record<string, unknown>).category as string;
+                if (category === "layout-update") {
                     layoutUpdateCount++;
                 }
             });

@@ -59,7 +59,7 @@ export const OBSOLESCENCE_RULES: Partial<Record<OperationCategory, ObsolescenceR
     },
 
     "layout-update": {
-        obsoletes: ["render-update"],
+        obsoletes: ["layout-update", "render-update"],
         respectProgress: true,
     },
 

@@ -47,6 +47,10 @@ describe("OperationQueueManager", () => {
         });
 
         // Queue multiple operations in same microtask
+        queueManager.queueOperation("style-init", () => {
+            executionOrder.push("style-init");
+        });
+
         queueManager.queueOperation("data-add", () => {
             executionOrder.push("data-add-1");
         });
@@ -55,16 +59,14 @@ describe("OperationQueueManager", () => {
             executionOrder.push("data-add-2");
         });
 
-        queueManager.queueOperation("layout-update", () => {
-            executionOrder.push("layout-update");
-        });
-
         await queueManager.waitForCompletion();
 
-        // Should have executed all operations (may include triggered operations)
-        // Due to triggers, we may have multiple batches
+        // Should have executed all operations in correct dependency order
+        // style-init should come first, then data-adds
         assert.isAbove(batchCount, 0, "Should have at least one batch");
         assert.isAtLeast(executionOrder.length, 3, "Should execute at least the 3 queued operations");
+        // style-init should be first due to dependencies
+        assert.equal(executionOrder[0], "style-init", "style-init should execute first");
     });
 
     it("should handle circular dependencies gracefully", async() => {

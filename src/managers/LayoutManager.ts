@@ -76,7 +76,11 @@ export class LayoutManager implements Manager {
         this.running = false;
     }
 
-    async setLayout(type: string, opts: object = {}): Promise<void> {
+    /**
+     * Internal method for setting layout - bypasses queue
+     * Used by operations that are already queued to prevent nested queueing
+     */
+    private async _setLayoutInternal(type: string, opts: object = {}): Promise<void> {
         try {
             // Auto-sync layout dimension with graph's 2D/3D mode if not explicitly set
             const layoutOpts = {... opts};
@@ -170,6 +174,14 @@ export class LayoutManager implements Manager {
             // Otherwise wrap and throw
             throw new Error(`Error setting layout '${type}': ${error instanceof Error ? error.message : String(error)}`);
         }
+    }
+
+    /**
+     * Public method for setting layout
+     * This goes through the queue when called from Graph
+     */
+    async setLayout(type: string, opts: object = {}): Promise<void> {
+        return this._setLayoutInternal(type, opts);
     }
 
     /**
@@ -274,7 +286,7 @@ export class LayoutManager implements Manager {
                         delete (layoutOpts as Record<string, unknown>)[key];
                     });
 
-                    await this.setLayout(layoutType, layoutOpts);
+                    await this._setLayoutInternal(layoutType, layoutOpts);
                 }
             }
         } catch {
@@ -295,7 +307,7 @@ export class LayoutManager implements Manager {
                                this.hasOptionsChanged(options);
 
             if (needsUpdate) {
-                await this.setLayout(layoutType, options);
+                await this._setLayoutInternal(layoutType, options);
             }
         }
     }

@@ -345,7 +345,7 @@ export const DeterministicVariant6: Story = {
         }, 5);
 
         setTimeout(() => {
-            g.layout = "force"; // Wrong layout #2
+            g.layout = "d3"; // Wrong layout #2
         }, 8);
 
         setTimeout(() => {
@@ -916,7 +916,7 @@ export const DeterministicVariant18: Story = {
         }, 2);
 
         setTimeout(() => {
-            g.layout = "grid";
+            g.layout = "random";
         }, 4);
 
         setTimeout(() => {
@@ -924,7 +924,7 @@ export const DeterministicVariant18: Story = {
         }, 6);
 
         setTimeout(() => {
-            g.layout = "force";
+            g.layout = "forceatlas2";
         }, 8);
 
         setTimeout(() => {
@@ -1761,12 +1761,6 @@ export const DeterministicVariant33: Story = {
                 graph: {
                     ... STYLE_TEMPLATE.graph,
                     twoD: true,
-                },
-                nodeStyle: {
-                    ... STYLE_TEMPLATE.nodeStyle,
-                    texture: {
-                        color: "#4CAF50",
-                    },
                 },
                 data: {
                     ... STYLE_TEMPLATE.data,

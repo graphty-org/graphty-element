@@ -43,7 +43,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             manager.enterBatchMode();
             expect(manager.isInBatchMode()).toBe(true);
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             expect(manager.isInBatchMode()).toBe(false);
         });
 
@@ -63,7 +63,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             await new Promise((resolve) => setTimeout(resolve, 10));
             expect(executed).toBe(false);
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             // Now it should be executed
@@ -89,7 +89,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             // None should be executed yet
             expect(executionOrder).toEqual([]);
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
             await Promise.all(promises);
 
@@ -116,12 +116,16 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                     executionOrder.push("style");
                 });
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
             await Promise.all([p1, p2, p3]);
 
-            // Should execute in dependency order: style → data → layout
-            expect(executionOrder).toEqual(["style", "data", "layout"]);
+            // Should execute with dependencies respected: style → data
+            // layout-set does NOT depend on data-add in stateless design
+            const styleIndex = executionOrder.indexOf("style");
+            const dataIndex = executionOrder.indexOf("data");
+            expect(styleIndex).toBeLessThan(dataIndex);
+            expect(executionOrder.length).toBe(3);
         });
 
         it("should handle multiple operations of the same category", async() => {
@@ -149,7 +153,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                     executionOrder.push("layout");
                 }));
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
             await Promise.all(promises);
 
@@ -176,7 +180,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             // Operation shouldn't execute yet
             expect(executed).toBe(false);
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             // Operation should be complete after waiting
@@ -201,7 +205,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 },
             );
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
 
             // Wait for operations to complete
             await manager.waitForCompletion();
@@ -215,7 +219,10 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
 
             const localExecutionOrder: string[] = [];
 
-            // Queue operations in wrong order to test dependency sorting
+            // Queue operations to test dependency sorting
+            // style-init has no dependencies
+            // data-add depends on style-init
+            // layout-set does NOT depend on data-add (stateless design)
             void manager.queueOperationAsync("layout-set",
                 () => {
                     localExecutionOrder.push("layout");
@@ -231,11 +238,15 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                     localExecutionOrder.push("style");
                 });
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
-            // Execution should be in dependency order regardless of queue order
-            expect(localExecutionOrder).toEqual(["style", "data", "layout"]);
+            // style must come before data (dependency)
+            // layout-set does NOT depend on data-add in stateless design
+            const styleIndex = localExecutionOrder.indexOf("style");
+            const dataIndex = localExecutionOrder.indexOf("data");
+            expect(styleIndex).toBeLessThan(dataIndex);
+            expect(localExecutionOrder.length).toBe(3);
         });
     });
 
@@ -247,7 +258,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 () => {
                     executionOrder.push("batch1-data");
                 });
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             // Second batch
@@ -256,7 +267,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 () => {
                     executionOrder.push("batch2-data");
                 });
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             expect(executionOrder).toEqual(["batch1-data", "batch2-data"]);
@@ -278,7 +289,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 () => {
                     executionOrder.push("batch");
                 });
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await p2;
 
             // Another normal operation
@@ -309,7 +320,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                     executionOrder.push("success2");
                 });
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             // Other operations should still execute despite one failing
@@ -317,7 +328,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             expect(executionOrder).toContain("success2");
         });
 
-        it("should clean up deferred promises after batch completion", async() => {
+        it("should properly resolve all batch promises", async() => {
             manager.enterBatchMode();
 
             const promises = [
@@ -326,15 +337,10 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 manager.queueOperationAsync("data-add", () => { /* Test operation */ }),
             ];
 
-            // Check that deferred promises are tracked
-            expect(manager.getDeferredPromiseCount()).toBe(3);
+            await manager.exitBatchMode();
 
-            manager.exitBatchMode();
-            await manager.waitForCompletion();
-            await Promise.all(promises);
-
-            // All deferred promises should be cleaned up
-            expect(manager.getDeferredPromiseCount()).toBe(0);
+            // All promises should resolve
+            await expect(Promise.all(promises)).resolves.not.toThrow();
         });
     });
 
@@ -357,7 +363,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                 executionOrder.push("layout");
             });
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
             await Promise.all([p1, p2, p3]);
 
@@ -377,7 +383,7 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
                     executionOrder.push("op2");
                 });
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             await manager.waitForCompletion();
 
             expect(executionOrder).toEqual(["op1", "op2"]);
@@ -391,11 +397,11 @@ describe("OperationQueueManager - Deferred Promise Batching", () => {
             manager.enterBatchMode();
             expect(manager.isInBatchMode()).toBe(true);
 
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             expect(manager.isInBatchMode()).toBe(false);
 
             // Extra exit should be safe
-            manager.exitBatchMode();
+            void manager.exitBatchMode();
             expect(manager.isInBatchMode()).toBe(false);
         });
     });

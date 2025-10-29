@@ -222,7 +222,7 @@ describe("Automatic Layout Updates", () => {
         ];
 
         // Exit batch mode
-        operationQueue.exitBatchMode();
+        void operationQueue.exitBatchMode();
 
         // Wait for all operations
         await Promise.all(promises);
