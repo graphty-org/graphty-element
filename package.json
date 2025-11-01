@@ -67,7 +67,7 @@
     "build": "tsc --project tsconfig.build.json && vite build",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",
-    "storybook": "storybook dev -p 9025 --no-open",
+    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p 9025 --no-open",
     "chromatic": "npx chromatic --exit-zero-on-changes",
     "prepare": "husky",
     "build-storybook": "storybook build",

@@ -11,6 +11,11 @@ const meta: Meta = {
     decorators: [eventWaitingDecorator],
     argTypes: {
         edgeLineWidth: {control: {type: "range", min: 0.1, max: 10, step: 0.1}, table: {category: "Line"}, name: "line.width"},
+        edgeLineColor: {control: "color", table: {category: "Line"}, name: "line.color"},
+        edgeLineOpacity: {control: {type: "range", min: 0, max: 1, step: 0.1}, table: {category: "Line"}, name: "line.opacity"},
+        arrowSize: {control: {type: "range", min: 0.1, max: 5, step: 0.1}, table: {category: "Arrow"}, name: "arrowHead.size"},
+        arrowColor: {control: "color", table: {category: "Arrow"}, name: "arrowHead.color"},
+        arrowOpacity: {control: {type: "range", min: 0, max: 1, step: 0.1}, table: {category: "Arrow"}, name: "arrowHead.opacity"},
     },
     parameters: {
         // controls: {exclude: /^(#|_)/},
@@ -25,14 +30,15 @@ const meta: Meta = {
     },
     args: {
         styleTemplate: templateCreator({}),
-        dataSource: "json",
-        dataSourceConfig: {
-            data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
-        },
-        layout: "ngraph",
-        layoutConfig: {
-            seed: 42, // Fixed seed for consistent layouts in visual tests
-        },
+        nodeData: [
+            {id: "A", position: {x: -3, y: 0, z: 0}},
+            {id: "B", position: {x: 3, y: 0, z: 0}},
+        ],
+        edgeData: [
+            {src: "A", dst: "B"},
+        ],
+        layout: "fixed",
+        layoutConfig: {},
     },
 };
 export default meta;
@@ -54,6 +60,187 @@ export const Width: Story = {
 
 export const NormalArrowHead: Story = {
     args: {
-        styleTemplate: templateCreator({edgeStyle: {arrowHead: {type: "normal"}}}),
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const ArrowSize: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", size: 2.0, color: "darkgrey"},
+                line: {width: 0.5, color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "line.width"],
+        },
+    },
+};
+
+export const ArrowOpacity: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", opacity: 0.5, color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.opacity"],
+        },
+    },
+};
+
+export const ArrowColor: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", color: "#FF0000"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.color", "line.color"],
+        },
+    },
+};
+
+export const LineOpacity: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", color: "darkgrey"},
+                line: {opacity: 0.5, color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["line.opacity"],
+        },
+    },
+};
+
+export const CombinedOpacity: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "normal", opacity: 0.3, color: "darkgrey"},
+                line: {opacity: 0.7, color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.opacity", "line.opacity"],
+        },
+    },
+};
+
+export const InvertedArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "inverted", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const DotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "dot", color: "#FF0000", size: 4.0},
+                line: {color: "#666666", width: 0.5},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+        },
+    },
+};
+
+export const OpenDotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "open-dot", color: "#FF0000", size: 4.0},
+                line: {color: "#666666", width: 0.5},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+        },
+    },
+};
+
+export const SphereDotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "sphere-dot", color: "#FF0000", size: 4.0},
+                line: {color: "#666666", width: 0.5},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+        },
+    },
+};
+
+export const DiamondArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "diamond", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const BoxArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "box", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
     },
 };

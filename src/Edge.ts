@@ -104,7 +104,7 @@ export class Edge {
             {
                 type: style.arrowHead?.type ?? "none",
                 width: style.line?.width ?? 0.25,
-                color: style.line?.color ?? "#FFFFFF",
+                color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
             },
             this.context.getScene(),
         );
@@ -188,7 +188,7 @@ export class Edge {
             {
                 type: style.arrowHead?.type ?? "none",
                 width: style.line?.width ?? 0.25,
-                color: style.line?.color ?? "#FFFFFF",
+                color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
             },
             this.context.getScene(),
         );
@@ -278,38 +278,80 @@ export class Edge {
                     };
                 }
 
-                // Calculate approximate positions based on node sizes
+                // Pure geometric positioning (same as main path, but using node centers/radii)
                 const direction = fallbackDst.subtract(fallbackSrc).normalize();
+
+                // Get arrow length (including size multiplier)
                 const style = Styles.getStyleForEdgeStyleId(this.styleId);
-                const arrowLen = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25);
+                const lineWidth = style.line?.width ?? 0.25;
+                const arrowSize = style.arrowHead?.size ?? 1.0;
+                const arrowLength = EdgeMesh.calculateArrowLength(lineWidth) * arrowSize;
 
-                // Estimate node radius (assuming spherical nodes)
-                const dstNodeRadius = this.dstNode.size || 1;
-                const srcNodeRadius = this.srcNode.size || 1;
+                // Use actual bounding sphere radii
+                const dstNodeRadius = this.dstNode.mesh.getBoundingInfo().boundingSphere.radiusWorld;
+                const srcNodeRadius = this.srcNode.mesh.getBoundingInfo().boundingSphere.radiusWorld;
 
-                // Position arrow at edge of destination node
-                const approxDstPoint = fallbackDst.subtract(direction.scale(dstNodeRadius));
-                const approxSrcPoint = fallbackSrc.add(direction.scale(srcNodeRadius));
-                const approxNewEndPoint = approxDstPoint.subtract(direction.scale(arrowLen));
+                // Calculate surface intersection points
+                const srcSurfacePoint = fallbackSrc.add(direction.scale(srcNodeRadius));
+                const dstSurfacePoint = fallbackDst.subtract(direction.scale(dstNodeRadius));
+
+                // Line ends arrowLength before destination surface
+                const lineEndPoint = dstSurfacePoint.subtract(direction.scale(arrowLength));
+
+                // Position arrow at destination surface
+                // Different arrow types have different pivot points
+                const centerBasedArrows = ["dot", "open-dot", "sphere-dot", "sphere"];
+                const arrowType = style.arrowHead?.type;
 
                 this.arrowMesh.setEnabled(true);
-                this.arrowMesh.position = approxDstPoint;
+
+                if (centerBasedArrows.includes(arrowType ?? "")) {
+                    // Center-based arrows: use actual mesh bounding radius
+                    const actualRadius = this.arrowMesh.getBoundingInfo().boundingSphere.radiusWorld;
+                    this.arrowMesh.position = dstSurfacePoint.subtract(direction.scale(actualRadius));
+                } else {
+                    // Tip-based arrows: position tip at surface
+                    this.arrowMesh.position = dstSurfacePoint;
+                }
+
                 this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
                 return {
-                    srcPoint: approxSrcPoint,
-                    dstPoint: approxNewEndPoint,
+                    srcPoint: srcSurfacePoint,
+                    dstPoint: lineEndPoint,
                 };
             }
 
             this.arrowMesh.setEnabled(true);
-            this.arrowMesh.position = dstPoint;
+
+            // Get arrow style and dimensions
+            const arrowStyle = Styles.getStyleForEdgeStyleId(this.styleId);
+            const arrowType = arrowStyle.arrowHead?.type;
+            const lineWidth = arrowStyle.line?.width ?? 0.25;
+            const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
+            const arrowLength = EdgeMesh.calculateArrowLength(lineWidth) * arrowSize;
+
+            // Different arrow types have different pivot points:
+            // - Triangular arrows (normal, inverted, diamond, box): tip at local origin
+            // - Sphere/circle arrows (dot, open-dot, sphere-dot, sphere): center at local origin
+            const centerBasedArrows = ["dot", "open-dot", "sphere-dot", "sphere"];
+            const direction = dstPoint.subtract(srcPoint).normalize();
+
+            if (centerBasedArrows.includes(arrowType ?? "")) {
+                // Center-based arrows: use actual mesh bounding radius
+                // (mesh geometry may differ from calculated size due to segment count)
+                const actualRadius = this.arrowMesh.getBoundingInfo().boundingSphere.radiusWorld;
+                this.arrowMesh.position = dstPoint.subtract(direction.scale(actualRadius));
+            } else {
+                // Tip-based arrows: position tip at surface
+                this.arrowMesh.position = dstPoint;
+            }
+
             this.arrowMesh.lookAt(this.dstNode.mesh.position);
 
             return {
                 srcPoint,
-                dstPoint: newEndPoint,
-                // dstPoint,
+                dstPoint: newEndPoint,  // Line ends before arrow to create gap for arrow to fill
             };
         }
 
@@ -342,7 +384,8 @@ export class Edge {
 
             // Only adjust endpoint if we have an arrow head
             if (hasArrowHead) {
-                const len = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25);
+                const arrowSize = style.arrowHead?.size ?? 1.0;
+                const len = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25) * arrowSize;
                 const distance = srcPoint.subtract(dstPoint).length();
                 const adjDistance = distance - len;
                 const {x: x1, y: y1, z: z1} = srcPoint;

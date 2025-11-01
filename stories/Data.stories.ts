@@ -25,7 +25,7 @@ export const Basic: Story = {
     args: {
         nodeData,
         edgeData,
-        layout: "circular", // Use deterministic layout for visual tests
+        layout: "ngraph", // Use deterministic layout for visual tests
         layoutConfig: {
             // circular layout is deterministic, no seed needed
         },
@@ -48,7 +48,7 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
-        layout: "circular", // Use deterministic layout for visual tests
+        layout: "ngraph", // Use deterministic layout for visual tests
         layoutConfig: {
             // circular layout is deterministic, no seed needed
         },
@@ -76,7 +76,7 @@ export const ModifiedJson: Story = {
         },
         edgeSrcIdPath: "source",
         edgeDstIdPath: "target",
-        layout: "circular", // Use deterministic layout for visual tests
+        layout: "ngraph", // Use deterministic layout for visual tests
         layoutConfig: {
             // circular layout is deterministic, no seed needed
         },

@@ -9,6 +9,7 @@ const ArrowType = z.enum([
     "normal",
     "inverted",
     "dot",
+    "sphere-dot",
     "open-dot",
     "none",
     "tee",

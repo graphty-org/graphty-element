@@ -78,7 +78,6 @@ export const eventWaitingDecorator = (story: any): any => {
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
-        console.info("[Info] No graphty-element found in canvas element");
         return;
     }
 
@@ -98,7 +97,6 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 // For static layouts, this is not an error - they may have already settled
-                console.info("[Info] graph-settled event wait completed (timeout)");
                 resolve();
             }, 500); // Much shorter timeout since static layouts settle immediately
         });
@@ -106,7 +104,6 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
         await Promise.race([settledPromise, timeoutPromise]);
     } else {
         // Fallback to original implementation if decorator wasn't used
-        console.info("[Info] Event waiting decorator not active, using fallback approach");
 
         // Give the graph a moment to initialize and potentially fire the event
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -117,7 +114,6 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
             const timeout = setTimeout(() => {
                 if (!settled) {
                     // Not a warning - static layouts may have already settled
-                    console.info("[Info] graph-settled event wait completed (timeout)");
                     settled = true;
                     resolve();
                 }
@@ -328,6 +324,13 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                     deepSet(t, `nodeStyle.${name}`, val);
                 } else if (t.layers) {
                     deepSet(t, `layers[0].node.style.${name}`, val);
+                }
+            } else if (name.startsWith("line.") || name.startsWith("arrowHead.")) {
+                // For edge properties
+                if (t.edgeStyle) {
+                    deepSet(t, `edgeStyle.${name}`, val);
+                } else if (t.layers) {
+                    deepSet(t, `layers[0].edge.style.${name}`, val);
                 }
             } else if (name.startsWith("graph.layoutOptions.")) {
                 // For layout options
