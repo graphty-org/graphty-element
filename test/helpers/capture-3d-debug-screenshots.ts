@@ -81,39 +81,64 @@ const getCameraPositions = (): CameraPosition[] => {
 };
 
 /**
- * Setup camera position
+ * Setup camera position using mouse/keyboard controls
+ * This works WITH the camera control system instead of fighting against it
  */
 async function setupCamera(
     page: any,
     position: CameraPosition
 ): Promise<void> {
-    await page.evaluate((pos: CameraPosition) => {
-        const graphty = document.querySelector("graphty-element") as any;
-        if (!graphty || !graphty.graph) {
-            throw new Error("Graph not found");
-        }
+    // Skip if this is the "start" position - use default camera
+    if (isNaN(position.alpha)) {
+        return;
+    }
 
-        const camera = graphty.graph.camera;
-        if (!camera) {
-            throw new Error("Camera not found");
-        }
+    // Get canvas element and its bounding box
+    const canvas = await page.locator('canvas');
+    const box = await canvas.boundingBox();
 
-        // Set camera position (skip if NaN - use existing position)
-        if (!isNaN(pos.alpha)) {
-            camera.alpha = pos.alpha;
-        }
-        if (!isNaN(pos.beta)) {
-            camera.beta = pos.beta;
-        }
-        if (!isNaN(pos.radius)) {
-            camera.radius = pos.radius;
-        }
+    if (!box) {
+        throw new Error("Canvas not found");
+    }
 
-        // Force a render
-        graphty.graph.scene.render();
-    }, position);
+    // Calculate center of canvas
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
 
-    // Wait for render to complete
+    // Use mouse drag to rotate camera
+    // Dragging horizontally changes alpha (horizontal rotation)
+    // Dragging vertically changes beta (vertical rotation)
+
+    // For different camera positions, we'll drag different amounts
+    // These are empirical values that move the camera to roughly the right positions
+    let dragX = 0;
+    let dragY = 0;
+
+    if (position.name === "left") {
+        // Rotate 90 degrees left (increase alpha by π/2)
+        dragX = -300; // Drag left
+        dragY = 0;
+    } else if (position.name === "top") {
+        // Look from top (beta ~0)
+        dragX = 0;
+        dragY = -400; // Drag up significantly
+    } else if (position.name === "top-left-1") {
+        // Halfway between top and left, closer to top
+        dragX = -150;
+        dragY = -300;
+    } else if (position.name === "top-left-2") {
+        // Halfway between top and left, closer to left
+        dragX = -250;
+        dragY = -150;
+    }
+
+    // Perform the drag operation
+    await page.mouse.move(centerX, centerY);
+    await page.mouse.down();
+    await page.mouse.move(centerX + dragX, centerY + dragY, { steps: 20 });
+    await page.mouse.up();
+
+    // Wait for camera to settle
     await page.waitForTimeout(500);
 }
 
@@ -223,9 +248,10 @@ async function captureScreenshots(storyId: string, showAxes: boolean = false) {
             const filename = `screenshot-${position.name}-${timestamp}.png`;
             const screenshotPath = resolve(TMP_DIR, filename);
 
-            await page.screenshot({
+            // Screenshot the canvas element specifically
+            const canvas = await page.locator('canvas');
+            await canvas.screenshot({
                 path: screenshotPath,
-                fullPage: false,
             });
 
             console.log(`  Saved: ${filename}\n`);
