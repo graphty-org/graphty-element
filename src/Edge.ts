@@ -1,5 +1,6 @@
 import {
     AbstractMesh,
+    Quaternion,
     Ray,
     Vector3,
 } from "@babylonjs/core";
@@ -105,6 +106,8 @@ export class Edge {
                 type: style.arrowHead?.type ?? "none",
                 width: style.line?.width ?? 0.25,
                 color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
+                size: style.arrowHead?.size,
+                opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
         );
@@ -189,6 +192,8 @@ export class Edge {
                 type: style.arrowHead?.type ?? "none",
                 width: style.line?.width ?? 0.25,
                 color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
+                size: style.arrowHead?.size,
+                opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
         );
@@ -295,26 +300,64 @@ export class Edge {
                 const srcSurfacePoint = fallbackSrc.add(direction.scale(srcNodeRadius));
                 const dstSurfacePoint = fallbackDst.subtract(direction.scale(dstNodeRadius));
 
-                // Line ends arrowLength before destination surface
-                const lineEndPoint = dstSurfacePoint.subtract(direction.scale(arrowLength));
-
-                // Position arrow at destination surface
                 // Different arrow types have different pivot points
-                const centerBasedArrows = ["dot", "open-dot", "sphere-dot", "sphere"];
+                // Dot is a perpendicular plane with zero thickness - uses tip-based positioning
+                const centerBasedArrows = ["open-dot", "sphere-dot", "sphere"];
                 const arrowType = style.arrowHead?.type;
 
                 this.arrowMesh.setEnabled(true);
 
-                if (centerBasedArrows.includes(arrowType ?? "")) {
-                    // Center-based arrows: use actual mesh bounding radius
-                    const actualRadius = this.arrowMesh.getBoundingInfo().boundingSphere.radiusWorld;
-                    this.arrowMesh.position = dstSurfacePoint.subtract(direction.scale(actualRadius));
-                } else {
-                    // Tip-based arrows: position tip at surface
-                    this.arrowMesh.position = dstSurfacePoint;
-                }
+                let lineEndPoint: Vector3;
 
-                this.arrowMesh.lookAt(this.dstNode.mesh.position);
+                if (centerBasedArrows.includes(arrowType ?? "")) {
+                    // Center-based arrows have radial visual extent: radius = arrowLength / 2
+                    const radius = arrowLength / 2;
+                    // Position center back by radius so front edge aligns with surface
+                    this.arrowMesh.position = dstSurfacePoint.subtract(direction.scale(radius));
+                    // Line ends at back edge of arrow: surface - diameter
+                    lineEndPoint = dstSurfacePoint.subtract(direction.scale(arrowLength));
+                } else {
+                    // Tip-based arrows (normal, inverted, diamond, box, dot): position tip at surface
+                    if (arrowType === "dot") {
+                        // Dot arrow: move back by radius so front edge (not center) touches sphere
+                        const radius = arrowLength / 2;
+                        this.arrowMesh.position = dstSurfacePoint.subtract(direction.scale(radius));
+                    } else {
+                        this.arrowMesh.position = dstSurfacePoint;
+                    }
+                    lineEndPoint = dstSurfacePoint.subtract(direction.scale(arrowLength));
+
+                    if (arrowType === "dot") {
+                        // Orient dot arrow with cylindrical billboarding (like GreasedLine)
+                        // GreasedLine uses camera's up vector projected onto edge-perpendicular plane
+                        const scene = (this.parentGraph as any).scene;
+                        const camera = scene?.activeCamera;
+                        if (camera) {
+                            // Use camera's up vector as reference (this is what GreasedLine does)
+                            const cameraUp = camera.upVector || Vector3.Up();
+
+                            // Project camera up onto plane perpendicular to edge direction
+                            const dotProd = Vector3.Dot(cameraUp, direction);
+                            const perpendicular = cameraUp.subtract(direction.scale(dotProd));
+
+                            // Handle edge case where camera up is parallel to edge
+                            const fallbackUp = Math.abs(direction.x) > 0.999 ? Vector3.Up() : Vector3.Right();
+                            const up = perpendicular.length() < 0.01 ?
+                                Vector3.Cross(direction, fallbackUp).normalize() : perpendicular.normalize();
+
+                            // Create rotation: right=edge, forward=perpendicular to edge
+                            const right = direction;
+                            const forward = up;
+                            const actualUp = Vector3.Cross(forward, right).normalize();
+
+                            const rotationQuat = Quaternion.RotationQuaternionFromAxis(right, actualUp, forward);
+                            this.arrowMesh.rotationQuaternion = rotationQuat;
+                        }
+                    } else {
+                        // Rotate tip-based arrows to point along edge direction
+                        this.arrowMesh.lookAt(this.dstNode.mesh.position);
+                    }
+                }
 
                 return {
                     srcPoint: srcSurfacePoint,
@@ -324,34 +367,74 @@ export class Edge {
 
             this.arrowMesh.setEnabled(true);
 
-            // Get arrow style and dimensions
+            // Get arrow type to determine positioning strategy
             const arrowStyle = Styles.getStyleForEdgeStyleId(this.styleId);
             const arrowType = arrowStyle.arrowHead?.type;
-            const lineWidth = arrowStyle.line?.width ?? 0.25;
-            const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
-            const arrowLength = EdgeMesh.calculateArrowLength(lineWidth) * arrowSize;
 
             // Different arrow types have different pivot points:
-            // - Triangular arrows (normal, inverted, diamond, box): tip at local origin
-            // - Sphere/circle arrows (dot, open-dot, sphere-dot, sphere): center at local origin
-            const centerBasedArrows = ["dot", "open-dot", "sphere-dot", "sphere"];
+            // - Triangular arrows (normal, inverted, diamond, box, dot): tip at local origin
+            // - Sphere arrows (open-dot, sphere-dot, sphere): center at local origin
+            const centerBasedArrows = ["open-dot", "sphere-dot", "sphere"];
             const direction = dstPoint.subtract(srcPoint).normalize();
 
             if (centerBasedArrows.includes(arrowType ?? "")) {
-                // Center-based arrows: use actual mesh bounding radius
-                // (mesh geometry may differ from calculated size due to segment count)
-                const actualRadius = this.arrowMesh.getBoundingInfo().boundingSphere.radiusWorld;
-                this.arrowMesh.position = dstPoint.subtract(direction.scale(actualRadius));
-            } else {
-                // Tip-based arrows: position tip at surface
-                this.arrowMesh.position = dstPoint;
-            }
+                // Center-based arrows: radius = arrowLength / 2
+                // Get arrow length to calculate radius
+                const style = Styles.getStyleForEdgeStyleId(this.styleId);
+                const arrowSize = style.arrowHead?.size ?? 1.0;
+                const arrowLength = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25) * arrowSize;
+                const radius = arrowLength / 2;
 
-            this.arrowMesh.lookAt(this.dstNode.mesh.position);
+                // Center-based arrows (sphere-dot, open-dot, sphere) use standard center positioning
+                this.arrowMesh.position = dstPoint.subtract(direction.scale(radius));
+            } else {
+                // Tip-based arrows (normal, inverted, diamond, box, dot): position tip at surface
+                if (arrowType === "dot") {
+                    // Dot arrow: move back by radius so front edge (not center) touches sphere
+                    const style = Styles.getStyleForEdgeStyleId(this.styleId);
+                    const arrowSize = style.arrowHead?.size ?? 1.0;
+                    const arrowLength = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25) * arrowSize;
+                    const radius = arrowLength / 2;
+                    this.arrowMesh.position = dstPoint.subtract(direction.scale(radius));
+                } else {
+                    this.arrowMesh.position = dstPoint;
+                }
+
+                if (arrowType === "dot") {
+                    // Orient dot arrow with cylindrical billboarding (like GreasedLine)
+                    // GreasedLine uses camera's up vector projected onto edge-perpendicular plane
+                    const scene = (this.parentGraph as any).scene;
+                    const camera = scene?.activeCamera;
+                    if (camera) {
+                        // Use camera's up vector as reference (this is what GreasedLine does)
+                        const cameraUp = camera.upVector || Vector3.Up();
+
+                        // Project camera up onto plane perpendicular to edge direction
+                        const dotProd = Vector3.Dot(cameraUp, direction);
+                        const perpendicular = cameraUp.subtract(direction.scale(dotProd));
+
+                        // Handle edge case where camera up is parallel to edge
+                        const fallbackUp = Math.abs(direction.x) > 0.999 ? Vector3.Up() : Vector3.Right();
+                        const up = perpendicular.length() < 0.01 ?
+                            Vector3.Cross(direction, fallbackUp).normalize() : perpendicular.normalize();
+
+                        // Create rotation: right=edge, forward=perpendicular to edge
+                        const right = direction;
+                        const forward = up;
+                        const actualUp = Vector3.Cross(forward, right).normalize();
+
+                        const rotationQuat = Quaternion.RotationQuaternionFromAxis(right, actualUp, forward);
+                        this.arrowMesh.rotationQuaternion = rotationQuat;
+                    }
+                } else {
+                    // Rotate tip-based arrows to point along edge direction
+                    this.arrowMesh.lookAt(this.dstNode.mesh.position);
+                }
+            }
 
             return {
                 srcPoint,
-                dstPoint: newEndPoint,  // Line ends before arrow to create gap for arrow to fill
+                dstPoint: newEndPoint, // Line ends before arrow to create gap for arrow to fill
             };
         }
 
@@ -386,8 +469,19 @@ export class Edge {
             if (hasArrowHead) {
                 const arrowSize = style.arrowHead?.size ?? 1.0;
                 const len = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25) * arrowSize;
+
+                // For center-based arrows, diameter equals length (radius = length/2)
+                // For tip-based arrows, use calculated length
+                const centerBasedArrows = ["open-dot", "sphere-dot", "sphere"];
+                const arrowType = style.arrowHead?.type;
+                const lineGapLength = centerBasedArrows.includes(arrowType ?? "") ? (
+                    len // diameter for circles/spheres (radius = len/2, so diameter = len)
+                ) : (
+                    len // length for tip-based arrows (triangular)
+                );
+
                 const distance = srcPoint.subtract(dstPoint).length();
-                const adjDistance = distance - len;
+                const adjDistance = distance - lineGapLength;
                 const {x: x1, y: y1, z: z1} = srcPoint;
                 const {x: x2, y: y2, z: z2} = dstPoint;
                 // calculate new line endpoint along line between midpoints of meshes

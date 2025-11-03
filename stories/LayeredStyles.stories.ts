@@ -267,3 +267,46 @@ export const ShapeVariationsWithColor: Story = {
         }),
     },
 };
+
+/**
+ * Axis-aligned colored spheres demonstrating 3D coordinate system.
+ * This is useful for debugging 3D positioning and camera angles.
+ * - Origin (0,0,0): Tiny black sphere
+ * - X-axis (5,0,0): Large red sphere
+ * - Y-axis (0,5,0): Large green sphere
+ * - Z-axis (0,0,5): Large blue sphere
+ *
+ * Edges connect origin to each axis node.
+ * Colors match BabylonJS AxesViewer convention (Red=X, Green=Y, Blue=Z).
+ */
+export const AxisAlignedColoredSpheres: Story = {
+    args: {
+        nodeData: [
+            {id: "origin", position: {x: 0, y: 0, z: 0}},
+            {id: "x-axis", position: {x: 5, y: 0, z: 0}},
+            {id: "y-axis", position: {x: 0, y: 5, z: 0}},
+            {id: "z-axis", position: {x: 0, y: 0, z: 5}},
+        ],
+        edgeData: [
+            {src: "origin", dst: "x-axis"},
+            {src: "origin", dst: "y-axis"},
+            {src: "origin", dst: "z-axis"},
+        ],
+        layout: "fixed",
+        layoutConfig: {
+            dim: 3,
+        },
+        styleTemplate: templateCreator({
+            layers: [
+                // Origin: tiny black sphere
+                {node: {selector: "id == 'origin'", style: {shape: {size: 0.5}, texture: {color: "black"}}}},
+                // X-axis: large red sphere
+                {node: {selector: "id == 'x-axis'", style: {shape: {size: 1.5}, texture: {color: "red"}}}},
+                // Y-axis: large green sphere
+                {node: {selector: "id == 'y-axis'", style: {shape: {size: 1.5}, texture: {color: "green"}}}},
+                // Z-axis: large blue sphere
+                {node: {selector: "id == 'z-axis'", style: {shape: {size: 1.5}, texture: {color: "blue"}}}},
+            ],
+        }),
+    },
+};

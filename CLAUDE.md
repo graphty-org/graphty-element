@@ -242,10 +242,33 @@ Run with: `node test/debug-screenshot.js`
 </script>
 ```
 
+### 5. Multi-Angle 3D Scene Capture (Recommended for 3D Debugging)
+```bash
+# Capture screenshots from multiple camera angles for debugging
+npx tsx test/helpers/capture-3d-debug-screenshots.ts <story-id> [--axes]
+
+# Examples:
+npx tsx test/helpers/capture-3d-debug-screenshots.ts styles-edge--default
+npx tsx test/helpers/capture-3d-debug-screenshots.ts styles-edge--default --axes
+```
+
+This script (`test/helpers/capture-3d-debug-screenshots.ts`):
+- Captures 5 screenshots from different camera angles:
+  - `start`: Initial camera position as configured in the story
+  - `left`: Looking at origin from the left side
+  - `top`: Looking down at origin from above
+  - `top-left-1`: Halfway between top and left (closer to top)
+  - `top-left-2`: Halfway between top and left (closer to left)
+- Optional `--axes` flag enables BabylonJS AxesViewer (Red=X, Green=Y, Blue=Z)
+- All screenshots saved in `tmp/` directory with timestamp
+- Filenames include angle and timestamp: `screenshot-{angle}-{timestamp}.png`
+- Use with Nanobanana MCP to analyze 3D rendering issues from multiple perspectives
+
 **Usage recommendations:**
 - **For CI/automated testing**: Use Playwright in Vitest
 - **For runtime debugging**: Use Babylon.js screenshot tools
 - **For quick manual checks**: Create a simple HTML page or Node script
+- **For complex 3D debugging**: Use multi-angle capture script with Nanobanana MCP analysis
 
 ## Visual Test Notes
 
@@ -292,3 +315,4 @@ To use the captured positions:
 2. Copy the output file to your desired location (e.g., `cp test/helpers/cat-social-network-2-fixed-positions-actual-engine.json test/helpers/my-fixed-positions.json`)
 3. Use the fixed layout type in your story/test with the generated data
 ```
+- use ./tmp for any temporary images, debugging files, debugging scripts, etc.

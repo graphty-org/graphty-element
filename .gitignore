@@ -24,6 +24,7 @@ dist-ssr
 .env
 TODO
 *~
+tmp/
 *storybook.log
 storybook-static/
 coverage/test/__screenshots__/

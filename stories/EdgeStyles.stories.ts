@@ -165,22 +165,6 @@ export const InvertedArrowHead: Story = {
     },
 };
 
-export const DotArrowHead: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            edgeStyle: {
-                arrowHead: {type: "dot", color: "#FF0000", size: 4.0},
-                line: {color: "#666666", width: 0.5},
-            },
-        }),
-    },
-    parameters: {
-        controls: {
-            include: ["arrowHead.size", "arrowHead.color", "line.width"],
-        },
-    },
-};
-
 export const OpenDotArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
@@ -202,6 +186,22 @@ export const SphereDotArrowHead: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "sphere-dot", color: "#FF0000", size: 4.0},
+                line: {color: "#666666", width: 0.5},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+        },
+    },
+};
+
+export const DotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "dot", color: "#FF0000", size: 1.0},
                 line: {color: "#666666", width: 0.5},
             },
         }),

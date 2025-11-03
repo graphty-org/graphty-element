@@ -20,6 +20,7 @@ export default tseslint.config(
             "coverage",
             "test/helpers/scripts/**/*.js",
             "test/fast-check-experiment/**",
+            "tmp/**",
         ],
     },
     {

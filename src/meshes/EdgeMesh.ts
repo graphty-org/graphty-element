@@ -1,6 +1,7 @@
 import {
     AbstractMesh,
     Color3,
+    Effect,
     Engine,
     GreasedLineBaseMesh,
     GreasedLineMeshColorMode,
@@ -10,8 +11,12 @@ import {
     MeshBuilder,
     RawTexture,
     type Scene,
+    ShaderMaterial,
     StandardMaterial,
+    Vector2,
     Vector3,
+    VertexBuffer,
+    VertexData,
 } from "@babylonjs/core";
 import {CreateGreasedLine} from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
 
@@ -36,6 +41,57 @@ export interface ArrowHeadOptions {
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EdgeMesh {
     private static readonly UNIT_VECTOR_POINTS = [0, 0, -0.5, 0, 0, 0.5];
+    private static shadersRegistered = false;
+
+    private static registerShaders(): void {
+        if (this.shadersRegistered) {
+            return;
+        }
+
+        // Register dot arrow vertex shader
+        // Simple billboard shader - mesh billboard mode handles camera facing
+        Effect.ShadersStore.dotArrowVertexShader = `
+precision highp float;
+
+attribute vec3 position;
+attribute vec2 uv;
+
+uniform mat4 worldViewProjection;
+
+varying vec2 vUV;
+
+void main() {
+    vUV = uv;
+    gl_Position = worldViewProjection * vec4(position, 1.0);
+}
+`;
+
+        // Register dot arrow fragment shader
+        // SDF circle with hard edge for uniform color
+        Effect.ShadersStore.dotArrowFragmentShader = `
+precision highp float;
+
+varying vec2 vUV;
+uniform vec3 arrowColor;
+
+void main() {
+    // Center coordinates (-1 to +1)
+    vec2 centered = vUV * 2.0 - 1.0;
+
+    // SDF: distance from center
+    float dist = length(centered);
+
+    // Hard cutoff for uniform color (no semi-transparent edge pixels)
+    if (dist > 1.0) {
+        discard;
+    }
+
+    gl_FragColor = vec4(arrowColor, 1.0);
+}
+`;
+
+        this.shadersRegistered = true;
+    }
 
     static create(
         cache: MeshCache,
@@ -69,9 +125,13 @@ export class EdgeMesh {
         const width = this.calculateArrowWidth(options.width) * size;
         const length = this.calculateArrowLength(options.width) * size;
 
-        // All arrow types use cache normally (StandardMaterial supports cloning)
-        const cacheKey = `edge-arrowhead-style-${styleId}`;
-        return cache.get(cacheKey, () => {
+        // Mesh caching strategy:
+        // - Billboard arrows (open-dot, sphere-dot, sphere, dot) can't be cached (need billboard per edge)
+        // - Triangular arrows (normal, inverted, diamond, box) CAN be cached
+        const centerBasedArrows = ["open-dot", "sphere-dot", "sphere", "dot"];
+        const needsFreshMesh = centerBasedArrows.includes(options.type ?? "");
+
+        const createMesh = (): Mesh => {
             let mesh: Mesh;
 
             // Route to specific arrow generator
@@ -106,7 +166,17 @@ export class EdgeMesh {
 
             mesh.visibility = opacity;
             return mesh;
-        });
+        };
+
+        // Some arrows don't work with instancing/caching, so create fresh mesh
+        // (billboard arrows and perpendicular dot which needs per-edge orientation)
+        if (needsFreshMesh) {
+            return createMesh();
+        }
+
+        // Other arrow types can use caching for performance
+        const cacheKey = `edge-arrowhead-style-${styleId}`;
+        return cache.get(cacheKey, createMesh);
     }
 
     private static createStaticLine(options: EdgeMeshOptions, style: EdgeStyleConfig, scene: Scene): GreasedLineBaseMesh {
@@ -234,8 +304,8 @@ export class EdgeMesh {
         );
 
         // Ensure material color is set correctly for instancing
-        const material = mesh.material as StandardMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as StandardMaterial;
             const colorObj = Color3.FromHexString(color);
             material.diffuseColor = colorObj;
             material.emissiveColor = colorObj;
@@ -281,8 +351,8 @@ export class EdgeMesh {
         );
 
         // Ensure material color is set correctly for instancing
-        const material = mesh.material as StandardMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as StandardMaterial;
             const colorObj = Color3.FromHexString(color);
             material.diffuseColor = colorObj;
             material.emissiveColor = colorObj;
@@ -290,6 +360,82 @@ export class EdgeMesh {
         }
 
         return mesh as Mesh;
+    }
+
+    // Dot arrow - shader-based filled circle billboard
+    // Uses custom shaders to create a 2D circle that appears as part of the edge line
+    // Implements perspective-correct billboarding like GreasedLine
+    private static createDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
+        // Register shaders if not already done
+        this.registerShaders();
+
+        // Circle radius: length/2 ensures it touches both line endpoint and node surface
+        const radius = length / 2;
+
+        // Create quad geometry for the billboard
+        // Vertices form a square from -1 to +1 in XY plane
+        const positions = [
+            -1, -1, 0,  // Bottom-left
+            1, -1, 0,   // Bottom-right
+            1, 1, 0,    // Top-right
+            -1, 1, 0,   // Top-left
+        ];
+
+        // UV coordinates for fragment shader (0 to 1)
+        const uvs = [
+            0, 0,  // Bottom-left
+            1, 0,  // Bottom-right
+            1, 1,  // Top-right
+            0, 1,  // Top-left
+        ];
+
+        // Two triangles to form the quad
+        const indices = [
+            0, 1, 2,  // First triangle
+            0, 2, 3,  // Second triangle
+        ];
+
+        // Create mesh with vertex data
+        const mesh = new Mesh("dot-arrow", scene);
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.uvs = uvs;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        // Create shader material with simple uniforms
+        const shaderMaterial = new ShaderMaterial(
+            "dotArrowMaterial",
+            scene,
+            {
+                vertex: "dotArrow",
+                fragment: "dotArrow",
+            },
+            {
+                attributes: ["position", "uv"],
+                uniforms: ["worldViewProjection", "arrowColor"],
+            },
+        );
+
+        // Set color uniform
+        const colorObj = Color3.FromHexString(color);
+        shaderMaterial.setVector3("arrowColor", new Vector3(colorObj.r, colorObj.g, colorObj.b));
+
+        // Enable alpha blending for anti-aliased edges
+        shaderMaterial.alpha = 1.0;
+        shaderMaterial.alphaMode = Engine.ALPHA_COMBINE;
+        shaderMaterial.backFaceCulling = false;
+
+        mesh.material = shaderMaterial;
+
+        // No billboard mode - mesh will be oriented in Edge.ts to align with edge direction
+        // This makes it appear circular from front, oval/thin from side (like GreasedLine continuation)
+
+        // Scale mesh to match arrow size
+        // Quad is 2 units wide (-1 to +1), so scale by radius to get correct size
+        mesh.scaling = new Vector3(radius, radius, 1);
+
+        return mesh;
     }
 
     // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
@@ -348,38 +494,39 @@ export class EdgeMesh {
         return mesh;
     }
 
-    // Dot arrow - 2D filled circle using thin disc mesh
-    // Creates a thin cylinder (disc) that rotates with edge perspective (no billboard mode)
-    // Uses StandardMaterial with emissive color to match GreasedLine's self-illuminated appearance
-    private static createDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Create a 2D filled circle using a disc (cylinder with height=0)
-        // This will rotate with the edge perspective (no billboard mode)
-        const radius = length / 2;
+    // Helper to create a circular texture with anti-aliasing (white circle on transparent background)
+    private static createCircleTextureData(size: number): Uint8Array {
+        const data = new Uint8Array(size * size * 4);
+        const center = size / 2;
+        const radius = (size / 2) - 1; // Leave 1 pixel margin for anti-aliasing
 
-        const mesh = MeshBuilder.CreateCylinder(
-            "dot-arrow",
-            {
-                diameter: radius * 2,
-                height: 0.01, // Very thin disc (nearly 2D)
-                tessellation: 32, // Smooth circle
-            },
-            scene,
-        );
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+                const dx = (x - center) + 0.5;
+                const dy = (y - center) + 0.5;
+                const distance = Math.sqrt((dx * dx) + (dy * dy));
+                const index = ((y * size) + x) * 4;
 
-        // Create material with the specified color
-        const material = new StandardMaterial("dot-arrow-mat", scene);
-        material.diffuseColor = Color3.FromHexString(color);
-        material.emissiveColor = Color3.FromHexString(color); // Self-illuminated like GreasedLine
-        material.disableLighting = true; // Match GreasedLine's unlit appearance
-        material.backFaceCulling = false; // Visible from both sides
+                // Anti-aliased edge: smooth transition over 1.5 pixels
+                let alpha = 255;
+                if (distance > radius) {
+                    const edgeDistance = distance - radius;
+                    if (edgeDistance < 1.5) {
+                        // Smooth falloff for anti-aliasing
+                        alpha = Math.max(0, Math.min(255, 255 * (1.5 - edgeDistance) / 1.5));
+                    } else {
+                        alpha = 0;
+                    }
+                }
 
-        mesh.material = material;
+                data[index] = 255; // R
+                data[index + 1] = 255; // G
+                data[index + 2] = 255; // B
+                data[index + 3] = alpha; // A (anti-aliased)
+            }
+        }
 
-        // Rotate to face along Z axis (default cylinder is along Y axis)
-        // This matches the orientation that edge arrows use
-        mesh.rotation.x = Math.PI / 2;
-
-        return mesh;
+        return data;
     }
 
     // Open-dot arrow - creates a circle outline using GreasedLine
@@ -409,8 +556,8 @@ export class EdgeMesh {
         );
 
         // Ensure material color is set correctly for instancing
-        const material = mesh.material as StandardMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as StandardMaterial;
             const colorObj = Color3.FromHexString(color);
             material.diffuseColor = colorObj;
             material.emissiveColor = colorObj;
@@ -462,8 +609,8 @@ export class EdgeMesh {
         );
 
         // Ensure material color is set correctly for instancing
-        const material = mesh.material as StandardMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as StandardMaterial;
             const colorObj = Color3.FromHexString(color);
             material.diffuseColor = colorObj;
             material.emissiveColor = colorObj;
@@ -503,8 +650,8 @@ export class EdgeMesh {
         );
 
         // Ensure material color is set correctly for instancing
-        const material = mesh.material as StandardMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as StandardMaterial;
             const colorObj = Color3.FromHexString(color);
             material.diffuseColor = colorObj;
             material.emissiveColor = colorObj;
