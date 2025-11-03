@@ -327,34 +327,9 @@ export class Edge {
                     }
                     lineEndPoint = dstSurfacePoint.subtract(direction.scale(arrowLength));
 
-                    if (arrowType === "dot") {
-                        // Orient dot arrow with cylindrical billboarding (like GreasedLine)
-                        // GreasedLine uses camera's up vector projected onto edge-perpendicular plane
-                        const scene = (this.parentGraph as any).scene;
-                        const camera = scene?.activeCamera;
-                        if (camera) {
-                            // Use camera's up vector as reference (this is what GreasedLine does)
-                            const cameraUp = camera.upVector || Vector3.Up();
-
-                            // Project camera up onto plane perpendicular to edge direction
-                            const dotProd = Vector3.Dot(cameraUp, direction);
-                            const perpendicular = cameraUp.subtract(direction.scale(dotProd));
-
-                            // Handle edge case where camera up is parallel to edge
-                            const fallbackUp = Math.abs(direction.x) > 0.999 ? Vector3.Up() : Vector3.Right();
-                            const up = perpendicular.length() < 0.01 ?
-                                Vector3.Cross(direction, fallbackUp).normalize() : perpendicular.normalize();
-
-                            // Create rotation: right=edge, forward=perpendicular to edge
-                            const right = direction;
-                            const forward = up;
-                            const actualUp = Vector3.Cross(forward, right).normalize();
-
-                            const rotationQuat = Quaternion.RotationQuaternionFromAxis(right, actualUp, forward);
-                            this.arrowMesh.rotationQuaternion = rotationQuat;
-                        }
-                    } else {
+                    if (arrowType !== "dot") {
                         // Rotate tip-based arrows to point along edge direction
+                        // Dot arrows use billboard mode and don't need rotation
                         this.arrowMesh.lookAt(this.dstNode.mesh.position);
                     }
                 }
@@ -400,34 +375,9 @@ export class Edge {
                     this.arrowMesh.position = dstPoint;
                 }
 
-                if (arrowType === "dot") {
-                    // Orient dot arrow with cylindrical billboarding (like GreasedLine)
-                    // GreasedLine uses camera's up vector projected onto edge-perpendicular plane
-                    const scene = (this.parentGraph as any).scene;
-                    const camera = scene?.activeCamera;
-                    if (camera) {
-                        // Use camera's up vector as reference (this is what GreasedLine does)
-                        const cameraUp = camera.upVector || Vector3.Up();
-
-                        // Project camera up onto plane perpendicular to edge direction
-                        const dotProd = Vector3.Dot(cameraUp, direction);
-                        const perpendicular = cameraUp.subtract(direction.scale(dotProd));
-
-                        // Handle edge case where camera up is parallel to edge
-                        const fallbackUp = Math.abs(direction.x) > 0.999 ? Vector3.Up() : Vector3.Right();
-                        const up = perpendicular.length() < 0.01 ?
-                            Vector3.Cross(direction, fallbackUp).normalize() : perpendicular.normalize();
-
-                        // Create rotation: right=edge, forward=perpendicular to edge
-                        const right = direction;
-                        const forward = up;
-                        const actualUp = Vector3.Cross(forward, right).normalize();
-
-                        const rotationQuat = Quaternion.RotationQuaternionFromAxis(right, actualUp, forward);
-                        this.arrowMesh.rotationQuaternion = rotationQuat;
-                    }
-                } else {
+                if (arrowType !== "dot") {
                     // Rotate tip-based arrows to point along edge direction
+                    // Dot arrows use billboard mode and don't need rotation
                     this.arrowMesh.lookAt(this.dstNode.mesh.position);
                 }
             }

@@ -428,8 +428,8 @@ void main() {
 
         mesh.material = shaderMaterial;
 
-        // No billboard mode - mesh will be oriented in Edge.ts to align with edge direction
-        // This makes it appear circular from front, oval/thin from side (like GreasedLine continuation)
+        // Enable billboard mode so the dot always faces the camera (like GreasedLine screen-space behavior)
+        mesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
         // Scale mesh to match arrow size
         // Quad is 2 units wide (-1 to +1), so scale by radius to get correct size
