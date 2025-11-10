@@ -415,7 +415,7 @@ export class Edge {
                 const direction = fallbackDst.subtract(fallbackSrc).normalize();
 
                 // DEBUG: Log node positions and calculated direction
-                console.log(`Edge: src=(${fallbackSrc.x.toFixed(3)}, ${fallbackSrc.y.toFixed(3)}, ${fallbackSrc.z.toFixed(3)}), dst=(${fallbackDst.x.toFixed(3)}, ${fallbackDst.y.toFixed(3)}, ${fallbackDst.z.toFixed(3)}), dir=(${direction.x.toFixed(3)}, ${direction.y.toFixed(3)}, ${direction.z.toFixed(3)})`);
+                // console.log(`Edge: src=(${fallbackSrc.x.toFixed(3)}, ${fallbackSrc.y.toFixed(3)}, ${fallbackSrc.z.toFixed(3)}), dst=(${fallbackDst.x.toFixed(3)}, ${fallbackDst.y.toFixed(3)}, ${fallbackDst.z.toFixed(3)}), dir=(${direction.x.toFixed(3)}, ${direction.y.toFixed(3)}, ${direction.z.toFixed(3)})`);
 
                 // Get arrow length (including size multiplier)
                 const style = Styles.getStyleForEdgeStyleId(this.styleId);

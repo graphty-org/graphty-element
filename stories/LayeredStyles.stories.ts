@@ -53,8 +53,8 @@ export const TwoLayerNodeColors: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {texture: {color: "red"}}}},
-                {node: {selector: "type == 'secondary'", style: {texture: {color: "blue"}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, texture: {color: "red"}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, texture: {color: "blue"}}}},
             ],
         }),
     },
@@ -69,8 +69,8 @@ export const ShapeAndColorLayers: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {shape: {type: "box"}}}},
-                {node: {selector: "type == 'secondary'", style: {texture: {color: "green"}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, shape: {type: "box"}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, texture: {color: "green"}}}},
             ],
         }),
     },
@@ -86,9 +86,9 @@ export const ThreeLayerSizes: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "id == 'A'", style: {shape: {size: 2}}}},
-                {node: {selector: "id == 'B' || id == 'C'", style: {shape: {size: 1.5}}}},
-                {node: {selector: "id == 'E'", style: {shape: {size: 0.5}}}},
+                {node: {selector: "id == 'A'", style: {enabled: true, shape: {size: 2}}}},
+                {node: {selector: "id == 'B' || id == 'C'", style: {enabled: true, shape: {size: 1.5}}}},
+                {node: {selector: "id == 'E'", style: {enabled: true, shape: {size: 0.5}}}},
             ],
         }),
     },
@@ -103,8 +103,8 @@ export const EdgeWidthLayers: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {edge: {selector: "weight == `1`", style: {line: {width: 0.1}}}},
-                {edge: {selector: "weight == `2`", style: {line: {width: 0.5}}}},
+                {edge: {selector: "weight == `1`", style: {enabled: true, line: {width: 0.1}}}},
+                {edge: {selector: "weight == `2`", style: {enabled: true, line: {width: 0.5}}}},
             ],
         }),
     },
@@ -120,9 +120,9 @@ export const ArrowHeadStyles: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {edge: {selector: "weight == `1`", style: {arrowHead: {type: "sphere-dot", size: 1.5}}}},
-                {edge: {selector: "weight == `2`", style: {arrowHead: {type: "diamond", size: 1.5}}}},
-                {edge: {selector: "", style: {arrowHead: {color: "yellow"}}}},
+                {edge: {selector: "weight == `1`", style: {enabled: true, arrowHead: {type: "sphere-dot", size: 1.5, color: "white", opacity: 1}}}},
+                {edge: {selector: "weight == `2`", style: {enabled: true, arrowHead: {type: "diamond", size: 1.5, color: "white", opacity: 1}}}},
+                {edge: {selector: "", style: {enabled: true, arrowHead: {type: "normal", size: 1, color: "yellow", opacity: 1}}}},
             ],
         }),
     },
@@ -139,10 +139,10 @@ export const MixedNodeProperties: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {texture: {color: "red"}}}},
-                {node: {selector: "type == 'secondary'", style: {texture: {color: "blue"}}}},
-                {node: {selector: "type == 'tertiary'", style: {texture: {color: "yellow"}, shape: {type: "cylinder"}}}},
-                {node: {selector: "id == 'A'", style: {shape: {size: 2.5}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, texture: {color: "red"}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, texture: {color: "blue"}}}},
+                {node: {selector: "type == 'tertiary'", style: {enabled: true, texture: {color: "yellow"}, shape: {type: "cylinder"}}}},
+                {node: {selector: "id == 'A'", style: {enabled: true, shape: {size: 2.5}}}},
             ],
         }),
     },
@@ -157,8 +157,8 @@ export const EdgeColorVariations: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {edge: {selector: "weight == `1`", style: {line: {color: "green"}, arrowHead: {color: "green"}}}},
-                {edge: {selector: "weight == `2`", style: {line: {color: "red"}, arrowHead: {color: "red"}}}},
+                {edge: {selector: "weight == `1`", style: {enabled: true, line: {color: "green"}, arrowHead: {type: "normal", size: 1, color: "green", opacity: 1}}}},
+                {edge: {selector: "weight == `2`", style: {enabled: true, line: {color: "red"}, arrowHead: {type: "normal", size: 1, color: "red", opacity: 1}}}},
             ],
         }),
     },
@@ -174,9 +174,9 @@ export const OpacityLayers: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "id == 'A'", style: {texture: {color: {colorType: "solid", value: "#FF0000", opacity: 0.3}}}}},
-                {node: {selector: "id == 'B' || id == 'C'", style: {texture: {color: {colorType: "solid", value: "#00FF00", opacity: 0.6}}}}},
-                {node: {selector: "id == 'D' || id == 'E'", style: {texture: {color: {colorType: "solid", value: "#0000FF", opacity: 0.9}}}}},
+                {node: {selector: "id == 'A'", style: {enabled: true, texture: {color: {colorType: "solid", value: "#FF0000", opacity: 0.3}}}}},
+                {node: {selector: "id == 'B' || id == 'C'", style: {enabled: true, texture: {color: {colorType: "solid", value: "#00FF00", opacity: 0.6}}}}},
+                {node: {selector: "id == 'D' || id == 'E'", style: {enabled: true, texture: {color: {colorType: "solid", value: "#0000FF", opacity: 0.9}}}}},
             ],
         }),
     },
@@ -191,8 +191,8 @@ export const WireframeEffectLayers: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {effect: {wireframe: true}, texture: {color: "red"}}}},
-                {node: {selector: "type == 'secondary'", style: {texture: {color: "blue"}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, effect: {wireframe: true}, texture: {color: "red"}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, texture: {color: "blue"}}}},
             ],
         }),
     },
@@ -209,10 +209,10 @@ export const ComplexMultiProperty: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "", style: {texture: {color: "green"}, shape: {size: 1}}}},
-                {node: {selector: "type == 'primary'", style: {texture: {color: "red"}}}},
-                {node: {selector: "id == 'A'", style: {shape: {type: "box", size: 2}}}},
-                {node: {selector: "type == 'secondary'", style: {shape: {type: "sphere"}}}},
+                {node: {selector: "", style: {enabled: true, texture: {color: "green"}, shape: {size: 1}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, texture: {color: "red"}}}},
+                {node: {selector: "id == 'A'", style: {enabled: true, shape: {type: "box", size: 2}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, shape: {type: "sphere"}}}},
             ],
         }),
     },

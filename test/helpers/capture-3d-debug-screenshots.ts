@@ -23,6 +23,8 @@
  *   --axes    Enable BabylonJS AxesViewer to show coordinate system
  */
 
+/* eslint-disable no-console */
+
 import {resolve} from "path";
 import {chromium} from "playwright";
 
