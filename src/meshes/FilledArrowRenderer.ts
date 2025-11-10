@@ -4,15 +4,14 @@ import {
     Mesh,
     Scene,
     ShaderMaterial,
-    Vector2,
     Vector3,
     VertexData,
 } from "@babylonjs/core";
 
 export interface FilledArrowOptions {
-    size: number;           // Screen-space size in pixels
-    color: string;          // Hex color
-    opacity?: number;       // 0-1
+    size: number; // Screen-space size in pixels
+    color: string; // Hex color
+    opacity?: number; // 0-1
 }
 
 /**
@@ -26,6 +25,7 @@ export interface FilledArrowOptions {
  * - Uniform scaling shader (not perpendicular expansion)
  * - Screen-space sizing formula matches CustomLineRenderer exactly
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Utility class with static state for shader registration
 export class FilledArrowRenderer {
     private static shadersRegistered = false;
 
@@ -133,7 +133,7 @@ void main() {
      */
     static createTriangle(
         inverted: boolean,
-        scene: Scene
+        scene: Scene,
     ): Mesh {
         const mesh = new Mesh("filled-triangle-arrow", scene);
 
@@ -149,12 +149,18 @@ void main() {
         // XZ plane (normal in Y), pointing along X axis
         // Y=0 so the face normal points in ±Y, which maps to 'up' (toward camera)
         const positions = [
-            tip, 0, 0,              // Tip at origin
-            base, 0, -width/2,      // Bottom corner (at base)
-            base, 0, width/2,       // Top corner (at base)
+            tip,
+            0,
+            0, // Tip at origin
+            base,
+            0,
+            -width / 2, // Bottom corner (at base)
+            base,
+            0,
+            width / 2, // Top corner (at base)
         ];
 
-        const indices = [0, 1, 2];  // One triangle
+        const indices = [0, 1, 2]; // One triangle
 
         const vertexData = new VertexData();
         vertexData.positions = positions;
@@ -183,15 +189,27 @@ void main() {
         // This allows positionOffset: 0 to place front tip exactly at sphere surface
         // XZ plane (normal in Y) so face points toward camera
         const positions = [
-            0, 0, 0,                // Front tip at origin
-            -length/2, 0, width/2,  // Top (at middle)
-            -length, 0, 0,          // Back tip
-            -length/2, 0, -width/2, // Bottom (at middle)
+            0,
+            0,
+            0, // Front tip at origin
+            -length / 2,
+            0,
+            width / 2, // Top (at middle)
+            -length,
+            0,
+            0, // Back tip
+            -length / 2,
+            0,
+            -width / 2, // Bottom (at middle)
         ];
 
         const indices = [
-            0, 1, 2,  // Top half
-            0, 2, 3,  // Bottom half
+            0,
+            1,
+            2, // Top half
+            0,
+            2,
+            3, // Bottom half
         ];
 
         const vertexData = new VertexData();
@@ -223,15 +241,27 @@ void main() {
         // This allows positionOffset: 0 to place front edge exactly at sphere surface
         // XZ plane (normal in Y) so face points toward camera
         const positions = [
-            -length, 0, halfWidth,   // Top-left (back)
-            0, 0, halfWidth,         // Top-right at origin (front)
-            0, 0, -halfWidth,        // Bottom-right at origin (front)
-            -length, 0, -halfWidth,  // Bottom-left (back)
+            -length,
+            0,
+            halfWidth, // Top-left (back)
+            0,
+            0,
+            halfWidth, // Top-right at origin (front)
+            0,
+            0,
+            -halfWidth, // Bottom-right at origin (front)
+            -length,
+            0,
+            -halfWidth, // Bottom-left (back)
         ];
 
         const indices = [
-            0, 1, 2,  // First triangle
-            0, 2, 3,  // Second triangle
+            0,
+            1,
+            2, // First triangle
+            0,
+            2,
+            3, // Second triangle
         ];
 
         const vertexData = new VertexData();
@@ -251,13 +281,13 @@ void main() {
      * @param scene Babylon.js scene
      * @param segments Number of segments for circle smoothness (default: 32)
      */
-    static createCircle(scene: Scene, segments: number = 32): Mesh {
+    static createCircle(scene: Scene, segments = 32): Mesh {
         const mesh = new Mesh("filled-circle-arrow", scene);
 
         // Normalized radius
-        const radius = 0.4;  // Smaller than other shapes for "dot" appearance
+        const radius = 0.4; // Smaller than other shapes for "dot" appearance
 
-        const positions: number[] = [0, 0, 0];  // Center point
+        const positions: number[] = [0, 0, 0]; // Center point
         const indices: number[] = [];
 
         // Generate circle vertices in YZ plane (perpendicular to line direction)
@@ -265,18 +295,18 @@ void main() {
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             positions.push(
-                0,                         // X = 0 (no extent along line)
-                Math.cos(angle) * radius,  // Y → up (toward camera)
-                Math.sin(angle) * radius   // Z → right (perpendicular)
+                0, // X = 0 (no extent along line)
+                Math.cos(angle) * radius, // Y → up (toward camera)
+                Math.sin(angle) * radius, // Z → right (perpendicular)
             );
         }
 
         // Generate triangle fan indices
         for (let i = 1; i <= segments; i++) {
             indices.push(
-                0,          // Center
-                i,          // Current point
-                i + 1       // Next point
+                0, // Center
+                i, // Current point
+                i + 1, // Next point
             );
         }
 
@@ -319,7 +349,7 @@ void main() {
                     "opacity",
                 ],
                 defines: ["#define THIN_INSTANCES"], // Enable thin instancing
-            }
+            },
         );
 
         // Set uniforms

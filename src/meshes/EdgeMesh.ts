@@ -243,14 +243,16 @@ void main() {
             let mesh: Mesh;
 
             // Route to appropriate renderer based on arrow type
-            if (FILLED_ARROWS.includes(options.type ?? "")) {
+            const arrowType = options.type ?? "";
+
+            if (FILLED_ARROWS.includes(arrowType)) {
                 // Filled arrows: Use FilledArrowRenderer with thin instances
                 // lineDirection passed per-instance when creating thin instances
-                mesh = this.createFilledArrow(options.type!, length, width, options.color, opacity, scene);
-            } else if (OUTLINE_ARROWS.includes(options.type ?? "")) {
+                mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
+            } else if (OUTLINE_ARROWS.includes(arrowType)) {
                 // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-                mesh = this.createOutlineArrow(options.type!, length, width, options.color, scene);
-            } else if (BILLBOARD_ARROWS.includes(options.type ?? "")) {
+                mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
+            } else if (BILLBOARD_ARROWS.includes(arrowType)) {
                 // 3D billboard arrows: Use existing sphere-based implementation
                 switch (options.type) {
                     case "open-dot":
@@ -294,6 +296,7 @@ void main() {
                 baseMesh.position.set(0, -10000, 0);
                 cache.meshCacheMap.set(cacheKey, baseMesh);
             }
+
             return baseMesh; // Return base mesh, not an instance
         }
 
@@ -404,6 +407,7 @@ void main() {
 
     private static createStaticLine(options: EdgeMeshOptions, style: EdgeStyleConfig, scene: Scene): Mesh {
         // Use custom line renderer if flag is enabled
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Feature flag for toggling renderer implementation
         if (this.USE_CUSTOM_RENDERER) {
             const points = [
                 new Vector3(
@@ -1106,10 +1110,10 @@ void main() {
 
     // Helper function similar to GetArrowCap but for vee shape
     // Creates geometry for a 90-degree V matching normal arrow dimensions
-    private static getVeeCap(length: number, width: number) {
+    private static getVeeCap(length: number, width: number): VertexData {
         // Calculate side length matching normal arrow (from tip to base corner)
         // Normal arrow: tip at (0,0,0), base corners at (±width/2, 0, -length)
-        const sideLength = Math.sqrt((width / 2) ** 2 + length ** 2);
+        const sideLength = Math.sqrt(((width / 2) ** 2) + (length ** 2));
 
         // For 90-degree angle between arms, each arm at 45° from center axis
         // Left arm direction: (-1, 0, -1) normalized = (-0.707, 0, -0.707)
@@ -1119,18 +1123,24 @@ void main() {
         // Each arm extends sideLength units from tip
         const component = sideLength * Math.SQRT1_2; // ≈ 0.7071
 
-        const points = [
+        const positions = [
             // Left arm endpoint at 45° angle
-            new Vector3(-component, 0, -component),
+            -component,
+            0,
+            -component,
             // Tip at surface
-            new Vector3(0, 0, 0),
+            0,
+            0,
+            0,
             // Right arm endpoint at 45° angle
-            new Vector3(component, 0, -component),
+            component,
+            0,
+            -component,
         ];
 
-        return {
-            points,
-        };
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        return vertexData;
     }
 
     // Vee arrow - shader-based billboard approach for consistent appearance

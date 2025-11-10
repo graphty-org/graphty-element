@@ -1,6 +1,7 @@
 // WORKAROUND: Import InstancedMesh side-effect first
 // See: https://github.com/graphty-org/graphty-element/issues/54
 import "@babylonjs/core/Meshes/instancedMesh";
+
 import {InstancedMesh, Mesh} from "@babylonjs/core";
 
 import type {NodeStyleId} from "../Styles";

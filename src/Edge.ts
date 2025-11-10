@@ -47,9 +47,9 @@ export class Edge {
     data: AdHocData;
     mesh: AbstractMesh;
     arrowMesh: AbstractMesh | null = null;
-    arrowMeshInstanceIndex: number = -1; // Thin instance index for filled arrows
+    arrowMeshInstanceIndex = -1; // Thin instance index for filled arrows
     arrowTailMesh: AbstractMesh | null = null;
-    arrowTailMeshInstanceIndex: number = -1; // Thin instance index for filled arrow tails
+    arrowTailMeshInstanceIndex = -1; // Thin instance index for filled arrow tails
     styleId: EdgeStyleId;
     // XXX: performance impact when not needed?
     ray: Ray;
@@ -157,7 +157,7 @@ export class Edge {
         // If this is a filled arrow (uses thin instances), create an instance
         if (this.arrowMesh && this.isFilledArrow(style.arrowHead?.type)) {
             // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ('thinInstanceAdd' in this.arrowMesh) {
+            if ("thinInstanceAdd" in this.arrowMesh) {
                 this.arrowMeshInstanceIndex = (this.arrowMesh as Mesh).thinInstanceAdd(Matrix.Identity());
             }
         }
@@ -179,7 +179,7 @@ export class Edge {
         // If this is a filled arrow (uses thin instances), create an instance
         if (this.arrowTailMesh && this.isFilledArrow(style.arrowTail?.type)) {
             // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ('thinInstanceAdd' in this.arrowTailMesh) {
+            if ("thinInstanceAdd" in this.arrowTailMesh) {
                 this.arrowTailMeshInstanceIndex = (this.arrowTailMesh as Mesh).thinInstanceAdd(Matrix.Identity());
             }
         }
@@ -284,7 +284,7 @@ export class Edge {
         // If new arrow is filled, create thin instance
         if (this.arrowMesh && this.isFilledArrow(style.arrowHead?.type)) {
             // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ('thinInstanceAdd' in this.arrowMesh) {
+            if ("thinInstanceAdd" in this.arrowMesh) {
                 this.arrowMeshInstanceIndex = (this.arrowMesh as Mesh).thinInstanceAdd(Matrix.Identity());
             }
         }
@@ -320,7 +320,7 @@ export class Edge {
         // If new arrow tail is filled, create thin instance
         if (this.arrowTailMesh && this.isFilledArrow(style.arrowTail?.type)) {
             // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ('thinInstanceAdd' in this.arrowTailMesh) {
+            if ("thinInstanceAdd" in this.arrowTailMesh) {
                 this.arrowTailMeshInstanceIndex = (this.arrowTailMesh as Mesh).thinInstanceAdd(Matrix.Identity());
             }
         }
@@ -476,7 +476,7 @@ export class Edge {
                         const angleZ = Math.atan2(direction.y, direction.x);
 
                         // Y rotation: tilt forward/back to match edge depth
-                        const horizontalDist = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+                        const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
                         const angleY = -Math.atan2(direction.z, horizontalDist);
 
                         // Apply rotations
@@ -535,7 +535,7 @@ export class Edge {
                     const angleZ = Math.atan2(direction.y, direction.x);
 
                     // Y rotation: tilt forward/back to match edge depth
-                    const horizontalDist = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+                    const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
                     const angleY = -Math.atan2(direction.z, horizontalDist);
 
                     // Apply rotations
@@ -599,7 +599,7 @@ export class Edge {
                             const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
 
                             // Y rotation: tilt forward/back to match edge depth
-                            const horizontalDist = Math.sqrt(reversedDirection.x * reversedDirection.x + reversedDirection.y * reversedDirection.y);
+                            const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
                             const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
 
                             // Apply rotations

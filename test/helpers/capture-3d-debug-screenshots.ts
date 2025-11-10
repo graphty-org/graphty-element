@@ -23,8 +23,8 @@
  *   --axes    Enable BabylonJS AxesViewer to show coordinate system
  */
 
-import { chromium } from "playwright";
-import { resolve } from "path";
+import {resolve} from "path";
+import {chromium} from "playwright";
 
 const STORYBOOK_URL = "http://dev.ato.ms:9025";
 const TMP_DIR = resolve(process.cwd(), "tmp");
@@ -32,8 +32,8 @@ const TMP_DIR = resolve(process.cwd(), "tmp");
 interface CameraPosition {
     name: string;
     description: string;
-    alpha: number;  // Horizontal rotation (in radians)
-    beta: number;   // Vertical rotation (in radians)
+    alpha: number; // Horizontal rotation (in radians)
+    beta: number; // Vertical rotation (in radians)
     radius: number; // Distance from target
 }
 
@@ -52,29 +52,29 @@ const getCameraPositions = (): CameraPosition[] => {
         {
             name: "left",
             description: "Left side view looking at origin",
-            alpha: Math.PI / 2,  // 90 degrees
-            beta: Math.PI / 2,   // Horizontal, at equator
+            alpha: Math.PI / 2, // 90 degrees
+            beta: Math.PI / 2, // Horizontal, at equator
             radius: 10,
         },
         {
             name: "top",
             description: "Top-down view looking at origin",
             alpha: 0,
-            beta: 0.1,  // Almost directly above (slight offset to avoid gimbal lock)
+            beta: 0.1, // Almost directly above (slight offset to avoid gimbal lock)
             radius: 10,
         },
         {
             name: "top-left-1",
             description: "Halfway between top and left (closer to top)",
-            alpha: Math.PI / 4,   // 45 degrees
-            beta: Math.PI / 6,    // 30 degrees from top
+            alpha: Math.PI / 4, // 45 degrees
+            beta: Math.PI / 6, // 30 degrees from top
             radius: 10,
         },
         {
             name: "top-left-2",
             description: "Halfway between top and left (closer to left)",
-            alpha: Math.PI / 4,   // 45 degrees
-            beta: Math.PI / 3,    // 60 degrees from top
+            alpha: Math.PI / 4, // 45 degrees
+            beta: Math.PI / 3, // 60 degrees from top
             radius: 10,
         },
     ];
@@ -84,9 +84,23 @@ const getCameraPositions = (): CameraPosition[] => {
  * Setup camera position using mouse/keyboard controls
  * This works WITH the camera control system instead of fighting against it
  */
+interface PageLike {
+    locator: (selector: string) => {
+        boundingBox: () => Promise<{x: number, y: number, width: number, height: number} | null>;
+        screenshot: (options: {path: string}) => Promise<unknown>;
+    };
+    mouse: {
+        move: (x: number, y: number, options?: {steps?: number}) => Promise<void>;
+        down: () => Promise<void>;
+        up: () => Promise<void>;
+    };
+    waitForTimeout: (ms: number) => Promise<void>;
+    evaluate: (fn: () => void) => Promise<void>;
+}
+
 async function setupCamera(
-    page: any,
-    position: CameraPosition
+    page: PageLike,
+    position: CameraPosition,
 ): Promise<void> {
     // Skip if this is the "start" position - use default camera
     if (isNaN(position.alpha)) {
@@ -94,7 +108,7 @@ async function setupCamera(
     }
 
     // Get canvas element and its bounding box
-    const canvas = await page.locator('canvas');
+    const canvas = page.locator("canvas");
     const box = await canvas.boundingBox();
 
     if (!box) {
@@ -102,8 +116,8 @@ async function setupCamera(
     }
 
     // Calculate center of canvas
-    const centerX = box.x + box.width / 2;
-    const centerY = box.y + box.height / 2;
+    const centerX = box.x + (box.width / 2);
+    const centerY = box.y + (box.height / 2);
 
     // Use mouse drag to rotate camera
     // Dragging horizontally changes alpha (horizontal rotation)
@@ -135,7 +149,7 @@ async function setupCamera(
     // Perform the drag operation
     await page.mouse.move(centerX, centerY);
     await page.mouse.down();
-    await page.mouse.move(centerX + dragX, centerY + dragY, { steps: 20 });
+    await page.mouse.move(centerX + dragX, centerY + dragY, {steps: 20});
     await page.mouse.up();
 
     // Wait for camera to settle
@@ -145,15 +159,16 @@ async function setupCamera(
 /**
  * Enable axes viewer at the origin
  */
-async function enableAxesViewer(page: any): Promise<void> {
+async function enableAxesViewer(page: PageLike): Promise<void> {
     await page.evaluate(() => {
-        const graphty = document.querySelector("graphty-element") as any;
-        if (!graphty || !graphty.graph) {
+        const elem = document.querySelector("graphty-element");
+        const graphty = elem as {graph: {scene: {metadata?: {axesViewer?: {dispose: () => void}}, render: () => void}}} | null;
+        if (!graphty?.graph) {
             console.error("Graph not found");
             return;
         }
 
-        const scene = graphty.graph.scene;
+        const {scene} = graphty.graph;
 
         // Remove any existing axes viewer
         if (scene.metadata?.axesViewer) {
@@ -162,35 +177,44 @@ async function enableAxesViewer(page: any): Promise<void> {
 
         // Create AxesViewer using global BABYLON namespace
         // Size 5 makes axes visible but not too large
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
         const axes = new (window as any).BABYLON.AxesViewer(scene, 5);
 
         // Make the colors bright and vivid (graphty-element's scene settings can wash out colors)
         // Set both emissive and diffuse colors to full brightness
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Private BabylonJS internal API
         axes._xAxis.getChildMeshes().forEach((mesh: any) => {
             if (mesh.material) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.emissiveColor = new (window as any).BABYLON.Color3(1, 0, 0); // Bright red
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.diffuseColor = new (window as any).BABYLON.Color3(1, 0, 0);
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Private BabylonJS internal API
         axes._yAxis.getChildMeshes().forEach((mesh: any) => {
             if (mesh.material) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.emissiveColor = new (window as any).BABYLON.Color3(0, 1, 0); // Bright green
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.diffuseColor = new (window as any).BABYLON.Color3(0, 1, 0);
             }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Private BabylonJS internal API
         axes._zAxis.getChildMeshes().forEach((mesh: any) => {
             if (mesh.material) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.emissiveColor = new (window as any).BABYLON.Color3(0, 0, 1); // Bright blue
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Browser context accessing global BABYLON namespace
                 mesh.material.diffuseColor = new (window as any).BABYLON.Color3(0, 0, 1);
             }
         });
 
         // Store reference
-        if (!scene.metadata) {
-            scene.metadata = {};
-        }
+        scene.metadata ??= {};
+
         scene.metadata.axesViewer = axes;
 
         // Force render
@@ -212,8 +236,8 @@ function getTimestamp(): string {
 /**
  * Main capture function
  */
-async function captureScreenshots(storyId: string, showAxes: boolean = false) {
-    const browser = await chromium.launch({ headless: true });
+async function captureScreenshots(storyId: string, showAxes = false): Promise<void> {
+    const browser = await chromium.launch({headless: true});
     const page = await browser.newPage();
 
     try {
@@ -223,7 +247,7 @@ async function captureScreenshots(storyId: string, showAxes: boolean = false) {
         await page.goto(storyUrl);
 
         // Wait for the component to load and render
-        await page.waitForSelector("graphty-element", { timeout: 10000 });
+        await page.waitForSelector("graphty-element", {timeout: 10000});
         console.log("Component loaded");
 
         // Wait for initial render to complete
@@ -249,7 +273,7 @@ async function captureScreenshots(storyId: string, showAxes: boolean = false) {
             const screenshotPath = resolve(TMP_DIR, filename);
 
             // Screenshot the canvas element specifically
-            const canvas = await page.locator('canvas');
+            const canvas = page.locator("canvas");
             await canvas.screenshot({
                 path: screenshotPath,
             });
@@ -263,7 +287,6 @@ async function captureScreenshots(storyId: string, showAxes: boolean = false) {
         console.log("1. Review images in tmp/ directory");
         console.log("2. Use Nanobanana MCP to analyze images for debugging");
         console.log("   Example: Ask Claude to analyze the screenshots with nanobanana");
-
     } catch (error) {
         console.error("Error:", error);
         throw error;
@@ -275,7 +298,7 @@ async function captureScreenshots(storyId: string, showAxes: boolean = false) {
 /**
  * Parse command line arguments and run
  */
-async function main() {
+async function main(): Promise<void> {
     const args = process.argv.slice(2);
 
     if (args.length === 0 || args.includes("--help") || args.includes("-h")) {

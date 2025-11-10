@@ -227,8 +227,8 @@ export const LabelEnabledLayers: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {label: {enabled: true, textPath: "id"}}}},
-                {node: {selector: "id == 'E'", style: {label: {enabled: true, textPath: "id", textColor: "red"}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, label: {enabled: true, textPath: "id"}}}},
+                {node: {selector: "id == 'E'", style: {enabled: true, label: {enabled: true, textPath: "id", textColor: "red"}}}},
             ],
         }),
     },
@@ -244,9 +244,9 @@ export const ArrowSizeVariations: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {edge: {selector: "weight == `1`", style: {arrowHead: {size: 0.5}}}},
-                {edge: {selector: "weight == `2`", style: {arrowHead: {size: 2.0}}}},
-                {edge: {selector: "src == 'A'", style: {line: {color: "purple"}, arrowHead: {color: "purple"}}}},
+                {edge: {selector: "weight == `1`", style: {enabled: true, arrowHead: {type: "normal", size: 0.5, color: "white", opacity: 1}}}},
+                {edge: {selector: "weight == `2`", style: {enabled: true, arrowHead: {type: "normal", size: 2.0, color: "white", opacity: 1}}}},
+                {edge: {selector: "src == 'A'", style: {enabled: true, line: {color: "purple"}, arrowHead: {type: "normal", size: 1, color: "purple", opacity: 1}}}},
             ],
         }),
     },
@@ -261,8 +261,8 @@ export const ShapeVariationsWithColor: Story = {
     args: {
         styleTemplate: templateCreator({
             layers: [
-                {node: {selector: "type == 'primary'", style: {shape: {type: "tetrahedron"}, texture: {color: "red"}}}},
-                {node: {selector: "type == 'secondary'", style: {shape: {type: "octahedron"}, texture: {color: "blue"}}}},
+                {node: {selector: "type == 'primary'", style: {enabled: true, shape: {type: "tetrahedron"}, texture: {color: "red"}}}},
+                {node: {selector: "type == 'secondary'", style: {enabled: true, shape: {type: "octahedron"}, texture: {color: "blue"}}}},
             ],
         }),
     },
@@ -299,13 +299,13 @@ export const AxisAlignedColoredSpheres: Story = {
         styleTemplate: templateCreator({
             layers: [
                 // Origin: tiny black sphere
-                {node: {selector: "id == 'origin'", style: {shape: {size: 0.5}, texture: {color: "black"}}}},
+                {node: {selector: "id == 'origin'", style: {enabled: true, shape: {size: 0.5}, texture: {color: "black"}}}},
                 // X-axis: large red sphere
-                {node: {selector: "id == 'x-axis'", style: {shape: {size: 1.5}, texture: {color: "red"}}}},
+                {node: {selector: "id == 'x-axis'", style: {enabled: true, shape: {size: 1.5}, texture: {color: "red"}}}},
                 // Y-axis: large green sphere
-                {node: {selector: "id == 'y-axis'", style: {shape: {size: 1.5}, texture: {color: "green"}}}},
+                {node: {selector: "id == 'y-axis'", style: {enabled: true, shape: {size: 1.5}, texture: {color: "green"}}}},
                 // Z-axis: large blue sphere
-                {node: {selector: "id == 'z-axis'", style: {shape: {size: 1.5}, texture: {color: "blue"}}}},
+                {node: {selector: "id == 'z-axis'", style: {enabled: true, shape: {size: 1.5}, texture: {color: "blue"}}}},
             ],
         }),
     },

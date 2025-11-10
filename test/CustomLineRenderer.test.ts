@@ -10,7 +10,6 @@ import fc from "fast-check";
 import {assert, describe, test} from "vitest";
 
 import {CustomLineRenderer} from "../src/meshes/CustomLineRenderer";
-import type {LineGeometry} from "../src/meshes/CustomLineRenderer";
 
 describe("CustomLineRenderer Geometry Generation", () => {
     // Helper to generate random Vector3 points
@@ -80,8 +79,7 @@ describe("CustomLineRenderer Geometry Generation", () => {
                     // Check pattern: -1, +1, -1, +1, -1, +1, ...
                     for (let i = 0; i < geometry.sides.length; i++) {
                         const expectedSide = (i % 2 === 0) ? -1 : 1;
-                        assert.equal(geometry.sides[i], expectedSide,
-                            `Side at index ${i} should be ${expectedSide}`);
+                        assert.equal(geometry.sides[i], expectedSide, `Side at index ${i} should be ${expectedSide}`);
                     }
                 },
             ), {numRuns: 30});
@@ -411,9 +409,9 @@ describe("CustomLineRenderer Geometry Generation", () => {
                     const points = [];
                     for (let i = 0; i < numPoints; i++) {
                         points.push(new Vector3(
-                            start.x + direction.x * i,
-                            start.y + direction.y * i,
-                            start.z + direction.z * i,
+                            start.x + (direction.x * i),
+                            start.y + (direction.y * i),
+                            start.z + (direction.z * i),
                         ));
                     }
 

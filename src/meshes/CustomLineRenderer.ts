@@ -1,34 +1,31 @@
 import {
-    AbstractMesh,
     Color3,
     Effect,
-    Engine,
     Mesh,
     Scene,
     ShaderMaterial,
     Vector2,
     Vector3,
-    VertexBuffer,
     VertexData,
 } from "@babylonjs/core";
 
 export interface LineGeometry {
-    positions: number[];      // Vertex positions (center line)
-    directions: number[];     // Tangent directions
-    sides: number[];          // -1 or +1 for perpendicular offset
-    distances: number[];      // Cumulative distance for patterns
-    uvs: number[];            // UV coordinates
-    indices: number[];        // Triangle indices
+    positions: number[]; // Vertex positions (center line)
+    directions: number[]; // Tangent directions
+    sides: number[]; // -1 or +1 for perpendicular offset
+    distances: number[]; // Cumulative distance for patterns
+    uvs: number[]; // UV coordinates
+    indices: number[]; // Triangle indices
 }
 
 export interface CustomLineOptions {
-    points: Vector3[];        // Path points
-    width: number;            // Line width in pixels
-    color: string;            // Line color (hex)
-    opacity?: number;         // Opacity 0-1
-    pattern?: string;         // solid, dash, dot, etc.
-    dashLength?: number;      // For dash pattern
-    gapLength?: number;       // For dash pattern
+    points: Vector3[]; // Path points
+    width: number; // Line width in pixels
+    color: string; // Line color (hex)
+    opacity?: number; // Opacity 0-1
+    pattern?: string; // solid, dash, dot, etc.
+    dashLength?: number; // For dash pattern
+    gapLength?: number; // For dash pattern
 }
 
 /**
@@ -47,6 +44,7 @@ export interface CustomLineOptions {
  * - Cached geometry for static edges
  * - LOD support for distant edges
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Utility class with static state for shader registration
 export class CustomLineRenderer {
     private static shadersRegistered = false;
 
@@ -203,22 +201,24 @@ void main() {
 
             // Add start vertices (at p0)
             this.addVertexPair(
-                positions, directions, sides, distances, uvs,
-                p0, direction, cumulativeDistance
+                positions, directions, sides, distances, uvs, p0, direction, cumulativeDistance,
             );
 
             // Add end vertices (at p1)
             cumulativeDistance += segmentLength;
             this.addVertexPair(
-                positions, directions, sides, distances, uvs,
-                p1, direction, cumulativeDistance
+                positions, directions, sides, distances, uvs, p1, direction, cumulativeDistance,
             );
 
             // Add indices for two triangles forming a quad
-            const baseIndex = i * 4;  // 4 vertices per segment
+            const baseIndex = i * 4; // 4 vertices per segment
             indices.push(
-                baseIndex, baseIndex + 1, baseIndex + 2,      // First triangle
-                baseIndex + 1, baseIndex + 3, baseIndex + 2   // Second triangle
+                baseIndex,
+                baseIndex + 1,
+                baseIndex + 2, // First triangle
+                baseIndex + 1,
+                baseIndex + 3,
+                baseIndex + 2, // Second triangle
             );
         }
 
@@ -245,9 +245,9 @@ void main() {
         sides: number[],
         distances: number[],
         uvs: number[],
-        actualPosition: Vector3,  // Actual 3D position (start or end)
+        actualPosition: Vector3, // Actual 3D position (start or end)
         direction: Vector3,
-        distance: number
+        distance: number,
     ): void {
         // Left vertex (side = -1)
         positions.push(actualPosition.x, actualPosition.y, actualPosition.z);
@@ -273,7 +273,7 @@ void main() {
      */
     static create(
         options: CustomLineOptions,
-        scene: Scene
+        scene: Scene,
     ): Mesh {
         this.registerShaders();
 
@@ -319,7 +319,7 @@ void main() {
                     "gapLength",
                 ],
                 defines: ["#define INSTANCES"], // Enable instancing support
-            }
+            },
         );
 
         // Set color uniform
@@ -369,7 +369,7 @@ void main() {
         width: number,
         color: string,
         scene: Scene,
-        opacity?: number
+        opacity?: number,
     ): Mesh {
         return this.create(
             {
@@ -378,7 +378,7 @@ void main() {
                 color,
                 opacity,
             },
-            scene
+            scene,
         );
     }
 
@@ -396,16 +396,16 @@ void main() {
     static createTriangularArrowGeometry(
         length: number,
         width: number,
-        inverted: boolean
+        inverted: boolean,
     ): LineGeometry {
         const tip = inverted ? -length : length;
         const base = inverted ? 0 : 0;
 
         const points = [
-            new Vector3(0, 0, tip),              // Tip
-            new Vector3(-width/2, 0, base),      // Left corner
-            new Vector3(width/2, 0, base),       // Right corner
-            new Vector3(0, 0, tip),              // Close triangle
+            new Vector3(0, 0, tip), // Tip
+            new Vector3(-width / 2, 0, base), // Left corner
+            new Vector3(width / 2, 0, base), // Right corner
+            new Vector3(0, 0, tip), // Close triangle
         ];
 
         // Use SAME createLineGeometry as lines!
@@ -422,7 +422,7 @@ void main() {
      * @param segments Number of segments for circle smoothness (default: 32)
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
-    static createCircularDotGeometry(radius: number, segments: number = 32): LineGeometry {
+    static createCircularDotGeometry(radius: number, segments = 32): LineGeometry {
         const points: Vector3[] = [];
 
         for (let i = 0; i <= segments; i++) {
@@ -430,7 +430,7 @@ void main() {
             points.push(new Vector3(
                 Math.cos(angle) * radius,
                 Math.sin(angle) * radius,
-                0
+                0,
             ));
         }
 
@@ -448,11 +448,11 @@ void main() {
      */
     static createDiamondArrowGeometry(length: number, width: number): LineGeometry {
         const points = [
-            new Vector3(0, 0, length),           // Front tip
-            new Vector3(-width/2, 0, 0),         // Left
-            new Vector3(0, 0, -length),          // Back tip
-            new Vector3(width/2, 0, 0),          // Right
-            new Vector3(0, 0, length),           // Close diamond
+            new Vector3(0, 0, length), // Front tip
+            new Vector3(-width / 2, 0, 0), // Left
+            new Vector3(0, 0, -length), // Back tip
+            new Vector3(width / 2, 0, 0), // Right
+            new Vector3(0, 0, length), // Close diamond
         ];
 
         return this.createLineGeometry(points);
@@ -472,11 +472,11 @@ void main() {
         const halfWidth = width / 2;
 
         const points = [
-            new Vector3(-halfWidth, 0, halfLength),   // Top-left
-            new Vector3(halfWidth, 0, halfLength),    // Top-right
-            new Vector3(halfWidth, 0, -halfLength),   // Bottom-right
-            new Vector3(-halfWidth, 0, -halfLength),  // Bottom-left
-            new Vector3(-halfWidth, 0, halfLength),   // Close box
+            new Vector3(-halfWidth, 0, halfLength), // Top-left
+            new Vector3(halfWidth, 0, halfLength), // Top-right
+            new Vector3(halfWidth, 0, -halfLength), // Bottom-right
+            new Vector3(-halfWidth, 0, -halfLength), // Bottom-left
+            new Vector3(-halfWidth, 0, halfLength), // Close box
         ];
 
         return this.createLineGeometry(points);
@@ -493,8 +493,8 @@ void main() {
     static createTeeArrowGeometry(width: number): LineGeometry {
         // Simple horizontal line perpendicular to edge direction
         const points = [
-            new Vector3(-width/2, 0, 0),  // Left endpoint
-            new Vector3(width/2, 0, 0),   // Right endpoint
+            new Vector3(-width / 2, 0, 0), // Left endpoint
+            new Vector3(width / 2, 0, 0), // Right endpoint
         ];
 
         return this.createLineGeometry(points);
@@ -511,9 +511,9 @@ void main() {
      */
     static createVeeArrowGeometry(length: number, width: number): LineGeometry {
         const points = [
-            new Vector3(-width/2, 0, -length),  // Left arm base
-            new Vector3(0, 0, 0),               // Tip at origin
-            new Vector3(width/2, 0, -length),   // Right arm base
+            new Vector3(-width / 2, 0, -length), // Left arm base
+            new Vector3(0, 0, 0), // Tip at origin
+            new Vector3(width / 2, 0, -length), // Right arm base
         ];
 
         return this.createLineGeometry(points);
@@ -544,8 +544,8 @@ void main() {
      */
     static createHalfOpenArrowGeometry(length: number, width: number): LineGeometry {
         const points = [
-            new Vector3(-width/2, 0, -length),  // Left arm base
-            new Vector3(0, 0, 0),               // Tip at origin
+            new Vector3(-width / 2, 0, -length), // Left arm base
+            new Vector3(0, 0, 0), // Tip at origin
         ];
 
         return this.createLineGeometry(points);
@@ -568,10 +568,10 @@ void main() {
             new Vector3(0, 0, -length),
             new Vector3(0, 0, 0),
             // Lift pen (will create gap in rendering)
-            new Vector3(-width/2, 0, -length),
+            new Vector3(-width / 2, 0, -length),
             new Vector3(0, 0, 0),
             // Another lift
-            new Vector3(width/2, 0, -length),
+            new Vector3(width / 2, 0, -length),
             new Vector3(0, 0, 0),
         ];
 
@@ -592,10 +592,10 @@ void main() {
     static createEmptyArrowGeometry(length: number, width: number): LineGeometry {
         // Same as triangular but don't close the path to create outline effect
         const points = [
-            new Vector3(0, 0, length),           // Tip
-            new Vector3(-width/2, 0, 0),         // Left corner
-            new Vector3(width/2, 0, 0),          // Right corner
-            new Vector3(0, 0, length),           // Back to tip to close outline
+            new Vector3(0, 0, length), // Tip
+            new Vector3(-width / 2, 0, 0), // Left corner
+            new Vector3(width / 2, 0, 0), // Right corner
+            new Vector3(0, 0, length), // Back to tip to close outline
         ];
 
         return this.createLineGeometry(points);
@@ -628,8 +628,8 @@ void main() {
      */
     static createFromGeometry(
         geometry: LineGeometry,
-        options: { width: number; color: string; opacity?: number },
-        scene: Scene
+        options: {width: number, color: string, opacity?: number},
+        scene: Scene,
     ): Mesh {
         this.registerShaders();
 
@@ -670,7 +670,7 @@ void main() {
                     "gapLength",
                 ],
                 defines: ["#define INSTANCES"], // Enable instancing
-            }
+            },
         );
 
         // Set uniforms
