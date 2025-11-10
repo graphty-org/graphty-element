@@ -1,3 +1,6 @@
+// WORKAROUND: Import InstancedMesh side-effect first
+// See: https://github.com/graphty-org/graphty-element/issues/54
+import "@babylonjs/core/Meshes/instancedMesh";
 import {InstancedMesh, Mesh} from "@babylonjs/core";
 
 import type {NodeStyleId} from "../Styles";
@@ -18,8 +21,8 @@ export class MeshCache {
 
         this.misses++;
         mesh = creator();
-        // Must keep mesh visible for instances to be visible
-        // Position it far away so it's not rendered
+        // Hide the original mesh - instances will still be visible
+        mesh.isVisible = false;
         mesh.position.set(0, -10000, 0);
         mesh.freezeWorldMatrix();
         this.meshCacheMap.set(name, mesh);

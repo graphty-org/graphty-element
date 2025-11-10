@@ -40,5 +40,10 @@ export const EDGE_CONSTANTS = {
     DEFAULT_LINE_OPACITY: 1.0,
     // Arrow shape dimensions
     ARROW_DOT_RADIUS_MULTIPLIER: 0.15,
+    ARROW_SPHERE_DOT_DIAMETER_RATIO: 0.25, // sphere-dot diameter is 1/4 of standard arrow length
     ARROW_DIAMOND_ASPECT_RATIO: 1.5,
+    // Hollow and line-based arrow dimensions
+    ARROW_CROW_FORK_ANGLE: 30, // degrees
+    ARROW_VEE_ANGLE: 60, // degrees
+    ARROW_HALF_OPEN_RATIO: 0.5,
 } as const;

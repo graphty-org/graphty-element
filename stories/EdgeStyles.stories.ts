@@ -29,7 +29,17 @@ const meta: Meta = {
         },
     },
     args: {
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            nodeStyle: {
+                texture: {
+                    color: {
+                        colorType: "solid",
+                        value: "#5A67D8",
+                        opacity: 0.25,
+                    },
+                },
+            },
+        }),
         nodeData: [
             {id: "A", position: {x: -3, y: 0, z: 0}},
             {id: "B", position: {x: 3, y: 0, z: 0}},
@@ -242,5 +252,82 @@ export const BoxArrowHead: Story = {
         controls: {
             include: ["arrowHead.size", "arrowHead.color"],
         },
+    },
+};
+
+export const EmptyArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "empty", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const OpenDiamondArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "open-diamond", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const TeeArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "tee", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const OpenArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "open", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const HalfOpenArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "half-open", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const VeeArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "vee", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+};
+
+export const CrowArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            edgeStyle: {
+                arrowHead: {type: "crow", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
     },
 };

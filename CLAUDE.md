@@ -262,7 +262,6 @@ This script (`test/helpers/capture-3d-debug-screenshots.ts`):
 - Optional `--axes` flag enables BabylonJS AxesViewer (Red=X, Green=Y, Blue=Z)
 - All screenshots saved in `tmp/` directory with timestamp
 - Filenames include angle and timestamp: `screenshot-{angle}-{timestamp}.png`
-- Use with Nanobanana MCP to analyze 3D rendering issues from multiple perspectives
 
 **Usage recommendations:**
 - **For CI/automated testing**: Use Playwright in Vitest
@@ -316,3 +315,4 @@ To use the captured positions:
 3. Use the fixed layout type in your story/test with the generated data
 ```
 - use ./tmp for any temporary images, debugging files, debugging scripts, etc.
+- check and see if storybook is running on port 9025 before starting storybook on a new port

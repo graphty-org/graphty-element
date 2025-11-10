@@ -55,3 +55,6 @@ test-results/
 .pt-config.json.backup
 .pthistory
 .git-prompts
+
+# wtt worktrees
+.worktrees/

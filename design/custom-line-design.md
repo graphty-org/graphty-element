@@ -100,28 +100,49 @@ When arrow heads use **different rendering technologies**, they can't replicate 
 
 ---
 
-## The Ultimate Solution: CustomLineRenderer
+## The Ultimate Solution: Unified Screen-Space Math
 
 ### Core Principle
 
-**ONE shader system for EVERYTHING:**
-- Lines use CustomLineRenderer shader
-- Arrow heads use CustomLineRenderer shader
-- Pattern animations use CustomLineRenderer shader
-- Bezier curves use CustomLineRenderer shader
+**IDENTICAL screen-space formula across TWO specialized shaders:**
+- **Lines**: CustomLineRenderer shader (perpendicular expansion)
+- **Outline arrows**: CustomLineRenderer shader (perpendicular expansion along traced paths)
+- **Filled arrows**: FilledArrowRenderer shader (uniform scaling from center)
+- **Pattern animations**: CustomLineRenderer shader
+- **Bezier curves**: CustomLineRenderer shader
 
-**Result**: Perfect alignment guaranteed because **identical math**.
+**Result**: Perfect alignment guaranteed because **identical screen-space formula** (`* clipPos.w / resolution`).
+
+### Why Two Shaders?
+
+**Different geometry types need different expansion strategies:**
+
+1. **Lines & Outline Arrows** → Perpendicular expansion
+   - Lines expand perpendicular to path direction
+   - Outline arrows (tee, vee, crow, empty) trace perimeter as path
+   - Both use quad-strip geometry
+   - Same shader: CustomLineRenderer
+
+2. **Filled Arrows** → Uniform scaling
+   - Filled shapes (normal, diamond, box, dot) need to scale uniformly from center
+   - Use standard polygon meshes (triangles)
+   - Radial expansion doesn't work for line-based shapes
+   - Different shader: FilledArrowRenderer
+
+**Both shaders use the SAME screen-space formula** → perfect alignment!
 
 ### Why This Solves Every Problem
 
-| Problem | Previous Approaches | CustomLineRenderer Solution |
+| Problem | Previous Approaches | Unified Formula Solution |
 |---------|-------------------|----------------------------|
-| **Width mismatch** | Different technologies = different formulas | Same shader = identical width formula |
-| **Alignment gaps** | Separate rendering paths | Unified rendering = perfect alignment |
+| **Width mismatch** | Different technologies = different formulas | Both shaders use `* w / resolution` |
+| **Alignment gaps** | Separate rendering paths | Identical screen-space formula |
 | **Perspective issues** | Some billboarded, some not | All use same 3D + screen-space hybrid |
-| **Performance** | Multiple draw calls, no instancing | Single shader, full instancing support |
-| **Maintainability** | Multiple shader implementations | One shader to rule them all |
-| **Future compatibility** | Hard to add new arrow types | Extend single geometry system |
+| **Performance** | Multiple draw calls, no instancing | Both shaders support instancing |
+| **Maintainability** | Multiple disparate implementations | Two shaders, one formula |
+| **Future compatibility** | Hard to add new arrow types | Just add geometry, use existing shaders |
+| **Filled arrows** | Can't create with line renderer | FilledArrowRenderer supports solid shapes |
+| **Outline arrows** | Different tech than lines | Use same CustomLineRenderer as lines |
 
 ---
 
@@ -429,123 +450,182 @@ gl_Position.xy += offset;
 
 **This is THE formula we need for everything.**
 
-#### 2. Arrow Heads (To Be Implemented)
+#### 2. Outline Arrow Heads (Use CustomLineRenderer)
 
-**Key Insight**: Arrow heads are just **specialized geometry** fed into the **same shader**!
+**Key Insight**: Outline arrows are **traced paths** fed into the **same shader as lines**!
 
-**Triangular arrow head** (normal, inverted):
+**Empty arrow (hollow triangle)**:
 ```typescript
-static createTriangularArrowGeometry(length: number, width: number, inverted: boolean): ArrowGeometry {
-    // Define triangle points
+static createEmptyArrowGeometry(length: number, width: number): LineGeometry {
+    const points = [
+        new Vector3(0, 0, length),       // Tip
+        new Vector3(-width/2, 0, 0),     // Left corner
+        new Vector3(width/2, 0, 0),      // Right corner
+        new Vector3(0, 0, length),       // Back to tip
+    ];
+
+    // Use createLineGeometry - creates quad-strip tracing this path
+    // Results in thick outline following triangle perimeter
+    return this.createLineGeometry(points);
+}
+```
+
+**Tee arrow (perpendicular line)**:
+```typescript
+static createTeeArrowGeometry(width: number): LineGeometry {
+    const points = [
+        new Vector3(-width/2, 0, 0),  // Left endpoint
+        new Vector3(width/2, 0, 0),   // Right endpoint
+    ];
+
+    return this.createLineGeometry(points);
+}
+```
+
+**Vee arrow (V-shape)**:
+```typescript
+static createVeeArrowGeometry(length: number, width: number): LineGeometry {
+    const points = [
+        new Vector3(-width/2, 0, -length),  // Left arm base
+        new Vector3(0, 0, 0),               // Tip
+        new Vector3(width/2, 0, -length),   // Right arm base
+    ];
+
+    return this.createLineGeometry(points);
+}
+```
+
+**Result**: Outline arrows use the **exact same shader as lines** → perfect alignment!
+
+#### 3. Filled Arrow Heads (Use FilledArrowRenderer)
+
+**Key Insight**: Filled arrows need **uniform scaling**, not perpendicular expansion.
+
+**FilledArrowRenderer vertex shader**:
+```glsl
+// Screen-space uniform scaling shader
+attribute vec3 position;
+uniform mat4 world;
+uniform mat4 viewProjection;
+uniform vec2 resolution;
+uniform float size;
+
+void main() {
+    // Get arrow center in clip space
+    vec4 centerClip = viewProjection * world * vec4(0, 0, 0, 1);
+
+    // SAME FORMULA AS CustomLineRenderer!
+    float screenScale = (size * centerClip.w) / resolution.y;
+
+    // Apply uniform scaling
+    vec3 scaledPos = position * screenScale;
+    gl_Position = viewProjection * world * vec4(scaledPos, 1.0);
+}
+```
+
+**Normal arrow (filled triangle)**:
+```typescript
+static createTriangleMesh(length: number, width: number, inverted: boolean): Mesh {
+    // Standard polygon mesh (not quad-strip!)
     const tip = inverted ? -length : length;
-    const base = inverted ? 0 : 0;
-    const points = [
-        new Vector3(0, 0, tip),              // Tip
-        new Vector3(-width/2, 0, base),      // Left corner
-        new Vector3(width/2, 0, base),       // Right corner
-        new Vector3(0, 0, tip),              // Close triangle
+    const vertices = [
+        new Vector3(0, 0, tip),        // Tip
+        new Vector3(-width/2, 0, 0),   // Left
+        new Vector3(width/2, 0, 0),    // Right
     ];
+    const indices = [0, 1, 2];  // One triangle
 
-    // Use SAME createLineGeometry method as lines!
-    // The quad-strip approach works for any path, including triangles
-    return this.createLineGeometry(points);
+    return FilledArrowRenderer.createMesh(vertices, indices, scene);
 }
 ```
 
-**Circular dot arrow**:
+**Diamond arrow (filled rhombus)**:
 ```typescript
-static createCircularDotGeometry(radius: number, segments: number = 32): ArrowGeometry {
-    const points: Vector3[] = [];
-
-    // Generate circle path
-    for (let i = 0; i <= segments; i++) {
-        const angle = (i / segments) * Math.PI * 2;
-        points.push(new Vector3(
-            Math.cos(angle) * radius,
-            Math.sin(angle) * radius,
-            0
-        ));
-    }
-
-    // Use SAME createLineGeometry method!
-    return this.createLineGeometry(points);
-}
-```
-
-**Diamond arrow**:
-```typescript
-static createDiamondArrowGeometry(length: number, width: number): ArrowGeometry {
-    const points = [
-        new Vector3(0, 0, length),           // Front tip
-        new Vector3(-width/2, 0, 0),         // Left
-        new Vector3(0, 0, -length),          // Back tip
-        new Vector3(width/2, 0, 0),          // Right
-        new Vector3(0, 0, length),           // Close diamond
+static createDiamondMesh(length: number, width: number): Mesh {
+    const vertices = [
+        new Vector3(0, 0, length),     // Front tip
+        new Vector3(-width/2, 0, 0),   // Left
+        new Vector3(0, 0, -length),    // Back tip
+        new Vector3(width/2, 0, 0),    // Right
     ];
+    const indices = [0, 1, 2, 0, 2, 3];  // Two triangles
 
-    return this.createLineGeometry(points);
+    return FilledArrowRenderer.createMesh(vertices, indices, scene);
 }
 ```
 
-**The Magic**: All arrow types use `createLineGeometry()`, which feeds into the **exact same shader** as lines. **Perfect alignment guaranteed.**
+**Result**: Filled arrows use **same screen-space formula** (`* w / resolution`) as lines → perfect alignment!
 
 ### Complete Integration Example
 
 ```typescript
-class EdgeRenderer {
-    static createEdge(src: Vector3, dst: Vector3, arrowType: string, width: number, scene: Scene): Mesh {
-        // 1. Create line geometry
-        const linePoints = [src, dst];
-        const lineGeometry = CustomLineRenderer.createLineGeometry(linePoints);
+class EdgeMesh {
+    // Filled arrow types that need uniform scaling shader
+    static readonly FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot"];
 
-        // 2. Create arrow geometry (using same shader!)
-        let arrowGeometry: LineGeometry;
-        const arrowWidth = width * 2.0;  // Arrow wider than line
-        const arrowLength = width * 4.0;
+    // Outline arrow types that use line shader
+    static readonly OUTLINE_ARROWS = ["empty", "open-diamond", "tee", "vee", "open", "half-open", "crow"];
 
-        switch(arrowType) {
-            case "normal":
-                arrowGeometry = CustomLineRenderer.createTriangularArrowGeometry(arrowLength, arrowWidth, false);
+    static createArrowHead(type: string, length: number, width: number, scene: Scene): Mesh {
+        if (this.FILLED_ARROWS.includes(type)) {
+            // Use FilledArrowRenderer for solid shapes
+            return this.createFilledArrow(type, length, width, scene);
+        } else {
+            // Use CustomLineRenderer for outlines
+            return this.createOutlineArrow(type, length, width, scene);
+        }
+    }
+
+    static createOutlineArrow(type: string, length: number, width: number, scene: Scene): Mesh {
+        let geometry: LineGeometry;
+
+        switch(type) {
+            case "empty":
+                geometry = CustomLineRenderer.createEmptyArrowGeometry(length, width);
                 break;
-            case "inverted":
-                arrowGeometry = CustomLineRenderer.createTriangularArrowGeometry(arrowLength, arrowWidth, true);
+            case "tee":
+                geometry = CustomLineRenderer.createTeeArrowGeometry(width);
                 break;
-            case "dot":
-                arrowGeometry = CustomLineRenderer.createCircularDotGeometry(arrowWidth / 2);
+            case "vee":
+                geometry = CustomLineRenderer.createVeeArrowGeometry(length, width);
                 break;
-            case "diamond":
-                arrowGeometry = CustomLineRenderer.createDiamondArrowGeometry(arrowLength, arrowWidth);
-                break;
-            // ... all arrow types
+            // ... other outline types
         }
 
-        // 3. COMBINE line and arrow geometry (single mesh!)
-        const combinedGeometry = this.mergeGeometries(lineGeometry, arrowGeometry, dst, lineDirection);
+        // Use CustomLineRenderer shader (same as lines!)
+        return CustomLineRenderer.createFromGeometry(geometry, {width, color, opacity}, scene);
+    }
 
-        // 4. Create mesh with SINGLE shader material
-        const mesh = new Mesh("edge-with-arrow", scene);
-        mesh.setVerticesData("position", combinedGeometry.positions);
-        mesh.setVerticesData("direction", combinedGeometry.directions);
-        mesh.setVerticesData("side", combinedGeometry.sides);
-        mesh.setVerticesData("distance", combinedGeometry.distances);
-        mesh.setVerticesData("uv", combinedGeometry.uvs);
-        mesh.setIndices(combinedGeometry.indices);
+    static createFilledArrow(type: string, length: number, width: number, scene: Scene): Mesh {
+        let mesh: Mesh;
 
-        // 5. Apply CustomLineRenderer shader (ONE shader for everything!)
-        mesh.material = CustomLineRenderer.createShaderMaterial(scene, width, color, opacity);
+        switch(type) {
+            case "normal":
+                mesh = FilledArrowRenderer.createTriangle(length, width, false, scene);
+                break;
+            case "diamond":
+                mesh = FilledArrowRenderer.createDiamond(length, width, scene);
+                break;
+            case "dot":
+                mesh = FilledArrowRenderer.createCircle(width / 2, scene);
+                break;
+            // ... other filled types
+        }
 
-        return mesh;
+        // Apply FilledArrowRenderer shader (same formula as lines!)
+        return FilledArrowRenderer.applyShader(mesh, {size, color, opacity}, scene);
     }
 }
 ```
 
 **Key benefits**:
-- ✅ One mesh = one draw call
-- ✅ One shader = guaranteed alignment
-- ✅ Full instancing support
-- ✅ Identical perspective behavior
-- ✅ Pattern support for both line AND arrows
-- ✅ No maintenance burden of multiple shaders
+- ✅ **Perfect alignment**: Both shaders use `* clipPos.w / resolution`
+- ✅ **Lines and outline arrows**: Literally same shader (CustomLineRenderer)
+- ✅ **Filled arrows**: Different shader, but identical screen-space formula
+- ✅ **Solid AND outline support**: Filled arrows use polygon meshes, outlines use quad-strips
+- ✅ **Performance**: Both shaders support full instancing/caching
+- ✅ **Identical perspective behavior**: Both use same `w` value
+- ✅ **Maintainability**: Two shaders, one formula, clear separation of concerns
 
 ---
 

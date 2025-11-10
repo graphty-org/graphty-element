@@ -14,7 +14,7 @@ This plan implements the complete EdgeStyle configuration schema for graphty-ele
 - Edge tooltips
 - Optional glow effects
 
-**Estimated Duration**: 15.5-20.5 days (reduced from 20-25 days due to CustomLineRenderer completion; excludes optional glow effects)
+**Estimated Duration**: 16-21.5 days (includes Phase 1 enhancements: cylindrical billboarding + perspective tapering; excludes optional glow effects)
 
 **Key Architectural Decision**: We have replaced GreasedLine with CustomLineRenderer, a custom line rendering system using quad-strip geometry and screen-space shaders. This provides:
 - Complete control over line rendering and patterns
@@ -22,6 +22,51 @@ This plan implements the complete EdgeStyle configuration schema for graphty-ele
 - Screen-space width consistency across all camera angles
 - Native support for mesh instancing and caching
 - Foundation for bezier curves via multi-segment geometry
+
+## Core Requirements
+
+The edge rendering system must satisfy these critical requirements:
+
+1. **✅ High Performance** - Handle thousands of edges efficiently
+   - Mesh instancing and caching
+   - Batched rendering
+   - GPU-accelerated shaders
+
+2. **✅ No-Gap Guarantee** - Perfect alignment between lines and arrow heads at any viewing angle
+   - Identical screen-space formulas in both shaders
+   - Position arrows at exact line endpoints
+   - **Current status**: Guaranteed via matching `* w / resolution` formula
+
+3. **✅ Arbitrary Shapes** - Support both solid and outline arrows of any shape
+   - Solid: `normal`, `inverted`, `diamond`, `box`, `dot` (FilledArrowRenderer)
+   - Outline: `empty`, `open-diamond`, `tee`, `vee`, `open`, `half-open`, `crow` (CustomLineRenderer)
+
+4. **✅ Line Patterns** - Multiple line rendering styles
+   - Implemented: `solid`, `dash`, `dot` (Phase 0)
+   - Planned: `dash-dot`, `equal-dash`, `sinewave`, `zigzag` (Phase 4)
+   - Future: `bezier` curves (Phase 5)
+
+5. **⚠️ Tangent Billboarding** - Arrows rotate around line axis to always show face to camera
+   - **Current status**: Y-axis cylindrical billboarding (works only for horizontal lines)
+   - **Required**: Tangent billboarding for all arrow types
+   - **Implementation**: Align arrow with line direction, rotate around line axis to face camera
+   - **Key constraint**: Arrow base must remain fixed at sphere surface (no gaps)
+   - **Visual requirements**:
+     - Tip points toward sphere intercept (along line direction)
+     - Visible from ANY camera angle (never edge-on/invisible)
+     - Base connects seamlessly to line (zero gap)
+     - Tapers with distance (perspective sizing)
+   - **Priority**: Phase 1 enhancement (see "Remaining Work" section)
+
+6. **✅ Perspective Tapering** - Lines and arrows taper naturally with distance from camera
+   - **Status**: IMPLEMENTED (2025-11-09)
+   - **Implementation**: Removed `* w` compensation from both FilledArrowRenderer and CustomLineRenderer
+   - **Alignment guarantee**: Maintained because both shaders apply same transformation
+   - **Result**: Objects appear smaller when farther from camera (natural perspective)
+
+**Status Summary**:
+- ✅ Requirements 1-4, 6: Fully implemented
+- ⚠️ Requirement 5: Tangent billboarding in progress (Y-axis approach implemented, needs upgrade to line-axis rotation)
 
 ## Phase Breakdown
 
@@ -71,11 +116,217 @@ This plan implements the complete EdgeStyle configuration schema for graphty-ele
 - Phase 5: Bezier curves will use CustomLineRenderer.createLineGeometry() with multi-point paths
 - Phases 2-3: **Arrow heads will use CustomLineRenderer geometry generators feeding into same shader as lines** (see `design/custom-line-design.md`)
 
-### Phase 1: Arrow Head Integration with CustomLineRenderer (2 days)
+### Phase 1: Arrow Head Integration with CustomLineRenderer (2-3 days)
+
+**⚠️ PARTIALLY COMPLETED (2025-11-09)** - Core architecture implemented, enhancements in progress.
 
 **Objective**: Integrate arrow heads into CustomLineRenderer shader system to achieve perfect alignment with lines. **This is the critical solution to all our arrow head alignment problems** - by using the same shader for both lines and arrows, we guarantee identical screen-space math and perfect alignment at all camera angles.
 
-**Duration**: 2 days
+**Duration**: 2-3 days (base implementation: 2 days ✅, enhancements: 1 day ⚠️)
+
+**Status**:
+- ✅ Two-shader architecture (FilledArrowRenderer + CustomLineRenderer)
+- ✅ Filled arrows (normal, inverted, diamond, box, dot)
+- ✅ Arrow positioning and alignment
+- ⚠️ Cylindrical billboarding (planned - see "Remaining Work")
+- ⚠️ Perspective tapering (planned - see "Remaining Work")
+
+---
+
+## ✅ Phase 1 Base Implementation Notes (COMPLETED)
+
+**Note**: This section documents the completed base implementation. For pending enhancements (cylindrical billboarding, perspective tapering), see the "Remaining Work" section below.
+
+**Architectural Pivot**: After detailed analysis in `design/custom-line-design.md`, we discovered that CustomLineRenderer's perpendicular expansion shader is NOT suitable for filled arrows. Instead, we implemented a **TWO-SHADER ARCHITECTURE**:
+
+### Actual Implementation
+
+**Two Renderers, Two Shaders**:
+
+1. **FilledArrowRenderer** (`src/meshes/FilledArrowRenderer.ts`) - NEW
+   - **Shader**: Uniform scaling shader with screen-space billboarding
+   - **Formula**: `position.xy * size * pixelToClip * centerClip.w`
+   - **Geometry**: Standard polygon meshes (triangles, not quad-strips)
+   - **Arrows**: `normal`, `inverted`, `diamond`, `box`, `dot`
+   - **Key Feature**: Extracts only position from mesh transform, ignores rotation → perfect billboarding
+
+2. **CustomLineRenderer** (`src/meshes/CustomLineRenderer.ts`) - EXISTING
+   - **Shader**: Perpendicular expansion shader (unchanged)
+   - **Formula**: `offset * vertexClip.w / resolution` (existing)
+   - **Geometry**: Quad-strip line meshes
+   - **Arrows**: `empty`, `open-diamond`, `tee`, `vee`, `open`, `half-open`, `crow`
+   - **Key Feature**: Works perfectly for outline arrows that need perpendicular expansion
+
+### Files Changed
+
+1. ✅ `src/meshes/FilledArrowRenderer.ts` - NEW FILE (318 lines)
+   - `registerShaders()` - Registers billboard vertex + fragment shaders
+   - `createTriangle(inverted, scene)` - XY plane triangle pointing +X
+   - `createDiamond(scene)` - XY plane diamond
+   - `createBox(scene)` - XY plane rectangle
+   - `createCircle(scene, segments=32)` - XY plane circle
+   - `applyShader(mesh, options, scene)` - Applies uniform scaling shader
+
+2. ✅ `src/meshes/EdgeMesh.ts` - UPDATED
+   - `createFilledArrow()` - Routes to FilledArrowRenderer (lines 287-327)
+   - `createOutlineArrow()` - Routes to CustomLineRenderer (lines 329-376)
+   - Updated imports to include `FilledArrowRenderer` and `VertexData`
+
+3. ✅ `design/custom-line-design.md` - UPDATED
+   - Documented the two-shader architecture rationale
+   - Explained why perpendicular expansion doesn't work for filled shapes
+   - Described the uniform scaling approach for filled arrows
+
+### Testing
+
+✅ **Visual Testing** (2025-11-09):
+- Captured screenshots from 5 camera angles (start, left, top, top-left-1, top-left-2)
+- Confirmed arrows billboard correctly from all angles
+- Confirmed no duplicate arrows or positioning issues
+- Arrow positioning: Base at line end, tip at sphere surface ✓
+- Arrow orientation: Always faces camera ✓
+
+**Test Files**:
+- Screenshots: `tmp/screenshot-{angle}-2025-11-09_16-13-00.png`
+- Test script: `test/helpers/capture-3d-debug-screenshots.ts`
+
+### Why This Architecture?
+
+**Problem with Single-Shader Approach** (original plan):
+- CustomLineRenderer uses perpendicular expansion (`offset = perpendicular * width * 0.5 * side`)
+- This causes filled triangles to have one thick vertex and one thin vertex → distortion
+- See `design/custom-line-design.md` sections 3.1-3.3 for detailed analysis
+
+**Solution with Two-Shader Approach**:
+- Filled arrows: Uniform scaling (all vertices scaled equally) → perfect shapes
+- Outline arrows: Perpendicular expansion (creates line thickness) → perfect outlines
+- Both use same screen-space sizing formula → consistent appearance
+- Both extract position correctly → no alignment issues
+
+### Remaining Work
+
+This phase focused on the **architecture and shader implementation**. The following enhancements are required to complete Phase 1:
+
+#### Phase 1 Enhancements (Priority)
+
+**1. Tangent Billboarding** (Est: 1-2 days)
+
+Currently, arrows use **Y-axis cylindrical billboarding** (works only for horizontal lines). Required: **tangent billboarding** (rotate around line axis, works for lines at any angle).
+
+**Core Requirements**:
+1. Arrow tip points along line direction (toward sphere intercept)
+2. Arrow rotates around line axis to face camera
+3. Arrow visible from ANY camera angle (never edge-on)
+4. Arrow base stays fixed at sphere surface (zero gap with line)
+
+**Mathematical Approach**:
+
+The arrow needs to:
+- Align with line direction (arrow points along line)
+- Rotate around that line axis to show face to camera
+- Maintain base position at sphere surface
+
+```glsl
+// FilledArrowRenderer vertex shader changes
+uniform vec3 cameraPosition;
+uniform vec3 lineDirection; // Direction from source to target (normalized)
+
+// 1. Build coordinate system aligned with line
+//    - Forward: line direction (arrow points this way)
+//    - Up: perpendicular to both line and camera direction
+//    - Right: perpendicular to forward and up
+vec3 forward = lineDirection;
+vec3 toCamera = normalize(cameraPosition - worldCenter);
+vec3 right = normalize(cross(forward, toCamera));
+vec3 up = cross(right, forward);
+
+// 2. Transform arrow vertices from local space to line-aligned space
+//    Local space: arrow in XY plane, pointing along +X
+//    World space: arrow aligned with line, facing camera
+vec3 localPos = position; // Arrow geometry (tip at origin, extends backward)
+vec3 worldOffset = localPos.x * forward + localPos.y * up + localPos.z * right;
+
+// 3. Apply screen-space sizing (same formula as before, but with rotated geometry)
+vec4 centerClip = viewProjection * vec4(worldCenter, 1.0);
+vec2 pixelToClip = vec2(2.0) / resolution;
+
+gl_Position = centerClip;
+gl_Position.xyz += worldOffset; // First position in world space
+// Then project to screen space...
+// (Need to refine this - world offset needs careful handling)
+```
+
+**Why This Maintains Zero Gap**:
+1. Arrow base is at `worldCenter` (sphere surface) - same as line endpoint
+2. Arrow extends backward from base along line direction
+3. Rotation is around line axis passing through base
+4. Base point is ON rotation axis → doesn't move during rotation
+5. Line endpoint uses same `worldCenter` coordinate → perfect alignment
+
+**Outline Arrows (CustomLineRenderer)**:
+- Already handle camera facing via perpendicular expansion in screen space
+- No changes needed - perpendicular expansion naturally faces camera
+- Gap prevention: line endpoint and arrow base both at sphere surface
+
+**Files to update**:
+- `src/meshes/FilledArrowRenderer.ts` - Complete shader rewrite for tangent billboarding
+- `src/Edge.ts` - Pass line direction to arrow shader
+- Tests in `test/browser/arrow-rendering.test.ts` - Verify visibility from all angles
+
+**Testing Strategy**:
+1. Visual tests from 6 angles: front, back, left, right, top, bottom
+2. Verify arrow is visible (not edge-on) from all angles
+3. Verify no gap between line and arrow at any angle
+4. Verify arrow points along line direction
+5. Verify perspective tapering works (arrows smaller with distance)
+
+**2. Perspective Tapering** ✅ **COMPLETED (2025-11-09)**
+
+~~Currently, arrows/lines use **anti-tapering** (constant screen-space size). Required: **perspective tapering** (objects farther from camera appear smaller).~~
+
+**Implementation completed**: Removed `* w` compensation from both shaders.
+
+**Implementation approach** - Remove `* w` compensation:
+
+```glsl
+// FilledArrowRenderer.ts:77 - CURRENT
+gl_Position.xy += position.xy * size * pixelToClip * centerClip.w;
+
+// FilledArrowRenderer.ts:77 - WITH TAPERING
+gl_Position.xy += position.xy * size * pixelToClip;  // Remove * centerClip.w
+
+// CustomLineRenderer.ts (similar change)
+// CURRENT: offset *= vertexClip.w / resolution
+// WITH TAPERING: offset /= resolution  // Remove * vertexClip.w
+```
+
+**Why alignment is maintained**:
+- Both line and arrow positioned at same 3D coordinate (sphere surface)
+- Both transform to same clip-space position (same x, y, z, **w**)
+- Both calculate screen-space offset WITHOUT `w` compensation
+- GPU applies perspective divide (`/= w`) to both identically
+- Result: Both taper by exact same factor → perfect alignment maintained
+
+**Files to update**:
+- `src/meshes/FilledArrowRenderer.ts:77` - Remove `* centerClip.w`
+- `src/meshes/CustomLineRenderer.ts` - Remove `* vertexClip.w` from offset calculation
+
+**Testing**:
+- Visual test at varying distances (should see size decrease with distance)
+- Verify no gap between line and arrow at any distance
+- Compare with anti-tapering mode
+
+#### Future Phases
+
+- Phase 2-3: Add remaining arrow types (dot-open, sphere variants, etc.)
+- Phase 4: Line patterns (dash-dot, equal-dash, sinewave, zigzag)
+- Phase 5: Bezier curves
+- Phase 6: Tooltips and arrow text
+- Phase 7: Polish and documentation
+
+**See**: `design/custom-line-design.md` for complete architectural rationale.
+
+---
 
 **Core Principle**: Arrow heads are **specialized geometry** fed into the **same CustomLineRenderer shader** as lines. This ensures:
 - ✅ Perfect alignment (identical screen-space formulas)
@@ -191,7 +442,7 @@ Arrow at z=50: offset *= 50 / resolution → 10px wide
 Result: MATCH! (both compensate for same depth)
 ```
 
-**Optional Perspective Tapering** (if implemented):
+**With Perspective Tapering** (Phase 1 enhancement - see "Remaining Work" section):
 ```
 Line at z=10:  offset / 10 (GPU divide) → 10px wide
 Arrow at z=10: offset / 10 (GPU divide) → 10px wide
@@ -202,7 +453,7 @@ Arrow at z=50: offset / 50 (GPU divide) → 2px wide
 Result: MATCH! (both taper identically)
 ```
 
-**No manual adjustment needed!** The shader formula automatically ensures arrows match lines at any depth.
+**No manual adjustment needed!** The shader formula automatically ensures arrows match lines at any depth, whether using anti-tapering (current) or perspective tapering (enhancement).
 
 ### Geometry Generation Strategy
 

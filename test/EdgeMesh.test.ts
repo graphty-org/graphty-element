@@ -118,7 +118,7 @@ describe("EdgeMesh", () => {
             );
 
             assert.exists(arrowMesh);
-            assert.equal(arrowMesh.name, "edge-arrowhead-style-test-arrow");
+            assert.equal(arrowMesh.name, "edge-arrowhead-v2-style-test-arrow");
         });
 
         test("returns null for 'none' type", () => {

@@ -1,3 +1,7 @@
+// WORKAROUND: Import InstancedMesh first to satisfy Babylon.js side-effect requirement
+// See: https://github.com/graphty-org/graphty-element/issues/54
+import "@babylonjs/core/Meshes/instancedMesh";
+
 export type {StyleSchema, StyleSchemaV1} from "./src/config";
 export {StyleTemplate} from "./src/config";
 export {DataSource} from "./src/data/DataSource";
