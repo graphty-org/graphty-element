@@ -209,76 +209,336 @@ This phase focused on the **architecture and shader implementation**. The follow
 
 #### Phase 1 Enhancements (Priority)
 
-**1. Tangent Billboarding** (Est: 1-2 days)
+**1. Tangent Billboarding** ✅ **COMPLETED (2025-11-09)**
 
-Currently, arrows use **Y-axis cylindrical billboarding** (works only for horizontal lines). Required: **tangent billboarding** (rotate around line axis, works for lines at any angle).
+**Status**: WORKING - Arrows visible from all camera angles using tangent billboarding
 
-**Core Requirements**:
-1. Arrow tip points along line direction (toward sphere intercept)
-2. Arrow rotates around line axis to face camera
-3. Arrow visible from ANY camera angle (never edge-on)
-4. Arrow base stays fixed at sphere surface (zero gap with line)
+**Implementation**: Tangent billboarding vertex shader in FilledArrowRenderer with per-instance line direction.
 
-**Mathematical Approach**:
+**Core Requirements** (All ✅):
+1. ✅ Arrow tip points along line direction (toward sphere intercept)
+2. ✅ Arrow rotates around line axis to face camera
+3. ✅ Arrow visible from ANY camera angle (never edge-on)
+4. ✅ Arrow base stays fixed at sphere surface (zero gap with line)
 
-The arrow needs to:
-- Align with line direction (arrow points along line)
-- Rotate around that line axis to show face to camera
-- Maintain base position at sphere surface
+---
+
+### CRITICAL LESSON LEARNED: Geometry Plane Requirements
+
+**THE PROBLEM THAT TOOK HOURS TO DEBUG:**
+
+Arrows were **completely invisible** from all angles despite shader compiling successfully and all data flowing correctly. The issue was **geometry plane choice**.
+
+**Root Cause Analysis**:
+
+The FilledArrowRenderer shader uses tangent billboarding with this coordinate system mapping:
 
 ```glsl
-// FilledArrowRenderer vertex shader changes
-uniform vec3 cameraPosition;
-uniform vec3 lineDirection; // Direction from source to target (normalized)
-
-// 1. Build coordinate system aligned with line
-//    - Forward: line direction (arrow points this way)
-//    - Up: perpendicular to both line and camera direction
-//    - Right: perpendicular to forward and up
-vec3 forward = lineDirection;
+// Shader coordinate mapping (FilledArrowRenderer.ts lines 93-102)
+vec3 forward = normalize(lineDirection);              // Arrow points along line
 vec3 toCamera = normalize(cameraPosition - worldCenter);
-vec3 right = normalize(cross(forward, toCamera));
-vec3 up = cross(right, forward);
+vec3 right = normalize(cross(forward, toCamera));     // Perpendicular to line AND camera
+vec3 up = cross(right, forward);                      // Faces camera
 
-// 2. Transform arrow vertices from local space to line-aligned space
-//    Local space: arrow in XY plane, pointing along +X
-//    World space: arrow aligned with line, facing camera
-vec3 localPos = position; // Arrow geometry (tip at origin, extends backward)
-vec3 worldOffset = localPos.x * forward + localPos.y * up + localPos.z * right;
-
-// 3. Apply screen-space sizing (same formula as before, but with rotated geometry)
-vec4 centerClip = viewProjection * vec4(worldCenter, 1.0);
-vec2 pixelToClip = vec2(2.0) / resolution;
-
-gl_Position = centerClip;
-gl_Position.xyz += worldOffset; // First position in world space
-// Then project to screen space...
-// (Need to refine this - world offset needs careful handling)
+// Transform arrow vertex from local space to world space
+vec3 worldOffset = position.x * forward + position.y * up + position.z * right;
 ```
 
-**Why This Maintains Zero Gap**:
-1. Arrow base is at `worldCenter` (sphere surface) - same as line endpoint
-2. Arrow extends backward from base along line direction
-3. Rotation is around line axis passing through base
-4. Base point is ON rotation axis → doesn't move during rotation
-5. Line endpoint uses same `worldCenter` coordinate → perfect alignment
+**Coordinate System Mapping**:
+- **Local X → World forward** (line direction, arrow points this way)
+- **Local Y → World up** (toward camera, for billboard facing)
+- **Local Z → World right** (perpendicular to both)
 
-**Outline Arrows (CustomLineRenderer)**:
-- Already handle camera facing via perpendicular expansion in screen space
-- No changes needed - perpendicular expansion naturally faces camera
-- Gap prevention: line endpoint and arrow base both at sphere surface
+**Why XY Plane Failed** ❌:
+```
+Triangle in XY plane:
+  Tip: (0, 0, 0)
+  Bottom: (-1, -0.4, 0)
+  Top: (-1, 0.4, 0)
 
-**Files to update**:
-- `src/meshes/FilledArrowRenderer.ts` - Complete shader rewrite for tangent billboarding
-- `src/Edge.ts` - Pass line direction to arrow shader
-- Tests in `test/browser/arrow-rendering.test.ts` - Verify visibility from all angles
+Face normal: Points in ±Z direction
 
-**Testing Strategy**:
-1. Visual tests from 6 angles: front, back, left, right, top, bottom
-2. Verify arrow is visible (not edge-on) from all angles
-3. Verify no gap between line and arrow at any angle
-4. Verify arrow points along line direction
-5. Verify perspective tapering works (arrows smaller with distance)
+After shader mapping:
+  ±Z normal → "right" direction (perpendicular to camera view)
+
+Result: Arrow is EDGE-ON to camera → INVISIBLE
+```
+
+**Why XZ Plane Works** ✅:
+```
+Triangle in XZ plane:
+  Tip: (0, 0, 0)
+  Bottom: (-1, 0, -0.4)
+  Top: (-1, 0, 0.4)
+
+Face normal: Points in ±Y direction
+
+After shader mapping:
+  ±Y normal → "up" direction (toward camera)
+
+Result: Arrow FACES camera → VISIBLE
+```
+
+**THE FIX** (FilledArrowRenderer.ts):
+
+```typescript
+// Triangle arrow - WRONG (XY plane):
+const positions = [
+    tip, 0, 0,              // Tip at origin
+    base, -width/2, 0,      // Bottom corner (at base)
+    base, width/2, 0,       // Top corner (at base)
+];
+
+// Triangle arrow - CORRECT (XZ plane):
+const positions = [
+    tip, 0, 0,              // Tip at origin
+    base, 0, -width/2,      // Bottom corner (at base)
+    base, 0, width/2,       // Top corner (at base)
+];
+
+// Diamond arrow - WRONG (XY plane):
+const positions = [
+    0, 0, 0,                // Front tip at origin
+    -length/2, width/2, 0,  // Top (at middle)
+    -length, 0, 0,          // Back tip
+    -length/2, -width/2, 0, // Bottom (at middle)
+];
+
+// Diamond arrow - CORRECT (XZ plane):
+const positions = [
+    0, 0, 0,                // Front tip at origin
+    -length/2, 0, width/2,  // Top (at middle)
+    -length, 0, 0,          // Back tip
+    -length/2, 0, -width/2, // Bottom (at middle)
+];
+
+// Box arrow - WRONG (XY plane):
+const positions = [
+    -length, halfWidth, 0,   // Top-left (back)
+    0, halfWidth, 0,         // Top-right at origin (front)
+    0, -halfWidth, 0,        // Bottom-right at origin (front)
+    -length, -halfWidth, 0,  // Bottom-left (back)
+];
+
+// Box arrow - CORRECT (XZ plane):
+const positions = [
+    -length, 0, halfWidth,   // Top-left (back)
+    0, 0, halfWidth,         // Top-right at origin (front)
+    0, 0, -halfWidth,        // Bottom-right at origin (front)
+    -length, 0, -halfWidth,  // Bottom-left (back)
+];
+```
+
+**Circle Arrow Exception** (Already Correct):
+
+Circle geometry is ALREADY in the YZ plane (perpendicular to line direction), which is correct:
+
+```typescript
+// Circle - CORRECT (YZ plane, X=0):
+for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    positions.push(
+        0,                         // X = 0 (no extent along line)
+        Math.cos(angle) * radius,  // Y → up (toward camera)
+        Math.sin(angle) * radius   // Z → right (perpendicular)
+    );
+}
+```
+
+Circle works because its face is perpendicular to the line direction (X axis), so it naturally faces the camera.
+
+---
+
+### RULE FOR FUTURE ARROW TYPES
+
+**CRITICAL GEOMETRY RULE**:
+
+For tangent billboarding in FilledArrowRenderer:
+- **Filled polygons (triangle, diamond, box)**: MUST use **XZ plane (Y=0)**
+- **Circles/discs**: Use **YZ plane (X=0)** (perpendicular to line)
+- **General rule**: Face normal must map to the shader's "up" vector (toward camera)
+
+**How to verify geometry is correct**:
+1. Arrow should be visible from ALL camera angles
+2. Arrow should never appear edge-on (invisible)
+3. Arrow face should always be oriented toward camera
+4. Test by rotating camera around the graph
+
+---
+
+### Actual Shader Implementation
+
+**Vertex Shader** (FilledArrowRenderer.ts lines 60-106):
+
+```glsl
+// Attributes
+attribute vec3 position;      // Arrow geometry (XZ plane, pointing along +X)
+attribute vec3 lineDirection; // Per-instance line direction
+
+// Thin instance attributes (world matrix columns)
+#ifdef THIN_INSTANCES
+attribute vec4 world0;
+attribute vec4 world1;
+attribute vec4 world2;
+attribute vec4 world3;
+#endif
+
+// Uniforms
+uniform mat4 viewProjection;
+uniform vec3 cameraPosition;
+uniform float size;
+
+void main() {
+    // Construct world matrix from thin instance attributes
+    #ifdef THIN_INSTANCES
+    mat4 finalWorld = mat4(world0, world1, world2, world3);
+    #else
+    mat4 finalWorld = mat4(1.0);
+    #endif
+
+    // Extract arrow center position from world matrix
+    vec3 worldCenter = vec3(finalWorld[3][0], finalWorld[3][1], finalWorld[3][2]);
+
+    // Build camera-facing coordinate system aligned with line
+    vec3 forward = normalize(lineDirection);              // Arrow points along line
+    vec3 toCamera = normalize(cameraPosition - worldCenter);
+    vec3 right = normalize(cross(forward, toCamera));     // Perpendicular to line AND camera
+    vec3 up = cross(right, forward);                      // Completes orthonormal basis, faces camera
+
+    // Transform arrow vertex from local space to world space
+    // Local space: position in XZ plane (Y=0), pointing along +X
+    // World space: aligned with line, facing camera
+    vec3 worldOffset = position.x * forward + position.y * up + position.z * right;
+    vec4 worldPos = vec4(worldCenter + worldOffset * size, 1.0);
+
+    // Transform to clip space
+    gl_Position = viewProjection * worldPos;
+}
+```
+
+**Key Points**:
+1. **Per-instance lineDirection**: Passed via thin instance attribute (registered in Edge.ts)
+2. **Orthonormal basis**: forward (line), right (⊥ to line & camera), up (faces camera)
+3. **Vertex transformation**: Maps XZ plane geometry to world-space billboard
+4. **Size scaling**: Applied in world space before projection
+
+---
+
+### Critical BabylonJS Integration Details
+
+**Thin Instance Buffer Updates** (Edge.ts lines 103-106):
+
+```typescript
+// CRITICAL: Notify BabylonJS that thin instance buffers have been updated!
+// Without these calls, the GPU never receives the updated data
+arrowMesh.thinInstanceBufferUpdated("matrix");
+arrowMesh.thinInstanceBufferUpdated("lineDirection");
+```
+
+**Why this is required**:
+- BabylonJS caches GPU buffer state
+- After setting thin instance data, must call `thinInstanceBufferUpdated()`
+- Without this, arrows render with stale/zero data (invisible or wrong orientation)
+
+**Per-Instance Data Setup** (Edge.ts lines 83-101):
+
+```typescript
+private updateFilledArrowInstance(
+    arrowMesh: Mesh,
+    instanceIndex: number,
+    position: Vector3,
+    lineDirection: Vector3,
+): void {
+    // Create transformation matrix with ONLY translation
+    // Rotation is handled by the shader via tangent billboarding
+    const matrix = Matrix.Translation(position.x, position.y, position.z);
+
+    // Update thin instance matrix
+    arrowMesh.thinInstanceSetMatrixAt(instanceIndex, matrix);
+
+    // Update lineDirection attribute (used by shader for tangent billboarding)
+    arrowMesh.thinInstanceSetAttributeAt("lineDirection", instanceIndex, [
+        lineDirection.x,
+        lineDirection.y,
+        lineDirection.z,
+    ]);
+
+    // CRITICAL: Notify BabylonJS that thin instance buffers have been updated!
+    arrowMesh.thinInstanceBufferUpdated("matrix");
+    arrowMesh.thinInstanceBufferUpdated("lineDirection");
+}
+```
+
+**Thin Instance Attribute Registration** (FilledArrowRenderer.ts line 375):
+
+```typescript
+// Setup thin instance support for per-instance lineDirection
+// Register the lineDirection attribute (vec3 = 3 floats)
+mesh.thinInstanceRegisterAttribute("lineDirection", 3);
+```
+
+---
+
+### Why This Maintains Zero Gap
+
+1. **Arrow base positioned at sphere surface**: `worldCenter` extracted from instance matrix = sphere intercept point
+2. **Line endpoint at same position**: Both line and arrow use same sphere intercept calculation
+3. **Rotation around line axis**: Billboard rotation happens around axis passing through base point
+4. **Base point ON rotation axis**: Rotation doesn't move the base, only orients the face
+5. **Perfect alignment guaranteed**: Both positioned at identical 3D coordinate
+
+---
+
+### Files Changed for Tangent Billboarding
+
+1. ✅ `src/meshes/FilledArrowRenderer.ts` (lines 60-106, 134-247)
+   - Tangent billboarding vertex shader
+   - Changed triangle/diamond/box from XY to XZ plane
+   - Thin instance attribute registration
+
+2. ✅ `src/Edge.ts` (lines 83-107)
+   - `updateFilledArrowInstance()` method
+   - Per-instance lineDirection updates
+   - `thinInstanceBufferUpdated()` calls
+
+3. ✅ Geometry plane fixes:
+   - Triangle: XY → XZ (lines 149-154)
+   - Diamond: XY → XZ (lines 192-196)
+   - Box: XY → XZ (lines 232-236)
+   - Circle: Already correct YZ plane (lines 267-275)
+
+---
+
+### Testing
+
+✅ **Visual Verification** (2025-11-09):
+- Arrow visible from all camera angles
+- Arrow always faces camera (never edge-on)
+- No gap between arrow and line
+- Arrow points along line direction
+- Verified with user: "holy shit! it works!"
+
+**Debug Process**:
+1. Added extensive console logging to track shader compilation, mesh state, arrow updates
+2. Used Playwright MCP to inspect browser console
+3. Discovered geometry plane issue through mathematical analysis of coordinate mappings
+4. Fixed all polygon geometries to use XZ plane
+5. Removed debug logging after verification
+
+---
+
+### Key Takeaway
+
+**FOR ALL FUTURE FILLED ARROW TYPES**:
+
+When adding new filled arrow shapes to FilledArrowRenderer:
+1. Define geometry in **XZ plane (Y=0)**
+2. Arrow points along **+X axis**
+3. Face normal points in **±Y direction** (toward/away from camera)
+4. Tip at origin (0, 0, 0), extends backward along -X
+5. Test visibility from multiple camera angles before committing
+
+**DO NOT** use XY plane for filled polygons - they will be invisible!
 
 **2. Perspective Tapering** ✅ **COMPLETED (2025-11-09)**
 
