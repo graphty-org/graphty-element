@@ -26,8 +26,10 @@ export enum PolyhedronType {
 }
 
 export const EDGE_CONSTANTS = {
-    DEFAULT_LINE_WIDTH: 0.25,
+    DEFAULT_LINE_WIDTH: 4.5,
     DEFAULT_LINE_COLOR: "#FFFFFF",
+    DEFAULT_ARROW_WIDTH: 5.0,
+    DEFAULT_ARROW_LENGTH: 0.5,
     ARROW_CAP_WIDTH_MULTIPLIER: 20,
     ARROW_CAP_WIDTH_MINIMUM: 4,
     ARROW_CAP_LENGTH_MINIMUM: 0.5,
@@ -42,6 +44,7 @@ export const EDGE_CONSTANTS = {
     ARROW_DOT_RADIUS_MULTIPLIER: 0.15,
     ARROW_SPHERE_DOT_DIAMETER_RATIO: 0.25, // sphere-dot diameter is 1/4 of standard arrow length
     ARROW_DIAMOND_ASPECT_RATIO: 1.5,
+    ARROW_BOX_ASPECT_RATIO: 1.0,
     // Hollow and line-based arrow dimensions
     ARROW_CROW_FORK_ANGLE: 30, // degrees
     ARROW_VEE_ANGLE: 60, // degrees

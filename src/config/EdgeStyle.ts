@@ -1,5 +1,6 @@
 import {z} from "zod/v4";
 
+import {EDGE_CONSTANTS} from "../constants/meshConstants";
 import {ColorStyle} from "./common";
 import {RichTextStyle} from "./RichTextStyle";
 
@@ -66,7 +67,7 @@ export const defaultEdgeStyle: EdgeStyleConfig = {
     line: {
         type: "solid",
         animationSpeed: 0,
-        width: 0.25,
+        width: EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
         color: "darkgrey",
     },
     arrowHead: ArrowStyle.parse({

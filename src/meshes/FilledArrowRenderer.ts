@@ -29,6 +29,10 @@ export interface FilledArrowOptions {
 export class FilledArrowRenderer {
     private static shadersRegistered = false;
 
+    // Shared callback optimization: Track all active materials
+    private static activeMaterials = new Set<ShaderMaterial>();
+    private static cameraCallbackRegistered = false;
+
     /**
      * Register filled arrow shaders
      */
@@ -120,6 +124,39 @@ void main() {
 `;
 
         this.shadersRegistered = true;
+    }
+
+    /**
+     * Register the shared camera position update callback
+     * This callback updates ALL arrow materials at once, instead of having one callback per material.
+     * This dramatically improves performance when rendering many arrows.
+     */
+    private static registerCameraCallback(scene: Scene): void {
+        if (this.cameraCallbackRegistered) {
+            return;
+        }
+
+        this.cameraCallbackRegistered = true;
+
+        scene.onBeforeRenderObservable.add(() => {
+            const camera = scene.activeCamera;
+            if (!camera) {
+                return;
+            }
+
+            // Query camera position once per frame
+            const cameraPos = camera.globalPosition;
+
+            // Update all active materials in one batch
+            for (const material of this.activeMaterials) {
+                try {
+                    material.setVector3("cameraPosition", cameraPos);
+                } catch {
+                    // Material was disposed, remove from set
+                    this.activeMaterials.delete(material);
+                }
+            }
+        });
     }
 
     /**
@@ -358,14 +395,9 @@ void main() {
         shaderMaterial.setFloat("size", options.size);
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
-        // Update camera position on every frame (for tangent billboarding)
-        scene.onBeforeRenderObservable.add(() => {
-            const camera = scene.activeCamera;
-            if (camera) {
-                // Use globalPosition to handle cameras parented to pivots
-                shaderMaterial.setVector3("cameraPosition", camera.globalPosition);
-            }
-        });
+        // Register material for shared camera position updates
+        this.activeMaterials.add(shaderMaterial);
+        this.registerCameraCallback(scene);
 
         shaderMaterial.backFaceCulling = false;
         mesh.material = shaderMaterial;

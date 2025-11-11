@@ -48,6 +48,10 @@ export interface CustomLineOptions {
 export class CustomLineRenderer {
     private static shadersRegistered = false;
 
+    // Shared callback optimization: Track all active materials
+    private static activeMaterials = new Set<ShaderMaterial>();
+    private static resolutionCallbackRegistered = false;
+
     /**
      * Register custom line shaders
      */
@@ -161,6 +165,38 @@ void main() {
 `;
 
         this.shadersRegistered = true;
+    }
+
+    /**
+     * Register the shared resolution update callback
+     * This callback updates ALL line materials at once, instead of having one callback per material.
+     * This dramatically improves performance when rendering many edges.
+     */
+    private static registerResolutionCallback(scene: Scene): void {
+        if (this.resolutionCallbackRegistered) {
+            return;
+        }
+
+        this.resolutionCallbackRegistered = true;
+
+        const engine = scene.getEngine();
+
+        scene.onBeforeRenderObservable.add(() => {
+            // Query resolution once per frame
+            const renderWidth = engine.getRenderWidth();
+            const renderHeight = engine.getRenderHeight();
+            const resolution = new Vector2(renderWidth, renderHeight);
+
+            // Update all active materials in one batch
+            for (const material of this.activeMaterials) {
+                try {
+                    material.setVector2("resolution", resolution);
+                } catch {
+                    // Material was disposed, remove from set
+                    this.activeMaterials.delete(material);
+                }
+            }
+        });
     }
 
     /**
@@ -342,13 +378,9 @@ void main() {
         shaderMaterial.setFloat("dashLength", options.dashLength ?? 3.0);
         shaderMaterial.setFloat("gapLength", options.gapLength ?? 2.0);
 
-        // Update resolution on every frame (like GreasedLine does)
-        const engine = scene.getEngine();
-        scene.onBeforeRenderObservable.add(() => {
-            const renderWidth = engine.getRenderWidth();
-            const renderHeight = engine.getRenderHeight();
-            shaderMaterial.setVector2("resolution", new Vector2(renderWidth, renderHeight));
-        });
+        // Register material for shared resolution updates
+        this.activeMaterials.add(shaderMaterial);
+        this.registerResolutionCallback(scene);
 
         // Disable backface culling for double-sided rendering
         shaderMaterial.backFaceCulling = false;
@@ -679,13 +711,9 @@ void main() {
         shaderMaterial.setFloat("width", options.width);
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
-        // Update resolution on every frame
-        const engine = scene.getEngine();
-        scene.onBeforeRenderObservable.add(() => {
-            const renderWidth = engine.getRenderWidth();
-            const renderHeight = engine.getRenderHeight();
-            shaderMaterial.setVector2("resolution", new Vector2(renderWidth, renderHeight));
-        });
+        // Register material for shared resolution updates
+        this.activeMaterials.add(shaderMaterial);
+        this.registerResolutionCallback(scene);
 
         shaderMaterial.backFaceCulling = false;
         mesh.material = shaderMaterial;

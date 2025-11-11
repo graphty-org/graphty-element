@@ -1248,6 +1248,8 @@ If not already present, add edge property handling to `stories/helpers.ts` rende
 
 **Objective**: Implement 4 filled arrow shapes (inverted, dot, diamond, box) and refactor createArrowHead() to use type-based routing. This establishes the pattern for all future arrow types.
 
+**NOTE**: Many arrow shapes and tests may exist from a previous implementation that didn't work. Carefully inspect each arrow type to determine whether it is using an outdated approach that needs to be replaced. If it is outdated, use the "normal" arrowhead as a reference for a known-good working implementation of the new architecture.
+
 **Duration**: 3 days
 
 **Tests to Write First**:

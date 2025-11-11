@@ -8,6 +8,7 @@ import {
 import * as jmespath from "jmespath";
 
 import type {AdHocData, EdgeStyleConfig} from "./config";
+import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import {EdgeMesh} from "./meshes/EdgeMesh";
@@ -79,6 +80,10 @@ export class Edge {
 
     /**
      * Update thin instance transform and lineDirection for filled arrows
+     *
+     * NOTE: This method does NOT call thinInstanceBufferUpdated()!
+     * Buffer updates are batched and called once per frame by the Graph class
+     * to avoid excessive GPU uploads (was 30K calls/sec with per-edge updates)
      */
     private updateFilledArrowInstance(
         arrowMesh: Mesh,
@@ -100,10 +105,8 @@ export class Edge {
             lineDirection.z,
         ]);
 
-        // CRITICAL: Notify BabylonJS that thin instance buffers have been updated!
-        // Without these calls, the GPU never receives the updated data
-        arrowMesh.thinInstanceBufferUpdated("matrix");
-        arrowMesh.thinInstanceBufferUpdated("lineDirection");
+        // NOTE: thinInstanceBufferUpdated() NOT called here!
+        // This is called once per frame by Graph after all edges update
     }
 
     constructor(graph: Graph | GraphContext, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
@@ -146,7 +149,7 @@ export class Edge {
             String(this.styleId),
             {
                 type: style.arrowHead?.type ?? "none",
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
                 size: style.arrowHead?.size,
                 opacity: style.arrowHead?.opacity,
@@ -168,7 +171,7 @@ export class Edge {
             `${String(this.styleId)}-tail`,
             {
                 type: style.arrowTail?.type ?? "none",
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.arrowTail?.color ?? style.line?.color ?? "#FFFFFF",
                 size: style.arrowTail?.size,
                 opacity: style.arrowTail?.opacity,
@@ -189,7 +192,7 @@ export class Edge {
             this.context.getMeshCache(),
             {
                 styleId: String(this.styleId),
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.line?.color ?? "#FFFFFF",
             },
 
@@ -273,7 +276,7 @@ export class Edge {
             String(styleId),
             {
                 type: style.arrowHead?.type ?? "none",
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.arrowHead?.color ?? style.line?.color ?? "#FFFFFF",
                 size: style.arrowHead?.size,
                 opacity: style.arrowHead?.opacity,
@@ -309,7 +312,7 @@ export class Edge {
             `${String(styleId)}-tail`,
             {
                 type: style.arrowTail?.type ?? "none",
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.arrowTail?.color ?? style.line?.color ?? "#FFFFFF",
                 size: style.arrowTail?.size,
                 opacity: style.arrowTail?.opacity,
@@ -330,7 +333,7 @@ export class Edge {
             this.context.getMeshCache(),
             {
                 styleId: String(styleId),
-                width: style.line?.width ?? 0.25,
+                width: style.line?.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
                 color: style.line?.color ?? "#FFFFFF",
             },
 
@@ -419,9 +422,8 @@ export class Edge {
 
                 // Get arrow length (including size multiplier)
                 const style = Styles.getStyleForEdgeStyleId(this.styleId);
-                const lineWidth = style.line?.width ?? 0.25;
                 const arrowSize = style.arrowHead?.size ?? 1.0;
-                const arrowLength = EdgeMesh.calculateArrowLength(lineWidth) * arrowSize;
+                const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
 
                 // Use actual bounding sphere radii
                 const dstNodeRadius = this.dstNode.mesh.getBoundingInfo().boundingSphere.radiusWorld;
@@ -498,7 +500,7 @@ export class Edge {
             const arrowStyle = Styles.getStyleForEdgeStyleId(this.styleId);
             const arrowType = arrowStyle.arrowHead?.type;
             const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
-            const arrowLength = EdgeMesh.calculateArrowLength(arrowStyle.line?.width ?? 0.25) * arrowSize;
+            const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
             const geometry = EdgeMesh.getArrowGeometry(arrowType ?? "normal");
             const direction = dstPoint.subtract(srcPoint).normalize();
 
@@ -564,7 +566,7 @@ export class Edge {
 
                     // Get tail arrow dimensions and geometry
                     const tailSize = tailStyle.arrowTail?.size ?? 1.0;
-                    const tailLength = EdgeMesh.calculateArrowLength(tailStyle.line?.width ?? 0.25) * tailSize;
+                    const tailLength = EdgeMesh.calculateArrowLength() * tailSize;
                     const tailGeometry = EdgeMesh.getArrowGeometry(tailType);
 
                     // Calculate tail position using common function
@@ -655,7 +657,7 @@ export class Edge {
             // Only adjust endpoint if we have an arrow head
             if (hasArrowHead) {
                 const arrowSize = style.arrowHead?.size ?? 1.0;
-                const arrowLength = EdgeMesh.calculateArrowLength(style.line?.width ?? 0.25) * arrowSize;
+                const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
                 const arrowType = style.arrowHead?.type ?? "normal";
                 const geometry = EdgeMesh.getArrowGeometry(arrowType);
 

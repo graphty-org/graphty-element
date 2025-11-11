@@ -224,8 +224,8 @@ void main() {
 
         const size = options.size ?? 1.0;
         const opacity = options.opacity ?? 1.0;
-        const width = this.calculateArrowWidth(options.width) * size;
-        const length = this.calculateArrowLength(options.width) * size;
+        const width = this.calculateArrowWidth() * size;
+        const length = this.calculateArrowLength() * size;
 
         // Arrow type routing:
         // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader)
@@ -790,12 +790,12 @@ void main() {
         );
     }
 
-    static calculateArrowWidth(lineWidth: number): number {
-        return Math.max(EDGE_CONSTANTS.ARROW_CAP_WIDTH_MULTIPLIER * lineWidth, EDGE_CONSTANTS.ARROW_CAP_WIDTH_MINIMUM);
+    static calculateArrowWidth(): number {
+        return EDGE_CONSTANTS.DEFAULT_ARROW_WIDTH;
     }
 
-    static calculateArrowLength(lineWidth: number): number {
-        return Math.max(lineWidth, EDGE_CONSTANTS.ARROW_CAP_LENGTH_MINIMUM);
+    static calculateArrowLength(): number {
+        return EDGE_CONSTANTS.DEFAULT_ARROW_LENGTH;
     }
 
     /**

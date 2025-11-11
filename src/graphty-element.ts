@@ -27,6 +27,18 @@ export class Graphty extends LitElement {
     connectedCallback(): void {
         super.connectedCallback();
         this.renderRoot.appendChild(this.#element);
+
+        // Parse URL parameters
+        this.parseURLParams();
+    }
+
+    private parseURLParams(): void {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Check for profiling parameter
+        if (urlParams.get("profiling") === "true") {
+            this.enableDetailedProfiling = true;
+        }
     }
 
     // update(changedProperties: Map<string, unknown>) {
@@ -377,6 +389,29 @@ export class Graphty extends LitElement {
         }
 
         this.requestUpdate("runAlgorithmsOnLoad", oldValue);
+    }
+
+    #enableDetailedProfiling?: boolean;
+
+    /**
+     * Enable detailed performance profiling.
+     * When enabled, hierarchical timing and advanced statistics will be collected.
+     * Access profiling data via graph.getStatsManager().getSnapshot() or
+     * graph.getStatsManager().reportDetailed().
+     */
+    @property({attribute: "enable-detailed-profiling", type: Boolean})
+    get enableDetailedProfiling(): boolean | undefined {
+        return this.#enableDetailedProfiling;
+    }
+    set enableDetailedProfiling(value: boolean | undefined) {
+        const oldValue = this.#enableDetailedProfiling;
+        this.#enableDetailedProfiling = value;
+
+        if (value !== undefined) {
+            this.#graph.enableDetailedProfiling = value;
+        }
+
+        this.requestUpdate("enableDetailedProfiling", oldValue);
     }
 
     /**

@@ -78,6 +78,13 @@ export interface GraphContextConfig {
     pinOnDrag?: boolean;
 
     /**
+     * Enable detailed performance profiling
+     * Adds hierarchical timing and advanced statistics
+     * Default: false (use existing StatsManager only)
+     */
+    enableDetailedProfiling?: boolean;
+
+    /**
      * Other graph-level configuration options can be added here
      */
 }

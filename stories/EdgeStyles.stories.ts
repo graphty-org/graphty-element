@@ -84,13 +84,13 @@ export const ArrowSize: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "normal", size: 2.0, color: "darkgrey"},
-                line: {width: 0.5, color: "darkgrey"},
+                line: {color: "darkgrey"},
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["arrowHead.size", "line.width"],
+            include: ["arrowHead.size"],
         },
     },
 };
@@ -180,13 +180,13 @@ export const OpenDotArrowHead: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "open-dot", color: "#FF0000", size: 4.0},
-                line: {color: "#666666", width: 0.5},
+                line: {color: "#666666"},
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+            include: ["arrowHead.size", "arrowHead.color"],
         },
     },
 };
@@ -196,13 +196,13 @@ export const SphereDotArrowHead: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "sphere-dot", color: "#FF0000", size: 4.0},
-                line: {color: "#666666", width: 0.5},
+                line: {color: "#666666"},
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+            include: ["arrowHead.size", "arrowHead.color"],
         },
     },
 };
@@ -212,13 +212,13 @@ export const DotArrowHead: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "dot", color: "#FF0000", size: 1.0},
-                line: {color: "#666666", width: 0.5},
+                line: {color: "#666666"},
             },
         }),
     },
     parameters: {
         controls: {
-            include: ["arrowHead.size", "arrowHead.color", "line.width"],
+            include: ["arrowHead.size", "arrowHead.color"],
         },
     },
 };
