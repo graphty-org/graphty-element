@@ -228,81 +228,47 @@ void main() {
         const length = this.calculateArrowLength() * size;
 
         // Arrow type routing:
-        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader)
-        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!)
-        // - 3D billboard arrows: Use existing implementation (spheres)
+        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
+        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
+        // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
         const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot"];
         const OUTLINE_ARROWS = ["empty", "open-diamond", "tee", "vee", "open", "half-open", "crow"];
         const BILLBOARD_ARROWS = ["open-dot", "sphere-dot", "sphere"];
 
-        // Only billboard arrows need fresh mesh per edge
-        // Filled arrows use thin instances with per-instance lineDirection attribute
-        const needsFreshMesh = BILLBOARD_ARROWS.includes(options.type ?? "");
+        // PERFORMANCE FIX: Create individual meshes for all arrow types
+        // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
+        // Individual meshes use direct position/rotation which is much faster for frequent updates
 
-        const createMesh = (): Mesh => {
-            let mesh: Mesh;
+        let mesh: Mesh;
+        const arrowType = options.type ?? "";
 
-            // Route to appropriate renderer based on arrow type
-            const arrowType = options.type ?? "";
-
-            if (FILLED_ARROWS.includes(arrowType)) {
-                // Filled arrows: Use FilledArrowRenderer with thin instances
-                // lineDirection passed per-instance when creating thin instances
-                mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
-            } else if (OUTLINE_ARROWS.includes(arrowType)) {
-                // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-                mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
-            } else if (BILLBOARD_ARROWS.includes(arrowType)) {
-                // 3D billboard arrows: Use existing sphere-based implementation
-                switch (options.type) {
-                    case "open-dot":
-                        mesh = this.createOpenDotArrow(length, width, options.color, scene);
-                        break;
-                    case "sphere-dot":
-                        mesh = this.createSphereDotArrow(length, width, options.color, scene);
-                        break;
-                    case "sphere":
-                        mesh = this.createSphereArrow(length, width, options.color, scene);
-                        break;
-                    default:
-                        throw new Error(`Unsupported arrow type: ${options.type}`);
-                }
-            } else {
-                throw new Error(`Unsupported arrow type: ${options.type}`);
+        if (FILLED_ARROWS.includes(arrowType)) {
+            // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
+            mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
+        } else if (OUTLINE_ARROWS.includes(arrowType)) {
+            // Outline arrows: Use CustomLineRenderer (same shader as lines!)
+            mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
+        } else if (BILLBOARD_ARROWS.includes(arrowType)) {
+            // 3D billboard arrows: Use existing sphere-based implementation
+            switch (options.type) {
+                case "open-dot":
+                    mesh = this.createOpenDotArrow(length, width, options.color, scene);
+                    break;
+                case "sphere-dot":
+                    mesh = this.createSphereDotArrow(length, width, options.color, scene);
+                    break;
+                case "sphere":
+                    mesh = this.createSphereArrow(length, width, options.color, scene);
+                    break;
+                default:
+                    throw new Error(`Unsupported arrow type: ${options.type}`);
             }
-
-            mesh.visibility = opacity;
-            return mesh;
-        };
-
-        // Some arrows don't work with instancing/caching, so create fresh mesh
-        // (billboard arrows and perpendicular dot which needs per-edge orientation)
-        if (needsFreshMesh) {
-            return createMesh();
+        } else {
+            throw new Error(`Unsupported arrow type: ${options.type}`);
         }
 
-        const cacheKey = `edge-arrowhead-v2-style-${styleId}`;
-
-        // Filled arrows use THIN INSTANCES, not InstancedMesh
-        // Return the base mesh directly so Edge can call thinInstanceAdd()
-        if (FILLED_ARROWS.includes(options.type ?? "")) {
-            let baseMesh = cache.meshCacheMap.get(cacheKey);
-            if (!baseMesh) {
-                // Create and cache the base mesh
-                baseMesh = createMesh();
-                baseMesh.name = cacheKey; // Set name to cache key for test compatibility
-                // IMPORTANT: Do NOT set isVisible = false! It hides ALL thin instances.
-                // Instead, move far away to hide the base mesh template.
-                baseMesh.position.set(0, -10000, 0);
-                cache.meshCacheMap.set(cacheKey, baseMesh);
-            }
-
-            return baseMesh; // Return base mesh, not an instance
-        }
-
-        // Outline arrows use regular instancing (InstancedMesh)
-        // MeshCache.get() creates an instance via mesh.createInstance()
-        return cache.get(cacheKey, createMesh);
+        mesh.visibility = opacity;
+        return mesh;
     }
 
     /**

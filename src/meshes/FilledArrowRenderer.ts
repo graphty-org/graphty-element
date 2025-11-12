@@ -66,28 +66,17 @@ precision highp float;
 
 // Attributes
 attribute vec3 position;      // Arrow geometry (XY plane, pointing along +X)
-attribute vec3 lineDirection; // Per-instance line direction
-
-// Thin instance attributes (world matrix columns)
-#ifdef THIN_INSTANCES
-attribute vec4 world0;
-attribute vec4 world1;
-attribute vec4 world2;
-attribute vec4 world3;
-#endif
 
 // Uniforms
 uniform mat4 viewProjection;
+uniform mat4 world;            // World matrix (for individual meshes)
 uniform vec3 cameraPosition;
+uniform vec3 lineDirection;    // Line direction (uniform for individual meshes)
 uniform float size;
 
 void main() {
-    // Construct world matrix from thin instance attributes
-    #ifdef THIN_INSTANCES
-    mat4 finalWorld = mat4(world0, world1, world2, world3);
-    #else
-    mat4 finalWorld = mat4(1.0); // Identity matrix for non-instanced
-    #endif
+    // Use world matrix directly (individual meshes)
+    mat4 finalWorld = world;
 
     // Extract arrow center position from world matrix
     vec3 worldCenter = vec3(finalWorld[3][0], finalWorld[3][1], finalWorld[3][2]);
@@ -356,10 +345,10 @@ void main() {
     }
 
     /**
-     * Apply the filled arrow shader to a mesh with thin instance support
+     * Apply the filled arrow shader to a mesh
      *
      * Uses tangent billboarding: arrow aligns with line direction in screen space.
-     * lineDirection is passed per-instance via thin instance attributes.
+     * lineDirection is passed as a uniform (set via setLineDirection method).
      *
      * @param mesh Mesh to apply shader to
      * @param options Styling options
@@ -377,15 +366,15 @@ void main() {
                 fragment: "filledArrow",
             },
             {
-                attributes: ["position", "lineDirection"],
+                attributes: ["position"],
                 uniforms: [
                     "viewProjection",
                     "cameraPosition",
                     "size",
                     "color",
                     "opacity",
+                    "lineDirection", // Now a uniform instead of per-instance attribute
                 ],
-                defines: ["#define THIN_INSTANCES"], // Enable thin instancing
             },
         );
 
@@ -395,6 +384,9 @@ void main() {
         shaderMaterial.setFloat("size", options.size);
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
+        // Initialize lineDirection to a default value (will be updated per-edge)
+        shaderMaterial.setVector3("lineDirection", new Vector3(1, 0, 0));
+
         // Register material for shared camera position updates
         this.activeMaterials.add(shaderMaterial);
         this.registerCameraCallback(scene);
@@ -402,11 +394,7 @@ void main() {
         shaderMaterial.backFaceCulling = false;
         mesh.material = shaderMaterial;
 
-        // Setup thin instance support for per-instance lineDirection
-        // Register the lineDirection attribute (vec3 = 3 floats)
-        mesh.thinInstanceRegisterAttribute("lineDirection", 3);
-
-        // IMPORTANT: Do NOT set isVisible = false for thin instances!
+        // No thin instance support needed - each edge has its own mesh
         // Setting isVisible = false hides ALL thin instances, not just the base mesh.
         // Instead, we rely on the mesh being moved far away in EdgeMesh.createArrowHead()
         // via position.set(0, -10000, 0) to hide the base mesh template.
@@ -417,5 +405,19 @@ void main() {
         mesh.alwaysSelectAsActiveMesh = true;
 
         return mesh;
+    }
+
+    /**
+     * Set the line direction for a filled arrow mesh
+     * This should be called every frame when the edge updates
+     *
+     * @param mesh Filled arrow mesh
+     * @param direction Line direction vector (normalized)
+     */
+    static setLineDirection(mesh: Mesh, direction: Vector3): void {
+        const material = mesh.material as ShaderMaterial;
+        if (material) {
+            material.setVector3("lineDirection", direction);
+        }
     }
 }

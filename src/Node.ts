@@ -90,6 +90,8 @@ export class Node {
     }
 
     update(): void {
+        this.context.getStatsManager().startMeasurement("Node.update");
+
         const newStyleKeys = Object.keys(this.styleUpdates);
         if (newStyleKeys.length > 0) {
             let style = Styles.getStyleForNodeStyleId(this.styleId);
@@ -103,6 +105,7 @@ export class Node {
         }
 
         if (this.dragging) {
+            this.context.getStatsManager().endMeasurement("Node.update");
             return;
         }
 
@@ -112,12 +115,17 @@ export class Node {
             this.mesh.position.y = pos.y;
             this.mesh.position.z = pos.z ?? 0;
         }
+
+        this.context.getStatsManager().endMeasurement("Node.update");
     }
 
     updateStyle(styleId: NodeStyleId): void {
+        this.context.getStatsManager().startMeasurement("Node.updateMesh");
+
         // Only skip update if styleId is the same AND mesh is not disposed
         // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
         if (styleId === this.styleId && !this.mesh.isDisposed()) {
+            this.context.getStatsManager().endMeasurement("Node.updateMesh");
             return;
         }
 
@@ -147,6 +155,8 @@ export class Node {
         }
 
         NodeBehavior.addDefaultBehaviors(this, this.opts);
+
+        this.context.getStatsManager().endMeasurement("Node.updateMesh");
     }
 
     pin(): void {
