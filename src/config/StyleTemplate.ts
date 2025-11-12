@@ -32,9 +32,14 @@ export const AppliedEdgeStyle = z.strictObject({
 export type AppliedNodeStyleConfig = z.infer<typeof AppliedNodeStyle>;
 export type AppliedEdgeStyleConfig = z.infer<typeof AppliedEdgeStyle>;
 
+const StyleLayerMetadata = z.strictObject({
+    name: z.string(),
+});
+
 export const StyleLayer = z.strictObject({
     node: AppliedNodeStyle,
     edge: AppliedEdgeStyle,
+    metadata: StyleLayerMetadata.optional(),
 })
     .partial()
     .refine(
