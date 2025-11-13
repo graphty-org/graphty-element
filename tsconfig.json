@@ -15,5 +15,6 @@
     /* Lit features */
     "experimentalDecorators": true
   },
-  "include": ["**/*.ts", ".storybook/**/*.ts"]
+  "include": ["**/*.ts", ".storybook/**/*.ts"],
+  "exclude": ["tmp/**/*"]
 }

@@ -935,11 +935,14 @@ export class StatsManager implements Manager {
 
         const snapshot = this.getSnapshot();
 
+        // eslint-disable-next-line no-console
         console.group("📊 Performance Report");
 
         // CPU metrics
         if (snapshot.cpu.length > 0) {
+            // eslint-disable-next-line no-console
             console.group("CPU Metrics");
+            // eslint-disable-next-line no-console
             console.table(
                 snapshot.cpu.map((m) => ({
                     "Label": m.label,
@@ -963,20 +966,24 @@ export class StatsManager implements Manager {
                 );
             });
 
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
         // Event Counters
         const countersSnapshot = this.getCountersSnapshot();
         if (countersSnapshot.length > 0) {
+            // eslint-disable-next-line no-console
             console.group("Event Counters");
+            // eslint-disable-next-line no-console
             console.table(
                 countersSnapshot.map((c) => ({
-                    "Label": c.label,
-                    "Value": c.value,
-                    "Operations": c.operations,
+                    Label: c.label,
+                    Value: c.value,
+                    Operations: c.operations,
                 })),
             );
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
@@ -984,10 +991,12 @@ export class StatsManager implements Manager {
         if (snapshot.gpu) {
             // eslint-disable-next-line no-console
             console.log("GPU Metrics (BabylonJS EngineInstrumentation):");
+            // eslint-disable-next-line no-console
             console.group("GPU Metrics (BabylonJS EngineInstrumentation)");
 
             // eslint-disable-next-line no-console
             console.log("  GPU Frame Time (ms):");
+            // eslint-disable-next-line no-console
             console.group("GPU Frame Time (ms)");
             // eslint-disable-next-line no-console
             console.log("  Current:", snapshot.gpu.gpuFrameTime.current.toFixed(3));
@@ -1001,10 +1010,12 @@ export class StatsManager implements Manager {
             console.log("  Max:", snapshot.gpu.gpuFrameTime.max.toFixed(3));
             // eslint-disable-next-line no-console
             console.log("  Total:", snapshot.gpu.gpuFrameTime.total.toFixed(3));
+            // eslint-disable-next-line no-console
             console.groupEnd();
 
             // eslint-disable-next-line no-console
             console.log("  Shader Compilation (ms):");
+            // eslint-disable-next-line no-console
             console.group("Shader Compilation (ms)");
             // eslint-disable-next-line no-console
             console.log("  Current:", snapshot.gpu.shaderCompilation.current.toFixed(2));
@@ -1018,8 +1029,10 @@ export class StatsManager implements Manager {
             console.log("  Max:", snapshot.gpu.shaderCompilation.max.toFixed(2));
             // eslint-disable-next-line no-console
             console.log("  Total:", snapshot.gpu.shaderCompilation.total.toFixed(2));
+            // eslint-disable-next-line no-console
             console.groupEnd();
 
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
@@ -1027,12 +1040,14 @@ export class StatsManager implements Manager {
         if (snapshot.scene) {
             // eslint-disable-next-line no-console
             console.log("Scene Metrics (BabylonJS SceneInstrumentation):");
+            // eslint-disable-next-line no-console
             console.group("Scene Metrics (BabylonJS SceneInstrumentation)");
 
             // Helper to print counter stats
             const printCounterStats = (name: string, counter: PerfCounterSnapshot, unit = "ms"): void => {
                 // eslint-disable-next-line no-console
                 console.log(`  ${name}:`);
+                // eslint-disable-next-line no-console
                 console.group(name);
                 // eslint-disable-next-line no-console
                 console.log(`  Current: ${counter.current.toFixed(2)} ${unit}`);
@@ -1046,6 +1061,7 @@ export class StatsManager implements Manager {
                 console.log(`  Max: ${counter.max.toFixed(2)} ${unit}`);
                 // eslint-disable-next-line no-console
                 console.log(`  Total: ${counter.total.toFixed(2)} ${unit}`);
+                // eslint-disable-next-line no-console
                 console.groupEnd();
             };
 
@@ -1059,6 +1075,7 @@ export class StatsManager implements Manager {
             // Draw Calls is special - count metric + timing
             // eslint-disable-next-line no-console
             console.log("  Draw Calls:");
+            // eslint-disable-next-line no-console
             console.group("Draw Calls");
             // eslint-disable-next-line no-console
             console.log(`  Count: ${snapshot.scene.drawCalls.count}`);
@@ -1074,8 +1091,10 @@ export class StatsManager implements Manager {
             console.log(`  Max: ${snapshot.scene.drawCalls.max.toFixed(0)}`);
             // eslint-disable-next-line no-console
             console.log(`  Total: ${snapshot.scene.drawCalls.total.toFixed(0)}`);
+            // eslint-disable-next-line no-console
             console.groupEnd();
 
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
@@ -1084,6 +1103,7 @@ export class StatsManager implements Manager {
             const ls = snapshot.layoutSession;
             // eslint-disable-next-line no-console
             console.log("Layout Session Performance:");
+            // eslint-disable-next-line no-console
             console.group("Layout Session Performance");
 
             // eslint-disable-next-line no-console
@@ -1097,7 +1117,7 @@ export class StatsManager implements Manager {
             // eslint-disable-next-line no-console
             console.log("");
             // eslint-disable-next-line no-console
-            console.log(`Per-Frame Averages:`);
+            console.log("Per-Frame Averages:");
             // eslint-disable-next-line no-console
             console.log(`├─ Total: ${ls.perFrame.total.toFixed(2)}ms/frame`);
             // eslint-disable-next-line no-console
@@ -1107,6 +1127,7 @@ export class StatsManager implements Manager {
             // eslint-disable-next-line no-console
             console.log(`└─ Blocking: ${ls.perFrame.blocking.toFixed(2)}ms/frame`);
 
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
@@ -1119,12 +1140,13 @@ export class StatsManager implements Manager {
                 console.log("");
                 // eslint-disable-next-line no-console
                 console.log("🔍 Blocking Correlation Analysis:");
+                // eslint-disable-next-line no-console
                 console.group("Blocking Correlation Analysis");
 
                 // eslint-disable-next-line no-console
                 console.log(`Analyzed ${this.frameProfiles.length} frames`);
                 // eslint-disable-next-line no-console
-                console.log(`High-blocking threshold: blocking > 1.0x CPU time`);
+                console.log("High-blocking threshold: blocking > 1.0x CPU time");
                 // eslint-disable-next-line no-console
                 console.log("");
 
@@ -1133,16 +1155,17 @@ export class StatsManager implements Manager {
 
                 // eslint-disable-next-line no-console
                 console.log("Top operations correlated with blocking:");
+                // eslint-disable-next-line no-console
                 console.table(
                     topBlockingOps.map((op) => ({
                         "Operation": op.label,
                         "Total CPU (ms)": op.totalCpuTime.toFixed(2),
                         "Appearances": op.appearanceCount,
                         "High-Blocking Frames": op.highBlockingFrames,
-                        "High-Blocking %": op.highBlockingPercentage.toFixed(1) + "%",
-                        "Avg Blocking Ratio": Number.isNaN(op.avgBlockingRatioWhenPresent)
-                            ? "N/A"
-                            : op.avgBlockingRatioWhenPresent.toFixed(2) + "x",
+                        "High-Blocking %": `${op.highBlockingPercentage.toFixed(1)}%`,
+                        "Avg Blocking Ratio": Number.isNaN(op.avgBlockingRatioWhenPresent) ?
+                            "N/A" :
+                            `${op.avgBlockingRatioWhenPresent.toFixed(2)}x`,
                     })),
                 );
 
@@ -1154,17 +1177,19 @@ export class StatsManager implements Manager {
                     console.log(
                         `  ${i + 1}. ${op.label}: ${op.highBlockingPercentage.toFixed(1)}% high-blocking frames (${op.highBlockingFrames}/${op.appearanceCount})`,
                     );
+                    const ratioStr = Number.isNaN(op.avgBlockingRatioWhenPresent) ?
+                        "N/A" :
+                        `${op.avgBlockingRatioWhenPresent.toFixed(2)}x`;
                     // eslint-disable-next-line no-console
-                    const ratioStr = Number.isNaN(op.avgBlockingRatioWhenPresent)
-                        ? "N/A"
-                        : op.avgBlockingRatioWhenPresent.toFixed(2) + "x";
                     console.log(`     Avg blocking ratio: ${ratioStr}`);
                 });
 
+                // eslint-disable-next-line no-console
                 console.groupEnd();
             }
         }
 
+        // eslint-disable-next-line no-console
         console.groupEnd();
     }
 
@@ -1178,15 +1203,16 @@ export class StatsManager implements Manager {
             return;
         }
 
-        if (!this.counters.has(label)) {
-            this.counters.set(label, {
+        let counter = this.counters.get(label);
+        if (!counter) {
+            counter = {
                 label,
                 value: 0,
                 operations: 0,
-            });
+            };
+            this.counters.set(label, counter);
         }
 
-        const counter = this.counters.get(label)!;
         counter.value += amount;
         counter.operations++;
     }
@@ -1201,15 +1227,16 @@ export class StatsManager implements Manager {
             return;
         }
 
-        if (!this.counters.has(label)) {
-            this.counters.set(label, {
+        let counter = this.counters.get(label);
+        if (!counter) {
+            counter = {
                 label,
                 value: 0,
                 operations: 0,
-            });
+            };
+            this.counters.set(label, counter);
         }
 
-        const counter = this.counters.get(label)!;
         counter.value -= amount;
         counter.operations++;
     }
@@ -1224,15 +1251,16 @@ export class StatsManager implements Manager {
             return;
         }
 
-        if (!this.counters.has(label)) {
-            this.counters.set(label, {
+        let counter = this.counters.get(label);
+        if (!counter) {
+            counter = {
                 label,
                 value: 0,
                 operations: 0,
-            });
+            };
+            this.counters.set(label, counter);
         }
 
-        const counter = this.counters.get(label)!;
         counter.value = value;
         counter.operations++;
     }

@@ -368,6 +368,7 @@ void main() {
             {
                 attributes: ["position"],
                 uniforms: [
+                    "world",
                     "viewProjection",
                     "cameraPosition",
                     "size",
@@ -415,8 +416,8 @@ void main() {
      * @param direction Line direction vector (normalized)
      */
     static setLineDirection(mesh: Mesh, direction: Vector3): void {
-        const material = mesh.material as ShaderMaterial;
-        if (material) {
+        if (mesh.material) {
+            const material = mesh.material as ShaderMaterial;
             material.setVector3("lineDirection", direction);
         }
     }

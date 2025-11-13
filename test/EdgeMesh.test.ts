@@ -118,7 +118,7 @@ describe("EdgeMesh", () => {
             );
 
             assert.exists(arrowMesh);
-            assert.equal(arrowMesh.name, "edge-arrowhead-v2-style-test-arrow");
+            assert.equal(arrowMesh.name, "filled-triangle-arrow");
         });
 
         test("returns null for 'none' type", () => {
@@ -168,17 +168,12 @@ describe("EdgeMesh", () => {
     });
 
     describe("Helper Methods", () => {
-        test("calculateArrowWidth returns correct values", () => {
-            assert.equal(EdgeMesh.calculateArrowWidth(0.1), 4); // minimum
-            assert.equal(EdgeMesh.calculateArrowWidth(0.25), 5); // 20 * 0.25
-            assert.equal(EdgeMesh.calculateArrowWidth(1), 20); // 20 * 1
+        test("calculateArrowWidth returns default constant", () => {
+            assert.equal(EdgeMesh.calculateArrowWidth(), 5.0); // DEFAULT_ARROW_WIDTH
         });
 
-        test("calculateArrowLength returns correct values", () => {
-            assert.equal(EdgeMesh.calculateArrowLength(0.1), 0.5); // minimum
-            assert.equal(EdgeMesh.calculateArrowLength(0.5), 0.5); // minimum
-            assert.equal(EdgeMesh.calculateArrowLength(1), 1); // same as width
-            assert.equal(EdgeMesh.calculateArrowLength(2), 2); // same as width
+        test("calculateArrowLength returns default constant", () => {
+            assert.equal(EdgeMesh.calculateArrowLength(), 0.5); // DEFAULT_ARROW_LENGTH
         });
 
         test("transformMesh positions and orients correctly", () => {

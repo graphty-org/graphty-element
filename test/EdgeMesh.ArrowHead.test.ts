@@ -1,8 +1,8 @@
 import {Mesh, NullEngine, Scene} from "@babylonjs/core";
 import {assert, beforeEach, describe, test} from "vitest";
 
-import {EdgeMesh} from "../../src/meshes/EdgeMesh";
-import {MeshCache} from "../../src/meshes/MeshCache";
+import {EdgeMesh} from "../src/meshes/EdgeMesh";
+import {MeshCache} from "../src/meshes/MeshCache";
 
 describe("Arrow Shape Generation", () => {
     let scene: Scene;
@@ -23,9 +23,9 @@ describe("Arrow Shape Generation", () => {
         );
 
         assert.exists(arrowMesh);
-        // The mesh should be cached and named appropriately
-        assert.isTrue(arrowMesh.name.includes("edge-arrowhead"));
-        // Should be a Mesh type (not InstancedMesh since it's cached base mesh)
+        // The mesh should be named appropriately (filled arrows use FilledArrowRenderer)
+        assert.isTrue(arrowMesh.name.includes("filled-triangle-arrow"));
+        // Should be a Mesh type
         assert.instanceOf(arrowMesh, Mesh);
     });
 
@@ -38,7 +38,7 @@ describe("Arrow Shape Generation", () => {
         );
 
         assert.exists(arrowMesh);
-        assert.isTrue(arrowMesh.name.includes("edge-arrowhead"));
+        assert.isTrue(arrowMesh.name.includes("filled-circle-arrow"));
         assert.instanceOf(arrowMesh, Mesh);
         // Verify the mesh has geometry
         const positions = arrowMesh.getVerticesData("position");
@@ -55,7 +55,7 @@ describe("Arrow Shape Generation", () => {
         );
 
         assert.exists(arrowMesh);
-        assert.isTrue(arrowMesh.name.includes("edge-arrowhead"));
+        assert.isTrue(arrowMesh.name.includes("filled-diamond-arrow"));
         assert.instanceOf(arrowMesh, Mesh);
         // Verify diamond has vertices (should have 4 corner points)
         const positions = arrowMesh.getVerticesData("position");
@@ -72,7 +72,7 @@ describe("Arrow Shape Generation", () => {
         );
 
         assert.exists(arrowMesh);
-        assert.isTrue(arrowMesh.name.includes("edge-arrowhead"));
+        assert.isTrue(arrowMesh.name.includes("filled-box-arrow"));
         assert.instanceOf(arrowMesh, Mesh);
         // Verify box has vertices (should have 4 corners)
         const positions = arrowMesh.getVerticesData("position");
@@ -89,7 +89,7 @@ describe("Arrow Shape Generation", () => {
         );
 
         assert.exists(arrowMesh);
-        assert.isTrue(arrowMesh.name.includes("edge-arrowhead"));
+        assert.isTrue(arrowMesh.name.includes("filled-triangle-arrow"));
         assert.instanceOf(arrowMesh, Mesh);
     });
 
@@ -141,22 +141,23 @@ describe("Arrow Shape Generation", () => {
         assert.isNull(arrowMesh);
     });
 
-    test("arrow caching works correctly", () => {
+    test("arrows are individual meshes (not cached)", () => {
         const arrow1 = EdgeMesh.createArrowHead(
             meshCache,
-            "test-cache",
+            "test-no-cache",
             {type: "normal", width: 1.0, color: "#FF0000", size: 1.0, opacity: 1.0},
             scene,
         );
 
         const arrow2 = EdgeMesh.createArrowHead(
             meshCache,
-            "test-cache",
+            "test-no-cache",
             {type: "normal", width: 1.0, color: "#FF0000", size: 1.0, opacity: 1.0},
             scene,
         );
 
-        // Both should point to the same base mesh (cached)
-        assert.equal(arrow1, arrow2);
+        // Performance optimization: individual meshes are created (not cached)
+        // This allows direct position/rotation updates which are faster than thin instances
+        assert.notEqual(arrow1, arrow2);
     });
 });

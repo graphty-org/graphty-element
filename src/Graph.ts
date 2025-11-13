@@ -7,7 +7,6 @@ import {
     AbstractMesh,
     Color4,
     Engine,
-    Mesh,
     PhotoDome,
     Scene,
     Vector3,

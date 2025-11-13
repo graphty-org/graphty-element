@@ -1,6 +1,5 @@
 import {
     AbstractMesh,
-    Matrix,
     Mesh,
     Ray,
     Vector3,
@@ -73,7 +72,6 @@ export class Edge {
         return this.parentGraph;
     }
 
-
     constructor(graph: Graph | GraphContext, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
@@ -97,7 +95,11 @@ export class Edge {
         this.dstNode = dstNode;
 
         // create ray for direction / intercept finding
-        this.ray = new Ray(this.srcNode.mesh.position, this.dstNode.mesh.position);
+        // Ray constructor expects (origin, direction), not (origin, destination)
+        this.ray = new Ray(
+            this.srcNode.mesh.position,
+            this.dstNode.mesh.position.subtract(this.srcNode.mesh.position),
+        );
 
         // copy edgeMeshConfig
         this.styleId = styleId;
@@ -507,7 +509,7 @@ export class Edge {
                     this.arrowTailMesh.position = tailPosition;
 
                     // Update lineDirection for filled arrow tails (shader needs it for billboarding)
-                    if (tailType && ["normal", "inverted", "diamond", "box", "dot"].includes(tailType)) {
+                    if (["normal", "inverted", "diamond", "box", "dot"].includes(tailType)) {
                         // Filled arrows use shader-based billboarding via lineDirection uniform
                         FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
                     } else if (tailGeometry.needsRotation) {

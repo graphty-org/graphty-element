@@ -1,3 +1,4 @@
+import type {EngineInstrumentation, SceneInstrumentation} from "@babylonjs/core";
 import {assert, beforeEach, describe, it, vi} from "vitest";
 
 import type {EventManager} from "../../src/managers/EventManager";
@@ -514,10 +515,7 @@ describe("StatsManager - Profiling", () => {
 
             // Initialize with mock instrumentation
             statsManager._injectMockInstrumentation(
-                mockEngineInstrumentation as unknown as {
-                    gpuFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    shaderCompilationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
+                mockEngineInstrumentation as unknown as EngineInstrumentation,
                 undefined,
             );
 
@@ -525,24 +523,24 @@ describe("StatsManager - Profiling", () => {
 
             // Verify GPU metrics are present
             assert.isDefined(snapshot.gpu);
-            assert.isDefined(snapshot.gpu?.gpuFrameTime);
-            assert.isDefined(snapshot.gpu?.shaderCompilation);
+            assert.isDefined(snapshot.gpu.gpuFrameTime);
+            assert.isDefined(snapshot.gpu.shaderCompilation);
 
             // Verify GPU frame time conversion from nanoseconds to milliseconds
-            assert.approximately(snapshot.gpu!.gpuFrameTime.current, 5.0, 0.001);
-            assert.approximately(snapshot.gpu!.gpuFrameTime.avg, 4.5, 0.001);
-            assert.approximately(snapshot.gpu!.gpuFrameTime.min, 3.0, 0.001);
-            assert.approximately(snapshot.gpu!.gpuFrameTime.max, 8.0, 0.001);
-            assert.approximately(snapshot.gpu!.gpuFrameTime.total, 450.0, 0.001);
-            assert.approximately(snapshot.gpu!.gpuFrameTime.lastSecAvg, 4.8, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.current, 5.0, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.avg, 4.5, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.min, 3.0, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.max, 8.0, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.total, 450.0, 0.001);
+            assert.approximately(snapshot.gpu.gpuFrameTime.lastSecAvg, 4.8, 0.001);
 
             // Verify shader compilation (already in milliseconds, no conversion)
-            assert.equal(snapshot.gpu!.shaderCompilation.current, 12.5);
-            assert.equal(snapshot.gpu!.shaderCompilation.avg, 10.2);
-            assert.equal(snapshot.gpu!.shaderCompilation.min, 5.0);
-            assert.equal(snapshot.gpu!.shaderCompilation.max, 25.0);
-            assert.equal(snapshot.gpu!.shaderCompilation.total, 1020.0);
-            assert.equal(snapshot.gpu!.shaderCompilation.lastSecAvg, 11.5);
+            assert.equal(snapshot.gpu.shaderCompilation.current, 12.5);
+            assert.equal(snapshot.gpu.shaderCompilation.avg, 10.2);
+            assert.equal(snapshot.gpu.shaderCompilation.min, 5.0);
+            assert.equal(snapshot.gpu.shaderCompilation.max, 25.0);
+            assert.equal(snapshot.gpu.shaderCompilation.total, 1020.0);
+            assert.equal(snapshot.gpu.shaderCompilation.lastSecAvg, 11.5);
         });
 
         it("should not include GPU metrics when instrumentation is not initialized", () => {
@@ -615,15 +613,7 @@ describe("StatsManager - Profiling", () => {
             // Initialize with mock instrumentation
             statsManager._injectMockInstrumentation(
                 undefined,
-                mockSceneInstrumentation as unknown as {
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    cameraRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    activeMeshesEvaluationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTargetsRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    drawCallsCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number, count: number};
-                },
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             const snapshot = statsManager.getSnapshot();
@@ -632,37 +622,37 @@ describe("StatsManager - Profiling", () => {
             assert.isDefined(snapshot.scene);
 
             // Verify frameTime
-            assert.equal(snapshot.scene!.frameTime.current, 16.7);
-            assert.equal(snapshot.scene!.frameTime.avg, 16.5);
-            assert.equal(snapshot.scene!.frameTime.min, 15.0);
-            assert.equal(snapshot.scene!.frameTime.max, 20.0);
-            assert.equal(snapshot.scene!.frameTime.total, 1650.0);
-            assert.equal(snapshot.scene!.frameTime.lastSecAvg, 16.6);
+            assert.equal(snapshot.scene.frameTime.current, 16.7);
+            assert.equal(snapshot.scene.frameTime.avg, 16.5);
+            assert.equal(snapshot.scene.frameTime.min, 15.0);
+            assert.equal(snapshot.scene.frameTime.max, 20.0);
+            assert.equal(snapshot.scene.frameTime.total, 1650.0);
+            assert.equal(snapshot.scene.frameTime.lastSecAvg, 16.6);
 
             // Verify renderTime
-            assert.equal(snapshot.scene!.renderTime.current, 12.3);
-            assert.equal(snapshot.scene!.renderTime.avg, 11.8);
+            assert.equal(snapshot.scene.renderTime.current, 12.3);
+            assert.equal(snapshot.scene.renderTime.avg, 11.8);
 
             // Verify interFrameTime
-            assert.equal(snapshot.scene!.interFrameTime.current, 16.8);
-            assert.equal(snapshot.scene!.interFrameTime.avg, 16.7);
+            assert.equal(snapshot.scene.interFrameTime.current, 16.8);
+            assert.equal(snapshot.scene.interFrameTime.avg, 16.7);
 
             // Verify cameraRenderTime
-            assert.equal(snapshot.scene!.cameraRenderTime.current, 2.5);
-            assert.equal(snapshot.scene!.cameraRenderTime.avg, 2.3);
+            assert.equal(snapshot.scene.cameraRenderTime.current, 2.5);
+            assert.equal(snapshot.scene.cameraRenderTime.avg, 2.3);
 
             // Verify activeMeshesEvaluation
-            assert.equal(snapshot.scene!.activeMeshesEvaluation.current, 1.8);
-            assert.equal(snapshot.scene!.activeMeshesEvaluation.avg, 1.6);
+            assert.equal(snapshot.scene.activeMeshesEvaluation.current, 1.8);
+            assert.equal(snapshot.scene.activeMeshesEvaluation.avg, 1.6);
 
             // Verify renderTargetsRenderTime
-            assert.equal(snapshot.scene!.renderTargetsRenderTime.current, 0.5);
-            assert.equal(snapshot.scene!.renderTargetsRenderTime.avg, 0.4);
+            assert.equal(snapshot.scene.renderTargetsRenderTime.current, 0.5);
+            assert.equal(snapshot.scene.renderTargetsRenderTime.avg, 0.4);
 
             // Verify drawCalls (includes count property)
-            assert.equal(snapshot.scene!.drawCalls.current, 150);
-            assert.equal(snapshot.scene!.drawCalls.avg, 145.5);
-            assert.equal(snapshot.scene!.drawCalls.count, 100);
+            assert.equal(snapshot.scene.drawCalls.current, 150);
+            assert.equal(snapshot.scene.drawCalls.avg, 145.5);
+            assert.equal(snapshot.scene.drawCalls.count, 100);
         });
 
         it("should not include Scene metrics when instrumentation is not initialized", () => {
@@ -698,10 +688,7 @@ describe("StatsManager - Profiling", () => {
             };
 
             statsManager._injectMockInstrumentation(
-                mockEngineInstrumentation as unknown as {
-                    gpuFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    shaderCompilationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
+                mockEngineInstrumentation as unknown as EngineInstrumentation,
                 undefined,
             );
 
@@ -802,15 +789,7 @@ describe("StatsManager - Profiling", () => {
 
             statsManager._injectMockInstrumentation(
                 undefined,
-                mockSceneInstrumentation as unknown as {
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    cameraRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    activeMeshesEvaluationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTargetsRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    drawCallsCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number, count: number};
-                },
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             // Enable profiling (required for reportDetailed to output anything)
@@ -897,10 +876,7 @@ describe("StatsManager - Profiling", () => {
 
             statsManager._injectMockInstrumentation(
                 undefined,
-                mockSceneInstrumentation as unknown as {
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAvg: number};
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             statsManager.enableProfiling();
@@ -932,7 +908,10 @@ describe("StatsManager - Profiling", () => {
 
             assert.isDefined(opA);
             assert.isDefined(opB);
+
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(opA!.appearanceCount, 1);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(opB!.appearanceCount, 1);
         });
 
@@ -959,10 +938,7 @@ describe("StatsManager - Profiling", () => {
 
             statsManager._injectMockInstrumentation(
                 undefined,
-                mockSceneInstrumentation as unknown as {
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAvg: number};
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             statsManager.enableProfiling();
@@ -984,8 +960,12 @@ describe("StatsManager - Profiling", () => {
             // Verify operation is flagged as high-blocking
             const blockingOp = blockingReport.find((op) => op.label === "blocking-operation");
             assert.isDefined(blockingOp);
+
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(blockingOp!.highBlockingFrames, 1);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(blockingOp!.highBlockingPercentage, 100); // 1/1 frames had high blocking
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.isAbove(blockingOp!.avgBlockingRatioWhenPresent, 1.0); // Blocking > 1x CPU time
         });
 
@@ -1012,10 +992,7 @@ describe("StatsManager - Profiling", () => {
 
             statsManager._injectMockInstrumentation(
                 undefined,
-                mockSceneInstrumentation as unknown as {
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAvg: number};
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             statsManager.enableProfiling();
@@ -1037,7 +1014,10 @@ describe("StatsManager - Profiling", () => {
             // Verify operation is NOT flagged as high-blocking
             const normalOp = blockingReport.find((op) => op.label === "normal-operation");
             assert.isDefined(normalOp);
+
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(normalOp!.highBlockingFrames, 0); // Not high-blocking (threshold is 1.0x)
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
             assert.equal(normalOp!.highBlockingPercentage, 0);
         });
 
@@ -1073,7 +1053,7 @@ describe("StatsManager - Profiling", () => {
                     min: 15.0,
                     max: 50.0,
                     total: 1800.0,
-                    lastSecAvg: 19.0,
+                    lastSecAverage: 19.0,
                 },
                 frameTimeCounter: {
                     current: 16.7,
@@ -1127,19 +1107,8 @@ describe("StatsManager - Profiling", () => {
             };
 
             statsManager._injectMockInstrumentation(
-                mockEngineInstrumentation as unknown as {
-                    gpuFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    shaderCompilationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                },
-                mockSceneInstrumentation as unknown as {
-                    interFrameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAvg: number};
-                    frameTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    cameraRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    activeMeshesEvaluationTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    renderTargetsRenderTimeCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number};
-                    drawCallsCounter: {current: number, average: number, min: number, max: number, total: number, lastSecAverage: number, count: number};
-                },
+                mockEngineInstrumentation as unknown as EngineInstrumentation,
+                mockSceneInstrumentation as unknown as SceneInstrumentation,
             );
 
             statsManager.enableProfiling();
@@ -1362,7 +1331,8 @@ describe("StatsManager - Profiling", () => {
 
                 // Verify derived metrics are calculated
                 assert.isDefined(tableData);
-                const hitsRow = tableData.find((row) => row.Label === "cache.hits");
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const hitsRow = tableData.find((row: any) => row.Label === "cache.hits");
                 assert.equal(hitsRow.Value, 90);
 
                 tableSpy.mockRestore();
