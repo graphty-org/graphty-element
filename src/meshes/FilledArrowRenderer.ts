@@ -584,7 +584,7 @@ void main() {
     }
 
     /**
-     * Create an empty arrow mesh (hollow triangle outline)
+     * Create an open normal arrow mesh (hollow triangle outline)
      *
      * Geometry is in XZ plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
@@ -592,8 +592,8 @@ void main() {
      *
      * @param scene Babylon.js scene
      */
-    static createEmpty(scene: Scene): Mesh {
-        const mesh = new Mesh("filled-empty-arrow", scene);
+    static createOpenNormal(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-open-normal-arrow", scene);
 
         // Normalized dimensions
         const length = 1.0;
@@ -649,6 +649,71 @@ void main() {
             3,
             0,
         ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create an open circle arrow mesh (hollow circle outline)
+     *
+     * Geometry is in XZ plane as a circle (Y=0)
+     * Uses normalized dimensions - actual sizing handled by shader
+     * Creates a hollow circle with clean edges using inner/outer vertices (same pattern as open-normal and open-diamond)
+     *
+     * @param scene Babylon.js scene
+     * @param segments Number of segments for circle smoothness (default: 32)
+     */
+    static createOpenCircle(scene: Scene, segments = 32): Mesh {
+        const mesh = new Mesh("filled-open-circle-arrow", scene);
+
+        // Normalized radius (diameter = 1.0 to match other arrows)
+        const outerRadius = 0.5;
+        const insetFactor = 0.225; // How much to inset inner circle (22.5% toward center) - matches open-diamond and open-normal thickness
+
+        // Calculate inner radius
+        const innerRadius = outerRadius * (1.0 - insetFactor);
+
+        const positions: number[] = [];
+        const indices: number[] = [];
+
+        // Generate outer circle vertices in XZ plane (Y=0)
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            positions.push(
+                Math.cos(angle) * outerRadius, // X → forward (along line direction)
+                0, // Y = 0 (face normal in ±Y, toward camera)
+                Math.sin(angle) * outerRadius, // Z → right (perpendicular to line)
+            );
+        }
+
+        // Generate inner circle vertices
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            positions.push(
+                Math.cos(angle) * innerRadius, // X → forward (along line direction)
+                0, // Y = 0 (face normal in ±Y, toward camera)
+                Math.sin(angle) * innerRadius, // Z → right (perpendicular to line)
+            );
+        }
+
+        // Create triangle strip connecting outer and inner circles
+        // Each segment forms 2 triangles (a quad strip)
+        for (let i = 0; i < segments; i++) {
+            const outerCurrent = i;
+            const outerNext = i + 1;
+            const innerCurrent = i + segments + 1;
+            const innerNext = i + segments + 2;
+
+            // First triangle: outer-current → inner-current → inner-next
+            indices.push(outerCurrent, innerCurrent, innerNext);
+            // Second triangle: outer-current → inner-next → outer-next
+            indices.push(outerCurrent, innerNext, outerNext);
+        }
 
         const vertexData = new VertexData();
         vertexData.positions = positions;

@@ -607,9 +607,9 @@ void main() {
     }
 
     /**
-     * Create empty arrow geometry (hollow triangle)
+     * Create open normal arrow geometry (hollow triangle)
      *
-     * Generates a triangular outline for empty-style arrow heads.
+     * Generates a triangular outline for open-normal-style arrow heads.
      * Note: This creates the same path as triangular arrow but without closing,
      * so it renders as an outline when used with thin line width.
      *
@@ -617,7 +617,7 @@ void main() {
      * @param width Width of the arrow at the base
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
-    static createEmptyArrowGeometry(length: number, width: number): LineGeometry {
+    static createOpenNormalArrowGeometry(length: number, width: number): LineGeometry {
         // Arrow in XY plane with tip at origin, pointing in +X direction
         // Triangle outline (tip at origin, base in -X)
         const points = [

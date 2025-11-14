@@ -215,7 +215,7 @@ export const EdgeMeshFactory = {
         "open-dot",
         "none",
         "tee",
-        "empty",
+        "open-normal",
         "diamond",
         "open-diamond",
         "crow",

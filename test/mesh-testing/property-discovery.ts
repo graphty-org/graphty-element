@@ -256,7 +256,7 @@ export const ARROWHEAD_PROPERTIES: PropertyMap = {
             "open-dot",
             "none",
             "tee",
-            "empty",
+            "open-normal",
             "diamond",
             "open-diamond",
             "crow",

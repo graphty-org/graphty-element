@@ -35,7 +35,6 @@ const meta: Meta = {
                     color: {
                         colorType: "solid",
                         value: "#5A67D8",
-                        opacity: 0.25,
                     },
                 },
             },
@@ -179,8 +178,8 @@ export const OpenDotArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
             edgeStyle: {
-                arrowHead: {type: "open-dot", color: "#FF0000", size: 4.0},
-                line: {color: "#666666"},
+                arrowHead: {type: "open-dot", color: "darkgrey", size: 1.0},
+                line: {color: "darkgrey"},
             },
         }),
     },
@@ -195,8 +194,8 @@ export const SphereDotArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
             edgeStyle: {
-                arrowHead: {type: "sphere-dot", color: "#FF0000", size: 4.0},
-                line: {color: "#666666"},
+                arrowHead: {type: "sphere-dot", color: "darkgrey", size: 4.0},
+                line: {color: "darkgrey"},
             },
         }),
     },
@@ -211,8 +210,8 @@ export const DotArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
             edgeStyle: {
-                arrowHead: {type: "dot", color: "#FF0000", size: 1.0},
-                line: {color: "#666666"},
+                arrowHead: {type: "dot", color: "darkgrey", size: 1.0},
+                line: {color: "darkgrey"},
             },
         }),
     },
@@ -255,22 +254,6 @@ export const BoxArrowHead: Story = {
     },
 };
 
-export const EmptyArrowHead: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            edgeStyle: {
-                arrowHead: {type: "empty", color: "darkgrey"},
-                line: {color: "darkgrey"},
-            },
-        }),
-    },
-    parameters: {
-        controls: {
-            include: ["arrowHead.size", "arrowHead.color", "arrowHead.opacity"],
-        },
-    },
-};
-
 export const OpenDiamondArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
@@ -307,7 +290,7 @@ export const OpenArrowHead: Story = {
     args: {
         styleTemplate: templateCreator({
             edgeStyle: {
-                arrowHead: {type: "open", color: "darkgrey"},
+                arrowHead: {type: "open-normal", color: "darkgrey"},
                 line: {color: "darkgrey"},
             },
         }),

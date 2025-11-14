@@ -14,7 +14,7 @@ const ArrowType = z.enum([
     "open-dot",
     "none",
     "tee",
-    "empty",
+    "open-normal",
     "diamond",
     "open-diamond",
     "crow",

@@ -236,9 +236,9 @@ void main() {
         // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
         // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
         // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"];
+        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"];
         const OUTLINE_ARROWS = ["open"];
-        const BILLBOARD_ARROWS = ["open-dot", "sphere-dot", "sphere"];
+        const BILLBOARD_ARROWS = ["sphere-dot", "sphere"];
 
         // PERFORMANCE FIX: Create individual meshes for all arrow types
         // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
@@ -326,11 +326,14 @@ void main() {
             case "crow":
                 mesh = FilledArrowRenderer.createCrow(scene);
                 break;
-            case "empty":
-                mesh = FilledArrowRenderer.createEmpty(scene);
+            case "open-normal":
+                mesh = FilledArrowRenderer.createOpenNormal(scene);
                 break;
             case "open-diamond":
                 mesh = FilledArrowRenderer.createOpenDiamond(scene);
+                break;
+            case "open-dot":
+                mesh = FilledArrowRenderer.createOpenCircle(scene);
                 break;
             default:
                 throw new Error(`Unsupported filled arrow type: ${type}`);
@@ -364,8 +367,8 @@ void main() {
 
         // Generate appropriate line geometry
         switch (type) {
-            case "empty":
-                geometry = CustomLineRenderer.createEmptyArrowGeometry(length, width);
+            case "open-normal":
+                geometry = CustomLineRenderer.createOpenNormalArrowGeometry(length, width);
                 break;
             case "open-diamond":
                 geometry = CustomLineRenderer.createOpenDiamondArrowGeometry(length, width);
@@ -785,7 +788,6 @@ void main() {
     static getArrowGeometry(arrowType: string): ArrowGeometry {
         switch (arrowType) {
             // Center-based arrows (sphere-like)
-            case "open-dot":
             case "sphere-dot":
                 return {
                     positioningMode: "center",
@@ -801,10 +803,11 @@ void main() {
                     scaleFactor: 1.0, // Full size
                 };
 
-            // Special tip-based arrows with custom positioning
+            // Special center-based filled arrows (symmetric, positioned by center)
             case "dot":
+            case "open-dot":
                 return {
-                    positioningMode: "center", // Dot is symmetric, position by center
+                    positioningMode: "center", // Dot and open-dot are symmetric, position by center
                     needsRotation: false,
                     positionOffset: 0,
                 };
@@ -816,7 +819,7 @@ void main() {
             case "tee":
             case "half-open":
             case "crow":
-            case "empty":
+            case "open-normal":
             case "open-diamond":
             case "diamond":
             case "box":
@@ -903,8 +906,8 @@ void main() {
         mesh.scaling.z = length;
     }
 
-    // Empty arrow - hollow triangle using thin outline
-    private static createEmptyArrow(length: number, width: number, color: string, scene: Scene): Mesh {
+    // Open normal arrow - hollow triangle using thin outline
+    private static createOpenNormalArrow(length: number, width: number, color: string, scene: Scene): Mesh {
         // Reuse normal arrow geometry but with thin line width to create outline effect
         const cap = GreasedLineTools.GetArrowCap(
             new Vector3(0, 0, -length),

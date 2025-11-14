@@ -431,7 +431,7 @@ export class Edge {
                 this.arrowMesh.position = arrowPosition;
 
                 // Update lineDirection for filled arrows (shader needs it for billboarding)
-                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(arrowType)) {
+                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
                     // Filled arrows use shader-based billboarding via lineDirection uniform
                     FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
                 } else if (geometry.needsRotation) {
@@ -471,7 +471,7 @@ export class Edge {
             this.arrowMesh.position = arrowPosition;
 
             // Update lineDirection for filled arrows (shader needs it for billboarding)
-            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(arrowType)) {
+            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
                 // Filled arrows use shader-based billboarding via lineDirection uniform
                 FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
             } else if (geometry.needsRotation) {
@@ -514,7 +514,7 @@ export class Edge {
                     this.arrowTailMesh.position = tailPosition;
 
                     // Update lineDirection for filled arrow tails (shader needs it for billboarding)
-                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(tailType)) {
+                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(tailType)) {
                         // Filled arrows use shader-based billboarding via lineDirection uniform
                         FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
                     } else if (tailGeometry.needsRotation) {
