@@ -50,7 +50,7 @@ export class CustomLineRenderer {
 
     // Shared callback optimization: Track all active materials
     private static activeMaterials = new Set<ShaderMaterial>();
-    private static resolutionCallbackRegistered = false;
+    private static registeredScene: Scene | null = null;
 
     /**
      * Register custom line shaders
@@ -173,11 +173,13 @@ void main() {
      * This dramatically improves performance when rendering many edges.
      */
     private static registerResolutionCallback(scene: Scene): void {
-        if (this.resolutionCallbackRegistered) {
+        // If already registered on this scene, skip
+        if (this.registeredScene === scene) {
             return;
         }
 
-        this.resolutionCallbackRegistered = true;
+        // Track which scene we're registered on
+        this.registeredScene = scene;
 
         const engine = scene.getEngine();
 
@@ -442,30 +444,6 @@ void main() {
 
         // Use SAME createLineGeometry as lines!
         // This ensures arrow uses identical shader
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create circular dot arrow geometry
-     *
-     * Generates a filled circle shape for dot-style arrow heads.
-     *
-     * @param radius Radius of the circle
-     * @param segments Number of segments for circle smoothness (default: 32)
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createCircularDotGeometry(radius: number, segments = 32): LineGeometry {
-        const points: Vector3[] = [];
-
-        for (let i = 0; i <= segments; i++) {
-            const angle = (i / segments) * Math.PI * 2;
-            points.push(new Vector3(
-                Math.cos(angle) * radius,
-                Math.sin(angle) * radius,
-                0,
-            ));
-        }
-
         return this.createLineGeometry(points);
     }
 

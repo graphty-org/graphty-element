@@ -249,7 +249,7 @@ void main() {
     /**
      * Create a filled box arrow mesh
      *
-     * Geometry is in XY plane as a rectangle
+     * Geometry is in XZ plane as a perfect square
      * Uses normalized dimensions - actual sizing handled by shader
      *
      * @param scene Babylon.js scene
@@ -257,28 +257,27 @@ void main() {
     static createBox(scene: Scene): Mesh {
         const mesh = new Mesh("filled-box-arrow", scene);
 
-        // Normalized dimensions
-        const length = 1.0;
-        const width = 0.8;
-
-        const halfWidth = width / 2;
+        // Normalized dimensions - perfect square (1.0 x 1.0)
+        const size = 1.0;
+        const halfSize = size / 2;
 
         // Front edge at origin, extends backward
         // This allows positionOffset: 0 to place front edge exactly at sphere surface
         // XZ plane (normal in Y) so face points toward camera
+        // Perfect square: size x size
         const positions = [
-            -length,
+            -size,
             0,
-            halfWidth, // Top-left (back)
-            0,
-            0,
-            halfWidth, // Top-right at origin (front)
+            halfSize, // Top-left (back)
             0,
             0,
-            -halfWidth, // Bottom-right at origin (front)
-            -length,
+            halfSize, // Top-right at origin (front)
             0,
-            -halfWidth, // Bottom-left (back)
+            0,
+            -halfSize, // Bottom-right at origin (front)
+            -size,
+            0,
+            -halfSize, // Bottom-left (back)
         ];
 
         const indices = [
@@ -301,8 +300,9 @@ void main() {
     /**
      * Create a filled circle arrow mesh
      *
-     * Geometry is in XY plane as a circle
+     * Geometry is in XZ plane as a circle (Y=0)
      * Uses normalized dimensions - actual sizing handled by shader
+     * Follows the same pattern as all other filled arrows (normal, diamond, box)
      *
      * @param scene Babylon.js scene
      * @param segments Number of segments for circle smoothness (default: 32)
@@ -311,19 +311,21 @@ void main() {
         const mesh = new Mesh("filled-circle-arrow", scene);
 
         // Normalized radius
-        const radius = 0.4; // Smaller than other shapes for "dot" appearance
+        // Diameter = 1.0 to match other arrows' normalized length (triangle/diamond/box all extend 1.0 unit)
+        const radius = 0.5;
 
-        const positions: number[] = [0, 0, 0]; // Center point
+        const positions: number[] = [0, 0, 0]; // Center point at origin
         const indices: number[] = [];
 
-        // Generate circle vertices in YZ plane (perpendicular to line direction)
-        // This ensures the circle always faces the camera (tangent billboarding)
+        // Generate circle vertices in XZ plane (Y=0)
+        // This follows the same pattern as normal/diamond/box arrows
+        // Face normal points in ±Y direction, which maps to "up" (toward camera) in shader
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             positions.push(
-                0, // X = 0 (no extent along line)
-                Math.cos(angle) * radius, // Y → up (toward camera)
-                Math.sin(angle) * radius, // Z → right (perpendicular)
+                Math.cos(angle) * radius, // X → forward (along line direction)
+                0, // Y = 0 (face normal in ±Y, toward camera)
+                Math.sin(angle) * radius, // Z → right (perpendicular to line)
             );
         }
 

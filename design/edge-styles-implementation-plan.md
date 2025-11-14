@@ -126,10 +126,13 @@ The edge rendering system must satisfy these critical requirements:
 
 **Status**:
 - ✅ Two-shader architecture (FilledArrowRenderer + CustomLineRenderer)
-- ✅ Filled arrows (normal, inverted, diamond, box, dot)
+- ✅ Filled arrows (normal, inverted, diamond, box, dot) - **ALL use XZ plane (Y=0)**
 - ✅ Arrow positioning and alignment
-- ⚠️ Cylindrical billboarding (planned - see "Remaining Work")
-- ⚠️ Perspective tapering (planned - see "Remaining Work")
+- ✅ Cylindrical billboarding (COMPLETED 2025-11-09)
+- ✅ Perspective tapering (COMPLETED 2025-11-09)
+- ✅ Dot arrow geometry standardized (FIXED 2025-11-13) - Changed from YZ to XZ plane
+
+**Note**: Dot arrow was originally implemented using YZ plane (perpendicular to line), creating a disc-perpendicular-to-line appearance. This was updated on 2025-11-13 to use XZ plane (Y=0) like all other filled arrows, making it camera-facing for consistency.
 
 ---
 
@@ -329,23 +332,23 @@ const positions = [
 ];
 ```
 
-**Circle Arrow Exception** (Already Correct):
+**Circle Arrow** ✅ **FIXED (2025-11-13)**:
 
-Circle geometry is ALREADY in the YZ plane (perpendicular to line direction), which is correct:
+Circle geometry NOW uses XZ plane (Y=0) to match all other filled arrows:
 
 ```typescript
-// Circle - CORRECT (YZ plane, X=0):
+// Circle - CORRECT (XZ plane, Y=0):
 for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
     positions.push(
-        0,                         // X = 0 (no extent along line)
-        Math.cos(angle) * radius,  // Y → up (toward camera)
+        Math.cos(angle) * radius,  // X → forward (along line direction)
+        0,                         // Y = 0 (face normal in ±Y, toward camera)
         Math.sin(angle) * radius   // Z → right (perpendicular)
     );
 }
 ```
 
-Circle works because its face is perpendicular to the line direction (X axis), so it naturally faces the camera.
+Circle now follows the same pattern as triangle/diamond/box - face normal in ±Y direction, which maps to shader's "up" vector (toward camera).
 
 ---
 
@@ -354,9 +357,9 @@ Circle works because its face is perpendicular to the line direction (X axis), s
 **CRITICAL GEOMETRY RULE**:
 
 For tangent billboarding in FilledArrowRenderer:
-- **Filled polygons (triangle, diamond, box)**: MUST use **XZ plane (Y=0)**
-- **Circles/discs**: Use **YZ plane (X=0)** (perpendicular to line)
-- **General rule**: Face normal must map to the shader's "up" vector (toward camera)
+- **ALL filled arrows (triangle, diamond, box, circle)**: MUST use **XZ plane (Y=0)**
+- **Face normal**: MUST point in ±Y direction to map to shader's "up" vector (toward camera)
+- **General rule**: All filled arrows follow the same pattern for consistency
 
 **How to verify geometry is correct**:
 1. Arrow should be visible from ALL camera angles

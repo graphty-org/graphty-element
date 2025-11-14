@@ -581,21 +581,6 @@ void main() {
         );
     }
 
-    // Dot arrow - screen-space disc matching GreasedLine's rendering
-    private static createDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        // Create a circular dot with radius = width/2 for proper sizing
-        const geometry = CustomLineRenderer.createCircularDotGeometry(width / 2, 32);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
     // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
     private static createSphereArrow(length: number, width: number, color: string, scene: Scene): Mesh {
         // Sphere fits exactly within the allocated arrow space
@@ -802,15 +787,24 @@ void main() {
                 };
 
             // Filled arrows using FilledArrowRenderer (billboard shaders, no rotation)
-            // These arrows have tip/front edge at origin, extending backward
+            // These arrows have tip/front edge at origin
             case "normal":
-            case "inverted":
             case "diamond":
             case "box":
                 return {
                     positioningMode: "tip",
                     needsRotation: false, // Billboard shaders handle orientation
                     positionOffset: 0, // Tip at origin, position mesh at surface
+                };
+
+            // Inverted arrow: geometry extends forward (+X), so we offset backward
+            // to position the base (at +1.0) at the sphere surface
+            // Note: subtract() in calculateArrowPosition means positive offset moves TOWARD sphere
+            case "inverted":
+                return {
+                    positioningMode: "tip",
+                    needsRotation: false, // Billboard shaders handle orientation
+                    positionOffset: 1.0, // Move arrow backward (toward sphere) to place base at surface
                 };
 
             // Outline arrows using CustomLineRenderer (same positioning as old system)
