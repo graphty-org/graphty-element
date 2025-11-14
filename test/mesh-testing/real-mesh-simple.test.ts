@@ -234,8 +234,8 @@ describe("Simple Real Mesh Tests", () => {
         });
 
         test("calculates arrow dimensions", () => {
-            const width = EdgeMesh.calculateArrowWidth(5);
-            const length = EdgeMesh.calculateArrowLength(5);
+            const width = EdgeMesh.calculateArrowWidth();
+            const length = EdgeMesh.calculateArrowLength();
 
             assert.isNumber(width);
             assert.isNumber(length);

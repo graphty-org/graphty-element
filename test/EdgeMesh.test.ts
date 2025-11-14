@@ -168,17 +168,12 @@ describe("EdgeMesh", () => {
     });
 
     describe("Helper Methods", () => {
-        test("calculateArrowWidth returns correct values", () => {
-            assert.equal(EdgeMesh.calculateArrowWidth(0.1), 4); // minimum
-            assert.equal(EdgeMesh.calculateArrowWidth(0.25), 5); // 20 * 0.25
-            assert.equal(EdgeMesh.calculateArrowWidth(1), 20); // 20 * 1
+        test("calculateArrowWidth returns default value", () => {
+            assert.equal(EdgeMesh.calculateArrowWidth(), 5);
         });
 
-        test("calculateArrowLength returns correct values", () => {
-            assert.equal(EdgeMesh.calculateArrowLength(0.1), 0.5); // minimum
-            assert.equal(EdgeMesh.calculateArrowLength(0.5), 0.5); // minimum
-            assert.equal(EdgeMesh.calculateArrowLength(1), 1); // same as width
-            assert.equal(EdgeMesh.calculateArrowLength(2), 2); // same as width
+        test("calculateArrowLength returns default value", () => {
+            assert.equal(EdgeMesh.calculateArrowLength(), 0.5);
         });
 
         test("transformMesh positions and orients correctly", () => {

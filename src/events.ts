@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingCompleteEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -58,6 +58,40 @@ export interface GraphGenericEvent {
         | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
         | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted";
     [key: string]: unknown;
+}
+
+// Data loading events
+export interface DataLoadingProgressEvent {
+    type: "data-loading-progress";
+    format: string;
+    bytesProcessed: number;
+    totalBytes?: number;
+    percentage?: number;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    chunksProcessed: number;
+}
+
+export interface DataLoadingErrorEvent {
+    type: "data-loading-error";
+    error: Error;
+    context: "detection" | "validation" | "parsing";
+    format?: string;
+    line?: number;
+    nodeId?: unknown;
+    edgeId?: string;
+    canContinue: boolean;
+}
+
+export interface DataLoadingCompleteEvent {
+    type: "data-loading-complete";
+    format: string;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    duration: number; // milliseconds
+    errors: number;
+    warnings: number;
+    success: boolean;
 }
 
 // node events
