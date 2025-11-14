@@ -264,6 +264,11 @@ export const EmptyArrowHead: Story = {
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color", "arrowHead.opacity"],
+        },
+    },
 };
 
 export const OpenDiamondArrowHead: Story = {
@@ -274,6 +279,11 @@ export const OpenDiamondArrowHead: Story = {
                 line: {color: "darkgrey"},
             },
         }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
     },
 };
 
@@ -286,6 +296,11 @@ export const TeeArrowHead: Story = {
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
 };
 
 export const OpenArrowHead: Story = {
@@ -296,6 +311,11 @@ export const OpenArrowHead: Story = {
                 line: {color: "darkgrey"},
             },
         }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
     },
 };
 
@@ -308,6 +328,11 @@ export const HalfOpenArrowHead: Story = {
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
 };
 
 export const VeeArrowHead: Story = {
@@ -319,6 +344,11 @@ export const VeeArrowHead: Story = {
             },
         }),
     },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
 };
 
 export const CrowArrowHead: Story = {
@@ -329,5 +359,10 @@ export const CrowArrowHead: Story = {
                 line: {color: "darkgrey"},
             },
         }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
     },
 };

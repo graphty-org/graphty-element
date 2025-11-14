@@ -347,6 +347,404 @@ void main() {
     }
 
     /**
+     * Create a vee arrow mesh (V-shaped)
+     *
+     * Geometry is in XZ plane pointing towards +X axis
+     * Uses normalized dimensions - actual sizing handled by shader
+     * V-shape: Triangle with middle baseline point pushed 2/3 toward tip
+     *
+     * @param scene Babylon.js scene
+     */
+    static createVee(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-vee-arrow", scene);
+
+        // Normalized dimensions
+        const length = 1.0;
+        const width = 0.8;
+
+        // Tip at origin, base extends backward
+        const tip = 0;
+        const base = -length;
+
+        // Middle point: starts at center of baseline, pushed 60% toward tip (2/3 - 10%)
+        const middleX = base + 0.6 * length; // -1.0 + 0.6 = -0.4
+
+        // XZ plane (normal in Y), pointing along X axis
+        // 4 vertices to form V-shape (2 triangles)
+        const positions = [
+            tip,
+            0,
+            0, // 0: Tip at origin
+            base,
+            0,
+            -width / 2, // 1: Base left corner
+            middleX,
+            0,
+            0, // 2: Middle point (pushed toward tip)
+            base,
+            0,
+            width / 2, // 3: Base right corner
+        ];
+
+        // Two triangles forming V-shape
+        const indices = [
+            0,
+            1,
+            2, // Left triangle: tip → base-left → middle
+            0,
+            2,
+            3, // Right triangle: tip → middle → base-right
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create a tee arrow mesh (thin horizontal bar)
+     *
+     * Geometry is in XZ plane as a 3:1 rectangle (wide and shallow)
+     * Uses normalized dimensions - actual sizing handled by shader
+     *
+     * @param scene Babylon.js scene
+     */
+    static createTee(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-tee-arrow", scene);
+
+        // Normalized dimensions - 3:1 rectangle (width:depth), 50% larger than base size
+        const width = 1.5; // Z-axis (horizontal span)
+        const depth = width / 3; // X-axis (shallow depth) = 0.5
+        const halfWidth = width / 2;
+
+        // Front edge at origin, extends backward
+        // This allows positionOffset: 0 to place front edge exactly at sphere surface
+        // XZ plane (normal in Y) so face points toward camera
+        const positions = [
+            -depth,
+            0,
+            halfWidth, // Top-left (back)
+            0,
+            0,
+            halfWidth, // Top-right at origin (front)
+            0,
+            0,
+            -halfWidth, // Bottom-right at origin (front)
+            -depth,
+            0,
+            -halfWidth, // Bottom-left (back)
+        ];
+
+        const indices = [
+            0,
+            1,
+            2, // First triangle
+            0,
+            2,
+            3, // Second triangle
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create a half-open arrow mesh (half of a vee - one arm)
+     *
+     * Geometry is in XZ plane pointing towards +X axis
+     * Uses normalized dimensions - actual sizing handled by shader
+     * Half-vee: One side of the V-shape
+     *
+     * @param scene Babylon.js scene
+     */
+    static createHalfOpen(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-half-open-arrow", scene);
+
+        // Normalized dimensions (same as vee)
+        const length = 1.0;
+        const width = 0.8;
+
+        // Tip at origin, base extends backward
+        const tip = 0;
+        const base = -length;
+
+        // Middle point: pushed 60% toward tip (same as vee)
+        const middleX = base + 0.6 * length; // -0.4
+
+        // XZ plane (normal in Y), pointing along X axis
+        // Only one side of the V (3 vertices forming 1 triangle)
+        const positions = [
+            tip,
+            0,
+            0, // 0: Tip at origin
+            base,
+            0,
+            -width / 2, // 1: Base left corner
+            middleX,
+            0,
+            0, // 2: Middle point (pushed toward tip)
+        ];
+
+        // One triangle forming half of the V
+        const indices = [
+            0,
+            1,
+            2, // Tip → base-left → middle
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create a crow arrow mesh (V-shaped) - EXACT COPY OF VEE
+     *
+     * Geometry is in XZ plane pointing towards +X axis
+     * Uses normalized dimensions - actual sizing handled by shader
+     * V-shape: Triangle with middle baseline point pushed 2/3 toward tip
+     *
+     * @param scene Babylon.js scene
+     */
+    static createCrow(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-crow-arrow", scene);
+
+        // Normalized dimensions
+        const length = 1.0;
+        const width = 0.8;
+
+        // ROTATED 180 degrees: Tip at back (touching line), base at front (near node)
+        const tip = -length; // Tip now at back
+        const base = 0; // Base now at front
+
+        // Middle point: pushed 60% from base toward tip
+        const middleX = base + 0.6 * (tip - base); // 0 + 0.6 * (-1.0) = -0.6
+
+        // Width of center prong at base
+        const centerProngWidth = 0.2;
+        // Center prong base position (moved forward from tip to avoid obscuring vee tip)
+        const centerProngBaseX = -0.6;
+
+        // XZ plane (normal in Y), pointing along X axis
+        // 7 vertices to form crow's foot shape (3 triangles)
+        // Left and right prongs point toward node, center prong points toward line
+        const positions = [
+            tip,
+            0,
+            0, // 0: Shared tip for left/right prongs (at back, touching line)
+            base,
+            0,
+            -width / 2, // 1: Base left corner (at front, near node)
+            middleX,
+            0,
+            0, // 2: Middle point (pushed toward tip)
+            base,
+            0,
+            width / 2, // 3: Base right corner (at front, near node)
+            centerProngBaseX,
+            0,
+            -centerProngWidth / 2, // 4: Center prong base left edge (shortened, doesn't reach vee tip)
+            centerProngBaseX,
+            0,
+            centerProngWidth / 2, // 5: Center prong base right edge (shortened, doesn't reach vee tip)
+            base,
+            0,
+            0, // 6: Center prong tip (at front, near node)
+        ];
+
+        // Three triangles forming crow's foot
+        const indices = [
+            0,
+            1,
+            2, // Left triangle: tip → base-left → middle
+            0,
+            2,
+            3, // Right triangle: tip → middle → base-right
+            6,
+            4,
+            5, // Center prong (flipped): tip at front → base-left at back → base-right at back
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create an empty arrow mesh (hollow triangle outline)
+     *
+     * Geometry is in XZ plane pointing towards +X axis
+     * Uses normalized dimensions - actual sizing handled by shader
+     * Creates a single hollow shape with clean corners using inner/outer vertices
+     *
+     * @param scene Babylon.js scene
+     */
+    static createEmpty(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-empty-arrow", scene);
+
+        // Normalized dimensions
+        const length = 1.0;
+        const width = 0.8;
+        const insetFactor = 0.225; // How much to inset inner triangle (22.5% toward center) - matches open-diamond thickness
+
+        // Outer triangle vertices
+        const v0 = { x: 0, z: 0 }; // Tip
+        const v1 = { x: -length, z: -width / 2 }; // Bottom-left
+        const v2 = { x: -length, z: width / 2 }; // Top-right
+
+        // Calculate centroid
+        const centerX = (v0.x + v1.x + v2.x) / 3;
+        const centerZ = (v0.z + v1.z + v2.z) / 3;
+
+        // Inner triangle vertices (moved toward center by insetFactor)
+        const v3 = { x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor };
+        const v4 = { x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor };
+        const v5 = { x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor };
+
+        // Build positions array (outer vertices, then inner vertices)
+        const positions = [
+            v0.x, 0, v0.z, // 0: Tip (outer)
+            v1.x, 0, v1.z, // 1: Bottom-left (outer)
+            v2.x, 0, v2.z, // 2: Top-right (outer)
+            v3.x, 0, v3.z, // 3: Tip (inner)
+            v4.x, 0, v4.z, // 4: Bottom-left (inner)
+            v5.x, 0, v5.z, // 5: Top-right (inner)
+        ];
+
+        // Create triangle strips connecting outer and inner vertices
+        // Each edge forms 2 triangles (a quad strip)
+        const indices = [
+            // Edge 0->1 (tip to bottom-left)
+            0,
+            3,
+            4,
+            0,
+            4,
+            1,
+            // Edge 1->2 (bottom-left to top-right)
+            1,
+            4,
+            5,
+            1,
+            5,
+            2,
+            // Edge 2->0 (top-right to tip)
+            2,
+            5,
+            3,
+            2,
+            3,
+            0,
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
+     * Create an open-diamond arrow mesh (hollow diamond outline)
+     *
+     * Geometry is in XZ plane
+     * Uses normalized dimensions - actual sizing handled by shader
+     * Creates a single hollow shape with clean corners using inner/outer vertices
+     *
+     * @param scene Babylon.js scene
+     */
+    static createOpenDiamond(scene: Scene): Mesh {
+        const mesh = new Mesh("filled-open-diamond-arrow", scene);
+
+        // Normalized dimensions (same as filled diamond)
+        const length = 1.0;
+        const width = 0.8;
+        const insetFactor = 0.225; // How much to inset inner diamond (22.5% toward center) - 50% thicker than original 0.15
+
+        // Outer diamond vertices
+        const v0 = { x: 0, z: 0 }; // Front tip
+        const v1 = { x: -length / 2, z: width / 2 }; // Top
+        const v2 = { x: -length, z: 0 }; // Back tip
+        const v3 = { x: -length / 2, z: -width / 2 }; // Bottom
+
+        // Calculate centroid
+        const centerX = (v0.x + v1.x + v2.x + v3.x) / 4;
+        const centerZ = (v0.z + v1.z + v2.z + v3.z) / 4;
+
+        // Inner diamond vertices (moved toward center by insetFactor)
+        const v4 = { x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor };
+        const v5 = { x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor };
+        const v6 = { x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor };
+        const v7 = { x: v3.x + (centerX - v3.x) * insetFactor, z: v3.z + (centerZ - v3.z) * insetFactor };
+
+        // Build positions array (outer vertices, then inner vertices)
+        const positions = [
+            v0.x, 0, v0.z, // 0: Front tip (outer)
+            v1.x, 0, v1.z, // 1: Top (outer)
+            v2.x, 0, v2.z, // 2: Back tip (outer)
+            v3.x, 0, v3.z, // 3: Bottom (outer)
+            v4.x, 0, v4.z, // 4: Front tip (inner)
+            v5.x, 0, v5.z, // 5: Top (inner)
+            v6.x, 0, v6.z, // 6: Back tip (inner)
+            v7.x, 0, v7.z, // 7: Bottom (inner)
+        ];
+
+        // Create triangle strips connecting outer and inner vertices
+        // Each edge forms 2 triangles (a quad strip)
+        const indices = [
+            // Edge 0->1 (front tip to top)
+            0,
+            4,
+            5,
+            0,
+            5,
+            1,
+            // Edge 1->2 (top to back tip)
+            1,
+            5,
+            6,
+            1,
+            6,
+            2,
+            // Edge 2->3 (back tip to bottom)
+            2,
+            6,
+            7,
+            2,
+            7,
+            3,
+            // Edge 3->0 (bottom to front tip)
+            3,
+            7,
+            4,
+            3,
+            4,
+            0,
+        ];
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.applyToMesh(mesh);
+
+        return mesh;
+    }
+
+    /**
      * Apply the filled arrow shader to a mesh
      *
      * Uses tangent billboarding: arrow aligns with line direction in screen space.

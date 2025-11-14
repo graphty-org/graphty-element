@@ -10,6 +10,7 @@ import type {AdHocData, EdgeStyleConfig} from "./config";
 import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
+import {CustomLineRenderer} from "./meshes/CustomLineRenderer";
 import {EdgeMesh} from "./meshes/EdgeMesh";
 import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
@@ -111,6 +112,7 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
+        console.log('Edge constructor: creating arrowMesh, arrowHead type:', style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(this.styleId),
@@ -123,8 +125,10 @@ export class Edge {
             },
             this.context.getScene(),
         );
+        console.log('Edge constructor: arrowMesh assigned:', this.arrowMesh?.name, this.arrowMesh !== null);
 
         // create arrow tail mesh if needed
+        console.log('Edge constructor: creating arrowTailMesh, arrowTail type:', style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(this.styleId)}-tail`,
@@ -137,6 +141,7 @@ export class Edge {
             },
             this.context.getScene(),
         );
+        console.log('Edge constructor: arrowTailMesh assigned:', this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // create edge line mesh
         this.mesh = EdgeMesh.create(
@@ -174,14 +179,27 @@ export class Edge {
         const srcPos = this.srcNode.mesh.position;
         const dstPos = this.dstNode.mesh.position;
 
-        if (this._lastSrcPos?.equalsWithEpsilon(srcPos, 0.001) &&
-            this._lastDstPos?.equalsWithEpsilon(dstPos, 0.001)) {
+        const srcMoved = !this._lastSrcPos || !this._lastSrcPos.equalsWithEpsilon(srcPos, 0.001);
+        const dstMoved = !this._lastDstPos || !this._lastDstPos.equalsWithEpsilon(dstPos, 0.001);
+
+        console.log('Edge.update dirty check:', {
+            srcMoved,
+            dstMoved,
+            _lastSrcPos: this._lastSrcPos ? {x: this._lastSrcPos.x, y: this._lastSrcPos.y, z: this._lastSrcPos.z} : null,
+            _lastDstPos: this._lastDstPos ? {x: this._lastDstPos.x, y: this._lastDstPos.y, z: this._lastDstPos.z} : null,
+            srcPos: {x: srcPos.x, y: srcPos.y, z: srcPos.z},
+            dstPos: {x: dstPos.x, y: dstPos.y, z: dstPos.z},
+        });
+
+        if (!srcMoved && !dstMoved) {
             // Nodes haven't moved, skip update
+            console.log('Edge.update: Skipping update (nodes haven\'t moved)');
             this.context.getStatsManager().endMeasurement("Edge.update");
             return;
         }
 
         // Nodes have moved, perform update
+        console.log('Edge.update: Performing update (nodes moved)');
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
@@ -215,12 +233,15 @@ export class Edge {
     }
 
     updateStyle(styleId: EdgeStyleId): void {
+        console.log('Edge.updateStyle called:', {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
         // Only skip update if styleId is the same AND mesh is not disposed
         // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
         if (styleId === this.styleId && !this.mesh.isDisposed()) {
+            console.log('Edge.updateStyle: skipping update (same style and mesh not disposed)');
             return;
         }
 
+        console.log('Edge.updateStyle: proceeding with update');
         this.styleId = styleId;
 
         // Invalidate position cache to force edge redraw with new style
@@ -234,10 +255,12 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
+        console.log('Edge.updateStyle: disposing old arrowMesh:', this.arrowMesh?.name);
         if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
             this.arrowMesh.dispose();
         }
 
+        console.log('Edge.updateStyle: creating new arrowMesh, type:', style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(styleId),
@@ -250,12 +273,15 @@ export class Edge {
             },
             this.context.getScene(),
         );
+        console.log('Edge.updateStyle: arrowMesh created:', this.arrowMesh?.name, this.arrowMesh !== null);
 
         // recreate arrow tail mesh if needed
+        console.log('Edge.updateStyle: disposing old arrowTailMesh:', this.arrowTailMesh?.name);
         if (this.arrowTailMesh && !this.arrowTailMesh.isDisposed()) {
             this.arrowTailMesh.dispose();
         }
 
+        console.log('Edge.updateStyle: creating new arrowTailMesh, type:', style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(styleId)}-tail`,
@@ -268,6 +294,7 @@ export class Edge {
             },
             this.context.getScene(),
         );
+        console.log('Edge.updateStyle: arrowTailMesh created:', this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // recreate edge line mesh
         this.mesh = EdgeMesh.create(
@@ -404,25 +431,14 @@ export class Edge {
                 this.arrowMesh.position = arrowPosition;
 
                 // Update lineDirection for filled arrows (shader needs it for billboarding)
-                if (arrowType && ["normal", "inverted", "diamond", "box", "dot"].includes(arrowType)) {
+                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(arrowType)) {
                     // Filled arrows use shader-based billboarding via lineDirection uniform
                     FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
                 } else if (geometry.needsRotation) {
-                    // Other arrow types need explicit rotation
-                    // Triangle in XY plane with tip at origin, pointing in +X direction
-                    // Rotate to align +X with edge direction
-
-                    // Z rotation: horizontal angle in XY plane
-                    const angleZ = Math.atan2(direction.y, direction.x);
-
-                    // Y rotation: tilt forward/back to match edge depth
-                    const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
-                    const angleY = -Math.atan2(direction.z, horizontalDist);
-
-                    // Apply rotations
-                    this.arrowMesh.rotation.x = 0; // No roll needed
-                    this.arrowMesh.rotation.y = angleY;
-                    this.arrowMesh.rotation.z = angleZ;
+                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                    const lookAtPoint = arrowPosition.add(direction);
+                    this.arrowMesh.lookAt(lookAtPoint);
                 }
 
                 return {
@@ -455,25 +471,14 @@ export class Edge {
             this.arrowMesh.position = arrowPosition;
 
             // Update lineDirection for filled arrows (shader needs it for billboarding)
-            if (arrowType && ["normal", "inverted", "diamond", "box", "dot"].includes(arrowType)) {
+            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(arrowType)) {
                 // Filled arrows use shader-based billboarding via lineDirection uniform
                 FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
             } else if (geometry.needsRotation) {
-                // Other arrow types need explicit rotation
-                // Triangle in XY plane with tip at origin, pointing in +X direction
-                // Rotate to align +X with edge direction
-
-                // Z rotation: horizontal angle in XY plane
-                const angleZ = Math.atan2(direction.y, direction.x);
-
-                // Y rotation: tilt forward/back to match edge depth
-                const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
-                const angleY = -Math.atan2(direction.z, horizontalDist);
-
-                // Apply rotations
-                this.arrowMesh.rotation.x = 0; // No roll needed
-                this.arrowMesh.rotation.y = angleY;
-                this.arrowMesh.rotation.z = angleZ;
+                // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                const lookAtPoint = arrowPosition.add(direction);
+                this.arrowMesh.lookAt(lookAtPoint);
             }
 
             // Handle arrow tail if configured
@@ -509,7 +514,7 @@ export class Edge {
                     this.arrowTailMesh.position = tailPosition;
 
                     // Update lineDirection for filled arrow tails (shader needs it for billboarding)
-                    if (["normal", "inverted", "diamond", "box", "dot"].includes(tailType)) {
+                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"].includes(tailType)) {
                         // Filled arrows use shader-based billboarding via lineDirection uniform
                         FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
                     } else if (tailGeometry.needsRotation) {

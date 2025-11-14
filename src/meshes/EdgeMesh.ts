@@ -218,7 +218,10 @@ void main() {
         options: ArrowHeadOptions,
         scene: Scene,
     ): AbstractMesh | null {
+        console.log('EdgeMesh.createArrowHead called:', {styleId, type: options.type, color: options.color});
+
         if (!options.type || options.type === "none") {
+            console.log('EdgeMesh.createArrowHead returning null (no type or none)');
             return null;
         }
 
@@ -227,12 +230,14 @@ void main() {
         const width = this.calculateArrowWidth() * size;
         const length = this.calculateArrowLength() * size;
 
+        console.log('EdgeMesh.createArrowHead computed dimensions:', {size, opacity, width, length});
+
         // Arrow type routing:
         // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
         // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
         // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot"];
-        const OUTLINE_ARROWS = ["empty", "open-diamond", "tee", "vee", "open", "half-open", "crow"];
+        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "empty", "open-diamond"];
+        const OUTLINE_ARROWS = ["open"];
         const BILLBOARD_ARROWS = ["open-dot", "sphere-dot", "sphere"];
 
         // PERFORMANCE FIX: Create individual meshes for all arrow types
@@ -244,12 +249,15 @@ void main() {
 
         if (FILLED_ARROWS.includes(arrowType)) {
             // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
+            console.log('Creating filled arrow:', arrowType);
             mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
         } else if (OUTLINE_ARROWS.includes(arrowType)) {
             // Outline arrows: Use CustomLineRenderer (same shader as lines!)
+            console.log('Creating outline arrow:', arrowType);
             mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
         } else if (BILLBOARD_ARROWS.includes(arrowType)) {
             // 3D billboard arrows: Use existing sphere-based implementation
+            console.log('Creating billboard arrow:', arrowType);
             switch (options.type) {
                 case "open-dot":
                     mesh = this.createOpenDotArrow(length, width, options.color, scene);
@@ -264,10 +272,13 @@ void main() {
                     throw new Error(`Unsupported arrow type: ${options.type}`);
             }
         } else {
+            console.log('Unknown arrow type, throwing error:', options.type);
             throw new Error(`Unsupported arrow type: ${options.type}`);
         }
 
+        console.log('EdgeMesh.createArrowHead created mesh:', {name: mesh.name, vertices: mesh.getTotalVertices(), opacity});
         mesh.visibility = opacity;
+        console.log('EdgeMesh.createArrowHead returning mesh');
         return mesh;
     }
 
@@ -302,6 +313,24 @@ void main() {
                 break;
             case "dot":
                 mesh = FilledArrowRenderer.createCircle(scene);
+                break;
+            case "vee":
+                mesh = FilledArrowRenderer.createVee(scene);
+                break;
+            case "tee":
+                mesh = FilledArrowRenderer.createTee(scene);
+                break;
+            case "half-open":
+                mesh = FilledArrowRenderer.createHalfOpen(scene);
+                break;
+            case "crow":
+                mesh = FilledArrowRenderer.createCrow(scene);
+                break;
+            case "empty":
+                mesh = FilledArrowRenderer.createEmpty(scene);
+                break;
+            case "open-diamond":
+                mesh = FilledArrowRenderer.createOpenDiamond(scene);
                 break;
             default:
                 throw new Error(`Unsupported filled arrow type: ${type}`);
@@ -779,16 +808,16 @@ void main() {
                     needsRotation: false,
                     positionOffset: 0,
                 };
-            case "vee":
-                return {
-                    positioningMode: "tip",
-                    needsRotation: true, // vee needs rotation
-                    positionOffset: 0.5, // Center at midpoint, so front edge touches surface
-                };
 
             // Filled arrows using FilledArrowRenderer (billboard shaders, no rotation)
             // These arrows have tip/front edge at origin
             case "normal":
+            case "vee":
+            case "tee":
+            case "half-open":
+            case "crow":
+            case "empty":
+            case "open-diamond":
             case "diamond":
             case "box":
                 return {
@@ -808,12 +837,7 @@ void main() {
                 };
 
             // Outline arrows using CustomLineRenderer (same positioning as old system)
-            case "tee":
-            case "open-diamond":
-            case "empty":
             case "open":
-            case "half-open":
-            case "crow":
             default:
                 return {
                     positioningMode: "tip",

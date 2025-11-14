@@ -457,12 +457,13 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createDiamondArrowGeometry(length: number, width: number): LineGeometry {
+        // Arrow points in +X direction to match filled arrow orientation
         const points = [
-            new Vector3(0, 0, length), // Front tip
-            new Vector3(-width / 2, 0, 0), // Left
-            new Vector3(0, 0, -length), // Back tip
-            new Vector3(width / 2, 0, 0), // Right
-            new Vector3(0, 0, length), // Close diamond
+            new Vector3(0, 0, 0), // Front tip at origin
+            new Vector3(-length, -width / 2, 0), // Left
+            new Vector3(-2 * length, 0, 0), // Back tip
+            new Vector3(-length, width / 2, 0), // Right
+            new Vector3(0, 0, 0), // Close diamond
         ];
 
         return this.createLineGeometry(points);
@@ -501,10 +502,11 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createTeeArrowGeometry(width: number): LineGeometry {
-        // Simple horizontal line perpendicular to edge direction
+        // Perpendicular line in XY plane (perpendicular to +X direction)
+        // Arrow points in +X, so tee is along Y axis
         const points = [
-            new Vector3(-width / 2, 0, 0), // Left endpoint
-            new Vector3(width / 2, 0, 0), // Right endpoint
+            new Vector3(0, -width / 2, 0), // Bottom endpoint
+            new Vector3(0, width / 2, 0), // Top endpoint
         ];
 
         return this.createLineGeometry(points);
@@ -520,10 +522,16 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createVeeArrowGeometry(length: number, width: number): LineGeometry {
+        // Use 60-degree angle to calculate proper vee width
+        const angle = (60 * Math.PI) / 180; // ARROW_VEE_ANGLE = 60 degrees
+        const veeWidth = Math.tan(angle) * length;
+
+        // Arrow in XY plane with tip at origin, pointing in +X direction
+        // (arms extend backward in -X direction)
         const points = [
-            new Vector3(-width / 2, 0, -length), // Left arm base
+            new Vector3(-length, -veeWidth / 2, 0), // Left arm base
             new Vector3(0, 0, 0), // Tip at origin
-            new Vector3(width / 2, 0, -length), // Right arm base
+            new Vector3(-length, veeWidth / 2, 0), // Right arm base
         ];
 
         return this.createLineGeometry(points);
@@ -553,9 +561,15 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createHalfOpenArrowGeometry(length: number, width: number): LineGeometry {
+        // ARROW_HALF_OPEN_RATIO = 0.5 (one arm is half length)
+        const ratio = 0.5;
+
+        // Arrow in XY plane with tip at origin, pointing in +X direction
+        // (arms extend backward in -X direction)
         const points = [
-            new Vector3(-width / 2, 0, -length), // Left arm base
+            new Vector3(-length, -width / 2, 0), // Left arm (full length)
             new Vector3(0, 0, 0), // Tip at origin
+            new Vector3(-length * ratio, width / 2, 0), // Right arm (half length)
         ];
 
         return this.createLineGeometry(points);
@@ -571,17 +585,21 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createCrowArrowGeometry(length: number, width: number): LineGeometry {
-        // Create three separate line segments
-        // This will be rendered as three disconnected lines
+        // Use 30-degree angle to calculate proper crow spread
+        const angle = (30 * Math.PI) / 180; // ARROW_CROW_FORK_ANGLE = 30 degrees
+        const spread = Math.tan(angle) * length;
+
+        // Arrow in XY plane with tip at origin, pointing in +X direction
+        // Three-pronged crow's foot (all prongs meet at origin, extend in -X)
         const points = [
-            // Center line
-            new Vector3(0, 0, -length),
+            // Left prong (bottom)
+            new Vector3(-length, -spread, 0),
             new Vector3(0, 0, 0),
-            // Lift pen (will create gap in rendering)
-            new Vector3(-width / 2, 0, -length),
+            // Center prong
+            new Vector3(-length, 0, 0),
             new Vector3(0, 0, 0),
-            // Another lift
-            new Vector3(width / 2, 0, -length),
+            // Right prong (top)
+            new Vector3(-length, spread, 0),
             new Vector3(0, 0, 0),
         ];
 
@@ -600,12 +618,13 @@ void main() {
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
     static createEmptyArrowGeometry(length: number, width: number): LineGeometry {
-        // Same as triangular but don't close the path to create outline effect
+        // Arrow in XY plane with tip at origin, pointing in +X direction
+        // Triangle outline (tip at origin, base in -X)
         const points = [
-            new Vector3(0, 0, length), // Tip
-            new Vector3(-width / 2, 0, 0), // Left corner
-            new Vector3(width / 2, 0, 0), // Right corner
-            new Vector3(0, 0, length), // Back to tip to close outline
+            new Vector3(0, 0, 0), // Tip at origin
+            new Vector3(-length, -width / 2, 0), // Left corner (bottom)
+            new Vector3(-length, width / 2, 0), // Right corner (top)
+            new Vector3(0, 0, 0), // Back to tip to close outline
         ];
 
         return this.createLineGeometry(points);
@@ -685,9 +704,20 @@ void main() {
 
         // Set uniforms
         const colorObj = Color3.FromHexString(options.color);
+        console.log('CustomLineRenderer.createFromGeometry: Setting uniforms:', {
+            color: options.color,
+            width: options.width,
+            opacity: options.opacity ?? 1.0,
+        });
         shaderMaterial.setVector3("color", new Vector3(colorObj.r, colorObj.g, colorObj.b));
         shaderMaterial.setFloat("width", options.width);
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
+
+        // Pattern uniforms (arrows are always solid)
+        shaderMaterial.setFloat("pattern", 0); // 0 = solid
+        shaderMaterial.setFloat("dashLength", 3.0); // Default (unused for solid)
+        shaderMaterial.setFloat("gapLength", 2.0); // Default (unused for solid)
+        console.log('CustomLineRenderer.createFromGeometry: All uniforms set');
 
         // Register material for shared resolution updates
         this.activeMaterials.add(shaderMaterial);
