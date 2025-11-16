@@ -25,15 +25,11 @@ export class DOTDataSource extends DataSource {
 
     private config: DOTDataSourceConfig;
     private chunkSize: number;
-    private errorLimit: number;
-    private errors: {message: string, line?: number}[] = [];
-    private warnings: {message: string, line?: number}[] = [];
 
     constructor(config: DOTDataSourceConfig) {
-        super();
+        super(config.errorLimit ?? 100);
         this.config = config;
         this.chunkSize = config.chunkSize ?? 1000;
-        this.errorLimit = config.errorLimit ?? 100;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -432,13 +428,5 @@ export class DOTDataSource extends DataSource {
         }
 
         return value;
-    }
-
-    private addError(message: string, line?: number): void {
-        this.errors.push({message, line});
-    }
-
-    private addWarning(message: string, line?: number): void {
-        this.warnings.push({message, line});
     }
 }

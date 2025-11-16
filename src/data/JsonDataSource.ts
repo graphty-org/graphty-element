@@ -31,7 +31,7 @@ export class JsonDataSource extends DataSource {
     opts: JsonDataSourceConfigType;
 
     constructor(anyOpts: object) {
-        super();
+        super(); // JsonDataSource uses default error limit
 
         const opts = JsonDataSourceConfig.parse(anyOpts);
         this.opts = opts;

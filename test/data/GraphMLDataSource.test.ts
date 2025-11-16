@@ -175,4 +175,238 @@ describe("GraphMLDataSource", () => {
         assert.strictEqual(node.boolValue, true);
         assert.strictEqual(node.stringValue, "hello");
     });
+
+    describe("yFiles GraphML support", () => {
+        test("parses yFiles ShapeNode visual properties", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <graph>
+    <node id="n0">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="100.0" y="200.0" width="60.0" height="30.0"/>
+          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="2.0"/>
+          <y:NodeLabel>Test Node</y:NodeLabel>
+          <y:Shape type="rectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            const node = chunks[0].nodes[0];
+            assert.strictEqual(node.id, "n0");
+            assert.strictEqual(node.position.x, 100.0);
+            assert.strictEqual(node.position.y, 200.0);
+            assert.strictEqual(node.position.z, 0);
+            assert.strictEqual(node.width, 60.0);
+            assert.strictEqual(node.height, 30.0);
+            assert.strictEqual(node.color, "#FFCC00");
+            assert.strictEqual(node.borderColor, "#000000");
+            assert.strictEqual(node.borderWidth, 2.0);
+            assert.strictEqual(node.label, "Test Node");
+            assert.strictEqual(node.shape, "box"); // rectangle maps to box
+        });
+
+        test("parses yFiles PolyLineEdge visual properties", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="edge" yfiles.type="edgegraphics"/>
+  <graph>
+    <node id="n0"/>
+    <node id="n1"/>
+    <edge id="e0" source="n0" target="n1">
+      <data key="d0">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#FF0000" type="line" width="3.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            const edge = chunks[0].edges[0];
+            assert.strictEqual(edge.src, "n0");
+            assert.strictEqual(edge.dst, "n1");
+            assert.strictEqual(edge.color, "#FF0000");
+            assert.strictEqual(edge.width, 3.0);
+            assert.strictEqual(edge.directed, true); // target arrow means directed
+        });
+
+        test("maps yFiles shape types to Graphty shapes", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <graph>
+    <node id="n0">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="30.0" height="30.0"/>
+          <y:Fill color="#FFFFFF"/>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="n1">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="30.0" height="30.0"/>
+          <y:Fill color="#FFFFFF"/>
+          <y:Shape type="roundrectangle"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+    <node id="n2">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="30.0" height="30.0"/>
+          <y:Fill color="#FFFFFF"/>
+          <y:Shape type="diamond"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            assert.strictEqual(chunks[0].nodes[0].shape, "sphere"); // ellipse -> sphere
+            assert.strictEqual(chunks[0].nodes[1].shape, "box"); // roundrectangle -> box
+            assert.strictEqual(chunks[0].nodes[2].shape, "box"); // diamond -> box (no direct mapping)
+        });
+
+        test("normalizes yFiles colors to standard hex format", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <graph>
+    <node id="n0">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="30.0" height="30.0"/>
+          <y:Fill color="#FFCC00"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            const node = chunks[0].nodes[0];
+            // Color should be preserved in hex format
+            assert.strictEqual(node.color, "#FFCC00");
+            assert.match(node.color, /^#[0-9A-F]{6}$/);
+        });
+
+        test("handles GraphML without yFiles namespace", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+  <graph>
+    <node id="n0"/>
+    <edge source="n0" target="n1"/>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            // Should still work for non-yFiles GraphML
+            assert.strictEqual(chunks[0].nodes.length, 1);
+            assert.strictEqual(chunks[0].edges.length, 1);
+        });
+
+        test("extracts node label from NodeLabel element", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <graph>
+    <node id="n0">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="30.0" height="30.0"/>
+          <y:NodeLabel>My Label</y:NodeLabel>
+        </y:ShapeNode>
+      </data>
+    </node>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            assert.strictEqual(chunks[0].nodes[0].label, "My Label");
+        });
+
+        test("handles edge arrows (directed vs undirected)", async() => {
+            const xml = `<?xml version="1.0"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="edge" yfiles.type="edgegraphics"/>
+  <graph>
+    <node id="n0"/>
+    <node id="n1"/>
+    <node id="n2"/>
+    <edge id="e0" source="n0" target="n1">
+      <data key="d0">
+        <y:PolyLineEdge>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e1" source="n1" target="n2">
+      <data key="d0">
+        <y:PolyLineEdge>
+          <y:Arrows source="none" target="none"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+</graphml>`;
+
+            const source = new GraphMLDataSource({data: xml});
+            const chunks = [];
+
+            for await (const chunk of source.getData()) {
+                chunks.push(chunk);
+            }
+
+            assert.strictEqual(chunks[0].edges[0].directed, true); // has target arrow
+            assert.strictEqual(chunks[0].edges[1].directed, false); // no arrows
+        });
+    });
 });

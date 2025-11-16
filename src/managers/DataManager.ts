@@ -358,7 +358,6 @@ export class DataManager implements Manager {
         let nodesLoaded = 0;
         let edgesLoaded = 0;
         let chunksProcessed = 0;
-        const allErrors: Error[] = [];
 
         try {
             const source = DataSource.get(type, opts);
@@ -391,15 +390,32 @@ export class DataManager implements Manager {
                     }
                 }
 
+                // Emit error summary if there were errors
+                if (this.graphContext) {
+                    const errorAggregator = source.getErrorAggregator();
+                    if (errorAggregator.getErrorCount() > 0) {
+                        const summary = errorAggregator.getSummary();
+                        this.eventManager.emitDataLoadingErrorSummary(
+                            type,
+                            summary.totalErrors,
+                            summary.message,
+                            errorAggregator.getDetailedReport(),
+                            summary.primaryCategory,
+                            summary.suggestion,
+                        );
+                    }
+                }
+
                 // Emit completion event
                 if (this.graphContext) {
                     const duration = Date.now() - startTime;
+                    const errorCount = source.getErrorAggregator().getErrorCount();
                     this.eventManager.emitDataLoadingComplete(
                         type,
                         nodesLoaded,
                         edgesLoaded,
                         duration,
-                        allErrors.length,
+                        errorCount,
                         0, // warnings
                         true,
                     );

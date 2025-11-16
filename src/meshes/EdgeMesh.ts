@@ -398,7 +398,7 @@ void main() {
         return CustomLineRenderer.createFromGeometry(
             geometry,
             {
-                width: width * 20, // Same scaling as lines
+                width,
                 color,
             },
             scene,
@@ -425,7 +425,7 @@ void main() {
             const mesh = CustomLineRenderer.create(
                 {
                     points,
-                    width: options.width * 20, // Scale factor to match GreasedLine sizing
+                    width: options.width,
                     color: options.color,
                     opacity: style.line?.opacity,
                     pattern: style.line?.type ?? "solid",

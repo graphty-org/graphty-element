@@ -375,8 +375,8 @@ void main() {
             dot: 2,
         };
         shaderMaterial.setFloat("pattern", patternMap[options.pattern ?? "solid"] ?? 0);
-        shaderMaterial.setFloat("dashLength", options.dashLength ?? 3.0);
-        shaderMaterial.setFloat("gapLength", options.gapLength ?? 2.0);
+        shaderMaterial.setFloat("dashLength", options.dashLength ?? 0.025);
+        shaderMaterial.setFloat("gapLength", options.gapLength ?? 0.025);
 
         // Register material for shared resolution updates
         this.activeMaterials.add(shaderMaterial);

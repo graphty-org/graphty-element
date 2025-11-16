@@ -18,15 +18,11 @@ export class GMLDataSource extends DataSource {
 
     private config: GMLDataSourceConfig;
     private chunkSize: number;
-    private errorLimit: number;
-    private errors: {message: string, line?: number}[] = [];
-    private warnings: {message: string, line?: number}[] = [];
 
     constructor(config: GMLDataSourceConfig) {
-        super();
+        super(config.errorLimit ?? 100);
         this.config = config;
         this.chunkSize = config.chunkSize ?? 1000;
-        this.errorLimit = config.errorLimit ?? 100;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -280,17 +276,24 @@ export class GMLDataSource extends DataSource {
         for (const node of nodeArray) {
             try {
                 if (typeof node !== "object" || !("id" in node)) {
-                    this.addError("Node missing id attribute");
+                    this.errorAggregator.addError({
+                        message: "Node missing id attribute",
+                        category: "missing-value",
+                        field: "id",
+                    });
                     continue;
                 }
 
                 const nodeData: Record<string, unknown> = {... node};
                 nodes.push(nodeData);
             } catch (error) {
-                this.addError(`Failed to parse node: ${error instanceof Error ? error.message : String(error)}`);
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse node: ${error instanceof Error ? error.message : String(error)}`,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
-                    throw new Error(`Too many errors (${this.errors.length}), aborting parse`);
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
                 }
             }
         }
@@ -310,7 +313,11 @@ export class GMLDataSource extends DataSource {
         for (const edge of edgeArray) {
             try {
                 if (typeof edge !== "object" || !("source" in edge) || !("target" in edge)) {
-                    this.addError("Edge missing source or target attribute");
+                    this.errorAggregator.addError({
+                        message: "Edge missing source or target attribute",
+                        category: "missing-value",
+                        field: typeof edge === "object" && !("source" in edge) ? "source" : "target",
+                    });
                     continue;
                 }
 
@@ -326,22 +333,17 @@ export class GMLDataSource extends DataSource {
 
                 edges.push(edgeData);
             } catch (error) {
-                this.addError(`Failed to parse edge: ${error instanceof Error ? error.message : String(error)}`);
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse edge: ${error instanceof Error ? error.message : String(error)}`,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
-                    throw new Error(`Too many errors (${this.errors.length}), aborting parse`);
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
                 }
             }
         }
 
         return edges as AdHocData[];
-    }
-
-    private addError(message: string, line?: number): void {
-        this.errors.push({message, line});
-    }
-
-    private addWarning(message: string, line?: number): void {
-        this.warnings.push({message, line});
     }
 }

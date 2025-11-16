@@ -27,11 +27,9 @@ export class CSVDataSource extends DataSource {
 
     private config: CSVDataSourceConfig;
     private chunkSize: number;
-    private errorLimit: number;
-    private errors: {message: string, row?: number}[] = [];
 
     constructor(config: CSVDataSourceConfig) {
-        super();
+        super(config.errorLimit ?? 100);
         this.config = {
             delimiter: ",",
             chunkSize: 1000,
@@ -39,7 +37,6 @@ export class CSVDataSource extends DataSource {
             ... config,
         };
         this.chunkSize = this.config.chunkSize ?? 1000;
-        this.errorLimit = this.config.errorLimit ?? 100;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -137,11 +134,15 @@ export class CSVDataSource extends DataSource {
         if (fullParse.errors.length > 0) {
             // Collect parsing errors but continue if possible
             for (const error of fullParse.errors) {
-                this.addError(`CSV parsing error: ${error.message}`, error.row);
+                const canContinue = this.errorAggregator.addError({
+                    message: `CSV parsing error: ${error.message}`,
+                    line: error.row,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
+                if (!canContinue) {
                     throw new Error(
-                        `Too many CSV parsing errors (${this.errors.length}), aborting`,
+                        `Too many CSV parsing errors (${this.errorAggregator.getErrorCount()}), aborting`,
                     );
                 }
             }
@@ -198,7 +199,12 @@ export class CSVDataSource extends DataSource {
                 const dst = row[targetCol];
 
                 if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.addError(`Row ${i + 1}: Missing source or target`, i);
+                    this.errorAggregator.addError({
+                        message: `Row ${i + 1}: Missing source or target`,
+                        line: i,
+                        category: "missing-value",
+                        field: src === null || src === undefined ? "source" : "target",
+                    });
                     continue;
                 }
 
@@ -239,13 +245,14 @@ export class CSVDataSource extends DataSource {
                     yield {nodes: [] as AdHocData[], edges: edges.splice(0, this.chunkSize) as AdHocData[]};
                 }
             } catch (error) {
-                this.addError(
-                    `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
-                    i,
-                );
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
+                    line: i,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
-                    throw new Error(`Too many errors (${this.errors.length}), aborting parse`);
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
                 }
             }
         }
@@ -285,14 +292,15 @@ export class CSVDataSource extends DataSource {
                     };
                 }
             } catch (error) {
-                this.addError(
-                    `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
-                    i,
-                );
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
+                    line: i,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
+                if (!canContinue) {
                     throw new Error(
-                        `Too many errors (${this.errors.length}), aborting parse`,
+                        `Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`,
                     );
                 }
             }
@@ -412,7 +420,12 @@ export class CSVDataSource extends DataSource {
                 const dst = row[info.targetColumn ?? "Target"];
 
                 if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.addError(`Row ${i + 1}: Missing source or target`, i);
+                    this.errorAggregator.addError({
+                        message: `Row ${i + 1}: Missing source or target`,
+                        line: i,
+                        category: "missing-value",
+                        field: src === null || src === undefined ? "source" : "target",
+                    });
                     continue;
                 }
 
@@ -441,14 +454,15 @@ export class CSVDataSource extends DataSource {
                     };
                 }
             } catch (error) {
-                this.addError(
-                    `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
-                    i,
-                );
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
+                    line: i,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
+                if (!canContinue) {
                     throw new Error(
-                        `Too many errors (${this.errors.length}), aborting parse`,
+                        `Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`,
                     );
                 }
             }
@@ -474,7 +488,12 @@ export class CSVDataSource extends DataSource {
                 const dst = row[info.targetColumn ?? "target"];
 
                 if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.addError(`Row ${i + 1}: Missing source or target`, i);
+                    this.errorAggregator.addError({
+                        message: `Row ${i + 1}: Missing source or target`,
+                        line: i,
+                        category: "missing-value",
+                        field: src === null || src === undefined ? "source" : "target",
+                    });
                     continue;
                 }
 
@@ -503,14 +522,15 @@ export class CSVDataSource extends DataSource {
                     };
                 }
             } catch (error) {
-                this.addError(
-                    `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
-                    i,
-                );
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse row ${i + 1}: ${error instanceof Error ? error.message : String(error)}`,
+                    line: i,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
+                if (!canContinue) {
                     throw new Error(
-                        `Too many errors (${this.errors.length}), aborting parse`,
+                        `Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`,
                     );
                 }
             }
@@ -656,9 +676,5 @@ export class CSVDataSource extends DataSource {
         }
 
         throw new Error("CSVDataSource requires data, file, or url");
-    }
-
-    private addError(message: string, row?: number): void {
-        this.errors.push({message, row});
     }
 }

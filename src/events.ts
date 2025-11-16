@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingCompleteEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -81,6 +81,16 @@ export interface DataLoadingErrorEvent {
     nodeId?: unknown;
     edgeId?: string;
     canContinue: boolean;
+}
+
+export interface DataLoadingErrorSummaryEvent {
+    type: "data-loading-error-summary";
+    format: string;
+    totalErrors: number;
+    primaryCategory?: string;
+    message: string;
+    suggestion?: string;
+    detailedReport: string;
 }
 
 export interface DataLoadingCompleteEvent {

@@ -3,6 +3,7 @@ import {Observable} from "@babylonjs/core";
 import type {
     DataLoadingCompleteEvent,
     DataLoadingErrorEvent,
+    DataLoadingErrorSummaryEvent,
     DataLoadingProgressEvent,
     EdgeEvent,
     EventCallbackType,
@@ -191,6 +192,26 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    emitDataLoadingErrorSummary(
+        format: string,
+        totalErrors: number,
+        message: string,
+        detailedReport: string,
+        primaryCategory?: string,
+        suggestion?: string,
+    ): void {
+        const event: DataLoadingErrorSummaryEvent = {
+            type: "data-loading-error-summary",
+            format,
+            totalErrors,
+            primaryCategory,
+            message,
+            suggestion,
+            detailedReport,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
     emitDataLoadingComplete(
         format: string,
         nodesLoaded: number,
@@ -252,6 +273,7 @@ export class EventManager implements Manager {
             case "operation-obsoleted":
             case "data-loading-progress":
             case "data-loading-error":
+            case "data-loading-error-summary":
             case "data-loading-complete": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {

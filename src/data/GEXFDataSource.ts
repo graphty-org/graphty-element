@@ -22,15 +22,11 @@ export class GEXFDataSource extends DataSource {
 
     private config: GEXFDataSourceConfig;
     private chunkSize: number;
-    private errorLimit: number;
-    private errors: {message: string, line?: number}[] = [];
-    private warnings: {message: string, line?: number}[] = [];
 
     constructor(config: GEXFDataSourceConfig) {
-        super();
+        super(config.errorLimit ?? 100);
         this.config = config;
         this.chunkSize = config.chunkSize ?? 1000;
-        this.errorLimit = config.errorLimit ?? 100;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -188,7 +184,11 @@ export class GEXFDataSource extends DataSource {
 
                 const id = nodeObj["@_id"];
                 if (!id) {
-                    this.addError("Node missing id attribute");
+                    this.errorAggregator.addError({
+                        message: "Node missing id attribute",
+                        category: "missing-value",
+                        field: "id",
+                    });
                     continue;
                 }
 
@@ -244,10 +244,13 @@ export class GEXFDataSource extends DataSource {
 
                 nodes.push(nodeData);
             } catch (error) {
-                this.addError(`Failed to parse node: ${error instanceof Error ? error.message : String(error)}`);
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse node: ${error instanceof Error ? error.message : String(error)}`,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
-                    throw new Error(`Too many errors (${this.errors.length}), aborting parse`);
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
                 }
             }
         }
@@ -282,7 +285,11 @@ export class GEXFDataSource extends DataSource {
                 const dst = edgeObj["@_target"];
 
                 if (!src || !dst) {
-                    this.addError("Edge missing source or target attribute");
+                    this.errorAggregator.addError({
+                        message: "Edge missing source or target attribute",
+                        category: "missing-value",
+                        field: !src ? "source" : "target",
+                    });
                     continue;
                 }
 
@@ -325,10 +332,13 @@ export class GEXFDataSource extends DataSource {
 
                 edges.push(edgeData);
             } catch (error) {
-                this.addError(`Failed to parse edge: ${error instanceof Error ? error.message : String(error)}`);
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse edge: ${error instanceof Error ? error.message : String(error)}`,
+                    category: "parse-error",
+                });
 
-                if (this.errors.length >= this.errorLimit) {
-                    throw new Error(`Too many errors (${this.errors.length}), aborting parse`);
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
                 }
             }
         }
@@ -349,13 +359,5 @@ export class GEXFDataSource extends DataSource {
             default:
                 return value;
         }
-    }
-
-    private addError(message: string, line?: number): void {
-        this.errors.push({message, line});
-    }
-
-    private addWarning(message: string, line?: number): void {
-        this.warnings.push({message, line});
     }
 }

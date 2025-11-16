@@ -1,0 +1,20 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {"id": "A", "type": "start", "value": 10},
+    {"id": "B", "type": "middle", "value": 20},
+    {"id": "C", "type": "middle", "value": 15},
+    {"id": "D", "type": "middle", "value": 25},
+    {"id": "E", "type": "end", "value": 30}
+  ],
+  "links": [
+    {"source": "A", "target": "B", "weight": 1.5},
+    {"source": "B", "target": "C", "weight": 2.0},
+    {"source": "A", "target": "C", "weight": 0.8},
+    {"source": "C", "target": "D", "weight": 3.5},
+    {"source": "D", "target": "E", "weight": 1.2},
+    {"source": "E", "target": "A", "weight": 2.5}
+  ]
+}
