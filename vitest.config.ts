@@ -24,6 +24,7 @@ export default defineConfig({
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
+                        "test/managers/UpdateManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         // Browser-only tests
                         "test/browser/**/*.test.ts",
@@ -52,6 +53,7 @@ export default defineConfig({
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
+                        "test/managers/UpdateManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         "test/performance/**/*.test.ts",
                         "test/examples/**/*.test.ts",
