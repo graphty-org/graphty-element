@@ -10,9 +10,9 @@ import type {AdHocData, EdgeStyleConfig} from "./config";
 import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
-import {CustomLineRenderer} from "./meshes/CustomLineRenderer";
 import {EdgeMesh} from "./meshes/EdgeMesh";
 import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
+import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
@@ -47,7 +47,7 @@ export class Edge {
     dstNode: Node;
     srcNode: Node;
     data: AdHocData;
-    mesh: AbstractMesh;
+    mesh: AbstractMesh | PatternedLineMesh; // PHASE 5: Support both solid lines and patterned lines
     arrowMesh: AbstractMesh | null = null;
     arrowTailMesh: AbstractMesh | null = null;
     styleId: EdgeStyleId;
@@ -112,7 +112,7 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
-        console.log('Edge constructor: creating arrowMesh, arrowHead type:', style.arrowHead?.type);
+        // console.log("Edge constructor: creating arrowMesh, arrowHead type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(this.styleId),
@@ -125,10 +125,10 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        console.log('Edge constructor: arrowMesh assigned:', this.arrowMesh?.name, this.arrowMesh !== null);
+        // console.log("Edge constructor: arrowMesh assigned:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // create arrow tail mesh if needed
-        console.log('Edge constructor: creating arrowTailMesh, arrowTail type:', style.arrowTail?.type);
+        // console.log("Edge constructor: creating arrowTailMesh, arrowTail type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(this.styleId)}-tail`,
@@ -141,9 +141,10 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        console.log('Edge constructor: arrowTailMesh assigned:', this.arrowTailMesh?.name, this.arrowTailMesh !== null);
+        // console.log("Edge constructor: arrowTailMesh assigned:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // create edge line mesh
+        // Note: Edge.transformArrowCap() provides start/end positions already adjusted for node surfaces and arrows
         this.mesh = EdgeMesh.create(
             this.context.getMeshCache(),
             {
@@ -179,27 +180,27 @@ export class Edge {
         const srcPos = this.srcNode.mesh.position;
         const dstPos = this.dstNode.mesh.position;
 
-        const srcMoved = !this._lastSrcPos || !this._lastSrcPos.equalsWithEpsilon(srcPos, 0.001);
-        const dstMoved = !this._lastDstPos || !this._lastDstPos.equalsWithEpsilon(dstPos, 0.001);
+        const srcMoved = !(this._lastSrcPos?.equalsWithEpsilon(srcPos, 0.001) ?? false);
+        const dstMoved = !(this._lastDstPos?.equalsWithEpsilon(dstPos, 0.001) ?? false);
 
-        console.log('Edge.update dirty check:', {
-            srcMoved,
-            dstMoved,
-            _lastSrcPos: this._lastSrcPos ? {x: this._lastSrcPos.x, y: this._lastSrcPos.y, z: this._lastSrcPos.z} : null,
-            _lastDstPos: this._lastDstPos ? {x: this._lastDstPos.x, y: this._lastDstPos.y, z: this._lastDstPos.z} : null,
-            srcPos: {x: srcPos.x, y: srcPos.y, z: srcPos.z},
-            dstPos: {x: dstPos.x, y: dstPos.y, z: dstPos.z},
-        });
+        // console.log("Edge.update dirty check:", {
+        //     srcMoved,
+        //     dstMoved,
+        //     _lastSrcPos: this._lastSrcPos ? {x: this._lastSrcPos.x, y: this._lastSrcPos.y, z: this._lastSrcPos.z} : null,
+        //     _lastDstPos: this._lastDstPos ? {x: this._lastDstPos.x, y: this._lastDstPos.y, z: this._lastDstPos.z} : null,
+        //     srcPos: {x: srcPos.x, y: srcPos.y, z: srcPos.z},
+        //     dstPos: {x: dstPos.x, y: dstPos.y, z: dstPos.z},
+        // });
 
         if (!srcMoved && !dstMoved) {
             // Nodes haven't moved, skip update
-            console.log('Edge.update: Skipping update (nodes haven\'t moved)');
+            // console.log("Edge.update: Skipping update (nodes haven't moved)");
             this.context.getStatsManager().endMeasurement("Edge.update");
             return;
         }
 
         // Nodes have moved, perform update
-        console.log('Edge.update: Performing update (nodes moved)');
+        // console.log("Edge.update: Performing update (nodes moved)");
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
@@ -233,34 +234,41 @@ export class Edge {
     }
 
     updateStyle(styleId: EdgeStyleId): void {
-        console.log('Edge.updateStyle called:', {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
+        // console.log("Edge.updateStyle called:", {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
         // Only skip update if styleId is the same AND mesh is not disposed
         // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
-        if (styleId === this.styleId && !this.mesh.isDisposed()) {
-            console.log('Edge.updateStyle: skipping update (same style and mesh not disposed)');
+        // PHASE 5: PatternedLineMesh doesn't have isDisposed(), check if it's AbstractMesh first
+        const meshDisposed = this.mesh instanceof PatternedLineMesh ?
+            false : // PatternedLineMesh is always "alive" (check individual meshes if needed)
+            this.mesh.isDisposed();
+
+        if (styleId === this.styleId && !meshDisposed) {
+            // console.log("Edge.updateStyle: skipping update (same style and mesh not disposed)");
             return;
         }
 
-        console.log('Edge.updateStyle: proceeding with update');
+        // console.log("Edge.updateStyle: proceeding with update");
         this.styleId = styleId;
 
         // Invalidate position cache to force edge redraw with new style
         this._lastSrcPos = null;
         this._lastDstPos = null;
-        // Only dispose if not already disposed
-        if (!this.mesh.isDisposed()) {
+        // PHASE 5: Dispose pattern lines or solid lines appropriately
+        if (this.mesh instanceof PatternedLineMesh) {
+            this.mesh.dispose(); // PatternedLineMesh has its own dispose logic for all child meshes
+        } else if (!this.mesh.isDisposed()) {
             this.mesh.dispose();
         }
 
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
-        console.log('Edge.updateStyle: disposing old arrowMesh:', this.arrowMesh?.name);
+        // console.log("Edge.updateStyle: disposing old arrowMesh:", this.arrowMesh?.name);
         if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
             this.arrowMesh.dispose();
         }
 
-        console.log('Edge.updateStyle: creating new arrowMesh, type:', style.arrowHead?.type);
+        // console.log("Edge.updateStyle: creating new arrowMesh, type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(styleId),
@@ -273,15 +281,15 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        console.log('Edge.updateStyle: arrowMesh created:', this.arrowMesh?.name, this.arrowMesh !== null);
+        // console.log("Edge.updateStyle: arrowMesh created:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // recreate arrow tail mesh if needed
-        console.log('Edge.updateStyle: disposing old arrowTailMesh:', this.arrowTailMesh?.name);
+        // console.log("Edge.updateStyle: disposing old arrowTailMesh:", this.arrowTailMesh?.name);
         if (this.arrowTailMesh && !this.arrowTailMesh.isDisposed()) {
             this.arrowTailMesh.dispose();
         }
 
-        console.log('Edge.updateStyle: creating new arrowTailMesh, type:', style.arrowTail?.type);
+        // console.log("Edge.updateStyle: creating new arrowTailMesh, type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(styleId)}-tail`,
@@ -294,7 +302,7 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        console.log('Edge.updateStyle: arrowTailMesh created:', this.arrowTailMesh?.name, this.arrowTailMesh !== null);
+        // console.log("Edge.updateStyle: arrowTailMesh created:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // recreate edge line mesh
         this.mesh = EdgeMesh.create(
@@ -361,7 +369,14 @@ export class Edge {
     }
 
     transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
-        EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
+        // PHASE 5: Check if mesh is PatternedLineMesh and route accordingly
+        if (this.mesh instanceof PatternedLineMesh) {
+            // Pattern lines: Update mesh positions in world space
+            this.mesh.update(srcPoint, dstPoint);
+        } else {
+            // Solid lines: Transform via position/rotation/scaling
+            EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
+        }
     }
 
     transformArrowCap(): EdgeLine {
