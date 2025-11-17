@@ -37,7 +37,7 @@ export const Dot: Story = {
                 edgeStyle: {
                     line: {
                         type: "dot",
-                        color: "#FF6B6B",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -53,7 +53,7 @@ export const Star: Story = {
                 edgeStyle: {
                     line: {
                         type: "star",
-                        color: "#4ECDC4",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -69,7 +69,7 @@ export const Box: Story = {
                 edgeStyle: {
                     line: {
                         type: "box",
-                        color: "#4ECDC4",
+                        color: "darkgrey",
                         width: 5,
                         opacity: 1.0,
                     },
@@ -102,7 +102,7 @@ export const Diamond: Story = {
                 edgeStyle: {
                     line: {
                         type: "diamond",
-                        color: "#FFA07A",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -118,7 +118,7 @@ export const DashDot: Story = {
                 edgeStyle: {
                     line: {
                         type: "dash-dot",
-                        color: "#98D8C8",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -134,7 +134,7 @@ export const Sinewave: Story = {
                 edgeStyle: {
                     line: {
                         type: "sinewave",
-                        color: "#F7DC6F",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -150,7 +150,7 @@ export const Zigzag: Story = {
                 edgeStyle: {
                     line: {
                         type: "zigzag",
-                        color: "#BB8FCE",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -186,7 +186,7 @@ export const AdaptiveDensity: Story = {
                 edgeStyle: {
                     line: {
                         type: "box",
-                        color: "#4ECDC4",
+                        color: "darkgrey",
                         width: 5,
                         opacity: 1.0,
                     },
@@ -230,7 +230,7 @@ export const CompressionTest: Story = {
                 edgeStyle: {
                     line: {
                         type: "dot",
-                        color: "#FF6B6B",
+                        color: "darkgrey",
                         width: 5,
                     },
                 },
@@ -285,7 +285,7 @@ export const AlternatingPattern: Story = {
                 edgeStyle: {
                     line: {
                         type: "dash-dot",
-                        color: "#FF6B6B",
+                        color: "darkgrey",
                         width: 6,
                     },
                 },
@@ -341,15 +341,15 @@ export const DashDotComparison: Story = {
                 edgeStyles: [
                     {
                         id: "dash",
-                        line: {type: "dash", color: "#4ECDC4", width: 6},
+                        line: {type: "dash", color: "darkgrey", width: 6},
                     },
                     {
                         id: "dash-dot",
-                        line: {type: "dash-dot", color: "#FF6B6B", width: 6},
+                        line: {type: "dash-dot", color: "darkgrey", width: 6},
                     },
                     {
                         id: "dot",
-                        line: {type: "dot", color: "#FFA07A", width: 6},
+                        line: {type: "dot", color: "darkgrey", width: 6},
                     },
                 ],
             },

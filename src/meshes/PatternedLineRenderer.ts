@@ -29,6 +29,72 @@ import {
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import {PatternedLineMesh} from "./PatternedLineMesh";
 
+/**
+ * Wrapper for continuous pattern meshes (zigzag, sinewave)
+ * Provides update() method interface compatible with Edge.transformEdgeMesh()
+ */
+export class ContinuousPatternMesh {
+    mesh: Mesh;
+    pattern: string;
+    width: number;
+    color: string;
+    opacity: number;
+    scene: Scene;
+    lastLength = 0;
+    isPickable = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    metadata: any = {};
+
+    constructor(
+        mesh: Mesh,
+        pattern: string,
+        width: number,
+        color: string,
+        opacity: number,
+        scene: Scene,
+    ) {
+        this.mesh = mesh;
+        this.pattern = pattern;
+        this.width = width;
+        this.color = color;
+        this.opacity = opacity;
+        this.scene = scene;
+    }
+
+    update(start: Vector3, end: Vector3): void {
+        const direction = end.subtract(start);
+        const lineLength = direction.length();
+        const normalizedDir = direction.normalize();
+
+        // Recreate geometry if length changed significantly (more than 1%)
+        if (Math.abs(lineLength - this.lastLength) > lineLength * 0.01) {
+            this.lastLength = lineLength;
+
+            // Calculate shader scaling factor (same as createContinuousMesh)
+            const geometryDiameter = PatternedLineRenderer["getGeometryDiameter"](this.pattern);
+            const size = this.width / geometryDiameter;
+
+            // Account for shader scaling: create geometry at 1/size of actual length
+            const geometryLength = lineLength / size;
+
+            // Recreate the geometry
+            const vertexData = this.pattern === "zigzag" ?
+                PatternedLineRenderer["createContinuousZigzag"](geometryLength) :
+                PatternedLineRenderer["createContinuousSinewave"](geometryLength);
+
+            vertexData.applyToMesh(this.mesh, true); // true = updatable
+        }
+
+        // Update position and line direction
+        this.mesh.position = start.clone();
+        FilledArrowRenderer.setLineDirection(this.mesh, normalizedDir);
+    }
+
+    dispose(): void {
+        this.mesh.dispose();
+    }
+}
+
 // ==========================================
 // PATTERN TYPE DEFINITIONS
 // ==========================================
@@ -127,11 +193,64 @@ export class PatternedLineRenderer {
         color: string,
         opacity: number,
         scene: Scene,
-    ): PatternedLineMesh {
+    ): PatternedLineMesh | ContinuousPatternMesh {
         // Register camera callback for batched shader updates
         this.registerCameraCallback(scene);
 
+        // For continuous patterns (zigzag, sinewave), create a single tiled mesh
+        const patternDef = PATTERN_DEFINITIONS[pattern];
+        if (patternDef.connected) {
+            return this.createContinuousMesh(pattern, start, end, width, color, opacity, scene);
+        }
+
         return new PatternedLineMesh(pattern, start, end, width, color, opacity, scene);
+    }
+
+    /**
+     * Create a single continuous mesh by tiling the pattern geometry along the line
+     * Used for connected patterns like zigzag and sinewave with ZERO spacing
+     */
+    static createContinuousMesh(
+        pattern: PatternType,
+        start: Vector3,
+        end: Vector3,
+        width: number,
+        color: string,
+        opacity: number,
+        scene: Scene,
+    ): ContinuousPatternMesh {
+        const direction = end.subtract(start);
+        const lineLength = direction.length();
+
+        // Calculate shader scaling factor
+        const geometryDiameter = this.getGeometryDiameter(pattern);
+        const size = width / geometryDiameter;
+
+        // Account for shader scaling: create geometry at 1/size of actual length
+        // so when shader scales by size, it reaches the correct lineLength
+        const geometryLength = lineLength / size;
+
+        // For connected patterns, generate the geometry for the scaled length
+        const vertexData = pattern === "zigzag" ?
+            this.createContinuousZigzag(geometryLength) :
+            this.createContinuousSinewave(geometryLength);
+
+        // Create the mesh
+        const mesh = new Mesh(`continuous-${pattern}`, scene);
+        vertexData.applyToMesh(mesh);
+
+        // Apply shader
+        FilledArrowRenderer.applyShader(mesh, {size, color, opacity}, scene);
+
+        // Position and orient the mesh along the line
+        mesh.position = start.clone();
+        const normalizedDir = direction.normalize();
+
+        // Set line direction for billboarding shader
+        FilledArrowRenderer.setLineDirection(mesh, normalizedDir);
+
+        // Wrap in ContinuousPatternMesh for update() interface
+        return new ContinuousPatternMesh(mesh, pattern, width, color, opacity, scene);
     }
 
     /**
@@ -418,6 +537,108 @@ export class PatternedLineRenderer {
     }
 
     /**
+     * Create continuous zigzag geometry for the full line length (ZERO spacing)
+     * Generates a seamless zigzag pattern along the entire X axis
+     *
+     * @param lineLength - Total length of the line
+     * @returns VertexData with positions and indices for continuous quad strip
+     */
+    private static createContinuousZigzag(lineLength: number): VertexData {
+        const positions: number[] = [];
+        const indices: number[] = [];
+
+        // Pattern configuration
+        const segmentLength = 1.0; // Length of one complete /\/\ period
+        const thickness = 0.5; // Line thickness perpendicular to the zigzag (same as amplitude for visibility)
+
+        // Calculate diagonal segment length and amplitude
+        const segmentCount = 4; // Number of diagonal segments per period (/\/\)
+        const diagonalLength = segmentLength / segmentCount; // 0.25
+        const amplitude = diagonalLength * 2; // 0.5 to get total diameter of 1.0
+
+        // Generate zigzag points directly along the line length
+        // Pattern: baseline(0) -> peak(1) -> baseline(2) -> valley(3) -> baseline(4) -> ...
+        const points: [number, number, number][] = [];
+
+        // Calculate total number of diagonal segments that fit
+        const totalDiagonals = Math.ceil(lineLength / diagonalLength);
+
+        // Generate points for each diagonal segment
+        for (let i = 0; i <= totalDiagonals; i++) {
+            const x = Math.min(i * diagonalLength, lineLength); // Clamp to lineLength
+            const phase = i % 4; // Which part of the /\/\ pattern
+
+            let z = 0;
+            if (phase === 0) z = 0; // Baseline
+            else if (phase === 1) z = amplitude; // Peak
+            else if (phase === 2) z = 0; // Baseline
+            else if (phase === 3) z = -amplitude; // Valley
+
+            points.push([x, 0, z]);
+
+            // Stop if we've reached the end
+            if (x >= lineLength) break;
+        }
+
+        // Create quad strip with thickness
+        for (const [px, py, pz] of points) {
+            positions.push(px, py, pz - thickness); // Bottom
+            positions.push(px, py, pz + thickness); // Top
+        }
+
+        // Create triangle indices for quad strip
+        for (let i = 0; i < points.length - 1; i++) {
+            const base = i * 2;
+            indices.push(base, base + 1, base + 2);
+            indices.push(base + 1, base + 3, base + 2);
+        }
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        return vertexData;
+    }
+
+    /**
+     * Create continuous sinewave geometry for the full line length (ZERO spacing)
+     * Generates a seamless sinewave pattern along the entire X axis
+     *
+     * @param lineLength - Total length of the line
+     * @returns VertexData with positions and indices for continuous quad strip
+     */
+    private static createContinuousSinewave(lineLength: number): VertexData {
+        const positions: number[] = [];
+        const indices: number[] = [];
+
+        const amplitude = 0.3;
+        const periods = 0.5; // Half period per unit length
+        const thickness = amplitude * 1.0; // Same as amplitude for visibility
+        const segments = Math.max(20, Math.ceil(lineLength * 10)); // More segments for longer lines
+
+        // Generate sine wave vertices
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const x = t * lineLength;
+            const z = amplitude * Math.sin((2 * Math.PI * periods * lineLength) * t);
+
+            positions.push(x, 0, z - thickness); // Bottom
+            positions.push(x, 0, z + thickness); // Top
+        }
+
+        // Create triangle indices for quad strip
+        for (let i = 0; i < segments; i++) {
+            const base = i * 2;
+            indices.push(base, base + 1, base + 2);
+            indices.push(base + 1, base + 3, base + 2);
+        }
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        return vertexData;
+    }
+
+    /**
      * Create zigzag segment geometry in XZ plane (Y=0)
      * Creates a quad strip following a zigzag pattern for seamless connection
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
@@ -436,36 +657,25 @@ export class PatternedLineRenderer {
         const indices: number[] = [];
         const thickness = amplitude * 0.2;
 
-        // Calculate peak height from angle
-        const peakHeight = Math.tan((angle * Math.PI) / 180) * (segmentLength / 2);
+        // Create a true zigzag pattern with diagonal slanting lines
+        // A zigzag consists of alternating diagonal segments (up-right, down-right)
+        // For 90-degree corners with equal segment lengths, use 45-degree diagonals
 
-        // Zigzag points: 0 → peak → 0 → valley → 0 (XZ plane, Y=0)
+        // IMPORTANT: Perpendicular extent must be 1.0 to match getGeometryDiameter()
+        // Total Z extent from -0.5 to +0.5 = 1.0 diameter
+        // Each diagonal segment goes at 45° (equal X and Z travel)
+        const segmentCount = 4; // Number of diagonal segments per period
+        const diagonalLength = segmentLength / segmentCount; // 0.25
+        const segmentAmplitude = diagonalLength * 2; // 0.5 to get total diameter of 1.0
+
+        // Zigzag points: continuous diagonal pattern /\/\/\ (XZ plane, Y=0)
+        // Total Z extent: -0.5 to +0.5 = 1.0 (matches getGeometryDiameter)
         const points: [number, number, number][] = [
-            [
-                0,
-                0,
-                0,
-            ], // Start
-            [
-                segmentLength / 4,
-                0,
-                peakHeight,
-            ], // Peak
-            [
-                segmentLength / 2,
-                0,
-                0,
-            ], // Mid
-            [
-                (3 * segmentLength) / 4,
-                0,
-                -peakHeight,
-            ], // Valley
-            [
-                segmentLength,
-                0,
-                0,
-            ], // End
+            [0, 0, 0], // Start at baseline
+            [diagonalLength, 0, segmentAmplitude], // Up-right diagonal (/) to peak
+            [2 * diagonalLength, 0, 0], // Down-right diagonal (\) back to baseline
+            [3 * diagonalLength, 0, -segmentAmplitude], // Down-right diagonal (\) to valley
+            [4 * diagonalLength, 0, 0], // Up-right diagonal (/) back to baseline - seamless tiling
         ];
 
         // Create quad strip with thickness
