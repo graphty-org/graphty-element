@@ -228,7 +228,9 @@ export class PatternedLineMesh {
         const dynamicLength = lastMeshLeftEdge - firstMeshRightEdge;
 
         // Calculate actual spacing
-        const minSpacing = meshWidth * 0.5;
+        // IMPORTANT: Spacing should be based on visual HEIGHT (this.width), not parallel length (meshWidth)
+        // This ensures gaps scale with the perpendicular dimension, not the aspect ratio
+        const minSpacing = this.width * 0.5;
         const remainder = dynamicLength - (numInterior * meshWidth) - (numGaps * minSpacing);
         const actualSpacing = minSpacing + (remainder / numGaps);
 
@@ -276,17 +278,49 @@ export class PatternedLineMesh {
     }
 
     /**
-     * Get the actual rendered size of pattern meshes
+     * Get the actual rendered size of pattern meshes (parallel dimension along the line)
      *
-     * Since PatternedLineRenderer now scales all meshes to match the line width exactly
-     * (shader size = width / geometryDiameter), the rendered size is simply the width.
+     * PatternedLineRenderer scales meshes so their perpendicular dimension matches line width:
+     *   shaderSize = width / geometryPerpendicularDiameter
      *
-     * All pattern meshes have the same visual height as the line width, ensuring:
-     * 1. Uniform appearance across all pattern types
-     * 2. Correct spacing calculations based on actual rendered size
+     * This method calculates the PARALLEL dimension (length along the line) after scaling.
+     *
+     * For circles/stars:
+     *   - Geometry has diameter 2.0 in all directions
+     *   - Rendered size = 2.0 × (width / 2.0) = width
+     *
+     * For boxes with aspectRatio:
+     *   - Geometry has perpendicular width = 1.0/aspectRatio, parallel length = 1.0
+     *   - Rendered parallel = 1.0 × (width / (1.0/aspectRatio)) = width × aspectRatio
+     *
+     * For diamonds/waves/zigzags:
+     *   - Geometry has diameter 1.0 in both directions
+     *   - Rendered size = 1.0 × (width / 1.0) = width
      */
     private getRenderedMeshSize(): number {
-        return this.width;
+        const patternDef = PATTERN_DEFINITIONS[this.pattern];
+
+        // For alternating patterns, we need to handle both shapes
+        // For now, use the first shape as representative (this is for spacing calculations)
+        const shapeDef = patternDef.shapes[0];
+        const aspectRatio = shapeDef.aspectRatio ?? 1.0;
+
+        switch (shapeDef.type) {
+            case "circle":
+            case "star":
+                // Circular shapes: rendered diameter = width
+                return this.width;
+            case "box":
+                // Box: rendered parallel length = width × aspectRatio
+                return this.width * aspectRatio;
+            case "diamond":
+            case "sinewave-segment":
+            case "zigzag-segment":
+                // These have 1:1 aspect ratio: rendered size = width
+                return this.width;
+            default:
+                return this.width;
+        }
     }
 
     /**
@@ -317,7 +351,8 @@ export class PatternedLineMesh {
         }
 
         // Spacing constraints
-        const minSpacing = meshWidth * 0.5;
+        // IMPORTANT: Spacing should be based on visual HEIGHT (this.width), not parallel length (meshWidth)
+        const minSpacing = this.width * 0.5;
 
         // Calculate number of interior meshes
         // Formula: K interior meshes create K+1 gaps

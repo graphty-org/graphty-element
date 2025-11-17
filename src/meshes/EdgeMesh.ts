@@ -214,7 +214,7 @@ void main() {
                 lineType as "dot" | "star" | "box" | "dash" | "diamond" | "dash-dot" | "sinewave" | "zigzag",
                 new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
                 new Vector3(0, 0, 0.5), // Placeholder end (Edge.update() will set real positions)
-                options.width / 20, // Convert back from scaled width (same as solid lines)
+                options.width / 40, // Convert back from scaled width - need /40 to match solid line thickness
                 options.color,
                 style.line?.opacity ?? 1.0,
                 scene,

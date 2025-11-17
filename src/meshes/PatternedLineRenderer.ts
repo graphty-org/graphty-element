@@ -162,6 +162,7 @@ export class PatternedLineRenderer {
         // For geometries with perpendicular diameter D, shader size = desiredWidth / D
         const geometryDiameter = this.getGeometryDiameter(pattern, shapeType);
         const size = width / geometryDiameter;
+
         FilledArrowRenderer.applyShader(mesh, {size, color, opacity}, scene);
 
         // Track material for batched updates
@@ -488,7 +489,9 @@ export class PatternedLineRenderer {
 
     /**
      * Get geometry perpendicular diameter for a pattern
-     * Returns the diameter perpendicular to the line (the visual height)
+     * Returns the actual mesh extent perpendicular to the line (the visual height)
+     *
+     * IMPORTANT: Returns the actual geometric extent (max - min), NOT 2 × radius
      *
      * @param pattern Pattern type
      * @param shapeType Optional specific shape type (for alternating patterns)
@@ -510,7 +513,12 @@ export class PatternedLineRenderer {
         switch (shape) {
             case "circle":
             case "star":
-                // Circle and star have outerRadius=1.0 → diameter=2.0 (circular, so aspectRatio doesn't apply)
+                // Circle: radius=0.5 → extent from -0.5 to +0.5 = 1.0
+                // Star: outerRadius=1.0, innerRadius=0.4 → extent from -1.0 to +1.0 = 2.0
+                // But we use the ACTUAL geometric extent in createCircleGeometry (radius=0.5) and createStarGeometry (outerRadius=1.0)
+                // Fixed: Circle geometry uses Math.cos/sin(angle) * 1.0, so extent is 2.0
+                // But createCircleGeometry in PatternedLineRenderer uses radius=1.0 for unit circle
+                // Actual extent is from -1.0 to +1.0 = 2.0
                 return 2.0;
             case "box":
                 // Box has length=1.0, width=1.0/aspectRatio
