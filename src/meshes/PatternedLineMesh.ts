@@ -18,7 +18,7 @@
  * - Phase 4: Connected patterns (sinewave, zigzag) positioning
  */
 
-import {Mesh, Scene, Vector3} from "@babylonjs/core";
+import {Mesh, Scene, ShaderMaterial, Vector3} from "@babylonjs/core";
 
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import {
@@ -37,6 +37,7 @@ export class PatternedLineMesh {
     private width: number;
     private color: string;
     private opacity: number;
+    private static readonly SEGMENT_LENGTH = 0.75; // Fixed segment length for all edges (for instancing)
 
     // PHASE 5: Edge compatibility properties (mimic AbstractMesh interface)
     // These aren't used by PatternedLineMesh but are set by Edge.ts for consistency
@@ -85,7 +86,39 @@ export class PatternedLineMesh {
             FilledArrowRenderer.setLineDirection(this.meshes[i], this.lineDirection);
         }
 
+        // For connected patterns, clip last segment to fit exactly
+        const patternDef = PATTERN_DEFINITIONS[this.pattern];
+        if (patternDef.connected && this.meshes.length > 0) {
+            this.clipLastSegment(newLength);
+        }
+
         this.lastLength = newLength;
+    }
+
+    /**
+     * Clip the last segment to fit exactly to line end
+     * Uses shader-based clipping instead of mesh scaling
+     * All segments use identical 0.75 geometry (for instancing)
+     */
+    private clipLastSegment(lineLength: number): void {
+        const lastIndex = this.meshes.length - 1;
+        const lastMesh = this.meshes[lastIndex];
+
+        // Calculate how much of the last segment should be visible
+        const fullSegmentsLength = lastIndex * PatternedLineMesh.SEGMENT_LENGTH;
+        const remainingLength = Math.max(0, lineLength - fullSegmentsLength);
+
+        // Set clip uniform on the last segment's material
+        const material = lastMesh.material as ShaderMaterial;
+        // If remainder is nearly full segment (>0.74), don't clip
+        if (remainingLength > 0.74) {
+            material.setFloat("clipEndX", -1.0); // Disable clipping
+        } else {
+            material.setFloat("clipEndX", remainingLength);
+        }
+
+        // Reset scaling (no longer needed)
+        lastMesh.scaling.set(1, 1, 1);
     }
 
     /**
@@ -191,7 +224,8 @@ export class PatternedLineMesh {
     private calculateDiscretePositions(
         start: Vector3,
         end: Vector3,
-        patternDef: PatternDefinition,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _patternDef: PatternDefinition,
     ): Vector3[] {
         const direction = end.subtract(start).normalize();
         const totalLength = Vector3.Distance(start, end);
@@ -204,7 +238,6 @@ export class PatternedLineMesh {
         // Last mesh right edge should be at distance totalLength from start
         const lineStart = 0;
         const lineEnd = totalLength;
-        const adjustedLength = lineEnd - lineStart;
 
         const meshCount = this.meshes.length;
 
@@ -257,20 +290,25 @@ export class PatternedLineMesh {
 
     /**
      * Calculate positions for connected patterns (sinewave, zigzag)
-     * Phase 4: Seamless connection - meshes positioned exactly segmentSize apart with no spacing
+     * Phase 4: Seamless connection - meshes positioned at fixed intervals
+     *
+     * All segments use FIXED 0.75 geometry (for instancing).
+     * Last segment is scaled in X-direction to fit exactly (see scaleLastSegment).
      */
     private calculateConnectedPositions(
         start: Vector3,
         end: Vector3,
-        patternDef: PatternDefinition,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _patternDef: PatternDefinition,
     ): Vector3[] {
         const direction = end.subtract(start).normalize();
-        const segmentSize = patternDef.shapes[0].size ?? 1.0;
-        const meshCount = this.meshes.length;
 
+        const meshCount = this.meshes.length;
         const positions: Vector3[] = [];
+
+        // Position segments at fixed 0.75 intervals (same geometry for all)
         for (let i = 0; i < meshCount; i++) {
-            const distance = i * segmentSize;
+            const distance = i * PatternedLineMesh.SEGMENT_LENGTH;
             positions.push(start.add(direction.scale(distance)));
         }
 
@@ -332,8 +370,10 @@ export class PatternedLineMesh {
         patternDef: PatternDefinition,
     ): number {
         if (patternDef.connected) {
-            const segmentSize = patternDef.shapes[0].size ?? 1.0;
-            return Math.ceil(lineLength / segmentSize);
+            // For connected patterns, use fixed 0.75 segment length
+            // Last segment will be scaled to fit remainder (see scaleLastSegment)
+            const segments = Math.ceil(lineLength / PatternedLineMesh.SEGMENT_LENGTH);
+            return Math.max(1, segments);
         }
 
         const meshWidth = this.getRenderedMeshSize(); // W
@@ -385,7 +425,9 @@ export class PatternedLineMesh {
             shapeType = patternDef.shapes[shapeIndex].type;
         }
 
-        return PatternedLineRenderer.createPatternMesh(
+        // All segments use FIXED 0.75 geometry (for instancing)
+        // No custom segment length passed - uses default 0.75
+        const mesh = PatternedLineRenderer.createPatternMesh(
             this.pattern,
             this.width,
             this.color,
@@ -393,5 +435,13 @@ export class PatternedLineMesh {
             this.scene,
             shapeType,
         );
+
+        // Initialize as non-clipped (will be updated in clipLastSegment if needed)
+        if (patternDef.connected) {
+            const material = mesh.material as ShaderMaterial;
+            material.setFloat("clipEndX", -1.0); // -1.0 = no clipping
+        }
+
+        return mesh;
     }
 }

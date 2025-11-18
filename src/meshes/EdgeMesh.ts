@@ -24,7 +24,7 @@ import {CustomLineRenderer, type LineGeometry} from "./CustomLineRenderer";
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import type {MeshCache} from "./MeshCache";
 import {PatternedLineMesh} from "./PatternedLineMesh";
-import {ContinuousPatternMesh, PatternedLineRenderer} from "./PatternedLineRenderer";
+import {PatternedLineRenderer} from "./PatternedLineRenderer";
 
 export interface EdgeMeshOptions {
     styleId: string;
@@ -202,7 +202,7 @@ void main() {
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
         scene: Scene,
-    ): AbstractMesh | PatternedLineMesh | ContinuousPatternMesh {
+    ): AbstractMesh | PatternedLineMesh {
         const lineType = style.line?.type ?? "solid";
         const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
 

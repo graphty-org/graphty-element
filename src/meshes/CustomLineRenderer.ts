@@ -568,7 +568,7 @@ void main(void) {
             const p0 = points[segIdx];
             const p1 = points[segIdx + 1];
             const segmentDir = p1.subtract(p0);
-            const _segmentLength = segmentDir.length();
+            const segmentLength = segmentDir.length();
             const tangent = segmentDir.normalize();
 
             // Calculate perpendicular vector for wave oscillation
@@ -587,7 +587,7 @@ void main(void) {
 
             // Generate points along this segment with wave
             // Use 10 points per unit length for smooth curves
-            const pointsPerSegment = Math.max(10, Math.ceil(_segmentLength * 10));
+            const pointsPerSegment = Math.max(10, Math.ceil(segmentLength * 10));
 
             for (let i = 0; i <= pointsPerSegment; i++) {
                 const t = i / pointsPerSegment;
@@ -632,7 +632,6 @@ void main(void) {
             const p0 = points[segIdx];
             const p1 = points[segIdx + 1];
             const segmentDir = p1.subtract(p0);
-            const _segmentLength = segmentDir.length();
             const tangent = segmentDir.normalize();
 
             // Calculate perpendicular vector for zigzag oscillation
@@ -997,10 +996,11 @@ void main(void) {
      * Generates a V-shaped arrow, alias for vee arrow.
      *
      * @param length Length of each arm of the V
-     * @param width Width between the arms at the base
+     * @param _width Width between the arms at the base (unused - maintained for API compatibility)
      * @returns LineGeometry for use with CustomLineRenderer shader
      */
-    static createOpenArrowGeometry(length: number, width: number): LineGeometry {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    static createOpenArrowGeometry(length: number, _width: number): LineGeometry {
         // Open arrow is the same as vee arrow
         return this.createVeeArrowGeometry(length);
     }

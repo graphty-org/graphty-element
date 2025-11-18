@@ -12,6 +12,7 @@ export interface FilledArrowOptions {
     size: number; // Screen-space size in pixels
     color: string; // Hex color
     opacity?: number; // 0-1
+    clipEndX?: number; // X-axis clipping: undefined = no clipping, number = clip at X position
 }
 
 /**
@@ -74,7 +75,13 @@ uniform vec3 cameraPosition;
 uniform vec3 lineDirection;    // Line direction (uniform for individual meshes)
 uniform float size;
 
+// Varyings
+varying vec3 vLocalPosition;  // Pass local position to fragment shader for clipping
+
 void main() {
+    // Pass local position to fragment shader (for shader-based clipping)
+    vLocalPosition = position;
+
     // Use world matrix directly (individual meshes)
     mat4 finalWorld = world;
 
@@ -99,15 +106,26 @@ void main() {
 }
 `;
 
-        // Fragment Shader: Simple solid color
+        // Fragment Shader: Simple solid color with optional clipping
         Effect.ShadersStore.filledArrowFragmentShader = `
 precision highp float;
 
 // Uniforms
 uniform vec3 color;
 uniform float opacity;
+uniform float clipEndX;        // X-axis clipping: -1.0 = disabled, >= 0.0 = clip at this X
+
+// Varyings
+varying vec3 vLocalPosition;  // Local position from vertex shader
 
 void main() {
+    // Shader-based clipping: Discard fragments beyond clipEndX
+    // clipEndX < 0.0 means clipping is disabled
+    // Only clip if clipEndX is meaningfully less than segment length (0.75)
+    if (clipEndX >= 0.0 && clipEndX < 0.74 && vLocalPosition.x > clipEndX) {
+        discard;
+    }
+
     gl_FragColor = vec4(color, opacity);
 }
 `;
@@ -367,7 +385,7 @@ void main() {
         const base = -length;
 
         // Middle point: starts at center of baseline, pushed 60% toward tip (2/3 - 10%)
-        const middleX = base + 0.6 * length; // -1.0 + 0.6 = -0.4
+        const middleX = base + (0.6 * length); // -1.0 + 0.6 = -0.4
 
         // XZ plane (normal in Y), pointing along X axis
         // 4 vertices to form V-shape (2 triangles)
@@ -476,7 +494,7 @@ void main() {
         const base = -length;
 
         // Middle point: pushed 60% toward tip (same as vee)
-        const middleX = base + 0.6 * length; // -0.4
+        const middleX = base + (0.6 * length); // -0.4
 
         // XZ plane (normal in Y), pointing along X axis
         // Only one side of the V (3 vertices forming 1 triangle)
@@ -528,7 +546,7 @@ void main() {
         const base = 0; // Base now at front
 
         // Middle point: pushed 60% from base toward tip
-        const middleX = base + 0.6 * (tip - base); // 0 + 0.6 * (-1.0) = -0.6
+        const middleX = base + (0.6 * (tip - base)); // 0 + 0.6 * (-1.0) = -0.6
 
         // Width of center prong at base
         const centerProngWidth = 0.2;
@@ -868,6 +886,7 @@ void main() {
                     "color",
                     "opacity",
                     "lineDirection", // Now a uniform instead of per-instance attribute
+                    "clipEndX", // X-axis clipping for pattern segments
                 ],
             },
         );
@@ -880,6 +899,9 @@ void main() {
 
         // Initialize lineDirection to a default value (will be updated per-edge)
         shaderMaterial.setVector3("lineDirection", new Vector3(1, 0, 0));
+
+        // Set clipping uniform (default -1.0 = disabled)
+        shaderMaterial.setFloat("clipEndX", options.clipEndX ?? -1.0);
 
         // Register material for shared camera position updates
         this.activeMaterials.add(shaderMaterial);

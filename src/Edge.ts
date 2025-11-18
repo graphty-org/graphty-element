@@ -12,7 +12,6 @@ import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import {EdgeMesh} from "./meshes/EdgeMesh";
 import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
-import {ContinuousPatternMesh} from "./meshes/PatternedLineRenderer";
 import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
@@ -48,7 +47,7 @@ export class Edge {
     dstNode: Node;
     srcNode: Node;
     data: AdHocData;
-    mesh: AbstractMesh | PatternedLineMesh | ContinuousPatternMesh; // PHASE 5: Support both solid lines and patterned lines
+    mesh: AbstractMesh | PatternedLineMesh; // PHASE 5: Support both solid lines and patterned lines
     arrowMesh: AbstractMesh | null = null;
     arrowTailMesh: AbstractMesh | null = null;
     styleId: EdgeStyleId;
@@ -238,9 +237,9 @@ export class Edge {
         // console.log("Edge.updateStyle called:", {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
         // Only skip update if styleId is the same AND mesh is not disposed
         // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
-        // PHASE 5: PatternedLineMesh and ContinuousPatternMesh don't have isDisposed(), check if it's AbstractMesh first
-        const meshDisposed = (this.mesh instanceof PatternedLineMesh || this.mesh instanceof ContinuousPatternMesh) ?
-            false : // PatternedLineMesh and ContinuousPatternMesh are always "alive" (check individual meshes if needed)
+        // PHASE 5: PatternedLineMesh doesn't have isDisposed(), check if it's AbstractMesh first
+        const meshDisposed = (this.mesh instanceof PatternedLineMesh) ?
+            false : // PatternedLineMesh is always "alive" (check individual meshes if needed)
             this.mesh.isDisposed();
 
         if (styleId === this.styleId && !meshDisposed) {
@@ -255,8 +254,8 @@ export class Edge {
         this._lastSrcPos = null;
         this._lastDstPos = null;
         // PHASE 5: Dispose pattern lines or solid lines appropriately
-        if (this.mesh instanceof PatternedLineMesh || this.mesh instanceof ContinuousPatternMesh) {
-            this.mesh.dispose(); // PatternedLineMesh and ContinuousPatternMesh have their own dispose logic
+        if (this.mesh instanceof PatternedLineMesh) {
+            this.mesh.dispose(); // PatternedLineMesh has its own dispose logic
         } else if (!this.mesh.isDisposed()) {
             this.mesh.dispose();
         }
@@ -370,8 +369,8 @@ export class Edge {
     }
 
     transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
-        // PHASE 5: Check if mesh is PatternedLineMesh or ContinuousPatternMesh and route accordingly
-        if (this.mesh instanceof PatternedLineMesh || this.mesh instanceof ContinuousPatternMesh) {
+        // PHASE 5: Check if mesh is PatternedLineMesh and route accordingly
+        if (this.mesh instanceof PatternedLineMesh) {
             // Pattern lines: Update mesh positions in world space
             this.mesh.update(srcPoint, dstPoint);
         } else {

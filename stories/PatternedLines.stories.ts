@@ -135,7 +135,7 @@ export const Sinewave: Story = {
                     line: {
                         type: "sinewave",
                         color: "darkgrey",
-                        width: 5,
+                        width: 15,
                     },
                 },
             },
@@ -150,8 +150,8 @@ export const Zigzag: Story = {
                 edgeStyle: {
                     line: {
                         type: "zigzag",
-                        color: "darkgrey",
-                        width: 5,
+                        color: "red",
+                        width: 15,
                     },
                 },
             },
