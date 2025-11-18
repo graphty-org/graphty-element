@@ -552,18 +552,18 @@ export class PatternedLineRenderer {
 
             // Calculate the tangent (derivative) to apply thickness perpendicular to curve
             // dz/dx = amplitude * cos(2π * x / wavelength) * (2π / wavelength)
-            const dz_dx = amplitude * Math.cos(2 * Math.PI * x / wavelength) * (2 * Math.PI / wavelength);
+            const dzDx = amplitude * Math.cos(2 * Math.PI * x / wavelength) * (2 * Math.PI / wavelength);
 
             // Tangent vector in XZ plane: (1, dz/dx)
             // Normal (perpendicular) vector: (-dz/dx, 1)
             // Normalize to get unit normal
-            const normalLength = Math.sqrt(dz_dx * dz_dx + 1);
-            const nx = -dz_dx / normalLength;
+            const normalLength = Math.sqrt((dzDx * dzDx) + 1);
+            const nx = -dzDx / normalLength;
             const nz = 1 / normalLength;
 
             // Apply thickness along the normal direction (perpendicular to curve)
-            positions.push(x + nx * thickness, 0, z + nz * thickness); // Bottom
-            positions.push(x - nx * thickness, 0, z - nz * thickness); // Top
+            positions.push((x + (nx * thickness)), 0, (z + (nz * thickness))); // Bottom
+            positions.push((x - (nx * thickness)), 0, (z - (nz * thickness))); // Top
         }
 
         // Create triangle indices for quad strip

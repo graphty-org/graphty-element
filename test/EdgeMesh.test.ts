@@ -1,4 +1,4 @@
-import {InstancedMesh, NullEngine, RawTexture, Scene, StandardMaterial, Vector3} from "@babylonjs/core";
+import {AbstractMesh, InstancedMesh, NullEngine, RawTexture, Scene, StandardMaterial, Vector3} from "@babylonjs/core";
 import {assert, beforeEach, describe, test} from "vitest";
 
 import {EDGE_CONSTANTS} from "../src/constants/meshConstants";
@@ -24,7 +24,7 @@ describe("EdgeMesh", () => {
             };
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             assert.exists(mesh);
             assert.equal(mesh.name, "edge-style-test-static");
@@ -48,7 +48,7 @@ describe("EdgeMesh", () => {
                 enabled: true,
             };
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             assert.exists(mesh);
             assert.equal(mesh.name, "edge-style-test-animated");
@@ -99,7 +99,7 @@ describe("EdgeMesh", () => {
                 enabled: true,
             };
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
             const material = mesh.material as StandardMaterial;
 
             // uScale is a property of RawTexture but not in the type definitions
@@ -182,7 +182,7 @@ describe("EdgeMesh", () => {
                 {styleId: "test-transform", width: 0.25, color: "#FF0000"},
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(4, 3, 0);
@@ -201,7 +201,7 @@ describe("EdgeMesh", () => {
                 {styleId: "test-negative", width: 0.25, color: "#FF0000"},
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             const srcPoint = new Vector3(-2, -2, -2);
             const dstPoint = new Vector3(2, 2, 2);
@@ -256,7 +256,7 @@ describe("EdgeMesh", () => {
                 options,
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             // Clear cache to ensure new mesh creation
             meshCache.clear();
@@ -266,7 +266,7 @@ describe("EdgeMesh", () => {
                 options,
                 {line: {width: 0.25, color: "#FF0000", animationSpeed: 0.1}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             assert.notEqual(staticMesh, animatedMesh);
             assert.equal(staticMesh.name, "edge-style-same-edge");

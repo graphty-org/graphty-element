@@ -5,7 +5,7 @@
  * Focused on successful execution rather than complex scenarios.
  */
 
-import {MeshBuilder, NullEngine, Scene, Vector3} from "@babylonjs/core";
+import {AbstractMesh, MeshBuilder, NullEngine, Scene, Vector3} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test} from "vitest";
 
 import {EdgeMesh} from "../../src/meshes/EdgeMesh";
@@ -251,7 +251,7 @@ describe("Simple Real Mesh Tests", () => {
             };
 
             const style = {enabled: true, line: {}};
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(5, 3, 2);
