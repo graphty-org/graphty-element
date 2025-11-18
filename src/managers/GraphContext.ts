@@ -1,5 +1,6 @@
 import type {Scene} from "@babylonjs/core";
 
+import type {XRConfig} from "../config/XRConfig";
 import type {MeshCache} from "../meshes/MeshCache";
 import type {DataManager} from "./DataManager";
 import type {LayoutManager} from "./LayoutManager";
@@ -83,6 +84,11 @@ export interface GraphContextConfig {
      * Default: false (use existing StatsManager only)
      */
     enableDetailedProfiling?: boolean;
+
+    /**
+     * XR (VR/AR) configuration
+     */
+    xr?: XRConfig;
 
     /**
      * Other graph-level configuration options can be added here

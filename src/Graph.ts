@@ -29,6 +29,9 @@ import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type G
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
 import {Styles} from "./Styles";
+import {XRSessionManager} from "./xr/XRSessionManager";
+import {XRUIManager} from "./ui/XRUIManager";
+import {defaultXRConfig} from "./config";
 import type {QueueableOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
 
@@ -72,6 +75,10 @@ export class Graph implements GraphContext {
     private algorithmManager: AlgorithmManager;
     private inputManager: InputManager;
     operationQueue: OperationQueueManager;
+
+    // XR managers
+    private xrSessionManager: XRSessionManager | null = null;
+    private xrUIManager: XRUIManager | null = null;
 
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
@@ -188,6 +195,7 @@ export class Graph implements GraphContext {
         const contextConfig: GraphContextConfig = {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: defaultXRConfig,
         };
         this.graphContext = new DefaultGraphContext(
             this.styleManager,
@@ -349,7 +357,8 @@ export class Graph implements GraphContext {
                 this.update();
             });
 
-            // this.xrHelper = await createXrButton(this.scene, this.camera);
+            // Initialize XR (VR/AR) if enabled
+            await this.initializeXR();
 
             // Watch for browser/canvas resize events
             window.addEventListener("resize", this.resizeHandler);
@@ -1010,7 +1019,97 @@ export class Graph implements GraphContext {
         this.scene.render();
     }
 
+    /**
+     * Initialize XR (VR/AR) system
+     * Creates session manager and UI buttons based on configuration
+     */
+    private async initializeXR(): Promise<void> {
+        const xrConfig = this.graphContext.getConfig().xr;
+        if (!xrConfig || !xrConfig.enabled) {
+            return;
+        }
+
+        // Create XR session manager
+        this.xrSessionManager = new XRSessionManager(this.scene, {
+            vr: xrConfig.vr,
+            ar: xrConfig.ar,
+        });
+
+        // Determine which modes are available by actually checking device support
+        const vrAvailable = xrConfig.vr.enabled && await this.xrSessionManager.isVRSupported();
+        const arAvailable = xrConfig.ar.enabled && await this.xrSessionManager.isARSupported();
+
+        // Create XR UI manager
+        this.xrUIManager = new XRUIManager(
+            this.element as HTMLElement,
+            vrAvailable,
+            arAvailable,
+            xrConfig.ui,
+        );
+
+        // Wire up button click handlers
+        this.xrUIManager.onEnterXR = async (mode) => {
+            try {
+                console.log(`[XR] Attempting to enter ${mode} mode...`);
+                await this.enterXR(mode);
+                console.log(`[XR] Successfully entered ${mode} mode`);
+            } catch (error) {
+                console.error("Failed to enter XR mode:", error);
+
+                // Show user-friendly alert on error
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                alert(`XR Session Failed:\n${errorMsg}\n\nCheck console for details.`);
+
+                // Emit error event
+                this.eventManager.emitGraphError(
+                    this,
+                    error instanceof Error ? error : new Error(String(error)),
+                    "xr",
+                    { mode },
+                );
+            }
+        };
+    }
+
+    /**
+     * Enter XR mode (VR or AR)
+     * @param mode - The XR mode to enter ('immersive-vr' or 'immersive-ar')
+     */
+    public async enterXR(mode: "immersive-vr" | "immersive-ar"): Promise<void> {
+        if (!this.xrSessionManager) {
+            throw new Error("XR is not initialized");
+        }
+
+        const previousCamera = this.camera.getActiveController()?.camera;
+
+        if (mode === "immersive-vr") {
+            await this.xrSessionManager.enterVR(previousCamera ?? undefined);
+        } else {
+            await this.xrSessionManager.enterAR(previousCamera ?? undefined);
+        }
+
+        // Note: Camera switching to XR camera will be handled in Phase 3
+        // For now, the XR session is active but we're not switching the camera controller
+    }
+
+    /**
+     * Exit XR mode and return to previous camera
+     */
+    public async exitXR(): Promise<void> {
+        if (!this.xrSessionManager) {
+            return;
+        }
+
+        await this.xrSessionManager.exitXR();
+
+        // Note: Camera restoration will be handled in Phase 3
+    }
+
     dispose(): void {
+        // Clean up XR resources
+        this.xrUIManager?.dispose();
+        this.xrSessionManager?.dispose();
+
         this.shutdown();
     }
 }

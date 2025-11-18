@@ -10,3 +10,5 @@ export type {RichTextStyleType} from "./RichTextStyle";
 export {RichTextStyle} from "./RichTextStyle";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";
+export type {XRConfig, XRUIConfig, XRModeConfig, XRInputConfig, XRTeleportationConfig} from "./XRConfig";
+export {defaultXRConfig} from "./XRConfig";
