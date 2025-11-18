@@ -338,19 +338,10 @@ export const DashDotComparison: Story = {
         ],
         styleTemplate: templateCreator(
             {
-                edgeStyles: [
-                    {
-                        id: "dash",
-                        line: {type: "dash", color: "darkgrey", width: 6},
-                    },
-                    {
-                        id: "dash-dot",
-                        line: {type: "dash-dot", color: "darkgrey", width: 6},
-                    },
-                    {
-                        id: "dot",
-                        line: {type: "dot", color: "darkgrey", width: 6},
-                    },
+                layers: [
+                    {edge: {selector: "style == 'dash'", style: {line: {type: "dash", color: "darkgrey", width: 6}}}},
+                    {edge: {selector: "style == 'dash-dot'", style: {line: {type: "dash-dot", color: "darkgrey", width: 6}}}},
+                    {edge: {selector: "style == 'dot'", style: {line: {type: "dot", color: "darkgrey", width: 6}}}},
                 ],
             },
         ),

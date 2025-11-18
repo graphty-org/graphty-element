@@ -483,20 +483,21 @@ export class PatternedLineRenderer {
         const length = 1.0;
         const width = 0.8;
 
-        // XZ plane (Y=0)
+        // XZ plane (Y=0), centered at origin like other shapes
+        // Diamond extends from -length/2 to +length/2 along X axis
         const positions = [
+            length / 2,
+            0,
+            0, // Front tip (right)
             0,
             0,
-            0, // Front tip
+            width / 2, // Top (center-top)
             -length / 2,
             0,
-            width / 2, // Top
-            -length,
+            0, // Back tip (left)
             0,
-            0, // Back tip
-            -length / 2,
             0,
-            -width / 2, // Bottom
+            -width / 2, // Bottom (center-bottom)
         ];
 
         const indices = [
