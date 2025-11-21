@@ -79,16 +79,13 @@ export class NodeDragHandler {
         if (camera) {
             this.dragState.dragPlaneNormal = camera.getForwardRay().direction.clone();
 
-            // ⚠️ TEMPORARILY DISABLED: Detach camera controls to prevent camera rotation during node drag
-            // Commenting out to isolate Z-axis problem from camera rotation problem
-            // const canvas = this.scene.getEngine().getRenderingCanvas();
-            // if (canvas) {
-            //     console.log('📷 Detaching camera controls', {
-            //         cameraType: camera.constructor.name,
-            //         hasCanvas: !!canvas,
-            //     });
-            //     camera.detachControl();
-            // }
+            // Disable camera input handler during node drag
+            // This prevents OrbitInputController from rotating camera while dragging nodes
+            const cameraManager = this.scene.metadata?.cameraManager;
+            if (cameraManager) {
+                console.log('📷 Disabling camera input during node drag');
+                cameraManager.temporarilyDisableInput();
+            }
         }
 
         // Make sure graph is running
@@ -134,6 +131,22 @@ export class NodeDragHandler {
             },
             deltaLength: delta.length(),
         });
+
+        // Validate delta - if it's unreasonably large, controller tracking likely glitched
+        // This prevents nodes from jumping to infinity when VR controller loses/reacquires tracking
+        const MAX_REASONABLE_DELTA = 5.0; // 5 units before amplification (~50 units after)
+        if (delta.length() > MAX_REASONABLE_DELTA) {
+            console.warn('⚠️ [XR] Detected unreasonable delta (controller tracking glitch):', {
+                deltaLength: delta.length(),
+                maxAllowed: MAX_REASONABLE_DELTA,
+                action: 'Resetting drag start position',
+            });
+
+            // Reset drag start to current position (treats this as a new drag start)
+            this.dragState.dragStartWorldPosition = worldPosition.clone();
+            this.dragState.dragStartMeshPosition = this.node.mesh.position.clone();
+            return; // Skip this update
+        }
 
         // Apply movement amplification in XR mode
         // In VR, all controller movements are physically constrained (not just Z-axis)
@@ -202,16 +215,12 @@ export class NodeDragHandler {
             this.node.pin();
         }
 
-        // ⚠️ TEMPORARILY DISABLED: Reattach camera controls after node drag
-        // Commenting out to isolate Z-axis problem from camera rotation problem
-        // const camera = this.scene.activeCamera;
-        // if (camera) {
-        //     const canvas = this.scene.getEngine().getRenderingCanvas();
-        //     if (canvas) {
-        //         console.log('📷 Reattaching camera controls');
-        //         camera.attachControl(canvas, true);
-        //     }
-        // }
+        // Re-enable camera input handler after node drag
+        const cameraManager = this.scene.metadata?.cameraManager;
+        if (cameraManager) {
+            console.log('📷 Re-enabling camera input after node drag');
+            cameraManager.temporarilyEnableInput();
+        }
 
         // Reset drag state
         this.node.dragging = false;

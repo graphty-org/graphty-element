@@ -62,6 +62,10 @@ export class RenderManager implements Manager {
         // Initialize camera manager
         this.camera = new CameraManager(this.scene);
 
+        // Store camera manager in scene metadata for access by other components
+        this.scene.metadata = this.scene.metadata || {};
+        this.scene.metadata.cameraManager = this.camera;
+
         // Setup cameras
         this.setupCameras();
 

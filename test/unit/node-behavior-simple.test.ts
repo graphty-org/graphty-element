@@ -38,15 +38,25 @@ vi.mock("@babylonjs/core", async() => {
 
 describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors makes node pickable", () => {
+        const mockScene = {
+            onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            pointerX: 0,
+            pointerY: 0,
+            activeCamera: {position: {x: 0, y: 0, z: 10}},
+            createPickingRay: vi.fn(),
+        } as unknown as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+
         const mockNode = {
             mesh: {
                 isPickable: false,
                 addBehavior: vi.fn(),
                 actionManager: null,
+                getScene: () => mockScene,
+                position: {x: 0, y: 0, z: 0},
             },
             parentGraph: {
                 getStyles: vi.fn(),
-                getScene: () => ({} as Record<string, unknown>),
+                getScene: () => mockScene,
                 setRunning: vi.fn(),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
@@ -64,15 +74,25 @@ describe("NodeBehavior Unit Tests", () => {
     });
 
     test("addDefaultBehaviors sets pinOnDrag from options", () => {
+        const mockScene = {
+            onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            pointerX: 0,
+            pointerY: 0,
+            activeCamera: {position: {x: 0, y: 0, z: 10}},
+            createPickingRay: vi.fn(),
+        } as unknown as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+
         const mockNode = {
             mesh: {
                 isPickable: false,
                 addBehavior: vi.fn(),
                 actionManager: null,
+                getScene: () => mockScene,
+                position: {x: 0, y: 0, z: 0},
             },
             parentGraph: {
                 getStyles: vi.fn(),
-                getScene: () => ({} as Record<string, unknown>),
+                getScene: () => mockScene,
                 setRunning: vi.fn(),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
@@ -100,12 +120,21 @@ describe("NodeBehavior Unit Tests", () => {
     });
 
     test("addDefaultBehaviors creates action manager for click behavior", () => {
-        const mockScene = {} as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+        const mockScene = {
+            onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            pointerX: 0,
+            pointerY: 0,
+            activeCamera: {position: {x: 0, y: 0, z: 10}},
+            createPickingRay: vi.fn(),
+        } as unknown as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+
         const mockNode = {
             mesh: {
                 isPickable: false,
                 addBehavior: vi.fn(),
                 actionManager: null,
+                getScene: () => mockScene,
+                position: {x: 0, y: 0, z: 0},
             },
             parentGraph: {
                 getStyles: vi.fn(),
@@ -137,12 +166,21 @@ describe("NodeBehavior Unit Tests", () => {
     });
 
     test("addDefaultBehaviors does not add double-click when no fetch functions", () => {
-        const mockScene = {} as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+        const mockScene = {
+            onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            pointerX: 0,
+            pointerY: 0,
+            activeCamera: {position: {x: 0, y: 0, z: 10}},
+            createPickingRay: vi.fn(),
+        } as unknown as Parameters<typeof NodeBehavior.addDefaultBehaviors>[1];
+
         const mockNode = {
             mesh: {
                 isPickable: false,
                 addBehavior: vi.fn(),
                 actionManager: null,
+                getScene: () => mockScene,
+                position: {x: 0, y: 0, z: 0},
             },
             parentGraph: {
                 getStyles: vi.fn(),
