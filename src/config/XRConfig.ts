@@ -81,6 +81,19 @@ export interface XRInputConfig {
    * @default false
    */
     physics: boolean;
+
+    /**
+   * Z-axis movement amplification factor in XR mode
+   * Multiplies Z-axis delta to make depth manipulation more practical
+   * @default 10.0
+   */
+    zAxisAmplification?: number;
+
+    /**
+   * Enable Z-axis amplification in desktop mode
+   * @default false
+   */
+    enableZAmplificationInDesktop?: boolean;
 }
 
 /**
@@ -143,7 +156,7 @@ export const defaultXRConfig: XRConfig = {
     enabled: true,
     ui: {
         enabled: true,
-        position: "bottom-left",
+        position: "bottom-right",
         unavailableMessageDuration: 5000,
     },
     vr: {
@@ -161,6 +174,8 @@ export const defaultXRConfig: XRConfig = {
         controllers: true,
         nearInteraction: true,
         physics: false,
+        zAxisAmplification: 10.0,
+        enableZAmplificationInDesktop: false,
     },
     teleportation: {
         enabled: false,

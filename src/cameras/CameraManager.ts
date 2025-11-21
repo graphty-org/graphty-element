@@ -12,7 +12,7 @@ export interface InputHandler {
     update(): void;
 }
 
-export type CameraKey = "orbit" | "2d";
+export type CameraKey = "orbit" | "2d" | "xr";
 
 export class CameraManager {
     private scene: Scene;

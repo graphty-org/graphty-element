@@ -1080,6 +1080,8 @@ export class Graph implements GraphContext {
             throw new Error("XR is not initialized");
         }
 
+        console.log('🔍 [XR] Entering XR mode:', mode);
+
         const previousCamera = this.camera.getActiveController()?.camera;
 
         if (mode === "immersive-vr") {
@@ -1088,8 +1090,50 @@ export class Graph implements GraphContext {
             await this.xrSessionManager.enterAR(previousCamera ?? undefined);
         }
 
-        // Note: Camera switching to XR camera will be handled in Phase 3
-        // For now, the XR session is active but we're not switching the camera controller
+        console.log('🔍 [XR] XR session created, now setting up XR camera and input...');
+
+        // Phase 3: Set up XR camera controller and input handler
+        const xrHelper = this.xrSessionManager.getXRHelper();
+        if (!xrHelper) {
+            throw new Error("XR helper not available after session creation");
+        }
+
+        // Store XR helper in scene metadata for isXRMode() detection
+        this.scene.metadata = this.scene.metadata || {};
+        this.scene.metadata.xrHelper = xrHelper;
+
+        console.log('🔍 [XR] XR helper stored in scene metadata');
+
+        // Create XR input controller
+        const {XRInputController} = await import("./cameras/XRInputController");
+        const xrConfig = this.graphContext.getConfig().xr ?? defaultXRConfig;
+        const xrInputController = new XRInputController(
+            this.scene,
+            this.xrSessionManager,
+            xrConfig.input,
+        );
+
+        console.log('🔍 [XR] XRInputController created');
+
+        // Enable XR input (this sets up controller drag handlers)
+        xrInputController.enable();
+
+        console.log('🔍 [XR] XRInputController enabled');
+
+        // Note: We're NOT switching the active camera in CameraManager
+        // The XR camera is automatically made active by BabylonJS WebXR
+        // But we do need to update XRInputController every frame
+
+        // Hook into render loop to update XR input
+        const xrUpdateObserver = this.scene.onBeforeRenderObservable.add(() => {
+            xrInputController.update();
+        });
+
+        // Store for cleanup
+        this.scene.metadata.xrInputController = xrInputController;
+        this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
+
+        console.log('🔍 [XR] XR input update loop registered');
     }
 
     /**
@@ -1100,9 +1144,31 @@ export class Graph implements GraphContext {
             return;
         }
 
+        console.log('🔍 [XR] Exiting XR mode...');
+
+        // Clean up XR input controller
+        if (this.scene.metadata?.xrInputController) {
+            console.log('🔍 [XR] Disposing XRInputController');
+            this.scene.metadata.xrInputController.dispose();
+            this.scene.metadata.xrInputController = null;
+        }
+
+        // Remove render loop observer
+        if (this.scene.metadata?.xrUpdateObserver) {
+            console.log('🔍 [XR] Removing XR update observer');
+            this.scene.onBeforeRenderObservable.remove(this.scene.metadata.xrUpdateObserver);
+            this.scene.metadata.xrUpdateObserver = null;
+        }
+
+        // Clear XR helper from metadata
+        if (this.scene.metadata?.xrHelper) {
+            console.log('🔍 [XR] Clearing XR helper from metadata');
+            this.scene.metadata.xrHelper = null;
+        }
+
         await this.xrSessionManager.exitXR();
 
-        // Note: Camera restoration will be handled in Phase 3
+        console.log('🔍 [XR] XR mode exited');
     }
 
     dispose(): void {
