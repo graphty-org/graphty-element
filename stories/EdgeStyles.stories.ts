@@ -147,7 +147,7 @@ export const CombinedOpacity: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "normal", opacity: 0.3, color: "darkgrey"},
-                line: {opacity: 0.7, color: "darkgrey"},
+                line: {opacity: 0.3, color: "darkgrey"},
             },
         }),
     },
@@ -339,6 +339,270 @@ export const CrowArrowHead: Story = {
         styleTemplate: templateCreator({
             edgeStyle: {
                 arrowHead: {type: "crow", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+// 2D Camera Tests - Solid Lines
+// This story demonstrates the line width bug in 2D orthographic camera mode
+// Before fix: Lines appear ~10x too wide
+// After fix: Lines should match 3D line width (4.5 pixels)
+export const TwoDSolidLines: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["line.width"],
+        },
+    },
+};
+
+// 2D Camera Tests - Patterned Lines
+// This story verifies patterned lines work correctly in 2D (no bug expected)
+// Patterned lines use FilledArrowRenderer with world-space sizing
+export const TwoDPatternedLines: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                line: {type: "diamond", color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["line.width"],
+        },
+    },
+};
+
+// 2D Arrow Head Stories
+// These stories verify that all arrow head types render correctly in 2D orthographic mode
+// All arrows should have uniform scaling and match 3D arrow dimensions
+
+export const TwoDNormalArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "normal", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDInvertedArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "inverted", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDDiamondArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "diamond", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDBoxArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "box", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDDotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "dot", color: "darkgrey", size: 1.0},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDVeeArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "vee", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDTeeArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "tee", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDCrowArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "crow", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDHalfOpenArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "half-open", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDOpenArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "open-normal", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDOpenDiamondArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "open-diamond", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDOpenDotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "open-dot", color: "darkgrey", size: 1.0},
+                line: {color: "darkgrey"},
+            },
+        }),
+    },
+    parameters: {
+        controls: {
+            include: ["arrowHead.size", "arrowHead.color"],
+        },
+    },
+};
+
+export const TwoDSphereDotArrowHead: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "sphere-dot", color: "darkgrey", size: 1.0},
                 line: {color: "darkgrey"},
             },
         }),

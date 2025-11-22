@@ -150,7 +150,7 @@ export const Zigzag: Story = {
                 edgeStyle: {
                     line: {
                         type: "zigzag",
-                        color: "red",
+                        color: "darkgrey",
                         width: 15,
                     },
                 },
@@ -216,60 +216,6 @@ export const AdaptiveDensity: Story = {
             {src: "A3", dst: "B3"},
             {src: "A4", dst: "B4"},
         ],
-    },
-};
-
-/**
- * Phase 2: Compression Test
- * Shows how meshes maintain minimum spacing by reducing count
- */
-export const CompressionTest: Story = {
-    args: {
-        styleTemplate: templateCreator(
-            {
-                edgeStyle: {
-                    line: {
-                        type: "dot",
-                        color: "darkgrey",
-                        width: 5,
-                    },
-                },
-            },
-        ),
-        nodeData: [
-            // Start with long edge (many meshes)
-            {id: "A", position: {x: -4, y: 0, z: 0}},
-            // Will compress to short edge (fewer meshes) in interactive demo
-            {id: "B", position: {x: 4, y: 0, z: 0}},
-        ],
-        edgeData: [{src: "A", dst: "B"}],
-    },
-};
-
-/**
- * Phase 2: Expansion Test
- * Shows how meshes maintain maximum spacing by adding count
- */
-export const ExpansionTest: Story = {
-    args: {
-        styleTemplate: templateCreator(
-            {
-                edgeStyle: {
-                    line: {
-                        type: "dash",
-                        color: "darkgrey",
-                        width: 5,
-                    },
-                },
-            },
-        ),
-        nodeData: [
-            // Start with short edge (few meshes)
-            {id: "A", position: {x: -1, y: 0, z: 0}},
-            // Will expand to long edge (more meshes) in interactive demo
-            {id: "B", position: {x: 1, y: 0, z: 0}},
-        ],
-        edgeData: [{src: "A", dst: "B"}],
     },
 };
 

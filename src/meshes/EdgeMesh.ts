@@ -1,5 +1,6 @@
 import {
     AbstractMesh,
+    Camera,
     Color3,
     Effect,
     Engine,
@@ -20,11 +21,12 @@ import {CreateGreasedLine} from "@babylonjs/core/Meshes/Builders/greasedLineBuil
 
 import type {EdgeStyleConfig} from "../config";
 import {EDGE_CONSTANTS} from "../constants/meshConstants";
-import {CustomLineRenderer, type LineGeometry} from "./CustomLineRenderer";
+import {CustomLineRenderer} from "./CustomLineRenderer";
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import type {MeshCache} from "./MeshCache";
 import {PatternedLineMesh} from "./PatternedLineMesh";
 import {PatternedLineRenderer} from "./PatternedLineRenderer";
+import {Simple2DLineRenderer} from "./Simple2DLineRenderer";
 
 export interface EdgeMeshOptions {
     styleId: string;
@@ -197,6 +199,29 @@ void main() {
         this.shadersRegistered = true;
     }
 
+    /**
+     * Determine if 2D rendering mode should be used
+     *
+     * 2D mode is enabled when BOTH conditions are met:
+     * 1. Camera is in orthographic mode
+     * 2. Graph has twoD metadata set to true
+     *
+     * @param scene - Babylon.js scene
+     * @returns true if 2D mode should be used
+     */
+    private static is2DMode(scene: Scene): boolean {
+        const camera = scene.activeCamera;
+        if (!camera) {
+            return false;
+        }
+
+        const isOrtho = camera.mode === Camera.ORTHOGRAPHIC_CAMERA;
+        // Check scene metadata for twoD flag (will be set by Graph)
+        const is2DGraph = scene.metadata?.twoD === true;
+
+        return isOrtho && is2DGraph;
+    }
+
     static create(
         cache: MeshCache,
         options: EdgeMeshOptions,
@@ -206,10 +231,13 @@ void main() {
         const lineType = style.line?.type ?? "solid";
         const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
 
+        console.log("[EdgeMesh.create] Called with lineType:", lineType, "isPatterned:", PATTERNED_TYPES.includes(lineType));
+
         // PHASE 5: Pattern lines use PatternedLineRenderer (individual meshes, no caching)
         // See: design/mesh-based-patterned-lines.md Phase 5
         // Note: Edge.transformArrowCap() provides start/end already adjusted for node surfaces and arrows
         if (PATTERNED_TYPES.includes(lineType)) {
+            console.log("[EdgeMesh.create] Using PatternedLineRenderer for pattern:", lineType);
             return PatternedLineRenderer.create(
                 lineType as "dot" | "star" | "box" | "dash" | "diamond" | "dash-dot" | "sinewave" | "zigzag",
                 new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
@@ -218,10 +246,25 @@ void main() {
                 options.color,
                 style.line?.opacity ?? 1.0,
                 scene,
+                this.is2DMode(scene), // Pass 2D mode detection flag
             );
         }
 
-        // Solid lines can use caching
+        // PHASE 2: Solid lines in 2D mode use Simple2DLineRenderer
+        // 2D mode uses world-space StandardMaterial meshes instead of billboard shaders
+        if (lineType === "solid" && this.is2DMode(scene)) {
+            console.log("[EdgeMesh.create] Using Simple2DLineRenderer for 2D solid line");
+            return Simple2DLineRenderer.create(
+                new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
+                new Vector3(0, 0, 0.5), // Placeholder end (Edge.update() will set real positions)
+                options.width / 40, // Convert back from scaled width to match 3D line thickness
+                options.color,
+                style.line?.opacity ?? 1.0,
+                scene,
+            );
+        }
+
+        // Solid lines can use caching (3D mode only, since 2D is handled above)
         const cacheKey = `edge-style-${options.styleId}`;
         return cache.get(cacheKey, () => {
             if (style.line?.animationSpeed) {
@@ -237,6 +280,7 @@ void main() {
         styleId: string,
         options: ArrowHeadOptions,
         scene: Scene,
+        _style?: EdgeStyleConfig, // NEW: Need style for 2D detection (unused - detection via scene)
     ): AbstractMesh | null {
         console.log("EdgeMesh.createArrowHead called:", {styleId, type: options.type, color: options.color});
 
@@ -252,13 +296,15 @@ void main() {
 
         console.log("EdgeMesh.createArrowHead computed dimensions:", {size, opacity, width, length});
 
+        // Detect 2D mode
+        const is2D = this.is2DMode(scene);
+
         // Arrow type routing:
-        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
-        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
+        // - Filled arrows: Use FilledArrowRenderer (2D: StandardMaterial, 3D: shader) - INDIVIDUAL MESHES
         // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"];
-        const OUTLINE_ARROWS = ["open"];
-        const BILLBOARD_ARROWS = ["sphere-dot", "sphere"];
+        // - Special circle arrows: open-dot and sphere-dot use billboard path for custom sizing/rendering
+        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"];
+        const BILLBOARD_ARROWS = ["sphere-dot", "sphere", "open-dot"];
 
         // PERFORMANCE FIX: Create individual meshes for all arrow types
         // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
@@ -269,12 +315,15 @@ void main() {
 
         if (FILLED_ARROWS.includes(arrowType)) {
             // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
-            console.log("Creating filled arrow:", arrowType);
-            mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
-        } else if (OUTLINE_ARROWS.includes(arrowType)) {
-            // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-            console.log("Creating outline arrow:", arrowType);
-            mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
+            console.log("Creating filled arrow:", arrowType, "is2D:", is2D);
+
+            if (is2D) {
+                // PHASE 4: Use 2D arrow creation in 2D mode
+                mesh = FilledArrowRenderer.create2DArrow(arrowType, length, width, options.color, opacity, scene);
+            } else {
+                // 3D mode: Use existing 3D shader-based arrows
+                mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
+            }
         } else if (BILLBOARD_ARROWS.includes(arrowType)) {
             // 3D billboard arrows: Use existing sphere-based implementation
             console.log("Creating billboard arrow:", arrowType);
@@ -372,57 +421,6 @@ void main() {
         );
     }
 
-    /**
-     * Create an outline arrow using CustomLineRenderer (perpendicular expansion shader)
-     * Uses the SAME shader as lines - guaranteed perfect alignment!
-     */
-    private static createOutlineArrow(
-        type: string,
-        length: number,
-        width: number,
-        color: string,
-        scene: Scene,
-    ): Mesh {
-        let geometry: LineGeometry;
-
-        // Generate appropriate line geometry
-        switch (type) {
-            case "open-normal":
-                geometry = CustomLineRenderer.createOpenNormalArrowGeometry(length, width);
-                break;
-            case "open-diamond":
-                geometry = CustomLineRenderer.createOpenDiamondArrowGeometry(length, width);
-                break;
-            case "tee":
-                geometry = CustomLineRenderer.createTeeArrowGeometry(width);
-                break;
-            case "vee":
-                geometry = CustomLineRenderer.createVeeArrowGeometry(length);
-                break;
-            case "open":
-                geometry = CustomLineRenderer.createOpenArrowGeometry(length, width);
-                break;
-            case "half-open":
-                geometry = CustomLineRenderer.createHalfOpenArrowGeometry(length, width);
-                break;
-            case "crow":
-                geometry = CustomLineRenderer.createCrowArrowGeometry(length);
-                break;
-            default:
-                throw new Error(`Unsupported outline arrow type: ${type}`);
-        }
-
-        // Create mesh from geometry using the SAME shader as lines
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines
-                color,
-            },
-            scene,
-        );
-    }
-
     private static createStaticLine(
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
@@ -448,14 +446,21 @@ void main() {
 
             const lineType = style.line?.type ?? "solid";
 
-            // Solid lines use CustomLineRenderer (shader-based)
+            console.log("[EdgeMesh] Creating line with CustomLineRenderer:", {
+                lineType,
+                color: options.color,
+                width: options.width,
+                scaledWidth: options.width * 20,
+            });
+
+            // CustomLineRenderer only handles solid lines
+            // All patterns are handled by PatternedLineMesh
             const mesh = CustomLineRenderer.create(
                 {
                     points,
                     width: options.width * 20, // Scale factor to match GreasedLine sizing
                     color: options.color,
                     opacity: style.line?.opacity,
-                    pattern: lineType,
                 },
                 scene,
             );
@@ -628,20 +633,6 @@ void main() {
         return mesh;
     }
 
-    // Inverted arrow (points away from target) - wide base at surface, tip extends back along line
-    private static createInvertedArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createTriangularArrowGeometry(length, width, true);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
     // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
     private static createSphereArrow(length: number, width: number, color: string, scene: Scene): Mesh {
         // Sphere fits exactly within the allocated arrow space
@@ -669,10 +660,23 @@ void main() {
     }
 
     // Sphere-dot arrow - creates a filled circle that appears circular from all angles
-    // Uses a 3D sphere which naturally appears as a circle regardless of viewing angle
+    // In 3D: Uses a 3D sphere which naturally appears as a circle regardless of viewing angle
+    // In 2D: Uses a 2D filled circle mesh with proper sizing to match other arrows
     private static createSphereDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Sphere-dot is a small variant (0.25x size for "dot" appearance)
-        const sphereDiameter = length * EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO;
+        const is2D = this.is2DMode(scene);
+
+        if (is2D) {
+            // PHASE 4: In 2D mode, create a filled circle using FilledArrowRenderer
+            // Use same size as regular dot arrow for consistency (not the tiny 0.25x ratio)
+            // This ensures sphere-dot matches other arrowheads in 2D mode
+            const mesh = FilledArrowRenderer.create2DArrow("dot", length, width, color, 1.0, scene);
+            mesh.name = "sphere-dot-arrow-2d";
+            return mesh;
+        }
+
+        // 3D mode: Use 3D sphere
+        // Use full length (not the tiny 0.25x ratio) to match 2D sizing and other arrows
+        const sphereDiameter = length;
 
         // Create a 3D sphere
         // A sphere naturally appears as a filled circle from all viewing angles
@@ -730,11 +734,24 @@ void main() {
         return data;
     }
 
-    // Open-dot arrow - creates a circle outline using GreasedLine
-    // Uses GreasedLineTools.GetCircleLinePoints to create a circular path
+    // Open-dot arrow - creates a circle outline using GreasedLine (3D) or FilledArrowRenderer (2D)
+    // Uses GreasedLineTools.GetCircleLinePoints to create a circular path in 3D mode
+    // In 2D mode, uses FilledArrowRenderer.createOpenCircle for proper sizing
     private static createOpenDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Open-dot is a small variant (0.25x size for "dot" appearance)
-        const circleDiameter = length * EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO;
+        const is2D = this.is2DMode(scene);
+
+        if (is2D) {
+            // PHASE 4: In 2D mode, create an open circle using FilledArrowRenderer
+            // Use same size as regular dot arrow for consistency (not the tiny 0.25x ratio)
+            // This ensures open-dot matches other arrowheads in 2D mode
+            const mesh = FilledArrowRenderer.create2DArrow("open-circle", length, width, color, 1.0, scene);
+            mesh.name = "open-dot-arrow-2d";
+            return mesh;
+        }
+
+        // 3D mode: Use GreasedLine circle outline
+        // Use full length (not the tiny 0.25x ratio) to match 2D sizing and other arrows
+        const circleDiameter = length;
         const circleRadius = circleDiameter / 2;
 
         // Generate circle points using GreasedLineTools
@@ -772,36 +789,6 @@ void main() {
         return mesh as Mesh;
     }
 
-    // Diamond arrow - uses 3 points with varying widths to create filled diamond shape
-    // Based on GetArrowCap technique: 2 points with widths create filled triangle
-    // Diamond needs 3 points: tip (sharp point), middle (wide), base (sharp point)
-    private static createDiamondArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createDiamondArrowGeometry(length, width);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
-    // Box arrow - modified GetArrowCap to create square instead of triangle
-    private static createBoxArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createBoxArrowGeometry(length, width);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
     static calculateArrowWidth(): number {
         return EDGE_CONSTANTS.DEFAULT_ARROW_WIDTH;
     }
@@ -822,7 +809,7 @@ void main() {
                     positioningMode: "center",
                     needsRotation: false,
                     positionOffset: 0,
-                    scaleFactor: EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO, // 0.25 - small "dot" variant
+                    scaleFactor: 1.0, // Full size (changed from 0.25 to match 2D and other arrows)
                 };
             case "sphere":
                 return {

@@ -476,7 +476,16 @@ export class Graph implements GraphContext {
         // Clear mesh cache if switching between 2D and 3D modes
         if (previousTwoD !== currentTwoD) {
             this.dataManager.meshCache.clear();
+
+            // Update scene metadata for 2D mode detection
+            this.scene.metadata = this.scene.metadata ?? {};
+            this.scene.metadata.twoD = currentTwoD;
         }
+
+        // Always activate appropriate camera when styles are loaded
+        // This ensures camera is set up correctly even on initial load
+        const cameraType = currentTwoD ? "2d" : "orbit";
+        this.camera.activateCamera(cameraType);
 
         // Update DataManager with new styles - this will apply styles to existing nodes/edges
         // IMPORTANT: DataManager needs to be updated after this.styles is set because
@@ -524,10 +533,6 @@ export class Graph implements GraphContext {
         // mb.motionStrength = 1;
         // default rendering pipeline?
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
-
-        // setup camera
-        const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
-        this.camera.activateCamera(cameraType);
 
         // Request zoom to fit when switching between 2D/3D modes
         if (previousTwoD !== currentTwoD) {

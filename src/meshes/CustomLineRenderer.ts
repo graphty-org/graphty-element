@@ -11,8 +11,6 @@ import {
     VertexData,
 } from "@babylonjs/core";
 
-import {EDGE_CONSTANTS} from "../constants/meshConstants";
-
 export interface LineGeometry {
     positions: number[]; // Vertex positions (center line)
     directions: number[]; // Tangent directions
@@ -29,9 +27,8 @@ export interface CustomLineOptions {
     width: number; // Line width in pixels
     color: string; // Line color (hex)
     opacity?: number; // Opacity 0-1
-    pattern?: string; // solid, dash, dot, etc.
-    dashLength?: number; // For dash pattern
-    gapLength?: number; // For dash pattern
+    // NOTE: Patterns are handled by PatternedLineMesh, not CustomLineRenderer
+    // CustomLineRenderer only renders solid lines
 }
 
 /**
@@ -88,6 +85,7 @@ uniform mat4 viewProjection;
 uniform mat4 projection;
 uniform vec2 resolution;
 uniform float width;
+uniform float orthoScale;  // Camera-aware scaling (1.0 for perspective, calculated for orthographic)
 
 // Varyings
 varying vec2 vUV;
@@ -138,17 +136,44 @@ void main() {
     // Divide by resolution to convert from pixels to NDC (-1 to +1)
     offset /= resolution;
 
+    // Apply camera-aware scaling
+    // For perspective cameras: orthoScale = 1.0 (no change)
+    // For orthographic cameras: orthoScale compensates for frustum size
+    offset *= orthoScale;
+
     // Apply offset in clip space
     gl_Position = vertexClip;
     gl_Position.xy += offset;
 
-    // Calculate world-space line width for circular dot patterns
-    // The line width in pixels (width) corresponds to a certain world-space distance
-    // This depends on the depth (distance from camera) due to perspective
-    // Scale factor empirically tuned to match typical viewing distances
-    float avgResolution = (resolution.x + resolution.y) * 0.5;
-    float scaleFactor = 0.01; // Empirically tuned for typical camera distances
-    vWorldSpaceLineWidth = (width / avgResolution) * vertexClip.w * scaleFactor;
+    // Calculate world-space line width for patterns
+    // We need to convert screen-space width (pixels) to world-space distance
+    // Strategy: Calculate two points in NDC space separated by 'width' pixels,
+    // then convert the distance to world-space units
+
+    // First, convert vertexClip to NDC space
+    vec2 point1NDC = vertexClip.xy / vertexClip.w;
+
+    // Calculate offset for 'width' pixels in NDC space
+    vec2 pixelOffset = perpendicular * width / resolution;
+
+    // Add offset in NDC space (this is the correct approach)
+    vec2 point2NDC = point1NDC + pixelOffset;
+
+    // Measure screen-space distance in NDC units
+    float screenSpaceDist = length(point2NDC - point1NDC);
+
+    // Convert screen-space distance to world-space distance
+    // Use the segment's world length vs screen length ratio
+    vec3 worldSegmentDir = segmentEnd - segmentStart;
+    float worldSegmentLength = length(worldSegmentDir);
+    float screenSegmentLength = screenDirLength;
+
+    // Calculate world units per NDC unit along the line direction
+    float worldPerScreen = (screenSegmentLength > 0.001)
+        ? worldSegmentLength / screenSegmentLength
+        : 0.0;
+
+    vWorldSpaceLineWidth = screenSpaceDist * worldPerScreen;
 
     // Pass to fragment shader
     vUV = uv;
@@ -165,97 +190,17 @@ precision highp float;
 // Varyings
 varying vec2 vUV;
 varying float vDistance;
-varying float vWorldSpaceLineWidth;  // World-space line width for circular dots
+varying float vWorldSpaceLineWidth;  // World-space line width for patterns
 
 // Uniforms
 uniform vec3 color;
 uniform float opacity;
-uniform float pattern;        // 0-6 for different patterns
-uniform float dashLength;
-uniform float gapLength;
-uniform float lineWidth;      // Width of the line for circular dots
 
 void main() {
-    // Apply patterns based on distance along line
-    if (pattern == 1.0) {
-        // Dash pattern
-        float cycle = dashLength + gapLength;
-        float phase = mod(vDistance, cycle);
-        if (phase > dashLength) {
-            discard;
-        }
-    } else if (pattern == 2.0) {
-        // Dash-dot pattern (dash, gap, dot, gap)
-        float cycle = dashLength + gapLength + 0.1 + gapLength;
-        float phase = mod(vDistance, cycle);
+    // NOTE: All patterns (dash, dot, sinewave, zigzag, etc.) are handled by PatternedLineMesh.
+    // CustomLineRenderer only renders solid lines.
 
-        if (phase < dashLength) {
-            // In dash - keep pixel
-        } else if (phase < dashLength + gapLength) {
-            discard; // First gap
-        } else if (phase < dashLength + gapLength + 0.1) {
-            // In dot - keep pixel
-        } else {
-            discard; // Second gap
-        }
-    } else if (pattern == 3.0) {
-        // Equal-dash pattern (dash and gap have same length)
-        float cycle = dashLength * 2.0;
-        float phase = mod(vDistance, cycle);
-        if (phase > dashLength) {
-            discard;
-        }
-    } else if (pattern == 6.0) {
-        // Dot pattern - circular dots using distance field
-        // Strategy: Make dots relative to line width to maintain visibility
-
-        // Dot size as fraction of line width
-        float dotSizeFraction = 0.45; // Dot radius = 45% of line radius (90% diameter)
-        float dotRadius_world = vWorldSpaceLineWidth * dotSizeFraction;
-        float dotDiameter = dotRadius_world * 2.0;
-
-        // Spacing: dots spaced at regular intervals (in line-width units)
-        float spacingMultiplier = 2.0; // Gap between dots in line-width units
-        float gapSize = vWorldSpaceLineWidth * spacingMultiplier;
-        float cycle = dotDiameter + gapSize;
-
-        float phase = mod(vDistance, cycle);
-
-        // First check: skip gaps
-        if (phase > dotDiameter) {
-            discard;
-        }
-
-        // Create circular dots using distance field
-        // Center of dot in this cycle
-        float dotCenterInCycle = dotRadius_world;
-
-        // Distance from center along the line (in world units)
-        float distAlongLine = abs(phase - dotCenterInCycle);
-
-        // Distance from center across the line (in UV space: 0 to 1)
-        // vUV.y ranges from 0 to 1, center is at 0.5
-        float distAcrossLine_UV = abs(vUV.y - 0.5); // 0 to 0.5 in UV space
-
-        // Convert UV-space distance to world-space using line width
-        float distAcrossLine_world = distAcrossLine_UV * vWorldSpaceLineWidth;
-
-        // Now both distances are in world units - create circular distance field
-        float normalizedAlongLine = distAlongLine / dotRadius_world;
-        float normalizedAcrossLine = distAcrossLine_world / dotRadius_world;
-
-        // Create circular distance field
-        vec2 normalizedDist = vec2(normalizedAlongLine, normalizedAcrossLine);
-        float circularDist = length(normalizedDist);
-
-        // Discard if outside the circular dot
-        if (circularDist > 1.0) {
-            discard;
-        }
-    }
-    // Patterns 4 and 5 (sinewave, zigzag) use geometry modification, not shader discard
-    // pattern == 0.0 or other values: solid (no discard)
-
+    // Simple solid line rendering
     gl_FragColor = vec4(color, opacity);
 }
 `;
@@ -334,6 +279,7 @@ void main(void) {
             for (const material of this.activeMaterials) {
                 try {
                     material.setVector2("resolution", resolution);
+                    material.setFloat("orthoScale", 1.0);
                 } catch {
                     // Material was disposed, remove from set
                     this.activeMaterials.delete(material);
@@ -719,26 +665,9 @@ void main(void) {
     ): Mesh {
         this.registerShaders();
 
-        // Generate base points (may be modified for geometric patterns)
-        let {points} = options;
-
-        // Apply geometric patterns by modifying points
-        if (options.pattern === "sinewave") {
-            points = this.createSinewaveGeometry(
-                points,
-                options.width * 0.5, // amplitude
-                2.0, // frequency
-            );
-        } else if (options.pattern === "zigzag") {
-            points = this.createZigzagGeometry(
-                points,
-                options.width * 0.5, // amplitude
-                3.0, // frequency
-            );
-        }
-
         // Generate geometry from points
-        const geometry = this.createLineGeometry(points);
+        // NOTE: All patterns (dash, dot, sinewave, zigzag, etc.) are handled by PatternedLineMesh
+        const geometry = this.createLineGeometry(options.points);
 
         // Create mesh
         const mesh = new Mesh("custom-line", scene);
@@ -774,11 +703,9 @@ void main(void) {
                     "projection",
                     "resolution",
                     "width",
+                    "orthoScale",
                     "color",
                     "opacity",
-                    "pattern",
-                    "dashLength",
-                    "gapLength",
                 ],
                 defines: ["#define INSTANCES"], // Enable instancing support
             },
@@ -791,42 +718,14 @@ void main(void) {
         // Set width uniform (in pixels)
         shaderMaterial.setFloat("width", options.width);
 
+        // Set orthoScale default (will be updated by resolution callback)
+        shaderMaterial.setFloat("orthoScale", 1.0);
+
         // Set opacity
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
-        // Pattern uniforms
-        // Map pattern names to shader pattern codes
-        const patternMap: Record<string, number> = {
-            "solid": 0,
-            "dash": 1,
-            "dash-dot": 2,
-            "equal-dash": 3,
-            "sinewave": 4,
-            "zigzag": 5,
-            "dot": 6,
-            "dots": 6, // Alias for dot
-        };
-        const patternValue = patternMap[options.pattern ?? "solid"] ?? 0;
-        shaderMaterial.setFloat("pattern", patternValue);
-
-        // Apply pattern-specific defaults
-        const pattern = options.pattern ?? "solid";
-        let {dashLength} = options;
-        let {gapLength} = options;
-
-        if (pattern === "dash" && !options.dashLength && !options.gapLength) {
-            // Use dash-specific constants for short dashes
-            dashLength = EDGE_CONSTANTS.DASH_LENGTH_MULTIPLIER;
-            gapLength = EDGE_CONSTANTS.DASH_GAP_MULTIPLIER;
-        }
-
-        const finalDashLength = dashLength ?? 3.0;
-        const finalGapLength = gapLength ?? 2.0;
-        const finalLineWidth = options.width;
-
-        shaderMaterial.setFloat("dashLength", finalDashLength);
-        shaderMaterial.setFloat("gapLength", finalGapLength);
-        shaderMaterial.setFloat("lineWidth", finalLineWidth);
+        // NOTE: All patterns are handled by PatternedLineMesh
+        // CustomLineRenderer only renders solid lines
 
         // Register material for shared resolution updates
         this.activeMaterials.add(shaderMaterial);
@@ -867,235 +766,6 @@ void main(void) {
             },
             scene,
         );
-    }
-
-    /**
-     * Create triangular arrow geometry (normal or inverted)
-     *
-     * Returns LineGeometry that can be fed into the same shader as lines.
-     * This ensures perfect alignment between arrows and lines.
-     *
-     * @param length Length of the arrow from tip to base
-     * @param width Width of the arrow at the base
-     * @param inverted If true, arrow points backward (inverted triangle)
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createTriangularArrowGeometry(
-        length: number,
-        width: number,
-        inverted: boolean,
-    ): LineGeometry {
-        const tip = inverted ? -length : length;
-        const base = inverted ? 0 : 0;
-
-        const points = [
-            new Vector3(0, 0, tip), // Tip
-            new Vector3(-width / 2, 0, base), // Left corner
-            new Vector3(width / 2, 0, base), // Right corner
-            new Vector3(0, 0, tip), // Close triangle
-        ];
-
-        // Use SAME createLineGeometry as lines!
-        // This ensures arrow uses identical shader
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create diamond arrow geometry
-     *
-     * Generates a diamond (rhombus) shape for arrow heads.
-     *
-     * @param length Length of the diamond (front tip to back tip)
-     * @param width Width of the diamond at the widest point
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createDiamondArrowGeometry(length: number, width: number): LineGeometry {
-        // Arrow points in +X direction to match filled arrow orientation
-        const points = [
-            new Vector3(0, 0, 0), // Front tip at origin
-            new Vector3(-length, -width / 2, 0), // Left
-            new Vector3(-2 * length, 0, 0), // Back tip
-            new Vector3(-length, width / 2, 0), // Right
-            new Vector3(0, 0, 0), // Close diamond
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create box arrow geometry
-     *
-     * Generates a rectangular box shape for arrow heads.
-     *
-     * @param length Length of the box
-     * @param width Width of the box
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createBoxArrowGeometry(length: number, width: number): LineGeometry {
-        const halfLength = length / 2;
-        const halfWidth = width / 2;
-
-        const points = [
-            new Vector3(-halfWidth, 0, halfLength), // Top-left
-            new Vector3(halfWidth, 0, halfLength), // Top-right
-            new Vector3(halfWidth, 0, -halfLength), // Bottom-right
-            new Vector3(-halfWidth, 0, -halfLength), // Bottom-left
-            new Vector3(-halfWidth, 0, halfLength), // Close box
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create tee arrow geometry (perpendicular line)
-     *
-     * Generates a simple perpendicular line for tee-style arrow heads.
-     *
-     * @param width Width of the perpendicular line
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createTeeArrowGeometry(width: number): LineGeometry {
-        // Perpendicular line in XY plane (perpendicular to +X direction)
-        // Arrow points in +X, so tee is along Y axis
-        const points = [
-            new Vector3(0, -width / 2, 0), // Bottom endpoint
-            new Vector3(0, width / 2, 0), // Top endpoint
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create vee arrow geometry (V-shaped arrow)
-     *
-     * Generates a V-shaped arrow pointing forward.
-     *
-     * @param length Length of each arm of the V
-     * @param width Width between the arms at the base
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createVeeArrowGeometry(length: number): LineGeometry {
-        // Use 60-degree angle to calculate proper vee width
-        const angle = (60 * Math.PI) / 180; // ARROW_VEE_ANGLE = 60 degrees
-        const veeWidth = Math.tan(angle) * length;
-
-        // Arrow in XY plane with tip at origin, pointing in +X direction
-        // (arms extend backward in -X direction)
-        const points = [
-            new Vector3(-length, -veeWidth / 2, 0), // Left arm base
-            new Vector3(0, 0, 0), // Tip at origin
-            new Vector3(-length, veeWidth / 2, 0), // Right arm base
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create open arrow geometry (V-shaped, similar to vee)
-     *
-     * Generates a V-shaped arrow, alias for vee arrow.
-     *
-     * @param length Length of each arm of the V
-     * @param _width Width between the arms at the base (unused - maintained for API compatibility)
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    static createOpenArrowGeometry(length: number, _width: number): LineGeometry {
-        // Open arrow is the same as vee arrow
-        return this.createVeeArrowGeometry(length);
-    }
-
-    /**
-     * Create half-open arrow geometry (one-sided V)
-     *
-     * Generates a half V-shaped arrow with only one arm.
-     *
-     * @param length Length of the arm
-     * @param width Width offset of the arm
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createHalfOpenArrowGeometry(length: number, width: number): LineGeometry {
-        // ARROW_HALF_OPEN_RATIO = 0.5 (one arm is half length)
-        const ratio = 0.5;
-
-        // Arrow in XY plane with tip at origin, pointing in +X direction
-        // (arms extend backward in -X direction)
-        const points = [
-            new Vector3(-length, -width / 2, 0), // Left arm (full length)
-            new Vector3(0, 0, 0), // Tip at origin
-            new Vector3(-length * ratio, width / 2, 0), // Right arm (half length)
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create crow arrow geometry (multi-line arrow)
-     *
-     * Generates a crow-foot style arrow with three lines.
-     *
-     * @param length Length of the lines
-     * @param width Width between the outer lines
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createCrowArrowGeometry(length: number): LineGeometry {
-        // Use 30-degree angle to calculate proper crow spread
-        const angle = (30 * Math.PI) / 180; // ARROW_CROW_FORK_ANGLE = 30 degrees
-        const spread = Math.tan(angle) * length;
-
-        // Arrow in XY plane with tip at origin, pointing in +X direction
-        // Three-pronged crow's foot (all prongs meet at origin, extend in -X)
-        const points = [
-            // Left prong (bottom)
-            new Vector3(-length, -spread, 0),
-            new Vector3(0, 0, 0),
-            // Center prong
-            new Vector3(-length, 0, 0),
-            new Vector3(0, 0, 0),
-            // Right prong (top)
-            new Vector3(-length, spread, 0),
-            new Vector3(0, 0, 0),
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create open normal arrow geometry (hollow triangle)
-     *
-     * Generates a triangular outline for open-normal-style arrow heads.
-     * Note: This creates the same path as triangular arrow but without closing,
-     * so it renders as an outline when used with thin line width.
-     *
-     * @param length Length of the arrow from tip to base
-     * @param width Width of the arrow at the base
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createOpenNormalArrowGeometry(length: number, width: number): LineGeometry {
-        // Arrow in XY plane with tip at origin, pointing in +X direction
-        // Triangle outline (tip at origin, base in -X)
-        const points = [
-            new Vector3(0, 0, 0), // Tip at origin
-            new Vector3(-length, -width / 2, 0), // Left corner (bottom)
-            new Vector3(-length, width / 2, 0), // Right corner (top)
-            new Vector3(0, 0, 0), // Back to tip to close outline
-        ];
-
-        return this.createLineGeometry(points);
-    }
-
-    /**
-     * Create open-diamond arrow geometry (hollow diamond)
-     *
-     * Generates a diamond outline for open-diamond-style arrow heads.
-     *
-     * @param length Length of the diamond (front tip to back tip)
-     * @param width Width of the diamond at the widest point
-     * @returns LineGeometry for use with CustomLineRenderer shader
-     */
-    static createOpenDiamondArrowGeometry(length: number, width: number): LineGeometry {
-        // Same as diamond geometry - the outline effect comes from thin line width
-        return this.createDiamondArrowGeometry(length, width);
     }
 
     /**
@@ -1148,11 +818,9 @@ void main(void) {
                     "projection",
                     "resolution",
                     "width",
+                    "orthoScale",
                     "color",
                     "opacity",
-                    "pattern",
-                    "dashLength",
-                    "gapLength",
                 ],
                 defines: ["#define INSTANCES"], // Enable instancing
             },
@@ -1167,6 +835,7 @@ void main(void) {
         // });
         shaderMaterial.setVector3("color", new Vector3(colorObj.r, colorObj.g, colorObj.b));
         shaderMaterial.setFloat("width", options.width);
+        shaderMaterial.setFloat("orthoScale", 1.0); // Default (will be updated by resolution callback)
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
         // Pattern uniforms (arrows are always solid)

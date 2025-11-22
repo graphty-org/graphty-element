@@ -1,4 +1,13 @@
-import {InstancedMesh, NullEngine, RawTexture, Scene, StandardMaterial, Vector3} from "@babylonjs/core";
+import {
+    ArcRotateCamera,
+    Camera,
+    InstancedMesh,
+    NullEngine,
+    RawTexture,
+    Scene,
+    StandardMaterial,
+    Vector3,
+} from "@babylonjs/core";
 import {assert, beforeEach, describe, test} from "vitest";
 
 import {EDGE_CONSTANTS} from "../src/constants/meshConstants";
@@ -289,6 +298,66 @@ describe("EdgeMesh", () => {
                 scene.onBeforeRenderObservable.observers.length,
                 initialObserverCount + 1,
             );
+        });
+    });
+
+    describe("2D Mode Detection", () => {
+        test("is2DMode returns true for orthographic camera with twoD metadata", () => {
+            const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+            camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            scene.activeCamera = camera;
+            scene.metadata = {twoD: true};
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), true);
+        });
+
+        test("is2DMode returns false for perspective camera", () => {
+            const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+            camera.mode = Camera.PERSPECTIVE_CAMERA;
+            scene.activeCamera = camera;
+            scene.metadata = {twoD: true};
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), false);
+        });
+
+        test("is2DMode returns false when twoD is false", () => {
+            const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+            camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            scene.activeCamera = camera;
+            scene.metadata = {twoD: false};
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), false);
+        });
+
+        test("is2DMode returns false when twoD is not set", () => {
+            const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+            camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            scene.activeCamera = camera;
+            scene.metadata = {};
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), false);
+        });
+
+        test("is2DMode returns false when no camera exists", () => {
+            scene.activeCamera = null;
+            scene.metadata = {twoD: true};
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), false);
+        });
+
+        test("is2DMode returns false when metadata is undefined", () => {
+            const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
+            camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+            scene.activeCamera = camera;
+            scene.metadata = undefined;
+
+            // @ts-expect-error - is2DMode is private but we need to test it
+            assert.strictEqual(EdgeMesh.is2DMode(scene), false);
         });
     });
 });

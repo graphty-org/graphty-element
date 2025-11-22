@@ -14,6 +14,7 @@ import {EdgeMesh} from "./meshes/EdgeMesh";
 import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
 import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
+import {Simple2DLineRenderer} from "./meshes/Simple2DLineRenderer";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
 
@@ -124,6 +125,7 @@ export class Edge {
                 opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
+            style, // Pass style for 2D detection
         );
         // console.log("Edge constructor: arrowMesh assigned:", this.arrowMesh?.name, this.arrowMesh !== null);
 
@@ -140,6 +142,7 @@ export class Edge {
                 opacity: style.arrowTail?.opacity,
             },
             this.context.getScene(),
+            style, // Pass style for 2D detection
         );
         // console.log("Edge constructor: arrowTailMesh assigned:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
@@ -158,7 +161,7 @@ export class Edge {
         );
 
         this.mesh.isPickable = false;
-        this.mesh.metadata = {};
+        this.mesh.metadata = this.mesh.metadata ?? {};
         this.mesh.metadata.parentEdge = this;
 
         // create label if configured
@@ -280,6 +283,7 @@ export class Edge {
                 opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
+            style, // Pass style for 2D detection
         );
         // console.log("Edge.updateStyle: arrowMesh created:", this.arrowMesh?.name, this.arrowMesh !== null);
 
@@ -301,6 +305,7 @@ export class Edge {
                 opacity: style.arrowTail?.opacity,
             },
             this.context.getScene(),
+            style, // Pass style for 2D detection
         );
         // console.log("Edge.updateStyle: arrowTailMesh created:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
@@ -318,7 +323,7 @@ export class Edge {
         );
 
         this.mesh.isPickable = false;
-        this.mesh.metadata = {};
+        this.mesh.metadata = this.mesh.metadata ?? {};
         this.mesh.metadata.parentEdge = this;
 
         // Update label if needed
@@ -373,6 +378,9 @@ export class Edge {
         if (this.mesh instanceof PatternedLineMesh) {
             // Pattern lines: Update mesh positions in world space
             this.mesh.update(srcPoint, dstPoint);
+        } else if (this.mesh.metadata?.is2DLine) {
+            // PHASE 2: 2D solid lines use Simple2DLineRenderer position updates
+            Simple2DLineRenderer.updatePositions(this.mesh as Mesh, srcPoint, dstPoint);
         } else {
             // Solid lines: Transform via position/rotation/scaling
             EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
@@ -423,6 +431,13 @@ export class Edge {
                 const arrowType = style.arrowHead?.type;
                 const geometry = EdgeMesh.getArrowGeometry(arrowType ?? "normal");
 
+                // PHASE 4: Override scaleFactor for 2D arrows
+                // In 2D mode, sphere-dot and open-dot use full-size circles (not tiny 0.25x spheres)
+                // so their scaleFactor should be 1.0, not 0.25
+                if (this.arrowMesh.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                    geometry.scaleFactor = 1.0;
+                }
+
                 this.arrowMesh.setEnabled(true);
 
                 // Calculate arrow position using common function
@@ -445,15 +460,22 @@ export class Edge {
                 // Update arrow position directly (no thin instances)
                 this.arrowMesh.position = arrowPosition;
 
-                // Update lineDirection for filled arrows (shader needs it for billboarding)
-                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
-                    // Filled arrows use shader-based billboarding via lineDirection uniform
-                    FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
-                } else if (geometry.needsRotation) {
-                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
-                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
-                    const lookAtPoint = arrowPosition.add(direction);
-                    this.arrowMesh.lookAt(lookAtPoint);
+                // PHASE 4: Handle 2D vs 3D arrow rotation
+                if (this.arrowMesh.metadata?.is2D) {
+                    // 2D: Simple Z-rotation to align with edge in XY plane
+                    const angle = Math.atan2(direction.y, direction.x);
+                    this.arrowMesh.rotation.z = angle;
+                } else {
+                    // 3D: Use billboarding or lookAt
+                    if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(arrowType)) {
+                        // Filled arrows use shader-based billboarding via lineDirection uniform
+                        FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+                    } else if (geometry.needsRotation) {
+                        // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                        // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                        const lookAtPoint = arrowPosition.add(direction);
+                        this.arrowMesh.lookAt(lookAtPoint);
+                    }
                 }
 
                 return {
@@ -471,6 +493,14 @@ export class Edge {
             const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
             const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
             const geometry = EdgeMesh.getArrowGeometry(arrowType ?? "normal");
+
+            // PHASE 4: Override scaleFactor for 2D arrows
+            // In 2D mode, sphere-dot and open-dot use full-size circles (not tiny 0.25x spheres)
+            // so their scaleFactor should be 1.0, not 0.25
+            if (this.arrowMesh.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                geometry.scaleFactor = 1.0;
+            }
+
             const direction = dstPoint.subtract(srcPoint).normalize();
 
             // Calculate arrow position using common function
@@ -485,15 +515,22 @@ export class Edge {
             // Update arrow position directly (no thin instances)
             this.arrowMesh.position = arrowPosition;
 
-            // Update lineDirection for filled arrows (shader needs it for billboarding)
-            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
-                // Filled arrows use shader-based billboarding via lineDirection uniform
-                FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
-            } else if (geometry.needsRotation) {
-                // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
-                // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
-                const lookAtPoint = arrowPosition.add(direction);
-                this.arrowMesh.lookAt(lookAtPoint);
+            // PHASE 4: Handle 2D vs 3D arrow rotation
+            if (this.arrowMesh.metadata?.is2D) {
+                // 2D: Simple Z-rotation to align with edge in XY plane
+                const angle = Math.atan2(direction.y, direction.x);
+                this.arrowMesh.rotation.z = angle;
+            } else {
+                // 3D: Use billboarding or lookAt
+                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(arrowType)) {
+                    // Filled arrows use shader-based billboarding via lineDirection uniform
+                    FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+                } else if (geometry.needsRotation) {
+                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                    const lookAtPoint = arrowPosition.add(direction);
+                    this.arrowMesh.lookAt(lookAtPoint);
+                }
             }
 
             // Handle arrow tail if configured
@@ -513,6 +550,11 @@ export class Edge {
                     const tailLength = EdgeMesh.calculateArrowLength() * tailSize;
                     const tailGeometry = EdgeMesh.getArrowGeometry(tailType);
 
+                    // PHASE 4: Override scaleFactor for 2D tail arrows
+                    if (this.arrowTailMesh.metadata?.is2D && tailGeometry.scaleFactor !== undefined) {
+                        tailGeometry.scaleFactor = 1.0;
+                    }
+
                     // Calculate tail position using common function
                     // For tail, we negate the direction since it points away from source
                     const tailPosition = EdgeMesh.calculateArrowPosition(
@@ -528,24 +570,31 @@ export class Edge {
                     // Update arrow tail position directly (no thin instances)
                     this.arrowTailMesh.position = tailPosition;
 
-                    // Update lineDirection for filled arrow tails (shader needs it for billboarding)
-                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(tailType)) {
-                        // Filled arrows use shader-based billboarding via lineDirection uniform
-                        FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
-                    } else if (tailGeometry.needsRotation) {
-                        // Other arrow types need explicit rotation
-                        // Triangle in XY plane with tip at origin, pointing in +X direction
-                        // Z rotation: horizontal angle in XY plane
-                        const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
+                    // PHASE 4: Handle 2D vs 3D arrow tail rotation
+                    if (this.arrowTailMesh.metadata?.is2D) {
+                        // 2D: Simple Z-rotation to align with edge in XY plane
+                        const angle = Math.atan2(reversedDirection.y, reversedDirection.x);
+                        this.arrowTailMesh.rotation.z = angle;
+                    } else {
+                        // 3D: Use billboarding or explicit rotation
+                        if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(tailType)) {
+                            // Filled arrows use shader-based billboarding via lineDirection uniform
+                            FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
+                        } else if (tailGeometry.needsRotation) {
+                            // Other arrow types need explicit rotation
+                            // Triangle in XY plane with tip at origin, pointing in +X direction
+                            // Z rotation: horizontal angle in XY plane
+                            const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
 
-                        // Y rotation: tilt forward/back to match edge depth
-                        const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
-                        const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
+                            // Y rotation: tilt forward/back to match edge depth
+                            const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
+                            const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
 
-                        // Apply rotations
-                        this.arrowTailMesh.rotation.x = 0;
-                        this.arrowTailMesh.rotation.y = angleY;
-                        this.arrowTailMesh.rotation.z = angleZ;
+                            // Apply rotations
+                            this.arrowTailMesh.rotation.x = 0;
+                            this.arrowTailMesh.rotation.y = angleY;
+                            this.arrowTailMesh.rotation.z = angleZ;
+                        }
                     }
 
                     // Adjust line start point to create gap for tail arrow
@@ -597,6 +646,11 @@ export class Edge {
                 const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
                 const arrowType = style.arrowHead?.type ?? "normal";
                 const geometry = EdgeMesh.getArrowGeometry(arrowType);
+
+                // PHASE 4: Override scaleFactor for 2D arrows in line endpoint calculation
+                if (this.arrowMesh?.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                    geometry.scaleFactor = 1.0;
+                }
 
                 // Use common function to calculate line endpoint
                 // Direction points FROM source TO destination (forward direction)

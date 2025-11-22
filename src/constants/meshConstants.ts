@@ -49,9 +49,9 @@ export const EDGE_CONSTANTS = {
     ARROW_CROW_FORK_ANGLE: 30, // degrees
     ARROW_VEE_ANGLE: 60, // degrees
     ARROW_HALF_OPEN_RATIO: 0.5,
-    // Line pattern parameters
-    DASH_LENGTH_MULTIPLIER: 0.05,
-    DASH_GAP_MULTIPLIER: 0.05, // Match dash length for equal spacing
+    // Line pattern parameters (multipliers relative to line width)
+    DASH_LENGTH_MULTIPLIER: 3.0, // Dash length = 3x line width
+    DASH_GAP_MULTIPLIER: 2.0, // Gap length = 2x line width
     SINEWAVE_AMPLITUDE_MULTIPLIER: 2,
     SINEWAVE_FREQUENCY_DEFAULT: 0.5,
     ZIGZAG_AMPLITUDE_MULTIPLIER: 2,
