@@ -1006,6 +1006,7 @@ void main() {
                 mesh = this.createBox(scene);
                 break;
             case "dot":
+            case "sphere-dot": // 2D mode: sphere-dot uses circle geometry with StandardMaterial
                 mesh = this.createCircle(scene);
                 break;
             case "vee":
