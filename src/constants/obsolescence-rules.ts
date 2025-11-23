@@ -63,10 +63,10 @@ export const OBSOLESCENCE_RULES: Partial<Record<OperationCategory, ObsolescenceR
         respectProgress: true,
     },
 
-    // Camera changes obsolete renders
+    // Camera changes obsolete renders and other camera operations
     "camera-update": {
-        obsoletes: ["render-update"],
-        respectProgress: true,
-        skipRunning: true, // Don't interrupt running renders
+        obsoletes: ["camera-update", "render-update"],
+        respectProgress: false, // New camera state should interrupt old animations
+        skipRunning: false, // Allow interrupting running camera animations
     },
 };

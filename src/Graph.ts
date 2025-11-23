@@ -5,7 +5,10 @@ import "./algorithms/index"; // register all internal algorithms
 
 import {
     AbstractMesh,
+    Animation,
     Color4,
+    CubicEase,
+    EasingFunction,
     Engine,
     PhotoDome,
     Scene,
@@ -28,6 +31,8 @@ import {
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
+import {ScreenshotCapture} from "./screenshot/ScreenshotCapture.js";
+import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 import {Styles} from "./Styles";
 import type {QueueableOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
@@ -40,6 +45,7 @@ export class Graph implements GraphContext {
     engine: WebGPUEngine | Engine;
     scene: Scene;
     camera: CameraManager;
+    private initialCameraState?: import("./screenshot/types.js").CameraState;
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
     needRays = true;
@@ -304,6 +310,18 @@ export class Graph implements GraphContext {
     }
 
     shutdown(): void {
+        // Stop any running camera animations
+        try {
+            const controller = this.camera.getActiveController();
+            if (controller && "pivot" in controller) {
+                this.scene.stopAnimation((controller as {pivot: unknown}).pivot);
+            }
+            // Note: 2D animations use direct animation on dummy objects
+            // and will be cleaned up when the scene is disposed
+        } catch {
+            // Ignore errors during animation cleanup
+        }
+
         // Use cleanup for common operations
         this.cleanup();
 
@@ -848,6 +866,10 @@ export class Graph implements GraphContext {
         return this.layoutManager;
     }
 
+    getUpdateManager(): UpdateManager {
+        return this.updateManager;
+    }
+
     getMeshCache(): MeshCache {
         return this.dataManager.meshCache;
     }
@@ -966,6 +988,935 @@ export class Graph implements GraphContext {
     async waitForSettled(): Promise<void> {
         // Wait for operation queue to complete all operations
         await this.operationQueue.waitForCompletion();
+    }
+
+    /**
+     * Capture a screenshot of the current graph visualization.
+     *
+     * @param options - Screenshot options (format, resolution, destinations, etc.)
+     * @returns Promise resolving to ScreenshotResult with blob and metadata
+     *
+     * @example
+     * ```typescript
+     * // Basic PNG screenshot
+     * const result = await graph.captureScreenshot();
+     *
+     * // High-res JPEG with download
+     * const result = await graph.captureScreenshot({
+     *   format: 'jpeg',
+     *   multiplier: 2,
+     *   destination: { download: true }
+     * });
+     *
+     * // Copy to clipboard
+     * const result = await graph.captureScreenshot({
+     *   destination: { clipboard: true }
+     * });
+     * ```
+     */
+    async captureScreenshot(options?: ScreenshotOptions): Promise<ScreenshotResult> {
+        const screenshotCapture = new ScreenshotCapture(
+            this.engine,
+            this.scene,
+            this.canvas,
+            this,
+        );
+        return screenshotCapture.captureScreenshot(options);
+    }
+
+    /**
+     * Get the current camera state
+     */
+    getCameraState(): import("./screenshot/types.js").CameraState {
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            return {};
+        }
+
+        const state: import("./screenshot/types.js").CameraState = {};
+
+        // Get the active camera controller (OrbitCameraController or TwoDCameraController)
+        const controller = this.camera.getActiveController();
+
+        if (controller && "pivot" in controller && "cameraDistance" in controller) {
+            // OrbitCameraController - get world position and pivot position
+            const orbitController = controller as unknown as {
+                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                cameraDistance: number;
+                camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
+            };
+
+            // Get camera's world position
+            // Compute world matrix first
+            orbitController.pivot.computeWorldMatrix(true);
+            orbitController.camera.computeWorldMatrix(true);
+
+            // Extract world position from world matrix
+            const worldMatrix = camera.getWorldMatrix();
+            const worldPosition = Vector3.TransformCoordinates(Vector3.Zero(), worldMatrix);
+            state.position = {
+                x: worldPosition.x,
+                y: worldPosition.y,
+                z: worldPosition.z,
+            };
+
+            // Pivot position is the "target" (what camera looks at)
+            state.target = {
+                x: orbitController.pivot.position.x,
+                y: orbitController.pivot.position.y,
+                z: orbitController.pivot.position.z,
+            };
+
+            // Store pivot rotation and distance for restoration
+            state.pivotRotation = {
+                x: orbitController.pivot.rotation.x,
+                y: orbitController.pivot.rotation.y,
+                z: orbitController.pivot.rotation.z,
+            };
+            state.cameraDistance = orbitController.cameraDistance;
+        } else if (controller && "velocity" in controller) {
+            // TwoDCameraController - get zoom and pan
+            const twoDController = controller as unknown as {
+                camera: {
+                    position: Vector3;
+                    orthoLeft: number | null;
+                    orthoRight: number | null;
+                    orthoTop: number | null;
+                    orthoBottom: number | null;
+                };
+                config: {
+                    initialOrthoSize: number;
+                };
+            };
+
+            // Calculate current zoom from ortho bounds
+            const currentSize = (twoDController.camera.orthoRight ?? 1) - (twoDController.camera.orthoLeft ?? -1);
+            const halfSize = currentSize / 2;
+            const initialSize = twoDController.config.initialOrthoSize;
+            state.zoom = initialSize / halfSize;
+
+            // Get pan from camera position
+            state.pan = {
+                x: twoDController.camera.position.x,
+                y: twoDController.camera.position.y,
+            };
+        } else if ("position" in camera) {
+            // Fallback for other camera types
+            state.position = {
+                x: camera.position.x,
+                y: camera.position.y,
+                z: camera.position.z,
+            };
+
+            // Check if camera has a target (ArcRotateCamera)
+            if ("target" in camera && camera.target instanceof Vector3) {
+                state.target = {
+                    x: camera.target.x,
+                    y: camera.target.y,
+                    z: camera.target.z,
+                };
+            }
+        }
+
+        return state;
+    }
+
+    /**
+     * Set the camera state (Phase 4: with animation support)
+     */
+    async setCameraState(
+        state: import("./screenshot/types.js").CameraState | {preset: string},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): Promise<void> {
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            return;
+        }
+
+        // Resolve preset if needed
+        const resolvedState = "preset" in state ?
+            this.resolveCameraPreset(state.preset) :
+            state;
+
+        // For immediate (non-animated) updates or skipQueue, apply directly
+        if (!options || !options.animate || options.skipQueue) {
+            this.applyCameraStateImmediate(resolvedState);
+            // Emit event
+            this.eventManager.emitGraphEvent("camera-state-changed", {state: resolvedState});
+
+            return;
+        }
+
+        // Queue animated camera transitions through operation queue
+        await this.operationQueue.queueOperationAsync(
+            "camera-update",
+            async(context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                // Animated transitions
+                const controller = this.camera.getActiveController();
+
+                try {
+                    if (controller && "pivot" in controller && "cameraDistance" in controller) {
+                        // OrbitCameraController (3D)
+                        await this.animateOrbitCamera(resolvedState, options, context.signal);
+                    } else if (controller && "velocity" in controller && typeof (controller as {velocity?: unknown}).velocity === "object") {
+                        // TwoDCameraController (2D) - has velocity object
+                        await this.animate2DCamera(resolvedState, options, context.signal);
+                    } else {
+                        // Unknown controller, apply immediately
+                        this.applyCameraStateImmediate(resolvedState);
+                        this.eventManager.emitGraphEvent("camera-state-changed", {state: resolvedState});
+                    }
+                } catch (error) {
+                    // Check if error is due to cancellation
+                    if (error instanceof Error && error.message === "Operation cancelled") {
+                        throw error; // Re-throw cancellation
+                    }
+
+                    console.error("Camera animation failed:", error);
+                    // Fallback to immediate
+                    this.applyCameraStateImmediate(resolvedState);
+                    this.eventManager.emitGraphEvent("camera-state-changed", {state: resolvedState});
+                }
+            },
+            {
+                description: (options && options.description) || `Animating camera to ${resolvedState.position ? "position" : "state"}`,
+            },
+        );
+    }
+
+    /**
+     * Apply camera state immediately without animation
+     */
+    private applyCameraStateImmediate(state: import("./screenshot/types.js").CameraState): void {
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            return;
+        }
+
+        // Get the active camera controller
+        const controller = this.camera.getActiveController();
+
+        if (controller && "pivot" in controller && "cameraDistance" in controller) {
+            // OrbitCameraController - work with pivot system
+            const orbitController = controller as unknown as {
+                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                cameraDistance: number;
+                updateCameraPosition: () => void;
+            };
+
+            // Set pivot position (target)
+            if (state.target) {
+                orbitController.pivot.position.set(
+                    state.target.x,
+                    state.target.y,
+                    state.target.z,
+                );
+            }
+
+            // Set pivot rotation if provided (for exact state restoration)
+            if (state.pivotRotation) {
+                orbitController.pivot.rotation.set(
+                    state.pivotRotation.x,
+                    state.pivotRotation.y,
+                    state.pivotRotation.z,
+                );
+            } else if (state.position && state.target) {
+                // Calculate pivot rotation from position and target
+                // Camera should look from position towards target
+                const direction = new Vector3(
+                    state.position.x - state.target.x,
+                    state.position.y - state.target.y,
+                    state.position.z - state.target.z,
+                );
+                const distance = direction.length();
+
+                // Calculate rotation angles to orient pivot so camera looks at target
+                // Add π to yaw because OrbitController's camera points in the opposite direction
+                const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
+                const pitch = Math.asin(direction.y / distance);
+
+                orbitController.pivot.rotation.set(pitch, yaw, 0);
+            }
+
+            // Set camera distance if provided
+            if (state.cameraDistance !== undefined) {
+                orbitController.cameraDistance = state.cameraDistance;
+            } else if (state.position && state.target) {
+                // Calculate distance from position to target
+                const dx = state.position.x - state.target.x;
+                const dy = state.position.y - state.target.y;
+                const dz = state.position.z - state.target.z;
+                orbitController.cameraDistance = Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
+            }
+
+            // Update the pivot's world matrix and camera position
+            orbitController.pivot.computeWorldMatrix(true);
+            orbitController.updateCameraPosition();
+        } else if (controller && "velocity" in controller) {
+            // TwoDCameraController - handle zoom and pan
+            const twoDController = controller as unknown as {
+                camera: {
+                    position: Vector3;
+                    orthoLeft: number | null;
+                    orthoRight: number | null;
+                    orthoTop: number | null;
+                    orthoBottom: number | null;
+                };
+                config: {
+                    initialOrthoSize: number;
+                };
+                updateOrtho: (size: number) => void;
+            };
+
+            // Set zoom (ortho bounds)
+            if (state.zoom !== undefined) {
+                const initialSize = twoDController.config.initialOrthoSize;
+                const targetSize = initialSize / state.zoom;
+                twoDController.updateOrtho(targetSize); // Reuse controller method
+            }
+
+            // Set pan (camera position)
+            if (state.pan) {
+                // Reuse controller's pan method for consistency
+                const dx = state.pan.x - twoDController.camera.position.x;
+                const dy = state.pan.y - twoDController.camera.position.y;
+
+                // Use controller's pan method (adds delta)
+                const panMethod = twoDController as unknown as {pan: (dx: number, dy: number) => void};
+                panMethod.pan(dx, dy);
+            }
+        } else {
+            // Fallback for other camera types
+            if (state.position && "position" in camera) {
+                camera.position.set(state.position.x, state.position.y, state.position.z);
+            }
+
+            if (state.target && "setTarget" in camera && typeof camera.setTarget === "function") {
+                camera.setTarget(new Vector3(state.target.x, state.target.y, state.target.z));
+            }
+        }
+    }
+
+    /**
+     * Apply easing function to animation
+     */
+    private applyEasing(animation: Animation, easing?: string): void {
+        if (!easing || easing === "linear") {
+            return; // No easing
+        }
+
+        let easingFunction: CubicEase;
+
+        switch (easing) {
+            case "easeInOut":
+                easingFunction = new CubicEase();
+                easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
+                break;
+            case "easeIn":
+                easingFunction = new CubicEase();
+                easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEIN);
+                break;
+            case "easeOut":
+                easingFunction = new CubicEase();
+                easingFunction.setEasingMode(EasingFunction.EASINGMODE_EASEOUT);
+                break;
+            default:
+                return; // Unknown easing, use linear
+        }
+
+        animation.setEasingFunction(easingFunction);
+    }
+
+    /**
+     * Animate camera distance using dummy object pattern
+     * Required because cameraDistance is not a scene node property
+     */
+    private async animateCameraDistance(
+        orbitController: {
+            cameraDistance: number;
+            updateCameraPosition: () => void;
+        },
+        targetDistance: number,
+        frameCount: number,
+        fps: number,
+        easing?: string,
+    ): Promise<void> {
+        // Create dummy object to animate
+        const dummy = {value: orbitController.cameraDistance};
+
+        const distAnim = new Animation(
+            "camera_distance",
+            "value",
+            fps,
+            Animation.ANIMATIONTYPE_FLOAT,
+            Animation.ANIMATIONLOOPMODE_CONSTANT,
+        );
+
+        distAnim.setKeys([
+            {frame: 0, value: orbitController.cameraDistance},
+            {frame: frameCount, value: targetDistance},
+        ]);
+
+        this.applyEasing(distAnim, easing);
+
+        return new Promise((resolve) => {
+            // Create observer to update controller during animation
+            const observer = this.scene.onBeforeRenderObservable.add(() => {
+                orbitController.cameraDistance = dummy.value;
+                orbitController.updateCameraPosition();
+            });
+
+            // Animate the dummy object
+            this.scene.beginDirectAnimation(
+                dummy,
+                [distAnim],
+                0,
+                frameCount,
+                false,
+                1.0,
+                () => {
+                    // Cleanup observer
+                    this.scene.onBeforeRenderObservable.remove(observer);
+
+                    // Ensure final value
+                    orbitController.cameraDistance = targetDistance;
+                    orbitController.updateCameraPosition();
+
+                    resolve();
+                },
+            );
+        });
+    }
+
+    /**
+     * Animate OrbitCameraController to target state
+     * Handles pivot-based camera system with custom distance animation
+     */
+    private async animateOrbitCamera(
+        targetState: import("./screenshot/types.js").CameraState,
+        options: import("./screenshot/types.js").CameraAnimationOptions,
+        signal?: AbortSignal,
+    ): Promise<void> {
+        const controller = this.camera.getActiveController();
+
+        // Type guard - ensure we have OrbitCameraController
+        if (!controller || !("pivot" in controller) || !("cameraDistance" in controller)) {
+            // Fallback to immediate if controller doesn't match
+            this.applyCameraStateImmediate(targetState);
+            return;
+        }
+
+        const orbitController = controller as unknown as {
+            pivot: {
+                position: Vector3;
+                rotation: Vector3;
+                animations?: Animation[];
+                computeWorldMatrix: (force: boolean) => void;
+            };
+            cameraDistance: number;
+            updateCameraPosition: () => void;
+        };
+
+        const fps = 60;
+        const duration = options.duration ?? 1000;
+        const frameCount = Math.floor(duration / (1000 / fps));
+        const animations: Animation[] = [];
+
+        // Animation 1: Pivot Position (target)
+        if (targetState.target) {
+            const posAnim = new Animation(
+                "pivot_position",
+                "position",
+                fps,
+                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            posAnim.setKeys([
+                {
+                    frame: 0,
+                    value: orbitController.pivot.position.clone(),
+                },
+                {
+                    frame: frameCount,
+                    value: new Vector3(
+                        targetState.target.x,
+                        targetState.target.y,
+                        targetState.target.z,
+                    ),
+                },
+            ]);
+
+            this.applyEasing(posAnim, options.easing);
+            animations.push(posAnim);
+        }
+
+        // Animation 2: Pivot Rotation (view direction)
+        if (targetState.pivotRotation) {
+            const rotAnim = new Animation(
+                "pivot_rotation",
+                "rotation",
+                fps,
+                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            rotAnim.setKeys([
+                {
+                    frame: 0,
+                    value: orbitController.pivot.rotation.clone(),
+                },
+                {
+                    frame: frameCount,
+                    value: new Vector3(
+                        targetState.pivotRotation.x,
+                        targetState.pivotRotation.y,
+                        targetState.pivotRotation.z,
+                    ),
+                },
+            ]);
+
+            this.applyEasing(rotAnim, options.easing);
+            animations.push(rotAnim);
+        } else if (targetState.position && targetState.target) {
+            // Calculate pivot rotation from position and target
+            const direction = new Vector3(
+                targetState.position.x - targetState.target.x,
+                targetState.position.y - targetState.target.y,
+                targetState.position.z - targetState.target.z,
+            );
+            const distance = direction.length();
+            const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
+            const pitch = Math.asin(direction.y / distance);
+
+            const rotAnim = new Animation(
+                "pivot_rotation",
+                "rotation",
+                fps,
+                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            rotAnim.setKeys([
+                {
+                    frame: 0,
+                    value: orbitController.pivot.rotation.clone(),
+                },
+                {
+                    frame: frameCount,
+                    value: new Vector3(pitch, yaw, 0),
+                },
+            ]);
+
+            this.applyEasing(rotAnim, options.easing);
+            animations.push(rotAnim);
+        }
+
+        // Animation 3: Camera Distance (custom property)
+        let distanceAnimation: Promise<void> | undefined;
+        if (targetState.cameraDistance !== undefined) {
+            distanceAnimation = this.animateCameraDistance(
+                orbitController,
+                targetState.cameraDistance,
+                frameCount,
+                fps,
+                options.easing,
+            );
+        } else if (targetState.position && targetState.target) {
+            // Calculate distance from position to target
+            const dx = targetState.position.x - targetState.target.x;
+            const dy = targetState.position.y - targetState.target.y;
+            const dz = targetState.position.z - targetState.target.z;
+            const calculatedDistance = Math.sqrt((dx * dx) + (dy * dy) + (dz * dz));
+            distanceAnimation = this.animateCameraDistance(
+                orbitController,
+                calculatedDistance,
+                frameCount,
+                fps,
+                options.easing,
+            );
+        }
+
+        // Apply animations to pivot
+        if (animations.length > 0) {
+            orbitController.pivot.animations = animations;
+
+            await new Promise<void>((resolve, reject) => {
+                this.scene.beginAnimation(
+                    orbitController.pivot,
+                    0,
+                    frameCount,
+                    false,
+                    1.0,
+                    () => {
+                        // Wait for distance animation to complete
+                        const finalize = async(): Promise<void> => {
+                            if (distanceAnimation) {
+                                await distanceAnimation;
+                            }
+
+                            // Ensure final state is applied exactly
+                            if (targetState.target) {
+                                orbitController.pivot.position.set(
+                                    targetState.target.x,
+                                    targetState.target.y,
+                                    targetState.target.z,
+                                );
+                            }
+
+                            if (targetState.pivotRotation) {
+                                orbitController.pivot.rotation.set(
+                                    targetState.pivotRotation.x,
+                                    targetState.pivotRotation.y,
+                                    targetState.pivotRotation.z,
+                                );
+                            } else if (targetState.position && targetState.target) {
+                                const direction = new Vector3(
+                                    targetState.position.x - targetState.target.x,
+                                    targetState.position.y - targetState.target.y,
+                                    targetState.position.z - targetState.target.z,
+                                );
+                                const distance = direction.length();
+                                const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
+                                const pitch = Math.asin(direction.y / distance);
+                                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                            }
+
+                            orbitController.pivot.computeWorldMatrix(true);
+                            orbitController.updateCameraPosition();
+
+                            // Emit completion event
+                            this.eventManager.emitGraphEvent("camera-state-changed", {
+                                state: targetState,
+                            });
+
+                            resolve();
+                        };
+
+                        void finalize();
+                    },
+                );
+
+                // Handle cancellation via AbortSignal
+                if (signal) {
+                    signal.addEventListener("abort", () => {
+                        // Stop the animation
+                        this.scene.stopAnimation(orbitController.pivot);
+                        // Also stop distance animation if running
+                        // (distance animation handles its own cleanup)
+                        reject(new Error("Operation cancelled"));
+                    }, {once: true});
+                }
+            });
+        } else if (distanceAnimation) {
+            // Only distance animation
+            await distanceAnimation;
+            this.eventManager.emitGraphEvent("camera-state-changed", {
+                state: targetState,
+            });
+        }
+    }
+
+    /**
+     * Animate 2D camera (zoom and pan)
+     */
+    private async animate2DCamera(
+        targetState: import("./screenshot/types.js").CameraState,
+        options: import("./screenshot/types.js").CameraAnimationOptions,
+        signal?: AbortSignal,
+    ): Promise<void> {
+        const controller = this.camera.getActiveController();
+
+        // Type guard for 2D controller
+        if (!controller || !("velocity" in controller)) {
+            this.applyCameraStateImmediate(targetState);
+            return;
+        }
+
+        const twoDController = controller as unknown as {
+            camera: {
+                position: Vector3;
+                orthoLeft: number | null;
+                orthoRight: number | null;
+                orthoTop: number | null;
+                orthoBottom: number | null;
+            };
+            config: {
+                initialOrthoSize: number;
+            };
+        };
+
+        const fps = 60;
+        const duration = options.duration ?? 1000;
+        const frameCount = Math.floor(duration / (1000 / fps));
+
+        // Create dummy object to animate camera properties
+        const dummy = {
+            posX: twoDController.camera.position.x,
+            posY: twoDController.camera.position.y,
+            orthoLeft: twoDController.camera.orthoLeft ?? -1,
+            orthoRight: twoDController.camera.orthoRight ?? 1,
+            orthoTop: twoDController.camera.orthoTop ?? 1,
+            orthoBottom: twoDController.camera.orthoBottom ?? -1,
+        };
+
+        const animations: Animation[] = [];
+
+        // Animate zoom (ortho bounds)
+        if (targetState.zoom !== undefined) {
+            // Calculate target ortho bounds based on zoom factor
+            // Zoom is absolute: 1.0 = initial size, 2.0 = half size (zoomed in), 0.5 = double size (zoomed out)
+            const initialSize = twoDController.config.initialOrthoSize;
+            const targetSize = initialSize / targetState.zoom;
+
+            const orthoLeftAnim = new Animation(
+                "ortho_left",
+                "orthoLeft",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+            orthoLeftAnim.setKeys([
+                {frame: 0, value: dummy.orthoLeft},
+                {frame: frameCount, value: -targetSize},
+            ]);
+            this.applyEasing(orthoLeftAnim, options.easing);
+            animations.push(orthoLeftAnim);
+
+            const orthoRightAnim = new Animation(
+                "ortho_right",
+                "orthoRight",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+            orthoRightAnim.setKeys([
+                {frame: 0, value: dummy.orthoRight},
+                {frame: frameCount, value: targetSize},
+            ]);
+            this.applyEasing(orthoRightAnim, options.easing);
+            animations.push(orthoRightAnim);
+
+            // Calculate aspect ratio to maintain proportions
+            const aspect = (dummy.orthoTop - dummy.orthoBottom) / (dummy.orthoRight - dummy.orthoLeft);
+            const orthoTopAnim = new Animation(
+                "ortho_top",
+                "orthoTop",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+            orthoTopAnim.setKeys([
+                {frame: 0, value: dummy.orthoTop},
+                {frame: frameCount, value: targetSize * aspect},
+            ]);
+            this.applyEasing(orthoTopAnim, options.easing);
+            animations.push(orthoTopAnim);
+
+            const orthoBottomAnim = new Animation(
+                "ortho_bottom",
+                "orthoBottom",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+            orthoBottomAnim.setKeys([
+                {frame: 0, value: dummy.orthoBottom},
+                {frame: frameCount, value: -targetSize * aspect},
+            ]);
+            this.applyEasing(orthoBottomAnim, options.easing);
+            animations.push(orthoBottomAnim);
+        }
+
+        // Animate pan (camera position)
+        if (targetState.pan?.x !== undefined) {
+            const panXAnim = new Animation(
+                "camera_pan_x",
+                "posX",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            panXAnim.setKeys([
+                {frame: 0, value: twoDController.camera.position.x},
+                {frame: frameCount, value: targetState.pan.x},
+            ]);
+
+            this.applyEasing(panXAnim, options.easing);
+            animations.push(panXAnim);
+        }
+
+        if (targetState.pan?.y !== undefined) {
+            const panYAnim = new Animation(
+                "camera_pan_y",
+                "posY",
+                fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            panYAnim.setKeys([
+                {frame: 0, value: twoDController.camera.position.y},
+                {frame: frameCount, value: targetState.pan.y},
+            ]);
+
+            this.applyEasing(panYAnim, options.easing);
+            animations.push(panYAnim);
+        }
+
+        if (animations.length === 0) {
+            return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            // Create observer to update controller
+            const observer = this.scene.onBeforeRenderObservable.add(() => {
+                twoDController.camera.position.x = dummy.posX;
+                twoDController.camera.position.y = dummy.posY;
+                twoDController.camera.orthoLeft = dummy.orthoLeft;
+                twoDController.camera.orthoRight = dummy.orthoRight;
+                twoDController.camera.orthoTop = dummy.orthoTop;
+                twoDController.camera.orthoBottom = dummy.orthoBottom;
+            });
+
+            // Animate dummy object
+            const animatable = this.scene.beginDirectAnimation(
+                dummy,
+                animations,
+                0,
+                frameCount,
+                false,
+                1.0,
+                () => {
+                    // Cleanup
+                    this.scene.onBeforeRenderObservable.remove(observer);
+
+                    // Apply final values exactly from dummy (already calculated during animation)
+                    if (targetState.pan) {
+                        twoDController.camera.position.x = dummy.posX;
+                        twoDController.camera.position.y = dummy.posY;
+                    }
+
+                    if (targetState.zoom !== undefined) {
+                        twoDController.camera.orthoLeft = dummy.orthoLeft;
+                        twoDController.camera.orthoRight = dummy.orthoRight;
+                        twoDController.camera.orthoTop = dummy.orthoTop;
+                        twoDController.camera.orthoBottom = dummy.orthoBottom;
+                    }
+
+                    this.eventManager.emitGraphEvent("camera-state-changed", {
+                        state: targetState,
+                    });
+
+                    resolve();
+                },
+            );
+
+            // Handle cancellation via AbortSignal
+            if (signal) {
+                signal.addEventListener("abort", () => {
+                    // Stop the animation
+                    animatable.stop();
+                    // Cleanup observer
+                    this.scene.onBeforeRenderObservable.remove(observer);
+                    reject(new Error("Operation cancelled"));
+                }, {once: true});
+            }
+        });
+    }
+
+    /**
+     * Resolve a camera preset to a camera state
+     */
+    resolveCameraPreset(preset: string): import("./screenshot/types.js").CameraState {
+        // For Phase 3, we only need basic fitToGraph support
+        // Full preset implementation will come in Phase 5
+        if (preset === "fitToGraph") {
+            // Return a simple state that positions camera to see all nodes
+            return {
+                position: {x: 50, y: 50, z: 50},
+                target: {x: 0, y: 0, z: 0},
+            };
+        }
+
+        // Return current state for unknown presets
+        return this.getCameraState();
+    }
+
+    /**
+     * Phase 4 Convenience Methods
+     */
+
+    /**
+     * Set camera position (3D)
+     */
+    async setCameraPosition(
+        position: {x: number, y: number, z: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): Promise<void> {
+        // Get current state to preserve target only
+        // Don't copy pivotRotation/cameraDistance - let them be recalculated
+        const currentState = this.getCameraState();
+        return this.setCameraState({position, target: currentState.target}, options);
+    }
+
+    /**
+     * Set camera target (3D)
+     */
+    async setCameraTarget(
+        target: {x: number, y: number, z: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): Promise<void> {
+        // Get current state to preserve position only
+        // Don't copy pivotRotation/cameraDistance - let them be recalculated
+        const currentState = this.getCameraState();
+        return this.setCameraState({position: currentState.position, target}, options);
+    }
+
+    /**
+     * Set camera zoom (2D)
+     */
+    async setCameraZoom(
+        zoom: number,
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): Promise<void> {
+        return this.setCameraState({zoom}, options);
+    }
+
+    /**
+     * Set camera pan (2D)
+     */
+    async setCameraPan(
+        pan: {x: number, y: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): Promise<void> {
+        return this.setCameraState({pan}, options);
+    }
+
+    /**
+     * Reset camera to default state
+     */
+    async resetCamera(options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
+        // Get default camera state from current controller
+        const defaultState = this.getDefaultCameraState();
+        return this.setCameraState(defaultState, options);
+    }
+
+    /**
+     * Get default camera state for current camera type
+     * Lazily captures the initial state on first use, or returns captured state
+     */
+    private getDefaultCameraState(): import("./screenshot/types.js").CameraState {
+        // If we haven't captured initial state yet, capture it now
+        // This happens on the first call to resetCamera()
+        this.initialCameraState ??= this.getCameraState();
+
+        return this.initialCameraState;
     }
 
     /**

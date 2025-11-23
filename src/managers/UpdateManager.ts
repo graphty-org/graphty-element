@@ -84,6 +84,20 @@ export class UpdateManager implements Manager {
     }
 
     /**
+     * Disable zoom to fit
+     */
+    disableZoomToFit(): void {
+        this.needsZoomToFit = false;
+    }
+
+    /**
+     * Get current zoom to fit state
+     */
+    isZoomToFitEnabled(): boolean {
+        return this.needsZoomToFit;
+    }
+
+    /**
      * Get the current render frame count
      */
     getRenderFrameCount(): number {

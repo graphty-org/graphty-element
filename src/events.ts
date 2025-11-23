@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -50,6 +50,17 @@ export interface GraphLayoutInitializedEvent {
     type: "layout-initialized";
     layoutType: string;
     shouldZoomToFit: boolean;
+}
+
+export interface CameraStateChangedEvent {
+    type: "camera-state-changed";
+    state: {
+        position?: {x: number, y: number, z: number};
+        target?: {x: number, y: number, z: number};
+        zoom?: number;
+        pan?: {x: number, y: number};
+        [key: string]: unknown;
+    };
 }
 
 // Generic events for internal manager communication

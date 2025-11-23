@@ -8,6 +8,7 @@ import {set as setDeep} from "lodash";
 
 import type {StyleSchema} from "./config";
 import {Graph} from "./Graph";
+import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 
 /**
  * Graphty creates a graph
@@ -432,9 +433,122 @@ export class Graphty extends LitElement {
     }
 
     /**
+     * Capture a screenshot of the current graph visualization.
+     *
+     * @param options - Screenshot options (format, resolution, destinations, etc.)
+     * @returns Promise resolving to ScreenshotResult with blob and metadata
+     *
+     * @example
+     * ```typescript
+     * const el = document.querySelector('graphty-element');
+     *
+     * // Basic PNG screenshot
+     * const result = await el.captureScreenshot();
+     *
+     * // High-res JPEG with download
+     * const result = await el.captureScreenshot({
+     *   format: 'jpeg',
+     *   multiplier: 2,
+     *   destination: { download: true }
+     * });
+     *
+     * // Copy to clipboard
+     * const result = await el.captureScreenshot({
+     *   destination: { clipboard: true }
+     * });
+     * ```
+     */
+    async captureScreenshot(options?: ScreenshotOptions): Promise<ScreenshotResult> {
+        return this.#graph.captureScreenshot(options);
+    }
+
+    /**
+     * Phase 4: Camera State API
+     */
+
+    /**
+     * Get current camera state (supports both 2D and 3D)
+     * @returns Current camera state including position, target, zoom, etc.
+     */
+    getCameraState(): import("./screenshot/types.js").CameraState {
+        return this.#graph.getCameraState();
+    }
+
+    /**
+     * Set camera state (supports both 2D and 3D)
+     * @param state - Camera state to apply or preset name
+     * @param options - Animation options
+     */
+    setCameraState(
+        state: import("./screenshot/types.js").CameraState | {preset: string},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): void {
+        void this.#graph.setCameraState(state, options);
+    }
+
+    /**
+     * Set camera position (3D)
+     * @param position - Target position {x, y, z}
+     * @param options - Animation options
+     */
+    setCameraPosition(
+        position: {x: number, y: number, z: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): void {
+        void this.#graph.setCameraPosition(position, options);
+    }
+
+    /**
+     * Set camera target (3D)
+     * @param target - Target point to look at {x, y, z}
+     * @param options - Animation options
+     */
+    setCameraTarget(
+        target: {x: number, y: number, z: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): void {
+        void this.#graph.setCameraTarget(target, options);
+    }
+
+    /**
+     * Set camera zoom (2D)
+     * @param zoom - Zoom level
+     * @param options - Animation options
+     */
+    setCameraZoom(
+        zoom: number,
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): void {
+        void this.#graph.setCameraZoom(zoom, options);
+    }
+
+    /**
+     * Set camera pan (2D)
+     * @param pan - Pan position {x, y}
+     * @param options - Animation options
+     */
+    setCameraPan(
+        pan: {x: number, y: number},
+        options?: import("./screenshot/types.js").CameraAnimationOptions,
+    ): void {
+        void this.#graph.setCameraPan(pan, options);
+    }
+
+    /**
+     * Reset camera to default position
+     * @param options - Animation options
+     */
+    resetCamera(options?: import("./screenshot/types.js").CameraAnimationOptions): void {
+        void this.#graph.resetCamera(options);
+    }
+
+    /**
      * Get the underlying Graph instance for debugging purposes
      */
     get graph(): Graph {
         return this.#graph;
     }
 }
+
+// Type alias for easier importing
+export type GraphtyElement = Graphty;
