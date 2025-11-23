@@ -613,3 +613,67 @@ export const TwoDSphereDotArrowHead: Story = {
         },
     },
 };
+
+// Comprehensive 2D Arrow Type Showcase
+// This story displays all arrow types in a grid layout for visual comparison
+export const TwoDAllArrows: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+        }),
+        nodeData: [
+            // Row 1: normal, inverted, diamond
+            {id: "normal-src", position: {x: -6, y: 3, z: 0}},
+            {id: "normal-dst", position: {x: -3, y: 3, z: 0}},
+            {id: "inverted-src", position: {x: -1, y: 3, z: 0}},
+            {id: "inverted-dst", position: {x: 2, y: 3, z: 0}},
+            {id: "diamond-src", position: {x: 4, y: 3, z: 0}},
+            {id: "diamond-dst", position: {x: 7, y: 3, z: 0}},
+            // Row 2: box, dot, vee
+            {id: "box-src", position: {x: -6, y: 0, z: 0}},
+            {id: "box-dst", position: {x: -3, y: 0, z: 0}},
+            {id: "dot-src", position: {x: -1, y: 0, z: 0}},
+            {id: "dot-dst", position: {x: 2, y: 0, z: 0}},
+            {id: "vee-src", position: {x: 4, y: 0, z: 0}},
+            {id: "vee-dst", position: {x: 7, y: 0, z: 0}},
+            // Row 3: tee, crow, open-normal
+            {id: "tee-src", position: {x: -6, y: -3, z: 0}},
+            {id: "tee-dst", position: {x: -3, y: -3, z: 0}},
+            {id: "crow-src", position: {x: -1, y: -3, z: 0}},
+            {id: "crow-dst", position: {x: 2, y: -3, z: 0}},
+            {id: "open-normal-src", position: {x: 4, y: -3, z: 0}},
+            {id: "open-normal-dst", position: {x: 7, y: -3, z: 0}},
+            // Row 4: half-open, open-diamond, open-dot, sphere-dot
+            {id: "half-open-src", position: {x: -8, y: -6, z: 0}},
+            {id: "half-open-dst", position: {x: -5, y: -6, z: 0}},
+            {id: "open-diamond-src", position: {x: -3, y: -6, z: 0}},
+            {id: "open-diamond-dst", position: {x: 0, y: -6, z: 0}},
+            {id: "open-dot-src", position: {x: 2, y: -6, z: 0}},
+            {id: "open-dot-dst", position: {x: 5, y: -6, z: 0}},
+            {id: "sphere-dot-src", position: {x: 7, y: -6, z: 0}},
+            {id: "sphere-dot-dst", position: {x: 10, y: -6, z: 0}},
+        ],
+        edgeData: [
+            {src: "normal-src", dst: "normal-dst", style: {arrowHead: {type: "normal"}}},
+            {src: "inverted-src", dst: "inverted-dst", style: {arrowHead: {type: "inverted"}}},
+            {src: "diamond-src", dst: "diamond-dst", style: {arrowHead: {type: "diamond"}}},
+            {src: "box-src", dst: "box-dst", style: {arrowHead: {type: "box"}}},
+            {src: "dot-src", dst: "dot-dst", style: {arrowHead: {type: "dot"}}},
+            {src: "vee-src", dst: "vee-dst", style: {arrowHead: {type: "vee"}}},
+            {src: "tee-src", dst: "tee-dst", style: {arrowHead: {type: "tee"}}},
+            {src: "crow-src", dst: "crow-dst", style: {arrowHead: {type: "crow"}}},
+            {src: "open-normal-src", dst: "open-normal-dst", style: {arrowHead: {type: "open-normal"}}},
+            {src: "half-open-src", dst: "half-open-dst", style: {arrowHead: {type: "half-open"}}},
+            {src: "open-diamond-src", dst: "open-diamond-dst", style: {arrowHead: {type: "open-diamond"}}},
+            {src: "open-dot-src", dst: "open-dot-dst", style: {arrowHead: {type: "open-dot"}}},
+            {src: "sphere-dot-src", dst: "sphere-dot-dst", style: {arrowHead: {type: "sphere-dot"}}},
+        ],
+        layout: "fixed",
+    },
+    parameters: {
+        chromatic: {
+            delay: 1000,
+        },
+    },
+};
+

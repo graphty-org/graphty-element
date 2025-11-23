@@ -85,7 +85,6 @@ uniform mat4 viewProjection;
 uniform mat4 projection;
 uniform vec2 resolution;
 uniform float width;
-uniform float orthoScale;  // Camera-aware scaling (1.0 for perspective, calculated for orthographic)
 
 // Varyings
 varying vec2 vUV;
@@ -135,11 +134,6 @@ void main() {
     // GPU will apply perspective divide (/= w), making distant lines smaller
     // Divide by resolution to convert from pixels to NDC (-1 to +1)
     offset /= resolution;
-
-    // Apply camera-aware scaling
-    // For perspective cameras: orthoScale = 1.0 (no change)
-    // For orthographic cameras: orthoScale compensates for frustum size
-    offset *= orthoScale;
 
     // Apply offset in clip space
     gl_Position = vertexClip;
@@ -279,7 +273,6 @@ void main(void) {
             for (const material of this.activeMaterials) {
                 try {
                     material.setVector2("resolution", resolution);
-                    material.setFloat("orthoScale", 1.0);
                 } catch {
                     // Material was disposed, remove from set
                     this.activeMaterials.delete(material);
@@ -703,7 +696,6 @@ void main(void) {
                     "projection",
                     "resolution",
                     "width",
-                    "orthoScale",
                     "color",
                     "opacity",
                 ],
@@ -717,9 +709,6 @@ void main(void) {
 
         // Set width uniform (in pixels)
         shaderMaterial.setFloat("width", options.width);
-
-        // Set orthoScale default (will be updated by resolution callback)
-        shaderMaterial.setFloat("orthoScale", 1.0);
 
         // Set opacity
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
@@ -818,7 +807,6 @@ void main(void) {
                     "projection",
                     "resolution",
                     "width",
-                    "orthoScale",
                     "color",
                     "opacity",
                 ],
@@ -835,7 +823,6 @@ void main(void) {
         // });
         shaderMaterial.setVector3("color", new Vector3(colorObj.r, colorObj.g, colorObj.b));
         shaderMaterial.setFloat("width", options.width);
-        shaderMaterial.setFloat("orthoScale", 1.0); // Default (will be updated by resolution callback)
         shaderMaterial.setFloat("opacity", options.opacity ?? 1.0);
 
         // Pattern uniforms (arrows are always solid)
