@@ -677,3 +677,45 @@ export const TwoDAllArrows: Story = {
     },
 };
 
+// Simple 2D story with 5 fully connected nodes for debugging arrow alignment
+export const TwoDFiveNodeComplete: Story = {
+    args: {
+        styleTemplate: templateCreator({
+            graph: {twoD: true},
+            edgeStyle: {
+                arrowHead: {type: "normal", color: "darkgrey"},
+                line: {color: "darkgrey"},
+            },
+        }),
+        nodeData: [
+            {id: "A", position: {x: 0, y: 3, z: 0}},
+            {id: "B", position: {x: 2.85, y: 0.93, z: 0}},
+            {id: "C", position: {x: 1.76, y: -2.43, z: 0}},
+            {id: "D", position: {x: -1.76, y: -2.43, z: 0}},
+            {id: "E", position: {x: -2.85, y: 0.93, z: 0}},
+        ],
+        edgeData: [
+            // All edges from A
+            {src: "A", dst: "B"},
+            {src: "A", dst: "C"},
+            {src: "A", dst: "D"},
+            {src: "A", dst: "E"},
+            // All edges from B
+            {src: "B", dst: "C"},
+            {src: "B", dst: "D"},
+            {src: "B", dst: "E"},
+            // All edges from C
+            {src: "C", dst: "D"},
+            {src: "C", dst: "E"},
+            // All edges from D
+            {src: "D", dst: "E"},
+        ],
+        layout: "fixed",
+    },
+    parameters: {
+        chromatic: {
+            delay: 1000,
+        },
+    },
+};
+

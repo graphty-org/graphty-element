@@ -1,6 +1,7 @@
 import {
     AbstractMesh,
     Mesh,
+    Quaternion,
     Ray,
     Vector3,
 } from "@babylonjs/core";
@@ -595,9 +596,24 @@ export class Edge {
 
             // PHASE 4: Handle 2D vs 3D arrow rotation
             if (this.arrowMesh.metadata?.is2D) {
-                // 2D: Simple Z-rotation to align with edge in XY plane
+                // 2D: Use quaternion to properly compose rotations
+                // The arrow geometry is in XZ plane with tip at origin pointing along +X
+                // We need to: 1) rotate to XY plane (90° around X), 2) rotate to point at edge direction
+                //
+                // With Euler angles (YXZ order), setting rotation.x then rotation.z doesn't work because
+                // after the X rotation, the local Z axis points toward world -Y, so Z rotation
+                // spins the arrow in XZ plane instead of XY plane.
+                //
+                // Solution: Use quaternion composition with correct order
                 const angle = Math.atan2(direction.y, direction.x);
-                this.arrowMesh.rotation.z = angle;
+
+                // Step 1: Rotation around X by 90° (brings arrow from XZ plane to XY plane)
+                const qX = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2);
+                // Step 2: Rotation around Z by angle (aligns arrow with edge direction in XY plane)
+                const qZ = Quaternion.RotationAxis(Vector3.Forward(), angle);
+
+                // Compose rotations: for "apply qX first, then qZ", use qZ * qX
+                this.arrowMesh.rotationQuaternion = qZ.multiply(qX);
             } else {
                 // 3D: Use billboarding or lookAt
                 if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(arrowType)) {
@@ -650,9 +666,11 @@ export class Edge {
 
                     // PHASE 4: Handle 2D vs 3D arrow tail rotation
                     if (this.arrowTailMesh.metadata?.is2D) {
-                        // 2D: Simple Z-rotation to align with edge in XY plane
+                        // 2D: Use quaternion to properly compose rotations (same as arrow head)
                         const angle = Math.atan2(reversedDirection.y, reversedDirection.x);
-                        this.arrowTailMesh.rotation.z = angle;
+                        const qX = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2);
+                        const qZ = Quaternion.RotationAxis(Vector3.Forward(), angle);
+                        this.arrowTailMesh.rotationQuaternion = qZ.multiply(qX);
                     } else {
                         // 3D: Use billboarding or explicit rotation
                         if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(tailType)) {
