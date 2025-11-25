@@ -43,6 +43,17 @@ export class ScreenshotCapture {
     private async doScreenshotCapture(options: ScreenshotOptions): Promise<ScreenshotResult> {
         const startTime = Date.now();
 
+        // Check engine configuration
+        const gl = (this.engine as Engine)._gl;
+
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (gl && !gl.getContextAttributes()?.preserveDrawingBuffer) {
+            throw new ScreenshotError(
+                "Screenshot requires Engine to be created with preserveDrawingBuffer: true",
+                ScreenshotErrorCode.ENGINE_NOT_CONFIGURED,
+            );
+        }
+
         // Get timing options with defaults
         const timing = {
             waitForSettle: true,
@@ -78,7 +89,7 @@ export class ScreenshotCapture {
                 this.graph.resolveCameraPreset(options.camera.preset) :
                 options.camera;
 
-            this.graph.setCameraState(cameraState);
+            await this.graph.setCameraState(cameraState);
             await this.waitForRender();
         }
 
@@ -178,7 +189,7 @@ export class ScreenshotCapture {
         } finally {
             // Restore camera if it was overridden
             if (originalCameraState) {
-                this.graph.setCameraState(originalCameraState);
+                await this.graph.setCameraState(originalCameraState);
 
                 // Restore zoom-to-fit state
                 if (zoomToFitWasEnabled) {

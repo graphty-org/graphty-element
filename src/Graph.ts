@@ -6,6 +6,7 @@ import "./algorithms/index"; // register all internal algorithms
 import {
     AbstractMesh,
     Animation,
+    Camera,
     Color4,
     CubicEase,
     EasingFunction,
@@ -17,6 +18,14 @@ import {
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
+import {
+    BUILTIN_PRESETS,
+    calculateFitToGraph,
+    calculateFrontView,
+    calculateIsometric,
+    calculateSideView,
+    calculateTopView,
+} from "./camera/presets.js";
 import {type CameraController, type CameraKey, CameraManager} from "./cameras/CameraManager";
 import {
     AdHocData,
@@ -32,6 +41,7 @@ import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type G
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
 import {ScreenshotCapture} from "./screenshot/ScreenshotCapture.js";
+import {ScreenshotError, ScreenshotErrorCode} from "./screenshot/ScreenshotError.js";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 import {Styles} from "./Styles";
 import type {QueueableOptions} from "./utils/queue-migration";
@@ -46,6 +56,7 @@ export class Graph implements GraphContext {
     scene: Scene;
     camera: CameraManager;
     private initialCameraState?: import("./screenshot/types.js").CameraState;
+    private userCameraPresets = new Map<string, import("./screenshot/types.js").CameraState>();
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
     needRays = true;
@@ -67,7 +78,8 @@ export class Graph implements GraphContext {
     };
 
     // Managers
-    private eventManager: EventManager;
+    /** Event manager for adding/removing event listeners */
+    readonly eventManager: EventManager;
     private renderManager: RenderManager;
     private lifecycleManager: LifecycleManager;
     private dataManager: DataManager;
@@ -1025,6 +1037,218 @@ export class Graph implements GraphContext {
     }
 
     /**
+     * Check if screenshot can be captured with given options.
+     *
+     * @param options - Screenshot options to validate
+     * @returns Promise<CapabilityCheck> - Result indicating whether screenshot is supported
+     *
+     * @example
+     * ```typescript
+     * // Check if 4x multiplier is supported
+     * const check = await graph.canCaptureScreenshot({ multiplier: 4 });
+     * if (!check.supported) {
+     *   console.error('Cannot capture:', check.reason);
+     * } else if (check.warnings) {
+     *   console.warn('Warnings:', check.warnings);
+     * }
+     *
+     * // Check 8K resolution
+     * const check8k = await graph.canCaptureScreenshot({
+     *   width: 7680,
+     *   height: 4320
+     * });
+     * console.log(`Memory: ${check8k.estimatedMemoryMB.toFixed(0)}MB`);
+     * ```
+     */
+    async canCaptureScreenshot(options?: ScreenshotOptions): Promise<import("./screenshot/capability-check.js").CapabilityCheck> {
+        const {canCaptureScreenshot} = await import("./screenshot/capability-check.js");
+        return canCaptureScreenshot(this.canvas, options ?? {});
+    }
+
+    /**
+     * Capture an animation as a video (stationary or animated camera)
+     *
+     * @param options - Animation capture options
+     * @returns Promise resolving to AnimationResult with blob and metadata
+     *
+     * @example
+     * ```typescript
+     * // Basic 5-second video at 30fps
+     * const result = await graph.captureAnimation({
+     *   duration: 5000,
+     *   fps: 30,
+     *   cameraMode: 'stationary'
+     * });
+     *
+     * // High-quality 60fps video with download
+     * const result = await graph.captureAnimation({
+     *   duration: 10000,
+     *   fps: 60,
+     *   cameraMode: 'stationary',
+     *   download: true,
+     *   downloadFilename: 'graph-video.webm'
+     * });
+     *
+     * // Animated camera path (camera tour)
+     * const result = await graph.captureAnimation({
+     *   duration: 5000,
+     *   fps: 30,
+     *   cameraMode: 'animated',
+     *   cameraPath: [
+     *     { position: { x: 10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 } },
+     *     { position: { x: 0, y: 20, z: 0 }, target: { x: 0, y: 0, z: 0 }, duration: 2500 },
+     *     { position: { x: -10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 }, duration: 2500 }
+     *   ],
+     *   easing: 'easeInOut',
+     *   download: true
+     * });
+     * ```
+     */
+    async captureAnimation(options: import("./video/VideoCapture.js").AnimationOptions): Promise<import("./video/VideoCapture.js").AnimationResult> {
+        const {MediaRecorderCapture} = await import("./video/MediaRecorderCapture.js");
+
+        const capture = new MediaRecorderCapture();
+
+        // Set up progress event handler
+        const onProgress = (progress: number): void => {
+            this.eventManager.emitGraphEvent("animation-progress", {progress});
+        };
+
+        // Handle animated camera mode
+        if (options.cameraMode === "animated") {
+            return this.captureAnimatedCameraVideo(options, capture, onProgress);
+        }
+
+        // Capture stationary video
+        const result = await capture.captureRealtime(
+            this.canvas,
+            options,
+            onProgress,
+        );
+
+        // Handle download if requested
+        this.handleVideoDownload(result, options);
+
+        return result;
+    }
+
+    /**
+     * Capture video with animated camera path
+     */
+    private async captureAnimatedCameraVideo(
+        options: import("./video/VideoCapture.js").AnimationOptions,
+        capture: import("./video/MediaRecorderCapture.js").MediaRecorderCapture,
+        onProgress: (progress: number) => void,
+    ): Promise<import("./video/VideoCapture.js").AnimationResult> {
+        const {CameraPathAnimator} = await import("./video/CameraPathAnimator.js");
+
+        // Validate cameraPath is provided
+        if (!options.cameraPath || options.cameraPath.length < 2) {
+            throw new Error("Animated camera mode requires at least 2 waypoints in cameraPath");
+        }
+
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            throw new Error("No active camera available for animated capture");
+        }
+
+        const fps = options.fps ?? 30;
+
+        // Create camera path animator
+        const animator = new CameraPathAnimator(camera, this.scene, {
+            fps,
+            duration: options.duration,
+            easing: options.easing,
+        });
+
+        // Create animations from waypoints
+        animator.createCameraAnimations(options.cameraPath);
+
+        // Start recording and animation simultaneously
+        const recordingPromise = capture.captureRealtime(
+            this.canvas,
+            options,
+            onProgress,
+        );
+
+        // Start camera animation (will run concurrently with recording)
+        const animationPromise = animator.startRealtimeAnimation();
+
+        // Wait for both to complete
+        // Recording duration is controlled by options.duration
+        // Animation should complete around the same time
+        const [result] = await Promise.all([recordingPromise, animationPromise]);
+
+        // Handle download if requested
+        this.handleVideoDownload(result, options);
+
+        return result;
+    }
+
+    /**
+     * Handle video download if requested
+     */
+    private handleVideoDownload(
+        result: import("./video/VideoCapture.js").AnimationResult,
+        options: import("./video/VideoCapture.js").AnimationOptions,
+    ): void {
+        if (options.download) {
+            let filename = options.downloadFilename ?? `animation-${Date.now()}.webm`;
+
+            // Auto-fix extension based on actual format when using auto-detect
+            if (!options.format || options.format === "auto") {
+                const correctExtension = result.metadata.format;
+                // Replace any existing video extension with the correct one
+                filename = filename.replace(/\.(webm|mp4)$/i, `.${correctExtension}`);
+                // If no extension exists, add the correct one
+                if (!/\.(webm|mp4)$/i.exec(filename)) {
+                    filename += `.${correctExtension}`;
+                }
+            }
+
+            const url = URL.createObjectURL(result.blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    /**
+     * Cancel ongoing animation capture
+     */
+    cancelAnimationCapture(): void {
+        // Phase 7: Basic implementation - will be enhanced in later phases
+        throw new Error("Animation capture cancelled");
+    }
+
+    /**
+     * Estimate performance and potential issues for animation capture
+     *
+     * @param options - Animation options to estimate
+     * @returns Promise resolving to CaptureEstimate
+     *
+     * @example
+     * ```typescript
+     * const estimate = await graph.estimateAnimationCapture({
+     *   duration: 5000,
+     *   fps: 60,
+     *   width: 3840,
+     *   height: 2160
+     * });
+     *
+     * if (estimate.likelyToDropFrames) {
+     *   console.warn(`May drop frames. Recommended: ${estimate.recommendedFps}fps`);
+     * }
+     * ```
+     */
+    async estimateAnimationCapture(options: Pick<import("./video/VideoCapture.js").AnimationOptions, "duration" | "fps" | "width" | "height">): Promise<import("./video/estimation.js").CaptureEstimate> {
+        const {estimateAnimationCapture} = await import("./video/estimation.js");
+        return estimateAnimationCapture(options);
+    }
+
+    /**
      * Get the current camera state
      */
     getCameraState(): import("./screenshot/types.js").CameraState {
@@ -1183,7 +1407,7 @@ export class Graph implements GraphContext {
                 }
             },
             {
-                description: (options && options.description) || `Animating camera to ${resolvedState.position ? "position" : "state"}`,
+                description: options.description ?? `Animating camera to ${resolvedState.position ? "position" : "state"}`,
             },
         );
     }
@@ -1545,7 +1769,16 @@ export class Graph implements GraphContext {
         if (animations.length > 0) {
             orbitController.pivot.animations = animations;
 
-            await new Promise<void>((resolve, reject) => {
+            await new Promise<void>((resolve) => {
+                let settled = false;
+
+                const safeSettle = (): void => {
+                    if (!settled) {
+                        settled = true;
+                        resolve();
+                    }
+                };
+
                 this.scene.beginAnimation(
                     orbitController.pivot,
                     0,
@@ -1594,21 +1827,22 @@ export class Graph implements GraphContext {
                                 state: targetState,
                             });
 
-                            resolve();
+                            safeSettle();
                         };
 
                         void finalize();
                     },
                 );
 
-                // Handle cancellation via AbortSignal
+                // Handle cancellation via AbortSignal - just resolve (don't reject)
+                // to avoid unhandled promise rejections during cleanup
                 if (signal) {
                     signal.addEventListener("abort", () => {
                         // Stop the animation
                         this.scene.stopAnimation(orbitController.pivot);
-                        // Also stop distance animation if running
-                        // (distance animation handles its own cleanup)
-                        reject(new Error("Operation cancelled"));
+                        // Resolve instead of reject to prevent unhandled rejection during cleanup
+                        // The operation queue will handle the abort signal separately
+                        safeSettle();
                     }, {once: true});
                 }
             });
@@ -1773,9 +2007,24 @@ export class Graph implements GraphContext {
             return;
         }
 
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
+            let settled = false;
+            let observer: ReturnType<typeof this.scene.onBeforeRenderObservable.add> | null = null;
+
+            const safeSettle = (): void => {
+                if (!settled) {
+                    settled = true;
+                    // Cleanup observer
+                    if (observer) {
+                        this.scene.onBeforeRenderObservable.remove(observer);
+                    }
+
+                    resolve();
+                }
+            };
+
             // Create observer to update controller
-            const observer = this.scene.onBeforeRenderObservable.add(() => {
+            observer = this.scene.onBeforeRenderObservable.add(() => {
                 twoDController.camera.position.x = dummy.posX;
                 twoDController.camera.position.y = dummy.posY;
                 twoDController.camera.orthoLeft = dummy.orthoLeft;
@@ -1793,9 +2042,6 @@ export class Graph implements GraphContext {
                 false,
                 1.0,
                 () => {
-                    // Cleanup
-                    this.scene.onBeforeRenderObservable.remove(observer);
-
                     // Apply final values exactly from dummy (already calculated during animation)
                     if (targetState.pan) {
                         twoDController.camera.position.x = dummy.posX;
@@ -1813,39 +2059,22 @@ export class Graph implements GraphContext {
                         state: targetState,
                     });
 
-                    resolve();
+                    safeSettle();
                 },
             );
 
-            // Handle cancellation via AbortSignal
+            // Handle cancellation via AbortSignal - just resolve (don't reject)
+            // to avoid unhandled promise rejections during cleanup
             if (signal) {
                 signal.addEventListener("abort", () => {
                     // Stop the animation
                     animatable.stop();
-                    // Cleanup observer
-                    this.scene.onBeforeRenderObservable.remove(observer);
-                    reject(new Error("Operation cancelled"));
+                    // Resolve instead of reject to prevent unhandled rejection during cleanup
+                    // The operation queue will handle the abort signal separately
+                    safeSettle();
                 }, {once: true});
             }
         });
-    }
-
-    /**
-     * Resolve a camera preset to a camera state
-     */
-    resolveCameraPreset(preset: string): import("./screenshot/types.js").CameraState {
-        // For Phase 3, we only need basic fitToGraph support
-        // Full preset implementation will come in Phase 5
-        if (preset === "fitToGraph") {
-            // Return a simple state that positions camera to see all nodes
-            return {
-                position: {x: 50, y: 50, z: 50},
-                target: {x: 0, y: 0, z: 0},
-            };
-        }
-
-        // Return current state for unknown presets
-        return this.getCameraState();
     }
 
     /**
@@ -1917,6 +2146,136 @@ export class Graph implements GraphContext {
         this.initialCameraState ??= this.getCameraState();
 
         return this.initialCameraState;
+    }
+
+    /**
+     * Resolve a camera preset (built-in or user-defined) to a CameraState
+     */
+    resolveCameraPreset(preset: string): import("./screenshot/types.js").CameraState {
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            throw new Error("No active camera");
+        }
+
+        const is2D = camera.mode === Camera.ORTHOGRAPHIC_CAMERA;
+
+        // Check built-in presets first
+        switch (preset) {
+            case "fitToGraph":
+                return calculateFitToGraph(this, camera);
+
+            case "topView":
+                return calculateTopView(this, camera);
+
+            case "sideView":
+                if (is2D) {
+                    throw new ScreenshotError(
+                        "sideView preset is only available for 3D cameras",
+                        ScreenshotErrorCode.CAMERA_PRESET_NOT_AVAILABLE_IN_2D,
+                    );
+                }
+
+                return calculateSideView(this);
+
+            case "frontView":
+                if (is2D) {
+                    throw new ScreenshotError(
+                        "frontView preset is only available for 3D cameras",
+                        ScreenshotErrorCode.CAMERA_PRESET_NOT_AVAILABLE_IN_2D,
+                    );
+                }
+
+                return calculateFrontView(this);
+
+            case "isometric":
+                if (is2D) {
+                    throw new ScreenshotError(
+                        "isometric preset is only available for 3D cameras",
+                        ScreenshotErrorCode.CAMERA_PRESET_NOT_AVAILABLE_IN_2D,
+                    );
+                }
+
+                return calculateIsometric(this);
+
+            default: {
+                // Check user-defined presets
+                const userPreset = this.userCameraPresets.get(preset);
+                if (!userPreset) {
+                    throw new ScreenshotError(
+                        `Unknown camera preset: ${preset}`,
+                        ScreenshotErrorCode.CAMERA_PRESET_NOT_FOUND,
+                    );
+                }
+
+                return userPreset;
+            }
+        }
+    }
+
+    /**
+     * Save current camera state as a named preset
+     */
+    saveCameraPreset(name: string): void {
+        if (BUILTIN_PRESETS.includes(name as typeof BUILTIN_PRESETS[number])) {
+            throw new ScreenshotError(
+                `Cannot overwrite built-in preset: ${name}`,
+                ScreenshotErrorCode.CANNOT_OVERWRITE_BUILTIN_PRESET,
+            );
+        }
+
+        const currentState = this.getCameraState();
+        this.userCameraPresets.set(name, currentState);
+    }
+
+    /**
+     * Load a camera preset (built-in or user-defined)
+     */
+    async loadCameraPreset(name: string, options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
+        return this.setCameraState({preset: name} as {preset: string}, options);
+    }
+
+    /**
+     * Get all camera presets (built-in + user-defined)
+     */
+    getCameraPresets(): Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> {
+        const presets: Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> = {};
+
+        // Built-in presets (marked as builtin)
+        for (const name of BUILTIN_PRESETS) {
+            presets[name] = {builtin: true};
+        }
+
+        // User-defined presets
+        for (const [name, state] of this.userCameraPresets.entries()) {
+            presets[name] = state;
+        }
+
+        return presets;
+    }
+
+    /**
+     * Export user-defined presets as JSON
+     */
+    exportCameraPresets(): Record<string, import("./screenshot/types.js").CameraState> {
+        const exported: Record<string, import("./screenshot/types.js").CameraState> = {};
+        for (const [name, state] of this.userCameraPresets.entries()) {
+            exported[name] = state;
+        }
+        return exported;
+    }
+
+    /**
+     * Import user-defined presets from JSON
+     */
+    importCameraPresets(presets: Record<string, import("./screenshot/types.js").CameraState>): void {
+        for (const [name, state] of Object.entries(presets)) {
+            if (BUILTIN_PRESETS.includes(name as typeof BUILTIN_PRESETS[number])) {
+                console.warn(`Skipping import of built-in preset: ${name}`);
+                continue;
+            }
+
+            this.userCameraPresets.set(name, state);
+        }
     }
 
     /**

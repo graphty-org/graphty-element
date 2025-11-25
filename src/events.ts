@@ -67,7 +67,8 @@ export interface CameraStateChangedEvent {
 export interface GraphGenericEvent {
     type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded"
         | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
-        | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted";
+        | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted"
+        | "animation-progress";
     [key: string]: unknown;
 }
 

@@ -463,6 +463,101 @@ export class Graphty extends LitElement {
     }
 
     /**
+     * Phase 6: Capability Check API
+     * Check if screenshot can be captured with given options.
+     * Available from Phase 6 onwards.
+     *
+     * @param options - Screenshot options to validate
+     * @returns Promise<CapabilityCheck> - Result indicating whether screenshot is supported
+     *
+     * @example
+     * ```typescript
+     * const el = document.querySelector('graphty-element');
+     *
+     * // Check if 4x multiplier is supported
+     * const check = await el.canCaptureScreenshot({ multiplier: 4 });
+     * if (!check.supported) {
+     *   alert(`Cannot capture: ${check.reason}`);
+     * } else if (check.warnings) {
+     *   console.warn('Warnings:', check.warnings);
+     * }
+     * ```
+     */
+    async canCaptureScreenshot(options?: ScreenshotOptions): Promise<import("./screenshot/capability-check.js").CapabilityCheck> {
+        return this.#graph.canCaptureScreenshot(options);
+    }
+
+    /**
+     * Phase 7: Video Capture API
+     * Capture an animation as a video (stationary or animated camera)
+     * Available from Phase 7 onwards.
+     *
+     * @param options - Animation capture options
+     * @returns Promise<AnimationResult> - Result with video blob and metadata
+     *
+     * @example
+     * ```typescript
+     * const el = document.querySelector('graphty-element');
+     *
+     * // Basic 5-second video
+     * const result = await el.captureAnimation({
+     *   duration: 5000,
+     *   fps: 30,
+     *   cameraMode: 'stationary'
+     * });
+     *
+     * // With download
+     * const result = await el.captureAnimation({
+     *   duration: 10000,
+     *   fps: 60,
+     *   cameraMode: 'stationary',
+     *   download: true,
+     *   downloadFilename: 'my-video.webm'
+     * });
+     * ```
+     */
+    async captureAnimation(options: import("./video/VideoCapture.js").AnimationOptions): Promise<import("./video/VideoCapture.js").AnimationResult> {
+        return this.#graph.captureAnimation(options);
+    }
+
+    /**
+     * Phase 7: Cancel Animation Capture
+     * Cancel an ongoing animation capture
+     * Available from Phase 7 onwards.
+     */
+    cancelAnimationCapture(): void {
+        this.#graph.cancelAnimationCapture();
+    }
+
+    /**
+     * Phase 7: Animation Capture Estimation
+     * Estimate performance and potential issues for animation capture
+     * Available from Phase 7 onwards.
+     *
+     * @param options - Animation options to estimate
+     * @returns Promise<CaptureEstimate> - Estimation result
+     *
+     * @example
+     * ```typescript
+     * const el = document.querySelector("graphty-element");
+     *
+     * const estimate = await el.estimateAnimationCapture({
+     *   duration: 5000,
+     *   fps: 60,
+     *   width: 3840,
+     *   height: 2160
+     * });
+     *
+     * if (estimate.likelyToDropFrames) {
+     *   console.warn(`May drop frames. Try ${estimate.recommendedFps}fps instead.`);
+     * }
+     * ```
+     */
+    async estimateAnimationCapture(options: Pick<import("./video/VideoCapture.js").AnimationOptions, "duration" | "fps" | "width" | "height">): Promise<import("./video/estimation.js").CaptureEstimate> {
+        return this.#graph.estimateAnimationCapture(options);
+    }
+
+    /**
      * Phase 4: Camera State API
      */
 
@@ -478,68 +573,120 @@ export class Graphty extends LitElement {
      * Set camera state (supports both 2D and 3D)
      * @param state - Camera state to apply or preset name
      * @param options - Animation options
+     * @returns Promise that resolves when the camera state is applied (or animation completes)
      */
-    setCameraState(
+    async setCameraState(
         state: import("./screenshot/types.js").CameraState | {preset: string},
         options?: import("./screenshot/types.js").CameraAnimationOptions,
-    ): void {
-        void this.#graph.setCameraState(state, options);
+    ): Promise<void> {
+        return this.#graph.setCameraState(state, options);
     }
 
     /**
      * Set camera position (3D)
      * @param position - Target position {x, y, z}
      * @param options - Animation options
+     * @returns Promise that resolves when the position is applied (or animation completes)
      */
-    setCameraPosition(
+    async setCameraPosition(
         position: {x: number, y: number, z: number},
         options?: import("./screenshot/types.js").CameraAnimationOptions,
-    ): void {
-        void this.#graph.setCameraPosition(position, options);
+    ): Promise<void> {
+        return this.#graph.setCameraPosition(position, options);
     }
 
     /**
      * Set camera target (3D)
      * @param target - Target point to look at {x, y, z}
      * @param options - Animation options
+     * @returns Promise that resolves when the target is applied (or animation completes)
      */
-    setCameraTarget(
+    async setCameraTarget(
         target: {x: number, y: number, z: number},
         options?: import("./screenshot/types.js").CameraAnimationOptions,
-    ): void {
-        void this.#graph.setCameraTarget(target, options);
+    ): Promise<void> {
+        return this.#graph.setCameraTarget(target, options);
     }
 
     /**
      * Set camera zoom (2D)
      * @param zoom - Zoom level
      * @param options - Animation options
+     * @returns Promise that resolves when the zoom is applied (or animation completes)
      */
-    setCameraZoom(
+    async setCameraZoom(
         zoom: number,
         options?: import("./screenshot/types.js").CameraAnimationOptions,
-    ): void {
-        void this.#graph.setCameraZoom(zoom, options);
+    ): Promise<void> {
+        return this.#graph.setCameraZoom(zoom, options);
     }
 
     /**
      * Set camera pan (2D)
      * @param pan - Pan position {x, y}
      * @param options - Animation options
+     * @returns Promise that resolves when the pan is applied (or animation completes)
      */
-    setCameraPan(
+    async setCameraPan(
         pan: {x: number, y: number},
         options?: import("./screenshot/types.js").CameraAnimationOptions,
-    ): void {
-        void this.#graph.setCameraPan(pan, options);
+    ): Promise<void> {
+        return this.#graph.setCameraPan(pan, options);
     }
 
     /**
      * Reset camera to default position
      * @param options - Animation options
+     * @returns Promise that resolves when the reset is applied (or animation completes)
      */
-    resetCamera(options?: import("./screenshot/types.js").CameraAnimationOptions): void {
-        void this.#graph.resetCamera(options);
+    async resetCamera(options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
+        return this.#graph.resetCamera(options);
+    }
+
+    /**
+     * Save current camera state as a named preset
+     * Available from Phase 5 onwards
+     * @param name - Name for the preset
+     */
+    saveCameraPreset(name: string): void {
+        this.#graph.saveCameraPreset(name);
+    }
+
+    /**
+     * Load a camera preset (built-in or user-defined)
+     * Available from Phase 5 onwards
+     * @param name - Name of the preset to load
+     * @param options - Animation options
+     */
+    async loadCameraPreset(name: string, options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
+        return this.#graph.loadCameraPreset(name, options);
+    }
+
+    /**
+     * Get all camera presets (built-in + user-defined)
+     * Available from Phase 5 onwards
+     * @returns Record of preset names to their state (built-in presets are marked)
+     */
+    getCameraPresets(): Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> {
+        return this.#graph.getCameraPresets();
+    }
+
+    /**
+     * Export user-defined presets as JSON
+     * Available from Phase 5 onwards
+     * @returns Record of user-defined preset names to their state
+     */
+    exportCameraPresets(): Record<string, import("./screenshot/types.js").CameraState> {
+        return this.#graph.exportCameraPresets();
+    }
+
+    /**
+     * Import user-defined presets from JSON
+     * Available from Phase 5 onwards
+     * @param presets - Record of preset names to their state
+     */
+    importCameraPresets(presets: Record<string, import("./screenshot/types.js").CameraState>): void {
+        this.#graph.importCameraPresets(presets);
     }
 
     /**

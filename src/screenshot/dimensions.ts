@@ -91,7 +91,7 @@ export function validateDimensions(width: number, height: number): void {
     // Check individual dimension limits
     if (width > BROWSER_LIMITS.MAX_DIMENSION || height > BROWSER_LIMITS.MAX_DIMENSION) {
         throw new ScreenshotError(
-            `Dimension too large: ${width}x${height}. Maximum dimension is ${BROWSER_LIMITS.MAX_DIMENSION}px.`,
+            `Dimension ${width}x${height} exceeds browser limit of ${BROWSER_LIMITS.MAX_DIMENSION}px.`,
             ScreenshotErrorCode.DIMENSION_TOO_LARGE,
             {
                 width,

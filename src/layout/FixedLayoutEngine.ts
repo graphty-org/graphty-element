@@ -24,6 +24,16 @@ export class FixedLayout extends SimpleLayoutEngine {
         // Use default scaling factor from parent class
     }
 
+    override addNode(n: import("../Node.js").Node): void {
+        super.addNode(n);
+        // For fixed layout, apply position immediately when node is added
+        const nodeData = n.data as Record<string, unknown>;
+        const position = nodeData.position as {x?: number, y?: number, z?: number} | undefined;
+        if (position) {
+            n.mesh.position.set(position.x ?? 0, position.y ?? 0, position.z ?? 0);
+        }
+    }
+
     doLayout(): void {
         this.stale = false;
         // Read positions from node data
@@ -32,16 +42,23 @@ export class FixedLayout extends SimpleLayoutEngine {
         for (const node of this._nodes) {
             const nodeData = node.data as Record<string, unknown>;
             const position = nodeData.position as {x?: number, y?: number, z?: number} | undefined;
+
+            let pos: number[];
             if (position) {
-                positions[node.id] = [
+                pos = [
                     position.x ?? 0,
                     position.y ?? 0,
                     position.z ?? 0,
                 ];
             } else {
                 // Default position if not specified
-                positions[node.id] = [0, 0, 0];
+                pos = [0, 0, 0];
             }
+
+            positions[node.id] = pos;
+
+            // Apply position directly to node mesh
+            node.mesh.position.set(pos[0], pos[1], pos[2]);
         }
 
         this.positions = positions;
