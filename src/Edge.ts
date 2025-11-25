@@ -5,8 +5,12 @@ import {
     Vector3,
 } from "@babylonjs/core";
 import * as jmespath from "jmespath";
+import _ from "lodash";
 
+import {CalculatedValue} from "./CalculatedValue";
+import {ChangeManager} from "./ChangeManager";
 import type {AdHocData, EdgeStyleConfig} from "./config";
+import {EdgeStyle} from "./config";
 import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
@@ -33,11 +37,6 @@ interface EdgeOpts {
     metadata?: object;
 }
 
-// Extend Ray type to include position property
-interface RayWithPosition extends Ray {
-    position: Vector3;
-}
-
 export class Edge {
     parentGraph: Graph | GraphContext;
     opts: EdgeOpts;
@@ -47,6 +46,8 @@ export class Edge {
     dstNode: Node;
     srcNode: Node;
     data: AdHocData;
+    algorithmResults: AdHocData;
+    styleUpdates: AdHocData;
     mesh: AbstractMesh | PatternedLineMesh; // PHASE 5: Support both solid lines and patterned lines
     arrowMesh: AbstractMesh | null = null;
     arrowTailMesh: AbstractMesh | null = null;
@@ -54,6 +55,7 @@ export class Edge {
     // XXX: performance impact when not needed?
     ray: Ray;
     label: RichTextLabel | null = null;
+    changeManager: ChangeManager;
     private _loggedLineDirection = false; // Debug flag for logging lineDirection
 
     // Dirty tracking: Cache last node positions to skip unnecessary updates
@@ -78,8 +80,12 @@ export class Edge {
         this.srcId = srcNodeId;
         this.dstId = dstNodeId;
         this.id = `${srcNodeId}:${dstNodeId}`;
-        this.data = data;
         this.opts = opts;
+        this.changeManager = new ChangeManager();
+        this.data = this.changeManager.watch("data", data);
+        this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
+        this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData, EdgeStyle);
+        this.changeManager.loadCalculatedValues(this.context.getStyleManager().getStyles().getCalculatedStylesForEdge(data), true);
 
         // make sure both srcNode and dstNode already exist
         const srcNode = this.context.getDataManager().nodeCache.get(srcNodeId);
@@ -167,8 +173,28 @@ export class Edge {
         }
     }
 
+    addCalculatedStyle(cv: CalculatedValue): void {
+        this.changeManager.addCalculatedValue(cv);
+    }
+
     update(): void {
         this.context.getStatsManager().startMeasurement("Edge.update");
+
+        // Process style updates from calculated values
+        const newStyleKeys = Object.keys(this.styleUpdates);
+        if (newStyleKeys.length > 0) {
+            let style = Styles.getStyleForEdgeStyleId(this.styleId);
+            // Convert styleUpdates Proxy to plain object for proper merging
+            // (styleUpdates is wrapped by on-change library's Proxy)
+            const plainStyleUpdates = _.cloneDeep(this.styleUpdates);
+            style = _.defaultsDeep(plainStyleUpdates, style);
+            const styleId = Styles.getEdgeIdForStyle(style);
+            this.updateStyle(styleId);
+            for (const key of newStyleKeys) {
+                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                delete this.styleUpdates[key];
+            }
+        }
 
         const lnk = this.context.getLayoutManager().layoutEngine?.getEdgePosition(this);
         if (!lnk) {
@@ -358,8 +384,9 @@ export class Edge {
 
             // RayHelper.CreateAndShow(ray, e.parentGraph.scene, Color3.Red());
 
-            // XXX: position is missing from Ray TypeScript definition
-            (e.ray as RayWithPosition).position = dstMesh.position;
+            // Update ray origin and direction to match current mesh positions
+            // The ray starts at the source node and points toward the destination node
+            e.ray.origin = srcMesh.position;
             e.ray.direction = dstMesh.position.subtract(srcMesh.position);
         }
 

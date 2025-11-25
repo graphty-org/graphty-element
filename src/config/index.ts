@@ -8,5 +8,8 @@ export type {NodeStyleConfig} from "./NodeStyle";
 export {defaultNodeStyle, NodeStyle} from "./NodeStyle";
 export type {RichTextStyleType} from "./RichTextStyle";
 export {RichTextStyle} from "./RichTextStyle";
+export type {StyleHelpersType} from "./StyleHelpers";
+export {StyleHelpers} from "./StyleHelpers";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";
+export type {ApplySuggestedStylesOptions, SuggestedStyleLayer, SuggestedStyleLayerMetadata, SuggestedStylesConfig, SuggestedStylesProvider} from "./SuggestedStyles";

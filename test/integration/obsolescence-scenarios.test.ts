@@ -97,20 +97,29 @@ describe("Obsolescence Scenarios", () => {
             {description: "Set layout"},
         );
 
-        // Wait for layout-set to start
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        // Start a layout operation that will reach high progress
+        // Use a signal to coordinate when we reach high progress
+        let signalHighProgress: () => void;
+        const highProgressReached = new Promise<void>((resolve) => {
+            signalHighProgress = resolve;
+        });
 
-        // Start a layout operation that will be near completion
-        const layoutOp = queueManager.queueOperation(
+        const layoutOpId = queueManager.queueOperation(
             "layout-update",
             async(context) => {
-                // Quickly get to 95% progress
+                // Progress through to 95%
                 for (let i = 0; i <= 95; i += 5) {
                     if (context.signal.aborted) {
                         throw new Error("AbortError");
                     }
 
                     context.progress.setProgress(i);
+
+                    // Signal when we reach 95% progress (which is > 90 threshold)
+                    if (i === 95) {
+                        signalHighProgress();
+                    }
+
                     await new Promise((resolve) => setTimeout(resolve, 2));
                 }
 
@@ -121,8 +130,9 @@ describe("Obsolescence Scenarios", () => {
             {description: "Nearly complete layout"},
         );
 
-        // Wait for layout to reach high progress - give it more time
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // Wait until the layout has ACTUALLY reached >90% progress
+        // This eliminates the race condition from using arbitrary timeouts
+        await highProgressReached;
 
         // Queue a data operation that would normally obsolete the layout
         queueManager.queueOperation(
@@ -145,7 +155,7 @@ describe("Obsolescence Scenarios", () => {
 
         // Layout should not be in obsoleted list
         assert.isFalse(
-            obsoletedOperations.includes(layoutOp),
+            obsoletedOperations.includes(layoutOpId),
             "Near-complete layout should not be obsoleted",
         );
     });

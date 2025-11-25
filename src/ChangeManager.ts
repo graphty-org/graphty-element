@@ -5,7 +5,7 @@ import {CalculatedValue} from "./CalculatedValue";
 import {AdHocData} from "./config";
 
 export class ChangeManager {
-    readonly watchedInputs = new Map<string, CalculatedValue>();
+    readonly watchedInputs = new Map<string, Set<CalculatedValue>>();
     readonly dataObjects: Record<string, AdHocData | undefined> = {};
     readonly calculatedValues = new Set<CalculatedValue>();
     readonly schemas: Record<string, z4.$ZodType | undefined> = {};
@@ -22,14 +22,17 @@ export class ChangeManager {
                 return;
             }
 
-            // see if this data change triggers a calculated value,
-            // and run the calculated value if it does
-            const cv = this.watchedInputs.get(`${dataType}.${path}`);
-            // console.log("onChange:", this.watchedInputs, `${dataType}.${path}`, cv);
-            if (cv) {
-                // find schema for validation, if it exists
-                const s = getSchema(this.schemas, cv.output);
-                cv.run(this.dataObjects as unknown as AdHocData, s);
+            // see if this data change triggers calculated values,
+            // and run the calculated values if it does
+            const cvs = this.watchedInputs.get(`${dataType}.${path}`);
+            // console.log("onChange:", this.watchedInputs, `${dataType}.${path}`, cvs);
+            if (cvs) {
+                // Run ALL calculated values watching this input path
+                for (const cv of cvs) {
+                    // find schema for validation, if it exists
+                    const s = getSchema(this.schemas, cv.output);
+                    cv.run(this.dataObjects as unknown as AdHocData, s);
+                }
             }
         });
 
@@ -53,7 +56,15 @@ export class ChangeManager {
     addCalculatedValue(cv: CalculatedValue): void {
         this.calculatedValues.add(cv);
 
-        cv.inputs.forEach((i) => this.watchedInputs.set(i, cv));
+        // Add this calculated value to the set of CVs watching each input
+        cv.inputs.forEach((i) => {
+            let cvSet = this.watchedInputs.get(i);
+            if (!cvSet) {
+                cvSet = new Set<CalculatedValue>();
+                this.watchedInputs.set(i, cvSet);
+            }
+            cvSet.add(cv);
+        });
     }
 
     addCalculatedValues(cvs: CalculatedValue[]): void {
@@ -62,9 +73,26 @@ export class ChangeManager {
         });
     }
 
-    loadCalculatedValues(cvs: CalculatedValue[]): void {
+    loadCalculatedValues(cvs: CalculatedValue[], runImmediately = false): void {
         this.watchedInputs.clear();
         this.addCalculatedValues(cvs);
+
+        // Optionally run all calculated values immediately
+        // This is needed when calculated values are loaded after their input data is already populated
+        if (runImmediately) {
+            this.runAllCalculatedValues();
+        }
+    }
+
+    /**
+     * Run all calculated values immediately
+     * This is needed when calculated values are loaded after their input data is already populated
+     */
+    runAllCalculatedValues(): void {
+        for (const cv of this.calculatedValues) {
+            const s = getSchema(this.schemas, cv.output);
+            cv.run(this.dataObjects as unknown as AdHocData, s);
+        }
     }
 }
 

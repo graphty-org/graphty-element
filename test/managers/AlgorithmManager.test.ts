@@ -28,9 +28,15 @@ describe("AlgorithmManager", () => {
             emitGraphEvent: vi.fn(),
         } as unknown as EventManager;
 
-        // Create mock graph
+        // Create mock graph with getDataManager method
         mockGraph = {
             id: "test-graph",
+            getDataManager: vi.fn().mockReturnValue({
+                nodes: new Map(),
+                edges: new Map(),
+                applyStylesToExistingNodes: vi.fn(),
+                applyStylesToExistingEdges: vi.fn(),
+            }),
         } as unknown as Graph;
 
         // Create mock algorithm

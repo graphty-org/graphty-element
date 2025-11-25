@@ -45,18 +45,18 @@ export class StyleManager implements Manager {
     /**
      * Get style ID for a node, with caching
      */
-    getStyleForNode(data: AdHocData): NodeStyleId {
+    getStyleForNode(data: AdHocData, algorithmResults?: AdHocData): NodeStyleId {
         if (!this.cacheEnabled) {
-            return this.styles.getStyleForNode(data);
+            return this.styles.getStyleForNode(data, algorithmResults);
         }
 
-        const cacheKey = this.createCacheKey(data);
+        const cacheKey = this.createCacheKey(data, algorithmResults);
         const cached = this.nodeStyleCache.get(cacheKey);
         if (cached !== undefined) {
             return cached;
         }
 
-        const styleId = this.styles.getStyleForNode(data);
+        const styleId = this.styles.getStyleForNode(data, algorithmResults);
         this.nodeStyleCache.set(cacheKey, styleId);
         return styleId;
     }
@@ -72,18 +72,18 @@ export class StyleManager implements Manager {
     /**
      * Get style ID for an edge, with caching
      */
-    getStyleForEdge(data: AdHocData): EdgeStyleId {
+    getStyleForEdge(data: AdHocData, algorithmResults?: AdHocData): EdgeStyleId {
         if (!this.cacheEnabled) {
-            return this.styles.getStyleForEdge(data);
+            return this.styles.getStyleForEdge(data, algorithmResults);
         }
 
-        const cacheKey = this.createCacheKey(data);
+        const cacheKey = this.createCacheKey(data, algorithmResults);
         const cached = this.edgeStyleCache.get(cacheKey);
         if (cached !== undefined) {
             return cached;
         }
 
-        const styleId = this.styles.getStyleForEdge(data);
+        const styleId = this.styles.getStyleForEdge(data, algorithmResults);
         this.edgeStyleCache.set(cacheKey, styleId);
         return styleId;
     }
@@ -118,6 +118,17 @@ export class StyleManager implements Manager {
         this.styles.insertLayer(position, layer);
         this.clearCache();
         this.eventManager.emitGraphEvent("style-changed", {});
+    }
+
+    /**
+     * Remove style layers matching a metadata predicate
+     */
+    removeLayersByMetadata(predicate: (metadata: unknown) => boolean): void {
+        const removed = this.styles.removeLayersByMetadata(predicate);
+        if (removed) {
+            this.clearCache();
+            this.eventManager.emitGraphEvent("style-changed", {});
+        }
     }
 
     /**
@@ -166,11 +177,15 @@ export class StyleManager implements Manager {
     }
 
     /**
-     * Create a cache key from node/edge data
+     * Create a cache key from node/edge data and algorithmResults
      * This is a simple implementation - could be optimized
      */
-    private createCacheKey(data: AdHocData): string {
+    private createCacheKey(data: AdHocData, algorithmResults?: AdHocData): string {
         // Use JSON stringify for now - could be optimized with a hash function
+        if (algorithmResults) {
+            return JSON.stringify({data, algorithmResults});
+        }
+
         return JSON.stringify(data);
     }
 }

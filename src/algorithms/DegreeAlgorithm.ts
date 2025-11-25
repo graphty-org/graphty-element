@@ -1,8 +1,33 @@
+import {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 
 export class DegreeAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "degree";
+
+    static suggestedStyles = (): SuggestedStylesConfig => ({
+        layers: [
+            {
+                node: {
+                    selector: "",
+                    style: {
+                        enabled: true,
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.degree.degreePct"],
+                        output: "style.texture.color",
+                        expr: "{ return StyleHelpers.color.sequential.viridis(arguments[0]) }",
+                    },
+                },
+                metadata: {
+                    name: "Degree - Viridis Gradient",
+                    description: "Purple (low) → Yellow (high) - colorblind-safe",
+                },
+            },
+        ],
+        description: "Visualizes node importance through color based on connection count",
+        category: "node-metric",
+    });
 
     // eslint-disable-next-line @typescript-eslint/require-await
     async run(): Promise<void> {
@@ -43,3 +68,6 @@ export class DegreeAlgorithm extends Algorithm {
         }
     }
 }
+
+// Auto-register this algorithm when the module is imported
+Algorithm.register(DegreeAlgorithm);

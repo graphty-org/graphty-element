@@ -153,6 +153,13 @@ export default tseslint.config(
             "consistent-return": "error", // either always return a value, or don't
             "@stylistic/wrap-iife": ["error", "inside"], // prevent weird IIFE errors
             "@stylistic/no-mixed-operators": ["error", {allowSamePrecedence: true}], // don't mix && and ||
+            "no-restricted-syntax": [ // prevent architectural violations
+                "error",
+                {
+                    selector: "MemberExpression[property.name=\"layers\"] CallExpression[callee.property.name=/^(push|splice|unshift|pop|shift)$/]",
+                    message: "Do not mutate layers directly. Use StyleManager.addLayer() or StyleManager.insertLayer().",
+                },
+            ],
         },
     },
     {

@@ -22,6 +22,13 @@ export interface QueueableOptions {
     respectProgress?: boolean;
 }
 
+export interface RunAlgorithmOptions extends QueueableOptions {
+    /**
+     * Automatically apply suggested styles after running the algorithm
+     */
+    applySuggestedStyles?: boolean;
+}
+
 /**
  * Helper to wrap a method with queue support while maintaining backwards compatibility
  */

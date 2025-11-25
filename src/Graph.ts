@@ -14,12 +14,15 @@ import {
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
+import {Algorithm} from "./algorithms/Algorithm";
 import {type CameraController, type CameraKey, CameraManager} from "./cameras/CameraManager";
 import {
     AdHocData,
+    ApplySuggestedStylesOptions,
     FetchEdgesFn,
     FetchNodesFn,
     StyleSchema,
+    SuggestedStylesConfig,
 } from "./config";
 import {
     EventCallbackType,
@@ -29,7 +32,7 @@ import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type G
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
 import {Styles} from "./Styles";
-import type {QueueableOptions} from "./utils/queue-migration";
+import type {QueueableOptions, RunAlgorithmOptions} from "./utils/queue-migration";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
@@ -314,6 +317,11 @@ export class Graph implements GraphContext {
     async runAlgorithmsFromTemplate(): Promise<void> {
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
             await this.algorithmManager.runAlgorithmsFromTemplate(this.styles.config.data.algorithms);
+
+            // Trigger calculated values after algorithms populate data
+            for (const node of this.dataManager.nodes.values()) {
+                node.changeManager.runAllCalculatedValues();
+            }
         }
     }
 
@@ -646,9 +654,14 @@ export class Graph implements GraphContext {
         );
     }
 
-    async runAlgorithm(namespace: string, type: string, options?: QueueableOptions): Promise<void> {
+    async runAlgorithm(namespace: string, type: string, options?: RunAlgorithmOptions): Promise<void> {
         if (options?.skipQueue) {
             await this.algorithmManager.runAlgorithm(namespace, type);
+
+            if (options.applySuggestedStyles) {
+                this.applySuggestedStyles(`${namespace}:${type}`);
+            }
+
             return;
         }
 
@@ -660,12 +673,119 @@ export class Graph implements GraphContext {
                 }
 
                 await this.algorithmManager.runAlgorithm(namespace, type);
+                if (options?.applySuggestedStyles) {
+                    this.applySuggestedStyles(`${namespace}:${type}`);
+                }
             },
             {
                 description: `Running ${namespace}:${type} algorithm`,
                 ... options,
             },
         );
+    }
+
+    /**
+     * Apply suggested styles from an algorithm
+     * @param algorithmKey - Algorithm key (e.g., "graphty:degree") or array of keys
+     * @param options - Options for applying suggested styles
+     * @returns true if any styles were applied, false otherwise
+     */
+    applySuggestedStyles(
+        algorithmKey: string | string[],
+        options?: ApplySuggestedStylesOptions,
+    ): boolean {
+        const keys = Array.isArray(algorithmKey) ? algorithmKey : [algorithmKey];
+        let applied = false;
+
+        for (const key of keys) {
+            const [namespace, type] = key.split(":");
+            const AlgorithmClass = Algorithm.getClass(namespace, type);
+
+            if (!AlgorithmClass || !AlgorithmClass.hasSuggestedStyles()) {
+                continue;
+            }
+
+            const suggestedStyles = AlgorithmClass.getSuggestedStyles();
+            if (suggestedStyles) {
+                this.#applyStyleLayers(suggestedStyles, key, options);
+                applied = true;
+            }
+        }
+
+        return applied;
+    }
+
+    /**
+     * Get suggested styles without applying them
+     * @param algorithmKey - Algorithm key (e.g., "graphty:degree")
+     * @returns Suggested styles config or null if none exist
+     */
+    getSuggestedStyles(algorithmKey: string): SuggestedStylesConfig | null {
+        const [namespace, type] = algorithmKey.split(":");
+        const AlgorithmClass = Algorithm.getClass(namespace, type);
+        return AlgorithmClass?.getSuggestedStyles() ?? null;
+    }
+
+    /**
+     * Private helper to apply style layers from suggested styles
+     */
+    #applyStyleLayers(
+        suggestedStyles: SuggestedStylesConfig,
+        algorithmKey: string,
+        options?: ApplySuggestedStylesOptions,
+    ): void {
+        const {layers} = suggestedStyles;
+        const {
+            position = "append",
+            mode = "merge",
+            layerPrefix = "",
+            enabledStyles,
+        } = options ?? {};
+
+        // If mode is replace, remove existing algorithm-sourced layers
+        if (mode === "replace") {
+            this.styleManager.removeLayersByMetadata((metadata) => {
+                const typedMetadata = metadata as {algorithmSource?: string} | undefined;
+                return typedMetadata?.algorithmSource === algorithmKey;
+            });
+        }
+
+        // Filter layers by enabledStyles if provided
+        const filteredLayers = enabledStyles ?
+            layers.filter((layer) => {
+                const name = layer.metadata?.name;
+                return name && enabledStyles.includes(name);
+            }) :
+            layers;
+
+        // Add metadata to track algorithm source
+        const enhancedLayers = filteredLayers.map((layer) => ({
+            ... layer,
+            metadata: {
+                ... layer.metadata,
+                name: layerPrefix + (layer.metadata?.name ?? ""),
+                algorithmSource: algorithmKey,
+            },
+        }));
+
+        // Apply layers based on position using StyleManager methods
+        // This automatically handles cache clearing and event emission
+        if (position === "prepend") {
+            // Insert at the beginning by inserting in reverse order
+            for (let i = enhancedLayers.length - 1; i >= 0; i--) {
+                this.styleManager.insertLayer(0, enhancedLayers[i]);
+            }
+        } else if (position === "append") {
+            // Add to the end
+            for (const layer of enhancedLayers) {
+                this.styleManager.addLayer(layer);
+            }
+        } else if (typeof position === "number") {
+            // Insert at specific position
+            for (let i = 0; i < enhancedLayers.length; i++) {
+                this.styleManager.insertLayer(position + i, enhancedLayers[i]);
+            }
+        }
     }
 
     async removeNodes(nodeIds: (string | number)[], options?: QueueableOptions): Promise<void> {
@@ -697,7 +817,7 @@ export class Graph implements GraphContext {
                 if (node) {
                     Object.assign(node.data, update);
                     // Recompute style after data update
-                    const styleId = this.styles.getStyleForNode(node.data);
+                    const styleId = this.styles.getStyleForNode(node.data, node.algorithmResults);
                     node.updateStyle(styleId);
                 }
             });
@@ -716,7 +836,7 @@ export class Graph implements GraphContext {
                     if (node) {
                         Object.assign(node.data, update);
                         // Recompute style after data update
-                        const styleId = this.styles.getStyleForNode(node.data);
+                        const styleId = this.styles.getStyleForNode(node.data, node.algorithmResults);
                         node.updateStyle(styleId);
                     }
                 });

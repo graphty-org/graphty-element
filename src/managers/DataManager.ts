@@ -71,10 +71,11 @@ export class DataManager implements Manager {
     /**
      * Apply styles to all existing nodes
      */
-    private applyStylesToExistingNodes(): void {
+    applyStylesToExistingNodes(): void {
         for (const n of this.nodes.values()) {
-            const styleId = this.styles.getStyleForNode(n.data);
-            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
+            const styleId = this.styles.getStyleForNode(n.data, n.algorithmResults);
+            // Run calculated values immediately since node data (including algorithmResults) is already populated
+            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data), true);
             n.updateStyle(styleId);
         }
     }
@@ -82,9 +83,9 @@ export class DataManager implements Manager {
     /**
      * Apply styles to all existing edges
      */
-    private applyStylesToExistingEdges(): void {
+    applyStylesToExistingEdges(): void {
         for (const e of this.edges.values()) {
-            const styleId = this.styles.getStyleForEdge(e.data);
+            const styleId = this.styles.getStyleForEdge(e.data, e.algorithmResults);
             e.updateStyle(styleId);
         }
     }

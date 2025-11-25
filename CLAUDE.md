@@ -173,6 +173,25 @@ When you write unit tests with vitest, prefer `assert` over `expect`.
 ## Development Best Practices
 
 - Always create unit tests when you write new core functionality
+- **Algorithm Registration**: All algorithm classes must auto-register at the end of their module file to ensure they work correctly in both production and test environments:
+  ```typescript
+  export class MyAlgorithm extends Algorithm {
+      static namespace = "my-namespace";
+      static type = "my-type";
+      // ... implementation
+  }
+
+  // Auto-register this algorithm when the module is imported
+  Algorithm.register(MyAlgorithm);
+  ```
+  This pattern ensures algorithms are automatically available when imported, preventing test isolation issues.
+
+## Common Pitfalls
+
+**Manager Pattern**: This codebase uses Manager classes to handle operations with side effects (caching, events, validation). Always use manager methods instead of directly manipulating managed data structures:
+- ✅ `styleManager.addLayer(layer)` - correct: uses manager method
+- ❌ `graph.styles.layers.push(layer)` - wrong: bypasses cache invalidation and event emission
+- Applies to: StyleManager, DataManager, LayoutManager, AlgorithmManager, etc.
 
 ## Debugging with Screenshots
 
