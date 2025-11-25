@@ -4,7 +4,7 @@ import {assert, test} from "vitest";
 import {PatternedLineRenderer} from "../../src/meshes/PatternedLineRenderer";
 
 // Setup helper
-function createTestScene(): {scene: Scene; engine: Engine; cleanup: () => void} {
+function createTestScene(): {scene: Scene, engine: Engine, cleanup: () => void} {
     const canvas = document.createElement("canvas");
     const engine = new Engine(canvas, false);
     const scene = new Scene(engine);

@@ -16,8 +16,8 @@
 
 /* eslint-disable no-console */
 
-import {chromium, type Browser, type Page} from "playwright";
 import {resolve} from "path";
+import {type Browser, chromium, type Page} from "playwright";
 
 const STORYBOOK_URL = "http://dev.ato.ms:9025";
 const TMP_DIR = resolve(process.cwd(), "tmp");

@@ -178,7 +178,7 @@ describe("EdgeMesh", () => {
 
     describe("Helper Methods", () => {
         test("calculateArrowWidth returns default constant", () => {
-            assert.equal(EdgeMesh.calculateArrowWidth(), 5.0); // DEFAULT_ARROW_WIDTH
+            assert.equal(EdgeMesh.calculateArrowWidth(), 1.25); // DEFAULT_ARROW_WIDTH
         });
 
         test("calculateArrowLength returns default constant", () => {

@@ -325,8 +325,8 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 } else if (t.layers) {
                     deepSet(t, `layers[0].node.style.${name}`, val);
                 }
-            } else if (name.startsWith("line.") || name.startsWith("arrowHead.") || name.startsWith("arrowTail.")) {
-                // For edge properties (including tail)
+            } else if (name.startsWith("line.") || name.startsWith("arrowHead.") || name.startsWith("arrowTail.") || name.startsWith("tooltip.")) {
+                // For edge properties (including tail and tooltip)
                 if (t.edgeStyle) {
                     deepSet(t, `edgeStyle.${name}`, val);
                 } else if (t.layers) {

@@ -55,6 +55,8 @@ export class Edge {
     // XXX: performance impact when not needed?
     ray: Ray;
     label: RichTextLabel | null = null;
+    arrowHeadText: RichTextLabel | null = null;
+    arrowTailText: RichTextLabel | null = null;
     private _loggedLineDirection = false; // Debug flag for logging lineDirection
 
     // Dirty tracking: Cache last node positions to skip unnecessary updates
@@ -113,7 +115,6 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
-        // console.log("Edge constructor: creating arrowMesh, arrowHead type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(this.styleId),
@@ -125,12 +126,9 @@ export class Edge {
                 opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
-            style, // Pass style for 2D detection
         );
-        // console.log("Edge constructor: arrowMesh assigned:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // create arrow tail mesh if needed
-        // console.log("Edge constructor: creating arrowTailMesh, arrowTail type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(this.styleId)}-tail`,
@@ -142,7 +140,6 @@ export class Edge {
                 opacity: style.arrowTail?.opacity,
             },
             this.context.getScene(),
-            style, // Pass style for 2D detection
         );
         // console.log("Edge constructor: arrowTailMesh assigned:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
@@ -167,6 +164,16 @@ export class Edge {
         // create label if configured
         if (style.label?.enabled) {
             this.label = this.createLabel(style);
+        }
+
+        // create arrow head text if configured
+        if (style.arrowHead?.text) {
+            this.arrowHeadText = this.createArrowText(style.arrowHead.text, "arrowHead");
+        }
+
+        // create arrow tail text if configured
+        if (style.arrowTail?.text) {
+            this.arrowTailText = this.createArrowText(style.arrowTail.text, "arrowTail");
         }
     }
 
@@ -206,17 +213,42 @@ export class Edge {
         // console.log("Edge.update: Performing update (nodes moved)");
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
+        const finalSrcPoint = srcPoint ?? new Vector3(lnk.src.x, lnk.src.y, lnk.src.z);
+        const finalDstPoint = dstPoint ?? new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z);
 
-        if (srcPoint && dstPoint) {
-            this.transformEdgeMesh(
-                srcPoint,
-                dstPoint,
+        // PHASE 5: Bezier curves need geometry recreation (can't transform)
+        const style = Styles.getStyleForEdgeStyleId(this.styleId);
+        if (style.line?.bezier) {
+            // Dispose old mesh
+            const vertexCount = this.mesh instanceof PatternedLineMesh ? '(PatternedLineMesh)' : this.mesh.getTotalVertices();
+            console.log("[Edge.update] Disposing old mesh for bezier curve, vertices:", vertexCount);
+            if (this.mesh instanceof PatternedLineMesh) {
+                this.mesh.dispose();
+            } else if (!this.mesh.isDisposed()) {
+                this.mesh.dispose();
+            }
+
+            // Create new bezier mesh with current positions
+            console.log("[Edge.update] Creating new bezier mesh from", finalSrcPoint, "to", finalDstPoint);
+            this.mesh = EdgeMesh.create(
+                this.context.getMeshCache(),
+                {
+                    styleId: String(this.styleId),
+                    width: style.line.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
+                    color: style.line.color ?? "#FFFFFF",
+                },
+                style,
+                this.context.getScene(),
+                finalSrcPoint,
+                finalDstPoint,
             );
+
+            this.mesh.isPickable = false;
+            this.mesh.metadata = this.mesh.metadata ?? {};
+            this.mesh.metadata.parentEdge = this;
         } else {
-            this.transformEdgeMesh(
-                new Vector3(lnk.src.x, lnk.src.y, lnk.src.z),
-                new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z),
-            );
+            // Non-bezier edges: Transform existing mesh
+            this.transformEdgeMesh(finalSrcPoint, finalDstPoint);
         }
 
         // Update label position if exists
@@ -227,6 +259,16 @@ export class Edge {
                 ((lnk.src.z ?? 0) + (lnk.dst.z ?? 0)) / 2,
             );
             this.label.attachTo(midPoint, "center", 0);
+        }
+
+        // Update arrow head text position if exists
+        if (this.arrowHeadText && this.arrowMesh) {
+            this.arrowHeadText.attachTo(this.arrowMesh.position, "top", 0.3);
+        }
+
+        // Update arrow tail text position if exists
+        if (this.arrowTailText && this.arrowTailMesh) {
+            this.arrowTailText.attachTo(this.arrowTailMesh.position, "top", 0.3);
         }
 
         // Cache positions for next frame
@@ -266,12 +308,10 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
-        // console.log("Edge.updateStyle: disposing old arrowMesh:", this.arrowMesh?.name);
         if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
             this.arrowMesh.dispose();
         }
 
-        // console.log("Edge.updateStyle: creating new arrowMesh, type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(styleId),
@@ -283,17 +323,13 @@ export class Edge {
                 opacity: style.arrowHead?.opacity,
             },
             this.context.getScene(),
-            style, // Pass style for 2D detection
         );
-        // console.log("Edge.updateStyle: arrowMesh created:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // recreate arrow tail mesh if needed
-        // console.log("Edge.updateStyle: disposing old arrowTailMesh:", this.arrowTailMesh?.name);
         if (this.arrowTailMesh && !this.arrowTailMesh.isDisposed()) {
             this.arrowTailMesh.dispose();
         }
 
-        // console.log("Edge.updateStyle: creating new arrowTailMesh, type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(styleId)}-tail`,
@@ -305,11 +341,21 @@ export class Edge {
                 opacity: style.arrowTail?.opacity,
             },
             this.context.getScene(),
-            style, // Pass style for 2D detection
         );
-        // console.log("Edge.updateStyle: arrowTailMesh created:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // recreate edge line mesh
+        // PHASE 5: For bezier curves, need to pass current positions
+        let srcPoint: Vector3 | undefined;
+        let dstPoint: Vector3 | undefined;
+        if (style.line?.bezier) {
+            const lnk = this.context.getLayoutManager().layoutEngine?.getEdgePosition(this);
+            if (lnk) {
+                const {srcPoint: arrowSrc, dstPoint: arrowDst} = this.transformArrowCap();
+                srcPoint = arrowSrc ?? new Vector3(lnk.src.x, lnk.src.y, lnk.src.z);
+                dstPoint = arrowDst ?? new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z);
+            }
+        }
+
         this.mesh = EdgeMesh.create(
             this.context.getMeshCache(),
             {
@@ -320,6 +366,8 @@ export class Edge {
 
             style,
             this.context.getScene(),
+            srcPoint,
+            dstPoint,
         );
 
         this.mesh.isPickable = false;
@@ -336,6 +384,30 @@ export class Edge {
         } else if (this.label) {
             this.label.dispose();
             this.label = null;
+        }
+
+        // Update arrow head text if needed
+        if (style.arrowHead?.text) {
+            if (this.arrowHeadText) {
+                this.arrowHeadText.dispose();
+            }
+
+            this.arrowHeadText = this.createArrowText(style.arrowHead.text, "arrowHead");
+        } else if (this.arrowHeadText) {
+            this.arrowHeadText.dispose();
+            this.arrowHeadText = null;
+        }
+
+        // Update arrow tail text if needed
+        if (style.arrowTail?.text) {
+            if (this.arrowTailText) {
+                this.arrowTailText.dispose();
+            }
+
+            this.arrowTailText = this.createArrowText(style.arrowTail.text, "arrowTail");
+        } else if (this.arrowTailText) {
+            this.arrowTailText.dispose();
+            this.arrowTailText = null;
         }
     }
 
@@ -381,8 +453,14 @@ export class Edge {
         } else if (this.mesh.metadata?.is2DLine) {
             // PHASE 2: 2D solid lines use Simple2DLineRenderer position updates
             Simple2DLineRenderer.updatePositions(this.mesh as Mesh, srcPoint, dstPoint);
+        } else if (this.mesh.metadata?.isBezierCurve) {
+            // PHASE 5: Bezier curves have baked-in geometry, no transformation needed
+            // The curve geometry is already in world coordinates from createBezierLine()
+            // Transforming would move/rotate/scale the curve incorrectly
+            console.log("[Edge.transformEdgeMesh] Skipping transform for bezier curve");
         } else {
             // Solid lines: Transform via position/rotation/scaling
+            console.log("[Edge.transformEdgeMesh] Transforming solid line from", srcPoint, "to", dstPoint);
             EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
         }
     }
@@ -779,6 +857,43 @@ export class Edge {
         const {location, textPath, enabled, ... finalLabelOptions} = labelOptions as RichTextLabelOptions & {location?: string, textPath?: string, enabled?: boolean};
 
         return finalLabelOptions;
+    }
+
+    private createArrowText(textConfig: Record<string, unknown>, source: "arrowHead" | "arrowTail"): RichTextLabel {
+        // Extract text from config - either direct text or textPath
+        let labelText: string = source === "arrowHead" ? "→" : "←";
+
+        if (textConfig.text !== undefined && textConfig.text !== null) {
+            if (typeof textConfig.text === "string" || typeof textConfig.text === "number" || typeof textConfig.text === "boolean") {
+                labelText = String(textConfig.text);
+            }
+        } else if (textConfig.textPath && typeof textConfig.textPath === "string") {
+            try {
+                const result = jmespath.search(this.data, textConfig.textPath);
+                if (result !== null && result !== undefined) {
+                    labelText = String(result);
+                }
+            } catch {
+                // Ignore jmespath errors
+            }
+        }
+
+        // Build label options from text config
+        const labelOptions: RichTextLabelOptions = {
+            text: labelText,
+            fontSize: typeof textConfig.fontSize === "number" ? textConfig.fontSize : 12,
+            textColor: typeof textConfig.textColor === "string" ? textConfig.textColor : "#FFFFFF",
+            backgroundColor: typeof textConfig.backgroundColor === "string" ? textConfig.backgroundColor : "#333333",
+            attachPosition: "top" as AttachPosition,
+            attachOffset: 0.3,
+        };
+
+        // Pass through additional styling options if provided
+        if (typeof textConfig.cornerRadius === "number") {
+            labelOptions.cornerRadius = textConfig.cornerRadius;
+        }
+
+        return new RichTextLabel(this.context.getScene(), labelOptions);
     }
 }
 

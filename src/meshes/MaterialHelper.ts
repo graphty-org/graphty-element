@@ -1,6 +1,6 @@
 import {Color3, Mesh, Scene, StandardMaterial} from "@babylonjs/core";
 
-import {FilledArrowRenderer, type FilledArrowOptions} from "./FilledArrowRenderer";
+import {type FilledArrowOptions, FilledArrowRenderer} from "./FilledArrowRenderer";
 
 /**
  * Utility for applying 2D vs 3D materials to meshes

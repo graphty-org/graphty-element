@@ -2,12 +2,13 @@
  * Programmatic measurement of dash pattern spacing
  * This test renders a dash pattern and measures actual pixel spacing
  */
-import {expect, test} from "vitest";
-import {page} from "@vitest/browser/context";
 import fs from "node:fs";
-import {PNG} from "pngjs";
 
-test("measure dash pattern spacing in pixels", async () => {
+import {page} from "@vitest/browser/context";
+import {PNG} from "pngjs";
+import {expect, test} from "vitest";
+
+test("measure dash pattern spacing in pixels", async() => {
     // Navigate to the dash pattern story
     await page.goto("http://dev.ato.ms:9025/iframe.html?id=styles-edge-patterns--dash&viewMode=story");
 
@@ -36,8 +37,8 @@ test("measure dash pattern spacing in pixels", async () => {
     // Find all dash segments by looking for non-background pixels
     // Background is typically dark/black, dashes are light/grey
     const threshold = 50; // Pixel brightness threshold
-    const segments: Array<{start: number; end: number; length: number}> = [];
-    const gaps: Array<{start: number; end: number; length: number}> = [];
+    const segments: {start: number, end: number, length: number}[] = [];
+    const gaps: {start: number, end: number, length: number}[] = [];
 
     let inDash = false;
     let dashStart = 0;
@@ -80,12 +81,12 @@ test("measure dash pattern spacing in pixels", async () => {
     }
 
     // Calculate statistics
-    const avgDashLength = segments.length > 0
-        ? segments.reduce((sum, s) => sum + s.length, 0) / segments.length
-        : 0;
-    const avgGapLength = gaps.length > 0
-        ? gaps.reduce((sum, g) => sum + g.length, 0) / gaps.length
-        : 0;
+    const avgDashLength = segments.length > 0 ?
+        segments.reduce((sum, s) => sum + s.length, 0) / segments.length :
+        0;
+    const avgGapLength = gaps.length > 0 ?
+        gaps.reduce((sum, g) => sum + g.length, 0) / gaps.length :
+        0;
 
     const gapToDashRatio = avgDashLength > 0 ? avgGapLength / avgDashLength : 0;
     const expectedRatio = 2.0 / 3.0; // We set gap=2x, dash=3x
@@ -109,7 +110,7 @@ test("measure dash pattern spacing in pixels", async () => {
     console.log("Average gap length (pixels):", measurements.avgGapLength.toFixed(2));
     console.log("Actual gap/dash ratio:", measurements.gapToDashRatio.toFixed(3));
     console.log("Expected gap/dash ratio:", measurements.expectedRatio.toFixed(3));
-    console.log("Ratio error:", ((measurements.gapToDashRatio - measurements.expectedRatio) / measurements.expectedRatio * 100).toFixed(1) + "%");
+    console.log("Ratio error:", `${((measurements.gapToDashRatio - measurements.expectedRatio) / measurements.expectedRatio * 100).toFixed(1)}%`);
     console.log("\nDash segments (pixels):");
     measurements.dashSegments.forEach((seg, i) => {
         console.log(`  Dash ${i + 1}: ${seg.start} to ${seg.end} (${seg.length}px)`);

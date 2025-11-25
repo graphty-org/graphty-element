@@ -57,6 +57,8 @@ export default defineConfig({
                         "test/examples/**/*.test.ts",
                     ],
                     exclude: [
+                        // Tests using Node.js-only libraries (pngjs)
+                        "test/browser/dash-spacing-measurement.test.ts",
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",

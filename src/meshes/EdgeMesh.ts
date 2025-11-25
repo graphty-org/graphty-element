@@ -10,7 +10,6 @@ import {
     MeshBuilder,
     RawTexture,
     type Scene,
-    ShaderMaterial,
     StandardMaterial,
     Vector3,
 } from "@babylonjs/core";
@@ -224,11 +223,46 @@ void main() {
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
         scene: Scene,
+        srcPoint?: Vector3, // Optional source point for bezier curves
+        dstPoint?: Vector3, // Optional destination point for bezier curves
     ): AbstractMesh | PatternedLineMesh {
         const lineType = style.line?.type ?? "solid";
         const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
 
-        console.log("[EdgeMesh.create] Called with lineType:", lineType, "isPatterned:", PATTERNED_TYPES.includes(lineType));
+        // PHASE 5: Bezier curves use CustomLineRenderer with multi-point paths (individual meshes, no caching)
+        // Each bezier curve has unique geometry based on src/dst points, so can't be cached
+        if (style.line?.bezier && srcPoint && dstPoint) {
+            const bezierPoints = this.createBezierLine(srcPoint, dstPoint);
+
+            // Convert flat array to Vector3 array
+            const points: Vector3[] = [];
+            for (let i = 0; i < bezierPoints.length; i += 3) {
+                points.push(new Vector3(bezierPoints[i], bezierPoints[i + 1], bezierPoints[i + 2]));
+            }
+
+            // Create line mesh with bezier points
+            const lineConfig = style.line;
+            const mesh = CustomLineRenderer.create(
+                {
+                    points,
+                    width: options.width * 20, // Scale factor to match GreasedLine sizing
+                    color: options.color,
+                    opacity: lineConfig.opacity,
+                },
+                scene,
+            );
+
+            // Apply opacity to mesh visibility
+            if (lineConfig.opacity !== undefined) {
+                mesh.visibility = lineConfig.opacity;
+            }
+
+            // Mark as bezier curve so it's not transformed by transformEdgeMesh()
+            // Bezier curves have their geometry baked in world coordinates
+            mesh.metadata = {isBezierCurve: true};
+
+            return mesh;
+        }
 
         // PHASE 5: Pattern lines use PatternedLineRenderer (individual meshes, no caching)
         // See: design/mesh-based-patterned-lines.md Phase 5
@@ -273,16 +307,12 @@ void main() {
     }
 
     static createArrowHead(
-        cache: MeshCache,
-        styleId: string,
+        _cache: MeshCache,
+        _styleId: string,
         options: ArrowHeadOptions,
         scene: Scene,
-        _style?: EdgeStyleConfig, // NEW: Need style for 2D detection (unused - detection via scene)
     ): AbstractMesh | null {
-        console.log("EdgeMesh.createArrowHead called:", {styleId, type: options.type, color: options.color});
-
         if (!options.type || options.type === "none") {
-            console.log("EdgeMesh.createArrowHead returning null (no type or none)");
             return null;
         }
 
@@ -290,8 +320,6 @@ void main() {
         const opacity = options.opacity ?? 1.0;
         const width = this.calculateArrowWidth() * size;
         const length = this.calculateArrowLength() * size;
-
-        console.log("EdgeMesh.createArrowHead computed dimensions:", {size, opacity, width, length});
 
         // Detect 2D mode
         const is2D = this.is2DMode(scene);
@@ -311,8 +339,6 @@ void main() {
 
         if (FILLED_ARROWS.includes(arrowType)) {
             // Filled arrows: Same geometry, different materials (StandardMaterial for 2D, ShaderMaterial for 3D)
-            console.log("Creating filled arrow:", arrowType, "is2D:", is2D);
-
             if (is2D) {
                 // PHASE 4: Use 2D arrow creation (StandardMaterial, no shader, XY rotation)
                 mesh = FilledArrowRenderer.create2DArrow(arrowType, length, width, options.color, opacity, scene);
@@ -322,20 +348,16 @@ void main() {
             }
         } else if (BILLBOARD_ARROWS.includes(arrowType)) {
             // 3D billboard arrows: Only "sphere" uses CreateSphere
-            console.log("Creating billboard arrow:", arrowType);
             if (options.type === "sphere") {
                 mesh = this.createSphereArrow(length, width, options.color, scene);
             } else {
                 throw new Error(`Unsupported arrow type: ${options.type}`);
             }
         } else {
-            console.log("Unknown arrow type, throwing error:", options.type);
             throw new Error(`Unsupported arrow type: ${options.type}`);
         }
 
-        console.log("EdgeMesh.createArrowHead created mesh:", {name: mesh.name, vertices: mesh.getTotalVertices(), opacity});
         mesh.visibility = opacity;
-        console.log("EdgeMesh.createArrowHead returning mesh");
         return mesh;
     }
 
@@ -478,6 +500,7 @@ void main() {
                     width: options.width * 20, // Scale factor to match GreasedLine sizing
                     color: options.color,
                     opacity: style.line?.opacity,
+                    enableInstancing: true, // Required for MeshCache InstancedMesh
                 },
                 scene,
             );
@@ -785,4 +808,114 @@ void main() {
         mesh.scaling.z = length;
     }
 
+    /**
+     * Generate Bezier curve points between two positions
+     * @param srcPoint - Start point of the curve
+     * @param dstPoint - End point of the curve
+     * @param controlPoints - Optional custom control points (default: auto-calculated)
+     * @returns Flat array of coordinates [x1, y1, z1, x2, y2, z2, ...]
+     */
+    static createBezierLine(
+        srcPoint: Vector3,
+        dstPoint: Vector3,
+        controlPoints?: Vector3[],
+    ): number[] {
+        // Handle self-loops (source === destination)
+        if (srcPoint.equalsWithEpsilon(dstPoint, 0.01)) {
+            return this.createSelfLoopCurve(srcPoint);
+        }
+
+        // Calculate automatic control points if not provided
+        const controls = controlPoints ?? this.calculateControlPoints(srcPoint, dstPoint);
+
+        // Determine point density based on curve length
+        const estimatedLength = Vector3.Distance(srcPoint, dstPoint) * 1.5; // Curve is ~1.5x longer
+        const numPoints = Math.max(
+            10,
+            Math.ceil(estimatedLength * EDGE_CONSTANTS.BEZIER_POINT_DENSITY),
+        );
+
+        const points: number[] = [];
+
+        // Generate cubic Bezier curve points
+        for (let i = 0; i <= numPoints; i++) {
+            const t = i / numPoints;
+            const point = this.cubicBezier(t, srcPoint, controls[0], controls[1], dstPoint);
+            points.push(point.x, point.y, point.z);
+        }
+
+        return points;
+    }
+
+    /**
+     * Calculate automatic control points for natural curve
+     * Creates a perpendicular offset from the midpoint for a smooth arc
+     */
+    private static calculateControlPoints(src: Vector3, dst: Vector3): [Vector3, Vector3] {
+        const direction = dst.subtract(src);
+        const distance = direction.length();
+
+        // Create perpendicular vector in XY plane
+        // Use cross product with up vector (0, 1, 0) to get perpendicular in XY plane
+        const up = new Vector3(0, 1, 0);
+        let perpendicular = Vector3.Cross(direction, up);
+
+        // If direction is parallel to up vector, use forward vector instead
+        if (perpendicular.length() < 0.01) {
+            const forward = new Vector3(0, 0, 1);
+            perpendicular = Vector3.Cross(direction, forward);
+        }
+
+        perpendicular.normalize();
+
+        // Offset control points perpendicular to line
+        const offset = distance * EDGE_CONSTANTS.BEZIER_CONTROL_POINT_OFFSET;
+
+        const midPoint = Vector3.Lerp(src, dst, 0.5);
+        const control1 = Vector3.Lerp(src, midPoint, 0.5).add(perpendicular.scale(offset));
+        const control2 = Vector3.Lerp(midPoint, dst, 0.5).add(perpendicular.scale(offset));
+
+        return [control1, control2];
+    }
+
+    /**
+     * Cubic Bezier formula: B(t) = (1-t)³P₀ + 3(1-t)²tP₁ + 3(1-t)t²P₂ + t³P₃
+     */
+    private static cubicBezier(
+        t: number,
+        p0: Vector3,
+        p1: Vector3,
+        p2: Vector3,
+        p3: Vector3,
+    ): Vector3 {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
+
+        return p0.scale(uuu)
+            .add(p1.scale(3 * uu * t))
+            .add(p2.scale(3 * u * tt))
+            .add(p3.scale(ttt));
+    }
+
+    /**
+     * Create a self-loop curve (circular arc) when source === destination
+     */
+    private static createSelfLoopCurve(center: Vector3): number[] {
+        const radius = 2.0; // Loop radius
+        const segments = 32; // Smooth circle
+        const points: number[] = [];
+
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const x = center.x + (Math.cos(angle) * radius);
+            const y = center.y + (Math.sin(angle) * radius);
+            const {z} = center;
+            points.push(x, y, z);
+        }
+
+        return points;
+    }
 }

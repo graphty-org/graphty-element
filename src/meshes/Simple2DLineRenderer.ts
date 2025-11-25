@@ -128,16 +128,28 @@ export class Simple2DLineRenderer {
 
         // Two triangles to form the rectangle
         const indices = [
-            0, 1, 2, // First triangle
-            0, 2, 3, // Second triangle
+            0,
+            1,
+            2, // First triangle
+            0,
+            2,
+            3, // Second triangle
         ];
 
         // Normals pointing in +Z direction (toward camera in 2D orthographic view)
         const normals = [
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
         ];
 
         // Apply vertex data

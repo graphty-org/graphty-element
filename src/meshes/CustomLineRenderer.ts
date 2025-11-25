@@ -27,6 +27,7 @@ export interface CustomLineOptions {
     width: number; // Line width in pixels
     color: string; // Line color (hex)
     opacity?: number; // Opacity 0-1
+    enableInstancing?: boolean; // Enable instancing support (required for mesh caching)
     // NOTE: Patterns are handled by PatternedLineMesh, not CustomLineRenderer
     // CustomLineRenderer only renders solid lines
 }
@@ -63,11 +64,19 @@ export class CustomLineRenderer {
             return;
         }
 
+        // CRITICAL FIX: Register shaders in BOTH shader stores
+        // When running in Storybook, there are TWO instances of BabylonJS:
+        // 1. The global BABYLON loaded via <script> tag
+        // 2. The ES module import from @babylonjs/core
+        // We need to register in both because ShaderMaterial might use either one
+        const globalShaderStore = typeof window !== 'undefined' && (window as typeof globalThis & { BABYLON?: {Effect: typeof Effect} }).BABYLON?.Effect.ShadersStore;
+        const moduleShaderStore = Effect.ShadersStore;
+
         // Vertex Shader: Screen-space width expansion
         // This matches the formula we learned from GreasedLine and dot arrowhead work
         // Updated to support instancing (required for BabylonJS mesh caching)
         // FIXED: Uses segmentStart/segmentEnd for consistent perpendicular calculation
-        Effect.ShadersStore.customLineVertexShader = `
+        const vertexShaderCode = `
 precision highp float;
 
 // Attributes
@@ -98,7 +107,7 @@ void main() {
     // Compute finalWorld matrix (handles both instanced and non-instanced meshes)
     #include<instancesVertex>
 
-    // Transform vertex to clip space using finalWorld
+    // Transform vertex to clip space using finalWorld (supports instancing)
     vec4 vertexClip = viewProjection * finalWorld * vec4(position, 1.0);
 
     // FIXED: Calculate screen-space direction using segment start/end
@@ -113,10 +122,11 @@ void main() {
     float screenDirLength = length(screenDirRaw);
 
     // Safety check: handle near-zero vectors to prevent numerical instability
-    // When a line segment appears very small in screen space (< 0.001 NDC units),
+    // When a line segment appears very small in screen space (< 0.000001 NDC units),
     // normalizing the direction vector causes garbage values
+    // NOTE: Lowered threshold from 0.001 to 0.000001 to support bezier curves with many tiny segments
     vec2 perpendicular;
-    if (screenDirLength < 0.001) {
+    if (screenDirLength < 0.000001) {
         // Fallback: line is degenerate in screen space, collapse to a point (zero width)
         perpendicular = vec2(0.0, 0.0);
     } else {
@@ -174,11 +184,16 @@ void main() {
     vDistance = distance;
 }
 `;
+        // Register in both stores
+        moduleShaderStore.customLineVertexShader = vertexShaderCode;
+        if (globalShaderStore) {
+            globalShaderStore.customLineVertexShader = vertexShaderCode;
+        }
 
         // Fragment Shader: Pattern rendering
         // Updated to support 7 pattern types:
         // 0=solid, 1=dash, 2=dash-dot, 3=equal-dash, 4=sinewave, 5=zigzag, 6=dots
-        Effect.ShadersStore.customLineFragmentShader = `
+        const fragmentShaderCode = `
 precision highp float;
 
 // Varyings
@@ -198,9 +213,14 @@ void main() {
     gl_FragColor = vec4(color, opacity);
 }
 `;
+        // Register in both stores
+        moduleShaderStore.customLineFragmentShader = fragmentShaderCode;
+        if (globalShaderStore) {
+            globalShaderStore.customLineFragmentShader = fragmentShaderCode;
+        }
 
         // Point Sprite Vertex Shader for circular dots
-        Effect.ShadersStore.circularDotVertexShader = `
+        const circularDotVertexShaderCode = `
 precision highp float;
 
 // Attributes
@@ -217,9 +237,14 @@ void main(void) {
     gl_PointSize = pointSize;
 }
 `;
+        // Register in both stores
+        moduleShaderStore.circularDotVertexShader = circularDotVertexShaderCode;
+        if (globalShaderStore) {
+            globalShaderStore.circularDotVertexShader = circularDotVertexShaderCode;
+        }
 
         // Point Sprite Fragment Shader with perfect circles
-        Effect.ShadersStore.circularDotFragmentShader = `
+        const circularDotFragmentShaderCode = `
 precision highp float;
 
 // Uniforms
@@ -243,6 +268,11 @@ void main(void) {
     gl_FragColor = vec4(color, opacity * alpha);
 }
 `;
+        // Register in both stores
+        moduleShaderStore.circularDotFragmentShader = circularDotFragmentShaderCode;
+        if (globalShaderStore) {
+            globalShaderStore.circularDotFragmentShader = circularDotFragmentShaderCode;
+        }
 
         this.shadersRegistered = true;
     }
@@ -681,6 +711,12 @@ void main(void) {
         mesh.setVerticesData("segmentEnd", geometry.segmentEnds, false, 3);
 
         // Create shader material
+        // Build defines array based on instancing support
+        const defines: string[] = [];
+        if (options.enableInstancing) {
+            defines.push("#define INSTANCES");
+        }
+
         const shaderMaterial = new ShaderMaterial(
             "customLineMaterial",
             scene,
@@ -699,7 +735,8 @@ void main(void) {
                     "color",
                     "opacity",
                 ],
-                defines: ["#define INSTANCES"], // Enable instancing support
+                // Enable instancing only when requested (cached edges need it, bezier curves don't)
+                defines: defines.length > 0 ? defines : undefined,
             },
         );
 
