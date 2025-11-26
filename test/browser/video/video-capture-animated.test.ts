@@ -2,44 +2,7 @@ import {afterEach, assert, beforeEach, describe, test, vi} from "vitest";
 
 import {Graph} from "../../../src/Graph.js";
 import type {CameraWaypoint} from "../../../src/video/VideoCapture.js";
-
-// Mock MediaRecorder
-class MockMediaRecorder {
-    ondataavailable: ((e: BlobEvent) => void) | null = null;
-    onstop: (() => void) | null = null;
-    onerror: ((e: Event) => void) | null = null;
-    state: "inactive" | "recording" | "paused" = "inactive";
-    mimeType: string;
-
-    constructor(stream: MediaStream, options?: {mimeType?: string, videoBitsPerSecond?: number}) {
-        this.mimeType = options?.mimeType ?? "video/webm";
-    }
-
-    start(): void {
-        this.state = "recording";
-    }
-
-    stop(): void {
-        this.state = "inactive";
-        // Simulate data available
-        const blob = new Blob(["mock video data"], {type: this.mimeType});
-        this.ondataavailable?.({data: blob} as BlobEvent);
-        setTimeout(() => this.onstop?.(), 0);
-    }
-
-    pause(): void {
-        this.state = "paused";
-    }
-
-    resume(): void {
-        this.state = "recording";
-    }
-
-    static isTypeSupported(type: string): boolean {
-        // Simulate browser support
-        return type.includes("webm") || type.includes("vp9") || type.includes("vp8");
-    }
-}
+import {restoreMockMediaRecorder, setupMockMediaRecorder} from "./mock-media-recorder.js";
 
 // Store original MediaRecorder
 let originalMediaRecorder: typeof MediaRecorder;
@@ -48,12 +11,12 @@ beforeEach(() => {
     // Save original
     originalMediaRecorder = globalThis.MediaRecorder;
     // Replace with mock
-    vi.stubGlobal("MediaRecorder", MockMediaRecorder);
+    setupMockMediaRecorder(vi);
 });
 
 afterEach(() => {
     // Restore original
-    vi.stubGlobal("MediaRecorder", originalMediaRecorder);
+    restoreMockMediaRecorder(vi, originalMediaRecorder);
 });
 
 describe("Video Capture - Animated Camera Mode", () => {

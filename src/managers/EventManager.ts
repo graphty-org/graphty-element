@@ -253,6 +253,13 @@ export class EventManager implements Manager {
     }
 
     /**
+     * Get the total number of registered listeners
+     */
+    listenerCount(): number {
+        return this.observers.size;
+    }
+
+    /**
      * Add a one-time listener that automatically removes itself after firing
      */
     once(type: EventType, callback: EventCallbackType): symbol {

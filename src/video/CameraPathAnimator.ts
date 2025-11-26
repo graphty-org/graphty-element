@@ -54,8 +54,9 @@ export class CameraPathAnimator {
         if (is2D) {
             // 2D: Animate zoom and pan
             // For 2D cameras, extract zoom/pan from waypoints if available
+            // Zoom requires animating all four ortho bounds
             this.animations.push(
-                this.createZoomAnimation(waypoints),
+                ... this.createOrthoZoomAnimations(waypoints),
                 this.createPanXAnimation(waypoints),
                 this.createPanYAnimation(waypoints),
             );
@@ -117,29 +118,82 @@ export class CameraPathAnimator {
     }
 
     /**
-     * Create zoom animation for 2D cameras.
-     * Uses a custom property 'orthoSize' that we'll update manually.
+     * Create zoom animations for 2D orthographic cameras.
+     * Returns animations for orthoLeft, orthoRight, orthoTop, orthoBottom.
+     * Uses the z position from waypoints as a proxy for zoom level (ortho size).
      */
-    private createZoomAnimation(waypoints: CameraWaypoint[]): Animation {
-        const animation = new Animation(
-            "camera_zoom",
-            "orthoSize",
-            this.fps,
-            Animation.ANIMATIONTYPE_FLOAT,
-            Animation.ANIMATIONLOOPMODE_CONSTANT,
-        );
+    private createOrthoZoomAnimations(waypoints: CameraWaypoint[]): Animation[] {
+        // Get the camera's current aspect ratio to maintain proportions
+        const currentLeft = (this.camera as {orthoLeft?: number | null}).orthoLeft ?? -10;
+        const currentRight = (this.camera as {orthoRight?: number | null}).orthoRight ?? 10;
+        const currentTop = (this.camera as {orthoTop?: number | null}).orthoTop ?? 10;
+        const currentBottom = (this.camera as {orthoBottom?: number | null}).orthoBottom ?? -10;
+
+        // Calculate aspect ratio from current ortho bounds
+        const currentWidth = currentRight - currentLeft;
+        const currentHeight = currentTop - currentBottom;
+        const aspectRatio = currentWidth / currentHeight;
 
         // For 2D, we'll use the z position as a proxy for zoom level
         // Higher z = more zoomed out, lower z = more zoomed in
-        const keys = waypoints.map((wp) => ({
-            frame: this.timestampToFrame(wp.duration ?? 0, waypoints, wp),
-            value: wp.position.z || 10, // Default zoom level
-        }));
+        // The z value represents the "ortho size" - half the height of the view
+        const calculateOrthoKeys = (
+            waypoints: CameraWaypoint[],
+            property: "left" | "right" | "top" | "bottom",
+        ): {frame: number, value: number}[] => {
+            return waypoints.map((wp) => {
+                const orthoSize = wp.position.z || 10; // Use z as ortho half-height
+                const halfHeight = orthoSize;
+                const halfWidth = halfHeight * aspectRatio;
 
-        animation.setKeys(keys);
-        this.applyEasing(animation, this.easing);
+                let value: number;
+                switch (property) {
+                    case "left":
+                        value = -halfWidth;
+                        break;
+                    case "right":
+                        value = halfWidth;
+                        break;
+                    case "top":
+                        value = halfHeight;
+                        break;
+                    case "bottom":
+                        value = -halfHeight;
+                        break;
+                    default:
+                        value = 0;
+                }
 
-        return animation;
+                return {
+                    frame: this.timestampToFrame(wp.duration ?? 0, waypoints, wp),
+                    value,
+                };
+            });
+        };
+
+        const properties = ["orthoLeft", "orthoRight", "orthoTop", "orthoBottom"] as const;
+        const propertyMap = {
+            orthoLeft: "left",
+            orthoRight: "right",
+            orthoTop: "top",
+            orthoBottom: "bottom",
+        } as const;
+
+        return properties.map((prop) => {
+            const animation = new Animation(
+                `camera_${prop}`,
+                prop,
+                this.fps,
+                Animation.ANIMATIONTYPE_FLOAT,
+                Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            const keys = calculateOrthoKeys(waypoints, propertyMap[prop]);
+            animation.setKeys(keys);
+            this.applyEasing(animation, this.easing);
+
+            return animation;
+        });
     }
 
     /**
@@ -338,8 +392,15 @@ export class CameraPathAnimator {
         const is2D = this.camera.mode === Camera.ORTHOGRAPHIC_CAMERA;
 
         if (is2D) {
+            // Calculate zoom from ortho bounds (use top and bottom for size calculation)
+            const orthoTop = this.evaluateFloatAnimation("orthoTop", frame);
+            const orthoBottom = this.evaluateFloatAnimation("orthoBottom", frame);
+            const zoom = orthoTop !== undefined && orthoBottom !== undefined ?
+                (orthoTop - orthoBottom) / 2 :
+                undefined;
+
             return {
-                zoom: this.evaluateFloatAnimation("orthoSize", frame),
+                zoom,
                 pan: {
                     x: this.evaluateFloatAnimation("position.x", frame) ?? 0,
                     y: this.evaluateFloatAnimation("position.y", frame) ?? 0,

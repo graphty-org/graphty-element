@@ -11,3 +11,22 @@ export {Graphty} from "./src/graphty-element";
 export {LayoutEngine} from "./src/layout/LayoutEngine";
 export {Node} from "./src/Node";
 export {Styles} from "./src/Styles";
+
+// Screenshot exports
+export {ScreenshotError, ScreenshotErrorCode} from "./src/screenshot/ScreenshotError";
+export type {
+    CameraAnimationOptions,
+    CameraState,
+    ClipboardStatus,
+    QualityEnhancementOptions,
+    ScreenshotOptions,
+    ScreenshotResult,
+} from "./src/screenshot/types";
+
+// Video capture exports
+export {AnimationCancelledError} from "./src/video/MediaRecorderCapture";
+export type {
+    AnimationOptions,
+    AnimationResult,
+    CameraWaypoint,
+} from "./src/video/VideoCapture";

@@ -1,3 +1,4 @@
+import {VIDEO_CONSTANTS} from "../screenshot/constants.js";
 import {ScreenshotError, ScreenshotErrorCode} from "../screenshot/ScreenshotError.js";
 import type {AnimationOptions, AnimationResult} from "./VideoCapture.js";
 
@@ -12,12 +13,63 @@ export class AnimationCancelledError extends Error {
 }
 
 /**
- * MediaRecorder wrapper with codec detection and Safari support
+ * Configuration options for MediaRecorderCapture
+ */
+export interface MediaRecorderCaptureConfig {
+    /**
+     * Enable debug logging for codec detection and capture process.
+     * @default false
+     */
+    debug?: boolean;
+}
+
+/**
+ * MediaRecorder wrapper with codec detection, Safari support, and cancellation handling.
+ *
+ * This class handles the complexities of video capture using the browser's MediaRecorder API:
+ * - Automatic codec detection (VP9 > VP8 > MP4/H.264)
+ * - Safari/iOS compatibility with MP4 fallback
+ * - Cancellation with proper race condition handling
+ *
+ * ## Cancellation Race Condition Handling
+ *
+ * The cancellation flow is designed to handle race conditions between:
+ * - The `cancel()` method being called
+ * - The `onstop` event firing from `MediaRecorder.stop()`
+ * - The duration timeout completing
+ *
+ * The flow ensures:
+ * 1. `isCancelled` flag is set BEFORE calling `recorder.stop()`
+ * 2. The `onstop` handler checks `isCancelled` before resolving
+ * 3. The reject callback is called synchronously after stopping
+ * 4. References are cleared after rejection to prevent double-handling
+ *
+ * This guarantees that a cancelled capture will always reject with
+ * AnimationCancelledError, never accidentally resolve with partial data.
  */
 export class MediaRecorderCapture {
+    /** The active MediaRecorder instance, null when not recording */
     private activeRecorder: MediaRecorder | null = null;
+    /** Flag to track cancellation state - set BEFORE stopping recorder */
     private isCancelled = false;
+    /** Stored reject callback for cancellation - cleared after use */
     private cancelReject: ((error: Error) => void) | null = null;
+    /** Debug logging enabled */
+    private debug: boolean;
+
+    constructor(config: MediaRecorderCaptureConfig = {}) {
+        this.debug = config.debug ?? false;
+    }
+
+    /**
+     * Log a debug message if debug mode is enabled
+     */
+    private log(message: string): void {
+        if (this.debug) {
+            // eslint-disable-next-line no-console
+            console.log(message);
+        }
+    }
     /**
      * Detects browser and returns best supported codec
      *
@@ -32,24 +84,17 @@ export class MediaRecorderCapture {
      */
     private getSupportedCodec(requestedFormat?: "webm" | "mp4" | "auto"): string {
         // Debug: Log codec support detection
-        // eslint-disable-next-line no-console
-        console.log("[MediaRecorder] Codec Detection:");
-        // eslint-disable-next-line no-console
-        console.log("  - Requested format:", requestedFormat ?? "auto");
-        // eslint-disable-next-line no-console
-        console.log("  - VP9 support:", MediaRecorder.isTypeSupported("video/webm;codecs=vp9"));
-        // eslint-disable-next-line no-console
-        console.log("  - VP8 support:", MediaRecorder.isTypeSupported("video/webm;codecs=vp8"));
-        // eslint-disable-next-line no-console
-        console.log("  - MP4 support:", MediaRecorder.isTypeSupported("video/mp4"));
-        // eslint-disable-next-line no-console
-        console.log("  - WebM (no codec) support:", MediaRecorder.isTypeSupported("video/webm"));
+        this.log("[MediaRecorder] Codec Detection:");
+        this.log(`  - Requested format: ${requestedFormat ?? "auto"}`);
+        this.log(`  - VP9 support: ${MediaRecorder.isTypeSupported("video/webm;codecs=vp9")}`);
+        this.log(`  - VP8 support: ${MediaRecorder.isTypeSupported("video/webm;codecs=vp8")}`);
+        this.log(`  - MP4 support: ${MediaRecorder.isTypeSupported("video/mp4")}`);
+        this.log(`  - WebM (no codec) support: ${MediaRecorder.isTypeSupported("video/webm")}`);
 
         // If user explicitly requested a format, try that first
         if (requestedFormat === "mp4") {
             if (MediaRecorder.isTypeSupported("video/mp4")) {
-                // eslint-disable-next-line no-console
-                console.log("  → Selected: video/mp4 (user requested)");
+                this.log("  → Selected: video/mp4 (user requested)");
                 return "video/mp4";
             }
 
@@ -58,14 +103,12 @@ export class MediaRecorderCapture {
 
         if (requestedFormat === "webm") {
             if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
-                // eslint-disable-next-line no-console
-                console.log("  → Selected: video/webm;codecs=vp9 (user requested WebM)");
+                this.log("  → Selected: video/webm;codecs=vp9 (user requested WebM)");
                 return "video/webm;codecs=vp9";
             }
 
             if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
-                // eslint-disable-next-line no-console
-                console.log("  → Selected: video/webm;codecs=vp8 (user requested WebM)");
+                this.log("  → Selected: video/webm;codecs=vp8 (user requested WebM)");
                 return "video/webm;codecs=vp8";
             }
 
@@ -75,28 +118,24 @@ export class MediaRecorderCapture {
         // Auto-detect best format (default)
         // Try WebM first (better compression, open format)
         if (MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
-            // eslint-disable-next-line no-console
-            console.log("  → Selected: video/webm;codecs=vp9 (auto - best quality)");
+            this.log("  → Selected: video/webm;codecs=vp9 (auto - best quality)");
             return "video/webm;codecs=vp9";
         }
 
         if (MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
-            // eslint-disable-next-line no-console
-            console.log("  → Selected: video/webm;codecs=vp8 (auto - fallback)");
+            this.log("  → Selected: video/webm;codecs=vp8 (auto - fallback)");
             return "video/webm;codecs=vp8";
         }
 
         // Fall back to MP4 for Safari
         if (MediaRecorder.isTypeSupported("video/mp4")) {
-            // eslint-disable-next-line no-console
-            console.log("  → Selected: video/mp4 (auto - Safari fallback)");
+            this.log("  → Selected: video/mp4 (auto - Safari fallback)");
             return "video/mp4";
         }
 
         // Try without codec specification (browser will choose)
         if (MediaRecorder.isTypeSupported("video/webm")) {
-            // eslint-disable-next-line no-console
-            console.log("  → Selected: video/webm (auto - no codec specified)");
+            this.log("  → Selected: video/webm (auto - no codec specified)");
             return "video/webm";
         }
 
@@ -119,7 +158,7 @@ export class MediaRecorderCapture {
         this.cancelReject = null;
 
         const codec = this.getSupportedCodec(options.format);
-        const fps = options.fps ?? 30;
+        const fps = options.fps ?? VIDEO_CONSTANTS.DEFAULT_FPS;
         const width = options.width ?? canvas.width;
         const height = options.height ?? canvas.height;
 
@@ -179,9 +218,8 @@ export class MediaRecorderCapture {
                     "mp4" :
                     "webm";
 
-                // Debug logging for format detection (TODO: Remove after iOS testing is complete)
-                // eslint-disable-next-line no-console
-                console.log(`[MediaRecorder] Codec requested: ${codec}, Blob MIME type: "${blob.type}", Detected format: ${format}`);
+                // Debug logging for format detection
+                this.log(`[MediaRecorder] Codec requested: ${codec}, Blob MIME type: "${blob.type}", Detected format: ${format}`);
 
                 // We can't accurately count frames with MediaRecorder in realtime mode
                 // So we assume all frames were captured unless we detect issues
@@ -229,7 +267,7 @@ export class MediaRecorderCapture {
                 if (elapsed >= options.duration) {
                     clearInterval(progressInterval);
                 }
-            }, 100);
+            }, VIDEO_CONSTANTS.PROGRESS_INTERVAL_MS);
 
             // Stop after duration
             setTimeout(() => {
@@ -244,7 +282,14 @@ export class MediaRecorderCapture {
     }
 
     /**
-     * Cancel an ongoing capture
+     * Cancel an ongoing capture.
+     *
+     * The cancellation flow is carefully ordered to avoid race conditions:
+     * 1. Set `isCancelled` flag first (prevents onstop from resolving)
+     * 2. Stop the recorder (may trigger onstop asynchronously)
+     * 3. Reject the promise synchronously (guarantees cancellation error)
+     * 4. Clear state (prevents double-handling)
+     *
      * @returns true if a capture was cancelled, false if no capture was in progress
      */
     cancel(): boolean {
@@ -252,19 +297,21 @@ export class MediaRecorderCapture {
             return false;
         }
 
+        // Step 1: Set flag BEFORE stopping - onstop handler checks this
         this.isCancelled = true;
 
-        // Stop the recorder if it's recording
+        // Step 2: Stop the recorder (may trigger onstop asynchronously)
         if (this.activeRecorder.state !== "inactive") {
             this.activeRecorder.stop();
         }
 
-        // Reject the promise
+        // Step 3: Reject synchronously - this happens before onstop can check isCancelled
         if (this.cancelReject) {
             this.cancelReject(new AnimationCancelledError());
             this.cancelReject = null;
         }
 
+        // Step 4: Clear state to prevent any further handling
         this.activeRecorder = null;
         return true;
     }

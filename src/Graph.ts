@@ -845,6 +845,16 @@ export class Graph implements GraphContext {
     }
 
     /**
+     * Get the total number of registered event listeners.
+     * Useful for debugging and testing to ensure listeners are properly cleaned up.
+     *
+     * @returns The number of registered listeners
+     */
+    listenerCount(): number {
+        return this.eventManager.listenerCount();
+    }
+
+    /**
      * Zoom the camera to fit all nodes in view.
      *
      * @remarks

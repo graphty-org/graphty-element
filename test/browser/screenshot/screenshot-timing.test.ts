@@ -137,10 +137,10 @@ test("waitForSettle times out if layout never settles", {timeout: 35000}, async(
 test("waitForOperations waits for pending operations", async() => {
     graph = await createTestGraphWithData();
 
-    // Queue a long operation
+    // Queue a long operation (use style-apply to avoid triggering layout-update)
     let operationComplete = false;
     const longOperation = graph.operationQueue.queueOperationAsync(
-        "data-add",
+        "style-apply",
         async() => {
             await new Promise((resolve) => setTimeout(resolve, 200));
             operationComplete = true;
@@ -192,11 +192,11 @@ test("can skip waiting with timing.waitForSettle: false", async() => {
 test("can skip waiting for operations with timing.waitForOperations: false", async() => {
     graph = await createTestGraphWithData();
 
-    // Queue a long operation
+    // Queue a long operation (use style-apply to avoid triggering layout-update)
     void graph.operationQueue.queueOperationAsync(
-        "data-add",
+        "style-apply",
         async() => {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
         },
     );
 
@@ -211,5 +211,6 @@ test("can skip waiting for operations with timing.waitForOperations: false", asy
     const endTime = Date.now();
 
     assert.ok(result.blob instanceof Blob, "Should return a blob");
-    assert.ok(endTime - startTime < 400, "Should capture quickly without waiting");
+    // Should complete much faster than 1000ms operation (allow 800ms for CI variability)
+    assert.ok(endTime - startTime < 800, "Should capture quickly without waiting");
 });

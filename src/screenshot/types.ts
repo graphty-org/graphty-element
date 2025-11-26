@@ -72,6 +72,33 @@ export interface ScreenshotOptions {
         waitForSettle?: boolean;
         waitForOperations?: boolean;
     };
+
+    // -------------------------------------------------------------------------
+    // Future Features (Not Yet Implemented)
+    // -------------------------------------------------------------------------
+
+    /**
+     * PNG metadata embedding.
+     *
+     * NOTE: This feature is not yet implemented. PNG metadata embedding
+     * requires binary format manipulation and external libraries.
+     * See design/screen-capture-design-review.md for details.
+     *
+     * When implemented, this will allow embedding custom metadata into PNG files
+     * such as graph information, capture settings, or application data.
+     *
+     * @future Phase 3+ feature
+     */
+    // embedMetadata?: boolean;
+
+    /**
+     * Custom metadata to embed in the PNG file.
+     *
+     * NOTE: This feature is not yet implemented. Requires embedMetadata support.
+     *
+     * @future Phase 3+ feature
+     */
+    // metadata?: Record<string, string>;
 }
 
 export interface ScreenshotResult {

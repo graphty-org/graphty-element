@@ -1,4 +1,4 @@
-import {afterEach, assert, expect, test} from "vitest";
+import {afterEach, assert, test} from "vitest";
 
 import type {Graph} from "../../../src/Graph";
 import {ScreenshotError, ScreenshotErrorCode} from "../../../src/screenshot/ScreenshotError.js";
@@ -12,10 +12,6 @@ afterEach(() => {
 
 test("throws DIMENSION_TOO_LARGE when exceeding browser limits", async() => {
     graph = await createTestGraphWithData();
-
-    await expect(
-        graph.captureScreenshot({width: 20000, height: 20000}),
-    ).rejects.toThrow(ScreenshotError);
 
     try {
         await graph.captureScreenshot({width: 20000, height: 20000});

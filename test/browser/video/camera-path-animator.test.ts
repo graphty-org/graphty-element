@@ -181,8 +181,12 @@ describe("CameraPathAnimator", () => {
 
             const animations = animator.createCameraAnimations(waypoints);
 
-            assert.equal(animations.length, 3);
-            assert.ok(animations.find((a) => a.targetProperty === "orthoSize"));
+            // 4 ortho bounds (left, right, top, bottom) + 2 pan (x, y)
+            assert.equal(animations.length, 6);
+            assert.ok(animations.find((a) => a.targetProperty === "orthoLeft"));
+            assert.ok(animations.find((a) => a.targetProperty === "orthoRight"));
+            assert.ok(animations.find((a) => a.targetProperty === "orthoTop"));
+            assert.ok(animations.find((a) => a.targetProperty === "orthoBottom"));
             assert.ok(animations.find((a) => a.targetProperty === "position.x"));
             assert.ok(animations.find((a) => a.targetProperty === "position.y"));
         });

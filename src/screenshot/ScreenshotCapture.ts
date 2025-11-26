@@ -10,6 +10,7 @@ import {
 
 import type {Graph} from "../Graph.js";
 import {copyToClipboard} from "./clipboard.js";
+import {SCREENSHOT_CONSTANTS} from "./constants.js";
 import {calculateDimensions} from "./dimensions.js";
 import {resolvePreset} from "./presets.js";
 import {ScreenshotError, ScreenshotErrorCode} from "./ScreenshotError.js";
@@ -17,6 +18,12 @@ import {enableTransparentBackground, restoreBackground} from "./transparency.js"
 import type {ClipboardStatus, QualityEnhancementOptions, ScreenshotOptions, ScreenshotResult} from "./types.js";
 
 export class ScreenshotCapture {
+    /**
+     * Common mesh names used for skybox/PhotoDome meshes.
+     * PhotoDome creates "testdome" by default; other common names are also included.
+     */
+    private readonly skyboxMeshNames = ["testdome", "skybox", "skyBox", "Skybox"];
+
     constructor(
         private engine: Engine | WebGPUEngine,
         private scene: Scene,
@@ -24,24 +31,64 @@ export class ScreenshotCapture {
         private graph: Graph,
     ) {}
 
-    async captureScreenshot(options: ScreenshotOptions = {}): Promise<ScreenshotResult> {
-        // Enqueue the screenshot operation to ensure sequential execution
-        // Store the result in a variable and return it after the queue completes
-        let result: ScreenshotResult | null = null;
+    /**
+     * Find the skybox mesh in the scene.
+     * Searches for common skybox mesh names and patterns.
+     * @returns The skybox mesh if found, null otherwise
+     */
+    private findSkyboxMesh(): Mesh | null {
+        // Check common skybox mesh names
+        for (const name of this.skyboxMeshNames) {
+            const mesh = this.scene.getMeshByName(name) as Mesh | null;
+            if (mesh) {
+                return mesh;
+            }
+        }
 
-        await this.graph.operationQueue.queueOperationAsync(
-            "render-update",
-            async() => {
-                result = await this.doScreenshotCapture(options);
-            },
-            {description: "capture screenshot"},
-        );
+        // Fallback: look for PhotoDome or common skybox patterns
+        const fallbackMesh = this.scene.meshes.find((m) =>
+            m.name.toLowerCase().includes("dome") ||
+            m.name.toLowerCase().includes("skybox"),
+        ) as Mesh | null;
 
-        // Result will always be set by the queued operation
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return result!;
+        return fallbackMesh ?? null;
     }
 
+    async captureScreenshot(options: ScreenshotOptions = {}): Promise<ScreenshotResult> {
+        // Check if we should wait for other operations (default: true)
+        const waitForOperations = options.timing?.waitForOperations ?? true;
+
+        if (waitForOperations) {
+            // Enqueue the screenshot operation to ensure sequential execution
+            // Store the result in a variable and return it after the queue completes
+            let result: ScreenshotResult | null = null;
+
+            await this.graph.operationQueue.queueOperationAsync(
+                "render-update",
+                async() => {
+                    result = await this.doScreenshotCapture(options);
+                },
+                {description: "capture screenshot"},
+            );
+
+            // Result will always be set by the queued operation
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            return result!;
+        }
+
+        // Execute immediately without waiting for other operations
+        return this.doScreenshotCapture(options);
+    }
+
+    /**
+     * Performs the actual screenshot capture logic.
+     * Handles timing options, camera overrides, quality enhancement, format conversion,
+     * and destinations (blob, download, clipboard). Ensures proper cleanup of temporary
+     * state (camera position, quality enhancement, transparent background) even on failure.
+     * @param options - Screenshot configuration options
+     * @returns Promise resolving to the ScreenshotResult
+     * @internal
+     */
     private async doScreenshotCapture(options: ScreenshotOptions): Promise<ScreenshotResult> {
         const startTime = Date.now();
 
@@ -107,7 +154,9 @@ export class ScreenshotCapture {
 
             // Determine format and quality
             const format = finalOptions.format ?? "png";
-            const quality = finalOptions.quality ?? (format === "jpeg" ? 0.92 : 1.0);
+            const quality = finalOptions.quality ?? (format === "jpeg" ?
+                SCREENSHOT_CONSTANTS.DEFAULT_JPEG_QUALITY :
+                SCREENSHOT_CONSTANTS.DEFAULT_PNG_QUALITY);
 
             // Validate format-specific options
             if (finalOptions.transparentBackground && format !== "png" && format !== "webp") {
@@ -120,8 +169,7 @@ export class ScreenshotCapture {
             // Handle transparent background
             let backgroundState;
             if (finalOptions.transparentBackground) {
-                // Find skybox mesh in the scene (PhotoDome creates a mesh named "testdome")
-                const skyboxMesh = this.scene.getMeshByName("testdome") as Mesh | null;
+                const skyboxMesh = this.findSkyboxMesh();
                 backgroundState = enableTransparentBackground(this.scene, skyboxMesh);
             }
 
@@ -222,7 +270,7 @@ export class ScreenshotCapture {
             } finally {
                 // Restore background state if it was modified
                 if (backgroundState) {
-                    const skyboxMesh = this.scene.getMeshByName("testdome") as Mesh | null;
+                    const skyboxMesh = this.findSkyboxMesh();
                     restoreBackground(this.scene, skyboxMesh, backgroundState);
                 }
 
@@ -244,6 +292,12 @@ export class ScreenshotCapture {
         }
     }
 
+    /**
+     * Waits for any pending operations in the operation queue to complete.
+     * Since the screenshot operation is queued, this is handled automatically
+     * by the queue - all previous operations complete before this one starts.
+     * @internal
+     */
     private async waitForOperations(): Promise<void> {
         // The operation queue automatically handles waiting for previous operations
         // Since we're already inside a queued operation, we don't need to do anything special
@@ -251,6 +305,13 @@ export class ScreenshotCapture {
         return Promise.resolve();
     }
 
+    /**
+     * Waits for the layout engine to settle before capturing a screenshot.
+     * If no layout engine is active or it's already settled, returns immediately.
+     * Throws ScreenshotError with LAYOUT_SETTLE_TIMEOUT if the layout doesn't settle
+     * within the configured timeout (SCREENSHOT_CONSTANTS.LAYOUT_SETTLE_TIMEOUT_MS).
+     * @internal
+     */
     private async waitForLayoutSettle(): Promise<void> {
         const layoutManager = this.graph.getLayoutManager();
 
@@ -265,37 +326,52 @@ export class ScreenshotCapture {
         // Wait for layout to settle (with timeout)
         return new Promise((resolve, reject) => {
             let completed = false;
+            let listenerId: symbol | null = null;
+
+            const cleanup = (): void => {
+                clearTimeout(timeout);
+                if (listenerId) {
+                    this.graph.eventManager.removeListener(listenerId);
+                    listenerId = null;
+                }
+            };
 
             const timeout = setTimeout(() => {
                 if (!completed) {
                     completed = true;
+                    cleanup();
                     reject(new ScreenshotError(
                         "Layout did not settle within timeout",
                         ScreenshotErrorCode.LAYOUT_SETTLE_TIMEOUT,
                     ));
                 }
-            }, 30000); // 30 second timeout
+            }, SCREENSHOT_CONSTANTS.LAYOUT_SETTLE_TIMEOUT_MS);
 
             const handler = (): void => {
                 if (!completed && layoutManager.isSettled) {
                     completed = true;
-                    clearTimeout(timeout);
+                    cleanup();
                     resolve();
                 }
             };
 
-            this.graph.addListener("graph-settled", handler);
+            listenerId = this.graph.eventManager.addListener("graph-settled", handler);
 
             // Check immediately in case it's already settled
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (!completed && layoutManager.isSettled) {
                 completed = true;
-                clearTimeout(timeout);
+                cleanup();
                 resolve();
             }
         });
     }
 
+    /**
+     * Waits for a single render frame to complete.
+     * Used to ensure the scene state is fully rendered before capture.
+     * @internal
+     */
     private async waitForRender(): Promise<void> {
         return new Promise((resolve) => {
             this.scene.onAfterRenderObservable.addOnce(() => {
@@ -304,6 +380,19 @@ export class ScreenshotCapture {
         });
     }
 
+    /**
+     * Captures the current scene as a Blob image.
+     * Handles supersampling if enabled, capturing at higher resolution and downscaling.
+     * @param format - Image format ('png', 'jpeg', or 'webp')
+     * @param quality - Image quality (0.0 to 1.0)
+     * @param captureWidth - Width to capture (may be supersampled)
+     * @param captureHeight - Height to capture (may be supersampled)
+     * @param supersampleFactor - Optional supersampling factor for downscaling
+     * @param targetWidth - Final output width (if downscaling)
+     * @param targetHeight - Final output height (if downscaling)
+     * @returns Promise resolving to the captured image Blob
+     * @internal
+     */
     private async captureBlob(
         format: string,
         quality: number,
@@ -339,7 +428,7 @@ export class ScreenshotCapture {
             });
 
             // Convert data URL to blob
-            let blob = await this.dataUrlToBlob(dataUrl, mimeType);
+            let blob = await this.dataUrlToBlob(dataUrl, mimeType, quality);
 
             // If supersampling was used, downscale to target size
             if (supersampleFactor && supersampleFactor > 1 && targetWidth && targetHeight) {
@@ -356,21 +445,40 @@ export class ScreenshotCapture {
         }
     }
 
-    private async dataUrlToBlob(dataUrl: string, mimeType: string): Promise<Blob> {
+    /**
+     * Converts a data URL to a Blob, optionally converting the image format.
+     * Since Babylon.js CreateScreenshotAsync always returns PNG, this method
+     * handles conversion to JPEG or WebP formats as needed.
+     * @param dataUrl - The data URL from CreateScreenshotAsync
+     * @param mimeType - Target MIME type for the output
+     * @param quality - Image quality for lossy formats (0.0 to 1.0)
+     * @returns Promise resolving to the image Blob
+     * @internal
+     */
+    private async dataUrlToBlob(dataUrl: string, mimeType: string, quality: number): Promise<Blob> {
         const response = await fetch(dataUrl);
         const arrayBuffer = await response.arrayBuffer();
 
         // If we need a different format, convert it
         // For now, CreateScreenshotAsync always returns PNG, so we need to convert
         if (mimeType !== "image/png") {
-            return this.convertBlobFormat(new Blob([arrayBuffer], {type: "image/png"}), mimeType);
+            return this.convertBlobFormat(new Blob([arrayBuffer], {type: "image/png"}), mimeType, quality);
         }
 
         return new Blob([arrayBuffer], {type: mimeType});
     }
 
-    private async convertBlobFormat(blob: Blob, targetMimeType: string): Promise<Blob> {
-    // Create an image element to load the blob
+    /**
+     * Converts a Blob from one image format to another using canvas rendering.
+     * Loads the blob into an Image, draws it to a canvas, and exports in the target format.
+     * @param blob - Source image Blob
+     * @param targetMimeType - Target MIME type (e.g., 'image/jpeg')
+     * @param quality - Image quality for lossy formats (0.0 to 1.0)
+     * @returns Promise resolving to the converted Blob
+     * @internal
+     */
+    private async convertBlobFormat(blob: Blob, targetMimeType: string, quality: number): Promise<Blob> {
+        // Create an image element to load the blob
         const img = new Image();
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -405,7 +513,7 @@ export class ScreenshotCapture {
                         }
                     },
                     targetMimeType,
-                    0.92,
+                    quality,
                 );
             };
 
@@ -423,6 +531,13 @@ export class ScreenshotCapture {
         });
     }
 
+    /**
+     * Downloads a Blob as a file using a temporary anchor element.
+     * Creates an object URL, triggers a click on a download link, then cleans up.
+     * @param blob - The Blob to download
+     * @param filename - The filename for the downloaded file
+     * @internal
+     */
     private downloadBlob(blob: Blob, filename: string): void {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -435,7 +550,15 @@ export class ScreenshotCapture {
     }
 
     /**
-     * Downscale an image blob to the target dimensions using high-quality bilinear filtering
+     * Downscales an image Blob to target dimensions using high-quality bilinear filtering.
+     * Used when supersampling is enabled to create the final output at the requested resolution.
+     * @param blob - Source image Blob (at supersampled resolution)
+     * @param targetWidth - Final output width
+     * @param targetHeight - Final output height
+     * @param mimeType - Output MIME type
+     * @param quality - Image quality for lossy formats (0.0 to 1.0)
+     * @returns Promise resolving to the downscaled Blob
+     * @internal
      */
     private async downscaleBlob(
         blob: Blob,
