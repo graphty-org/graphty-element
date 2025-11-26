@@ -94,6 +94,9 @@ export class Graph implements GraphContext {
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
+    // Active video capture for cancellation support
+    private activeCapture: import("./video/MediaRecorderCapture.js").MediaRecorderCapture | null = null;
+
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
         this.eventManager = new EventManager();
@@ -1109,27 +1112,35 @@ export class Graph implements GraphContext {
 
         const capture = new MediaRecorderCapture();
 
+        // Store reference for cancellation
+        this.activeCapture = capture;
+
         // Set up progress event handler
         const onProgress = (progress: number): void => {
             this.eventManager.emitGraphEvent("animation-progress", {progress});
         };
 
-        // Handle animated camera mode
-        if (options.cameraMode === "animated") {
-            return this.captureAnimatedCameraVideo(options, capture, onProgress);
+        try {
+            // Handle animated camera mode
+            if (options.cameraMode === "animated") {
+                return await this.captureAnimatedCameraVideo(options, capture, onProgress);
+            }
+
+            // Capture stationary video
+            const result = await capture.captureRealtime(
+                this.canvas,
+                options,
+                onProgress,
+            );
+
+            // Handle download if requested
+            this.handleVideoDownload(result, options);
+
+            return result;
+        } finally {
+            // Clear reference when done
+            this.activeCapture = null;
         }
-
-        // Capture stationary video
-        const result = await capture.captureRealtime(
-            this.canvas,
-            options,
-            onProgress,
-        );
-
-        // Handle download if requested
-        this.handleVideoDownload(result, options);
-
-        return result;
     }
 
     /**
@@ -1217,10 +1228,54 @@ export class Graph implements GraphContext {
 
     /**
      * Cancel ongoing animation capture
+     *
+     * @returns true if a capture was cancelled, false if no capture was in progress
+     *
+     * @example
+     * ```typescript
+     * // Start a capture
+     * const capturePromise = graph.captureAnimation({
+     *   duration: 10000,
+     *   fps: 30,
+     *   cameraMode: 'stationary'
+     * });
+     *
+     * // Cancel it after 2 seconds
+     * setTimeout(() => {
+     *   const wasCancelled = graph.cancelAnimationCapture();
+     *   console.log('Cancelled:', wasCancelled);
+     * }, 2000);
+     *
+     * // The promise will reject with AnimationCancelledError
+     * try {
+     *   await capturePromise;
+     * } catch (error) {
+     *   if (error.name === 'AnimationCancelledError') {
+     *     console.log('Capture was cancelled');
+     *   }
+     * }
+     * ```
      */
-    cancelAnimationCapture(): void {
-        // Phase 7: Basic implementation - will be enhanced in later phases
-        throw new Error("Animation capture cancelled");
+    cancelAnimationCapture(): boolean {
+        if (!this.activeCapture) {
+            return false;
+        }
+
+        const cancelled = this.activeCapture.cancel();
+
+        // Emit cancellation event
+        if (cancelled) {
+            this.eventManager.emitGraphEvent("animation-cancelled", {});
+        }
+
+        return cancelled;
+    }
+
+    /**
+     * Check if an animation capture is currently in progress
+     */
+    isAnimationCapturing(): boolean {
+        return this.activeCapture?.isCapturing() ?? false;
     }
 
     /**

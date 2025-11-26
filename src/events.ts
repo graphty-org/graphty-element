@@ -68,7 +68,8 @@ export interface GraphGenericEvent {
     type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded"
         | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
         | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted"
-        | "animation-progress";
+        | "animation-progress" | "animation-cancelled"
+        | "screenshot-enhancing" | "screenshot-ready";
     [key: string]: unknown;
 }
 

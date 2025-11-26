@@ -2,9 +2,22 @@ import {ScreenshotError, ScreenshotErrorCode} from "../screenshot/ScreenshotErro
 import type {AnimationOptions, AnimationResult} from "./VideoCapture.js";
 
 /**
+ * Error thrown when animation capture is cancelled
+ */
+export class AnimationCancelledError extends Error {
+    constructor() {
+        super("Animation capture cancelled");
+        this.name = "AnimationCancelledError";
+    }
+}
+
+/**
  * MediaRecorder wrapper with codec detection and Safari support
  */
 export class MediaRecorderCapture {
+    private activeRecorder: MediaRecorder | null = null;
+    private isCancelled = false;
+    private cancelReject: ((error: Error) => void) | null = null;
     /**
      * Detects browser and returns best supported codec
      *
@@ -101,6 +114,10 @@ export class MediaRecorderCapture {
         options: AnimationOptions,
         onProgress?: (progress: number) => void,
     ): Promise<AnimationResult> {
+        // Reset cancellation state for new capture
+        this.isCancelled = false;
+        this.cancelReject = null;
+
         const codec = this.getSupportedCodec(options.format);
         const fps = options.fps ?? 30;
         const width = options.width ?? canvas.width;
@@ -119,11 +136,23 @@ export class MediaRecorderCapture {
         }
 
         const recorder = new MediaRecorder(stream, recorderOptions);
+        this.activeRecorder = recorder;
 
         // Collect chunks
         const chunks: Blob[] = [];
 
         return new Promise<AnimationResult>((resolve, reject) => {
+            // Store reject for cancellation
+            this.cancelReject = reject;
+
+            // Check if already cancelled before starting
+            if (this.isCancelled) {
+                this.activeRecorder = null;
+                this.cancelReject = null;
+                reject(new AnimationCancelledError());
+                return;
+            }
+
             recorder.ondataavailable = (e) => {
                 if (e.data.size > 0) {
                     chunks.push(e.data);
@@ -131,6 +160,14 @@ export class MediaRecorderCapture {
             };
 
             recorder.onstop = () => {
+                this.activeRecorder = null;
+                this.cancelReject = null;
+
+                // If cancelled, don't resolve - the rejection has already happened
+                if (this.isCancelled) {
+                    return;
+                }
+
                 const blob = new Blob(chunks, {type: recorder.mimeType});
                 const expectedFrames = Math.floor((options.duration / 1000) * fps);
 
@@ -167,6 +204,8 @@ export class MediaRecorderCapture {
             };
 
             recorder.onerror = (e: Event) => {
+                this.activeRecorder = null;
+                this.cancelReject = null;
                 const errorMsg = e instanceof ErrorEvent ? e.message : "Unknown error";
                 reject(new ScreenshotError(`MediaRecorder error: ${errorMsg}`, ScreenshotErrorCode.VIDEO_CAPTURE_FAILED));
             };
@@ -177,6 +216,12 @@ export class MediaRecorderCapture {
             // Track progress
             const startTime = Date.now();
             const progressInterval = setInterval(() => {
+                // Stop progress tracking if cancelled
+                if (this.isCancelled) {
+                    clearInterval(progressInterval);
+                    return;
+                }
+
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(100, (elapsed / options.duration) * 100);
                 onProgress?.(progress);
@@ -189,10 +234,46 @@ export class MediaRecorderCapture {
             // Stop after duration
             setTimeout(() => {
                 clearInterval(progressInterval);
-                recorder.stop();
-                onProgress?.(100);
+                // Only stop if not already cancelled
+                if (!this.isCancelled && recorder.state !== "inactive") {
+                    recorder.stop();
+                    onProgress?.(100);
+                }
             }, options.duration);
         });
+    }
+
+    /**
+     * Cancel an ongoing capture
+     * @returns true if a capture was cancelled, false if no capture was in progress
+     */
+    cancel(): boolean {
+        if (!this.activeRecorder) {
+            return false;
+        }
+
+        this.isCancelled = true;
+
+        // Stop the recorder if it's recording
+        if (this.activeRecorder.state !== "inactive") {
+            this.activeRecorder.stop();
+        }
+
+        // Reject the promise
+        if (this.cancelReject) {
+            this.cancelReject(new AnimationCancelledError());
+            this.cancelReject = null;
+        }
+
+        this.activeRecorder = null;
+        return true;
+    }
+
+    /**
+     * Check if a capture is currently in progress
+     */
+    isCapturing(): boolean {
+        return this.activeRecorder !== null && this.activeRecorder.state === "recording";
     }
 
     /**

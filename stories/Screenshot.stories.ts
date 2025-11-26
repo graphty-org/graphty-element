@@ -946,3 +946,215 @@ export const ErrorHandling: Story = {
     </div>
   `,
 };
+
+export const EnhancedQuality: Story = {
+    name: "Enhanced Quality (Supersampling)",
+    args: {
+        layoutConfig: {
+            seed: 42,
+        },
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 2000,
+                },
+            },
+        }),
+    },
+    render: (args) => html`
+    <div style="display: flex; flex-direction: column; gap: 16px; height: 100vh;">
+      <div style="flex: 1; min-height: 0;">
+        <graphty-element
+          id="graph-enhanced"
+          style="width: 100%; height: 100%; display: block;"
+          .nodeData=${args.nodeData}
+          .edgeData=${args.edgeData}
+          .layoutConfig=${args.layoutConfig}
+          .styleTemplate=${args.styleTemplate}
+        ></graphty-element>
+      </div>
+
+      <div
+        style="padding: 16px; background: #f5f5f5; border-top: 1px solid #ddd; display: flex; gap: 8px; flex-wrap: wrap;"
+      >
+        <button
+          @click=${async() => {
+                const el = document.querySelector("#graph-enhanced");
+                if (!(el instanceof Graphty)) {
+                    return;
+                }
+
+                const statusEl = document.querySelector("#enhance-status");
+                if (statusEl) {
+                    statusEl.textContent = "Capturing standard screenshot...";
+                }
+
+                const result = await el.captureScreenshot({
+                    enhanceQuality: false,
+                    destination: {download: true},
+                    downloadFilename: "graph-standard.png",
+                });
+
+                if (statusEl) {
+                    statusEl.textContent = `Standard: ${result.metadata.width}x${result.metadata.height}, ${(result.metadata.byteSize / 1024).toFixed(1)}KB`;
+                }
+            }}
+          style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          📸 Standard (No AA)
+        </button>
+
+        <button
+          @click=${async() => {
+                const el = document.querySelector("#graph-enhanced");
+                if (!(el instanceof Graphty)) {
+                    return;
+                }
+
+                const statusEl = document.querySelector("#enhance-status");
+                if (statusEl) {
+                    statusEl.textContent = "Capturing with 2x supersampling + 4x MSAA...";
+                }
+
+                const result = await el.captureScreenshot({
+                    enhanceQuality: true, // Default: 2x supersample + 4x MSAA
+                    destination: {download: true},
+                    downloadFilename: "graph-enhanced-2x.png",
+                });
+
+                if (statusEl) {
+                    const enhTime = result.metadata.enhancementTime ?? 0;
+                    statusEl.textContent = `Enhanced (2x SS + 4x MSAA): ${result.metadata.width}x${result.metadata.height}, ${(result.metadata.byteSize / 1024).toFixed(1)}KB, took ${enhTime}ms`;
+                }
+            }}
+          style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          ✨ 2x Supersample + MSAA (Default)
+        </button>
+
+        <button
+          @click=${async() => {
+                const el = document.querySelector("#graph-enhanced");
+                if (!(el instanceof Graphty)) {
+                    return;
+                }
+
+                const statusEl = document.querySelector("#enhance-status");
+                if (statusEl) {
+                    statusEl.textContent = "Capturing with 4x supersampling + 8x MSAA (highest quality)...";
+                }
+
+                const result = await el.captureScreenshot({
+                    enhanceQuality: {
+                        supersampleFactor: 4,
+                        msaaSamples: 8,
+                    },
+                    destination: {download: true},
+                    downloadFilename: "graph-enhanced-4x.png",
+                });
+
+                if (statusEl) {
+                    const enhTime = result.metadata.enhancementTime ?? 0;
+                    statusEl.textContent = `Enhanced (4x SS + 8x MSAA): ${result.metadata.width}x${result.metadata.height}, ${(result.metadata.byteSize / 1024).toFixed(1)}KB, took ${enhTime}ms`;
+                }
+            }}
+          style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          ✨ 4x Supersample + 8x MSAA (Max Quality)
+        </button>
+
+        <button
+          @click=${async() => {
+                const el = document.querySelector("#graph-enhanced");
+                if (!(el instanceof Graphty)) {
+                    return;
+                }
+
+                const statusEl = document.querySelector("#enhance-status");
+                if (statusEl) {
+                    statusEl.textContent = "Capturing with MSAA only (no supersampling)...";
+                }
+
+                const result = await el.captureScreenshot({
+                    enhanceQuality: {
+                        supersampleFactor: 1, // No supersampling
+                        msaaSamples: 8,
+                    },
+                    destination: {download: true},
+                    downloadFilename: "graph-msaa-only.png",
+                });
+
+                if (statusEl) {
+                    const enhTime = result.metadata.enhancementTime ?? 0;
+                    statusEl.textContent = `MSAA Only (8x): ${result.metadata.width}x${result.metadata.height}, ${(result.metadata.byteSize / 1024).toFixed(1)}KB, took ${enhTime}ms`;
+                }
+            }}
+          style="padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          ✨ MSAA Only (8x, No SS)
+        </button>
+
+        <button
+          @click=${async() => {
+                const el = document.querySelector("#graph-enhanced");
+                if (!(el instanceof Graphty)) {
+                    return;
+                }
+
+                const statusEl = document.querySelector("#enhance-status");
+                if (statusEl) {
+                    statusEl.textContent = "Capturing with all methods combined...";
+                }
+
+                const result = await el.captureScreenshot({
+                    enhanceQuality: {
+                        supersampleFactor: 2,
+                        msaaSamples: 4,
+                        fxaa: true, // Add FXAA as final pass
+                    },
+                    destination: {download: true},
+                    downloadFilename: "graph-all-aa.png",
+                });
+
+                if (statusEl) {
+                    const enhTime = result.metadata.enhancementTime ?? 0;
+                    statusEl.textContent = `All AA (2x SS + 4x MSAA + FXAA): ${result.metadata.width}x${result.metadata.height}, ${(result.metadata.byteSize / 1024).toFixed(1)}KB, took ${enhTime}ms`;
+                }
+            }}
+          style="padding: 8px 16px; background: #6f42c1; color: white; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          ✨ SS + MSAA + FXAA (All Combined)
+        </button>
+
+        <div style="flex-basis: 100%; padding: 8px; background: #fff; border-radius: 4px;">
+          <div id="enhance-status" style="font-family: monospace; padding: 4px 0; color: #666;">
+            Click a button to capture a screenshot
+          </div>
+          <div style="margin-top: 8px; font-size: 12px; color: #666;">
+            <strong>Anti-Aliasing Methods:</strong>
+            <ul style="margin: 4px 0; padding-left: 20px;">
+              <li><strong>Supersampling (SS):</strong> Render at higher resolution, then downscale. Best quality for static images.</li>
+              <li><strong>MSAA:</strong> Multi-Sample Anti-Aliasing. Good for edges, hardware-accelerated.</li>
+              <li><strong>FXAA:</strong> Fast Approximate AA. Blurs edges slightly, use as final pass if needed.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="flex-basis: 100%; padding: 8px; background: #fff; border-radius: 4px;">
+          <strong>Enhanced Quality Features:</strong>
+          <ul style="margin: 4px 0; padding-left: 20px;">
+            <li><strong>FXAA Anti-Aliasing:</strong> Applies Fast Approximate Anti-Aliasing for smoother edges</li>
+            <li><strong>Enhancement Time:</strong> Returns timing metrics in result.metadata.enhancementTime</li>
+            <li><strong>Events:</strong> Emits 'screenshot-enhancing' and 'screenshot-ready' events</li>
+            <li><strong>Combinable:</strong> Works with all other options (multiplier, transparent, presets)</li>
+          </ul>
+          <p style="margin: 8px 0 0 0; font-size: 0.9em; color: #666;">
+            <strong>Tip:</strong> Compare standard vs enhanced screenshots side-by-side to see the difference in edge smoothness.
+          </p>
+        </div>
+      </div>
+    </div>
+  `,
+};

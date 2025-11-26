@@ -182,6 +182,9 @@ export class EventManager implements Manager {
             case "operation-progress":
             case "operation-obsoleted":
             case "animation-progress":
+            case "animation-cancelled":
+            case "screenshot-enhancing":
+            case "screenshot-ready":
             case "camera-state-changed": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {

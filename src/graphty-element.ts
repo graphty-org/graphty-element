@@ -524,9 +524,48 @@ export class Graphty extends LitElement {
      * Phase 7: Cancel Animation Capture
      * Cancel an ongoing animation capture
      * Available from Phase 7 onwards.
+     *
+     * @returns true if a capture was cancelled, false if no capture was in progress
+     *
+     * @example
+     * ```typescript
+     * const el = document.querySelector("graphty-element");
+     *
+     * // Start a 10-second capture
+     * const capturePromise = el.captureAnimation({
+     *   duration: 10000,
+     *   fps: 30,
+     *   cameraMode: 'stationary'
+     * });
+     *
+     * // Cancel after 2 seconds
+     * setTimeout(() => {
+     *   const wasCancelled = el.cancelAnimationCapture();
+     *   console.log('Cancelled:', wasCancelled);
+     * }, 2000);
+     *
+     * // Handle the cancellation
+     * try {
+     *   await capturePromise;
+     * } catch (error) {
+     *   if (error.name === 'AnimationCancelledError') {
+     *     console.log('Capture was cancelled by user');
+     *   }
+     * }
+     * ```
      */
-    cancelAnimationCapture(): void {
-        this.#graph.cancelAnimationCapture();
+    cancelAnimationCapture(): boolean {
+        return this.#graph.cancelAnimationCapture();
+    }
+
+    /**
+     * Phase 7: Check if animation capture is in progress
+     * Available from Phase 7 onwards.
+     *
+     * @returns true if a capture is currently running
+     */
+    isAnimationCapturing(): boolean {
+        return this.#graph.isAnimationCapturing();
     }
 
     /**

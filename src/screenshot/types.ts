@@ -5,6 +5,34 @@ export type ClipboardStatus =
   | "not-secure-context"
   | "failed";
 
+/**
+ * Options for quality enhancement during screenshot capture.
+ */
+export interface QualityEnhancementOptions {
+    /**
+     * Supersampling factor - renders at this multiple of the target resolution
+     * then downscales for smoother edges. Higher values = better quality but slower.
+     * @default 2
+     */
+    supersampleFactor?: number;
+
+    /**
+     * MSAA (Multi-Sample Anti-Aliasing) sample count.
+     * Values: 1 (off), 2, 4, 8, 16 (hardware dependent).
+     * Combined with supersampling for even better results.
+     * @default 4
+     */
+    msaaSamples?: number;
+
+    /**
+     * Enable FXAA as a final pass after other AA methods.
+     * Generally not needed when using supersampling, but can help smooth
+     * any remaining jaggies.
+     * @default false
+     */
+    fxaa?: boolean;
+}
+
 export interface ScreenshotOptions {
     format?: "png" | "jpeg" | "webp";
     quality?: number;
@@ -13,7 +41,25 @@ export interface ScreenshotOptions {
     height?: number;
     strictAspectRatio?: boolean;
     transparentBackground?: boolean;
-    enhanceQuality?: boolean;
+    /**
+     * Enable quality enhancement for the screenshot.
+     * Can be a boolean (true = default settings) or an object with specific settings.
+     *
+     * Quality enhancement uses supersampling (rendering at higher resolution then downscaling)
+     * which provides the highest quality anti-aliasing for screenshots.
+     *
+     * @example
+     * // Use default settings (2x supersampling)
+     * enhanceQuality: true
+     *
+     * @example
+     * // Custom settings
+     * enhanceQuality: {
+     *   supersampleFactor: 4,  // 4x supersampling (very high quality, slower)
+     *   msaaSamples: 4,        // Also add MSAA
+     * }
+     */
+    enhanceQuality?: boolean | QualityEnhancementOptions;
     destination?: {
         blob?: boolean;
         download?: boolean;
@@ -40,6 +86,8 @@ export interface ScreenshotResult {
         format: string;
         byteSize: number;
         captureTime: number;
+        /** Time spent on quality enhancement (FXAA), only present if enhanceQuality was true */
+        enhancementTime?: number;
     };
 }
 

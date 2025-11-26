@@ -1,6 +1,8 @@
 import {
     CreateScreenshotAsync,
+    DefaultRenderingPipeline,
     type Engine,
+    FxaaPostProcess,
     type Mesh,
     type Scene,
     type WebGPUEngine,
@@ -12,7 +14,7 @@ import {calculateDimensions} from "./dimensions.js";
 import {resolvePreset} from "./presets.js";
 import {ScreenshotError, ScreenshotErrorCode} from "./ScreenshotError.js";
 import {enableTransparentBackground, restoreBackground} from "./transparency.js";
-import type {ClipboardStatus, ScreenshotOptions, ScreenshotResult} from "./types.js";
+import type {ClipboardStatus, QualityEnhancementOptions, ScreenshotOptions, ScreenshotResult} from "./types.js";
 
 export class ScreenshotCapture {
     constructor(
@@ -123,14 +125,45 @@ export class ScreenshotCapture {
                 backgroundState = enableTransparentBackground(this.scene, skyboxMesh);
             }
 
+            // Handle quality enhancement (supersampling + optional MSAA/FXAA)
+            let enhancementState: EnhancementState | null = null;
+            let enhancementStartTime: number | undefined;
+            if (finalOptions.enhanceQuality) {
+                enhancementStartTime = Date.now();
+                this.graph.eventManager.emitGraphEvent("screenshot-enhancing", {});
+
+                // Normalize enhanceQuality to options object
+                const enhancementOptions: QualityEnhancementOptions =
+                    typeof finalOptions.enhanceQuality === "boolean" ?
+                        {} : // Use defaults
+                        finalOptions.enhanceQuality;
+
+                enhancementState = this.enableQualityEnhancement(enhancementOptions, dimensions);
+                // Wait for renders with the enhancement applied
+                await this.waitForRender();
+                await this.waitForRender(); // Extra frame for pipeline to stabilize
+            }
+
             try {
                 // Handle destinations
                 const destinations = finalOptions.destination ?? {blob: true};
                 let clipboardStatus: ClipboardStatus = "success";
                 let clipboardError: Error | undefined;
 
+                // Determine capture dimensions (may be supersampled)
+                const captureWidth = enhancementState?.supersampledWidth ?? dimensions.width;
+                const captureHeight = enhancementState?.supersampledHeight ?? dimensions.height;
+
                 // Start capturing the blob (this promise will be shared)
-                const blobPromise = this.captureBlob(format, quality, dimensions.width, dimensions.height);
+                const blobPromise = this.captureBlob(
+                    format,
+                    quality,
+                    captureWidth,
+                    captureHeight,
+                    enhancementState?.supersampleFactor,
+                    dimensions.width,
+                    dimensions.height,
+                );
 
                 // If clipboard is requested, start clipboard write immediately (before blob is ready)
                 // This preserves the user gesture context
@@ -165,6 +198,12 @@ export class ScreenshotCapture {
                 }
 
                 const captureTime = Date.now() - startTime;
+                const enhancementTime = enhancementStartTime ? Date.now() - enhancementStartTime : undefined;
+
+                // Emit screenshot-ready event with enhancement info
+                if (finalOptions.enhanceQuality) {
+                    this.graph.eventManager.emitGraphEvent("screenshot-ready", {enhancementTime});
+                }
 
                 return {
                     blob,
@@ -177,6 +216,7 @@ export class ScreenshotCapture {
                         format,
                         byteSize: blob.size,
                         captureTime,
+                        enhancementTime,
                     },
                 };
             } finally {
@@ -184,6 +224,11 @@ export class ScreenshotCapture {
                 if (backgroundState) {
                     const skyboxMesh = this.scene.getMeshByName("testdome") as Mesh | null;
                     restoreBackground(this.scene, skyboxMesh, backgroundState);
+                }
+
+                // Remove quality enhancement if it was added
+                if (enhancementState) {
+                    this.disableQualityEnhancement(enhancementState);
                 }
             }
         } finally {
@@ -262,8 +307,11 @@ export class ScreenshotCapture {
     private async captureBlob(
         format: string,
         quality: number,
-        width: number,
-        height: number,
+        captureWidth: number,
+        captureHeight: number,
+        supersampleFactor?: number,
+        targetWidth?: number,
+        targetHeight?: number,
     ): Promise<Blob> {
         try {
             // Map our format names to MIME types
@@ -285,13 +333,18 @@ export class ScreenshotCapture {
             }
 
             const dataUrl = await CreateScreenshotAsync(this.engine, this.scene.activeCamera, {
-                width,
-                height,
+                width: captureWidth,
+                height: captureHeight,
                 precision: quality,
             });
 
             // Convert data URL to blob
-            const blob = await this.dataUrlToBlob(dataUrl, mimeType);
+            let blob = await this.dataUrlToBlob(dataUrl, mimeType);
+
+            // If supersampling was used, downscale to target size
+            if (supersampleFactor && supersampleFactor > 1 && targetWidth && targetHeight) {
+                blob = await this.downscaleBlob(blob, targetWidth, targetHeight, mimeType, quality);
+            }
 
             return blob;
         } catch (error) {
@@ -380,4 +433,147 @@ export class ScreenshotCapture {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
+
+    /**
+     * Downscale an image blob to the target dimensions using high-quality bilinear filtering
+     */
+    private async downscaleBlob(
+        blob: Blob,
+        targetWidth: number,
+        targetHeight: number,
+        mimeType: string,
+        quality: number,
+    ): Promise<Blob> {
+        const img = new Image();
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+            throw new ScreenshotError(
+                "Failed to get 2D context for downscaling",
+                ScreenshotErrorCode.CANVAS_ALLOCATION_FAILED,
+            );
+        }
+
+        const imgUrl = URL.createObjectURL(blob);
+
+        return new Promise((resolve, reject) => {
+            img.onload = () => {
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+
+                // Enable high-quality image scaling
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = "high";
+
+                // Draw the supersampled image scaled down
+                ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                URL.revokeObjectURL(imgUrl);
+
+                canvas.toBlob(
+                    (downscaledBlob) => {
+                        if (downscaledBlob) {
+                            resolve(downscaledBlob);
+                        } else {
+                            reject(
+                                new ScreenshotError(
+                                    "Failed to downscale image",
+                                    ScreenshotErrorCode.SCREENSHOT_CAPTURE_FAILED,
+                                ),
+                            );
+                        }
+                    },
+                    mimeType,
+                    quality,
+                );
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(imgUrl);
+                reject(
+                    new ScreenshotError(
+                        "Failed to load image for downscaling",
+                        ScreenshotErrorCode.SCREENSHOT_CAPTURE_FAILED,
+                    ),
+                );
+            };
+
+            img.src = imgUrl;
+        });
+    }
+
+    /**
+     * Enable quality enhancement using supersampling and optional MSAA/FXAA.
+     * Returns the enhancement state so it can be removed after capture.
+     */
+    private enableQualityEnhancement(
+        options: QualityEnhancementOptions,
+        dimensions: {width: number, height: number},
+    ): EnhancementState {
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            throw new ScreenshotError(
+                "No active camera for quality enhancement",
+                ScreenshotErrorCode.SCREENSHOT_CAPTURE_FAILED,
+            );
+        }
+
+        // Default values
+        const supersampleFactor = options.supersampleFactor ?? 2;
+        const msaaSamples = options.msaaSamples ?? 4;
+        const useFxaa = options.fxaa ?? false;
+
+        const state: EnhancementState = {
+            supersampleFactor,
+            supersampledWidth: dimensions.width * supersampleFactor,
+            supersampledHeight: dimensions.height * supersampleFactor,
+        };
+
+        // Create DefaultRenderingPipeline for MSAA support
+        if (msaaSamples > 1) {
+            const pipeline = new DefaultRenderingPipeline(
+                "screenshotPipeline",
+                false, // hdr - not needed for screenshots
+                this.scene,
+                [camera],
+            );
+            pipeline.samples = msaaSamples;
+            pipeline.fxaaEnabled = useFxaa;
+            state.pipeline = pipeline;
+        } else if (useFxaa) {
+            // FXAA only, no pipeline needed
+            const fxaa = new FxaaPostProcess(
+                "screenshotFxaa",
+                1.0,
+                camera,
+            );
+            state.fxaaPostProcess = fxaa;
+        }
+
+        return state;
+    }
+
+    /**
+     * Remove quality enhancement after capture
+     */
+    private disableQualityEnhancement(state: EnhancementState): void {
+        if (state.pipeline) {
+            state.pipeline.dispose();
+        }
+
+        if (state.fxaaPostProcess) {
+            state.fxaaPostProcess.dispose();
+        }
+    }
+}
+
+/**
+ * State for quality enhancement that needs to be cleaned up after capture
+ */
+interface EnhancementState {
+    supersampleFactor: number;
+    supersampledWidth: number;
+    supersampledHeight: number;
+    pipeline?: DefaultRenderingPipeline;
+    fxaaPostProcess?: FxaaPostProcess;
 }
