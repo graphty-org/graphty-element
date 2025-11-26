@@ -1,9 +1,10 @@
-import {Observer, Ray, Scene, Vector3, type WebXRDefaultExperience, WebXRFeatureName, type WebXRInputSource} from "@babylonjs/core";
+import {Observer, Quaternion, Ray, Scene, Space, Vector3, type WebXRDefaultExperience, WebXRFeatureName, type WebXRInputSource} from "@babylonjs/core";
 
 import type {Node as GraphNode} from "../Node";
 import type {XRInputConfig} from "../config/XRConfig";
 import type {XRSessionManager} from "../xr/XRSessionManager";
 import type {InputHandler} from "./CameraManager";
+import {XRGestureDetector, type HandState} from "./XRGestureDetector";
 
 /**
  * XRInputController coordinates XR input sources and enables XR-specific features.
@@ -33,6 +34,7 @@ export class XRInputController implements InputHandler {
         node: GraphNode;
         controller: WebXRInputSource;
     } | null = null;
+    private gestureDetector: XRGestureDetector;
 
     constructor(
         scene: Scene,
@@ -42,6 +44,7 @@ export class XRInputController implements InputHandler {
         this.scene = scene;
         this.sessionManager = sessionManager;
         this.config = config;
+        this.gestureDetector = new XRGestureDetector();
     }
 
     public enable(): void {
@@ -145,39 +148,22 @@ export class XRInputController implements InputHandler {
         // Update drag position if a node is being dragged
         if (this.draggedNode) {
             const controller = this.draggedNode.controller;
-
-            // 🔍 TEST 3: Controller Position Tracking
-            const gripPos = controller.grip?.position;
-            const gripAbsPos = controller.grip?.absolutePosition;
-            const pointerPos = controller.pointer?.position;
-            const pointerAbsPos = controller.pointer?.absolutePosition;
-
-            console.log('🔍 [TEST 3] Controller Positions:', {
-                grip: {
-                    exists: !!controller.grip,
-                    position: gripPos?.asArray(),
-                    absolutePosition: gripAbsPos?.asArray(),
-                },
-                pointer: {
-                    exists: !!controller.pointer,
-                    position: pointerPos?.asArray(),
-                    absolutePosition: pointerAbsPos?.asArray(),
-                },
-                using: {
-                    position: (gripPos ?? pointerPos)?.asArray(),
-                    absolutePosition: (gripAbsPos ?? pointerAbsPos)?.asArray(),
-                },
-            });
-
             const gripPosition = controller.grip?.position ?? controller.pointer.position;
-
-            console.log('🔍 [TEST 3] Sending to onDragUpdate:', gripPosition.asArray());
-
             this.draggedNode.node.dragHandler?.onDragUpdate(gripPosition.clone());
+            return; // Don't process gestures while dragging
         }
 
-        // Future: Process hand gestures (two-hand zoom, rotate, etc.)
-        // Future: Update visual indicators for hands/controllers
+        // TODO(Phase 5): Re-enable gesture processing after fixing:
+        // 1. Create graph-root transform node in scene
+        // 2. Fix handedness check (should be inputSource.handedness, not grip.metadata.handedness)
+        // 3. Fix thumbstick API usage
+        // 4. Implement proper hand pinch detection
+
+        // Process hand gestures for zoom, rotate, pan (DISABLED - needs graph-root node)
+        // this.processGestures();
+
+        // Process thumbstick input for pan (DISABLED - needs graph-root node)
+        // this.processThumbstickInput();
     }
 
     private handleInputSourceAdded(inputSource: WebXRInputSource): void {
@@ -261,16 +247,38 @@ export class XRInputController implements InputHandler {
             console.log(`🔍 [XR] Using ${componentType} for grab interaction`);
 
             grabComponent.onButtonStateChangedObservable.add((component) => {
+                // CRITICAL: Log which controller is sending events
+                const eventControllerId = controller.uniqueId;
+                const dragControllerIdId = this.draggedNode?.controller.uniqueId;
+
                 console.log(`🔍 [XR] ${componentType} button state changed:`, {
                     pressed: component.pressed,
                     value: component.value,
                     currentlyDragging: !!this.draggedNode,
+                    eventControllerId,                      // Which controller sent this event
+                    dragControllerId: dragControllerIdId,   // Which controller owns the drag
+                    controllersMatch: eventControllerId === dragControllerIdId,
                 });
 
                 if (component.pressed) {
-                    this.handleSqueezeStart(controller);
-                } else if (this.draggedNode?.controller === controller) {
-                    this.handleSqueezeEnd();
+                    // Only start drag if not already dragging
+                    // The button state observable fires on EVERY analog value change,
+                    // not just on initial press, so we must guard against repeated calls
+                    if (!this.draggedNode) {
+                        console.log(`🔍 [XR] Starting drag with controller: ${eventControllerId}`);
+                        this.handleSqueezeStart(controller);
+                    } else {
+                        console.log(`🔍 [XR] BLOCKED: Drag already in progress by controller: ${dragControllerIdId}`);
+                    }
+                } else {
+                    console.log(`🔍 [XR] Button released by controller: ${eventControllerId}`);
+
+                    if (this.draggedNode?.controller === controller) {
+                        console.log(`🔍 [XR] Controller matches, calling handleSqueezeEnd()`);
+                        this.handleSqueezeEnd();
+                    } else if (this.draggedNode) {
+                        console.log(`🔍 [XR] ⚠️ MISMATCH: Drag owned by ${dragControllerIdId}, but release from ${eventControllerId}`);
+                    }
                 }
             });
 
@@ -279,17 +287,13 @@ export class XRInputController implements InputHandler {
     }
 
     private handleSqueezeStart(controller: WebXRInputSource): void {
-        console.log('🔍 [XR] handleSqueezeStart called');
+        console.log('🔍 [XR] handleSqueezeStart called for controller:', controller.uniqueId);
 
         // Raycast from controller to find node
         const ray = new Ray(Vector3.Zero(), Vector3.Forward());
         controller.getWorldPointerRayToRef(ray);
 
-        console.log('🔍 [XR] Raycast from controller:', {
-            origin: ray.origin.asArray(),
-            direction: ray.direction.asArray(),
-        });
-
+        // Simplified: Just do the filtered raycast without verbose logging
         const pickInfo = this.scene.pickWithRay(ray, (mesh) => {
             return mesh.metadata?.graphNode !== undefined;
         });
@@ -297,7 +301,7 @@ export class XRInputController implements InputHandler {
         console.log('🔍 [XR] Raycast result:', {
             hit: pickInfo?.hit,
             pickedMeshName: pickInfo?.pickedMesh?.name,
-            hasGraphNode: !!pickInfo?.pickedMesh?.metadata?.graphNode,
+            graphNodeId: pickInfo?.pickedMesh?.metadata?.graphNode?.id,
             distance: pickInfo?.distance,
         });
 
@@ -343,5 +347,102 @@ export class XRInputController implements InputHandler {
 
     public dispose(): void {
         this.disable();
+    }
+
+    /**
+     * Process hand gestures for zoom and rotation
+     * Requires hand tracking to be enabled
+     */
+    private processGestures(): void {
+        // Get hand states from input sources
+        const leftHand = this.getHandState("left");
+        const rightHand = this.getHandState("right");
+
+        // Update gesture detector
+        this.gestureDetector.updateHands(leftHand, rightHand);
+
+        // Get current gesture
+        const gesture = this.gestureDetector.getCurrentGesture();
+
+        switch (gesture.type) {
+            case "zoom":
+                this.handleZoom(gesture.zoomDelta!);
+                break;
+            case "rotate":
+                this.handleRotate(gesture.rotationAxis!, gesture.rotationAngle!);
+                break;
+            case "none":
+                // No gesture detected
+                break;
+        }
+    }
+
+    /**
+     * Get hand state from input sources
+     * Returns null if hand not tracked
+     */
+    private getHandState(handedness: "left" | "right"): HandState | null {
+        // TODO(Phase 5): Implement proper hand state detection
+        // This requires:
+        // 1. Finding the correct property on WebXRInputSource for handedness
+        // 2. Implementing hand pinch detection using WebXR Hand Tracking API
+        // 3. Creating a graph-root transform node to apply gestures to
+        //
+        // For now, always return null to disable gesture detection
+        return null;
+    }
+
+    /**
+     * Apply zoom to graph root transform
+     */
+    private handleZoom(scaleFactor: number): void {
+        const graphRoot = this.scene.getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            graphRoot.scaling.scaleInPlace(scaleFactor);
+        }
+    }
+
+    /**
+     * Apply rotation to graph root transform
+     */
+    private handleRotate(axis: Vector3, angle: number): void {
+        const graphRoot = this.scene.getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            graphRoot.rotate(axis, angle, Space.WORLD);
+        }
+    }
+
+    /**
+     * Apply pan/translation to graph root transform
+     */
+    private handlePan(delta: Vector3): void {
+        const graphRoot = this.scene.getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            graphRoot.position.addInPlace(delta);
+        }
+    }
+
+    /**
+     * Process thumbstick input from controllers for pan
+     */
+    private processThumbstickInput(): void {
+        this.inputSources.forEach((inputSource) => {
+            const controller = inputSource.motionController;
+            if (!controller) {
+                return;
+            }
+
+            const thumbstick = controller.getComponent("xr-standard-thumbstick");
+            if (thumbstick?.axes) {
+                const x = thumbstick.axes.x;
+                const y = thumbstick.axes.y;
+
+                // Only apply pan if thumbstick moved significantly
+                if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1) {
+                    const panDelta = this.gestureDetector.calculatePanFromThumbstick(x, y);
+                    this.handlePan(panDelta);
+                }
+            }
+        });
     }
 }

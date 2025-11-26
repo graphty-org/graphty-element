@@ -17,9 +17,11 @@ import {
 import {type CameraController, type CameraKey, CameraManager} from "./cameras/CameraManager";
 import {
     AdHocData,
+    defaultXRConfig,
     FetchEdgesFn,
     FetchNodesFn,
     StyleSchema,
+    type XRConfig,
 } from "./config";
 import {
     EventCallbackType,
@@ -29,10 +31,9 @@ import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type G
 import {MeshCache} from "./meshes/MeshCache";
 import {Node} from "./Node";
 import {Styles} from "./Styles";
-import {XRSessionManager} from "./xr/XRSessionManager";
 import {XRUIManager} from "./ui/XRUIManager";
-import {defaultXRConfig} from "./config";
 import type {QueueableOptions} from "./utils/queue-migration";
+import {XRSessionManager} from "./xr/XRSessionManager";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
@@ -881,6 +882,7 @@ export class Graph implements GraphContext {
         return {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: this.graphContext.getConfig().xr,
         };
     }
 
@@ -890,6 +892,14 @@ export class Graph implements GraphContext {
 
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
+    }
+
+    getXRConfig(): XRConfig | undefined {
+        return this.graphContext.getConfig().xr;
+    }
+
+    getXRSessionManager(): XRSessionManager | undefined {
+        return this.xrSessionManager ?? undefined;
     }
 
     // Input manager access
@@ -1025,7 +1035,7 @@ export class Graph implements GraphContext {
      */
     private async initializeXR(): Promise<void> {
         const xrConfig = this.graphContext.getConfig().xr;
-        if (!xrConfig || !xrConfig.enabled) {
+        if (!xrConfig?.enabled) {
             return;
         }
 
@@ -1048,7 +1058,7 @@ export class Graph implements GraphContext {
         );
 
         // Wire up button click handlers
-        this.xrUIManager.onEnterXR = async (mode) => {
+        this.xrUIManager.onEnterXR = async(mode) => {
             try {
                 console.log(`[XR] Attempting to enter ${mode} mode...`);
                 await this.enterXR(mode);
@@ -1065,7 +1075,7 @@ export class Graph implements GraphContext {
                     this,
                     error instanceof Error ? error : new Error(String(error)),
                     "xr",
-                    { mode },
+                    {mode},
                 );
             }
         };
@@ -1080,7 +1090,7 @@ export class Graph implements GraphContext {
             throw new Error("XR is not initialized");
         }
 
-        console.log('🔍 [XR] Entering XR mode:', mode);
+        console.log("🔍 [XR] Entering XR mode:", mode);
 
         const previousCamera = this.camera.getActiveController()?.camera;
 
@@ -1090,7 +1100,7 @@ export class Graph implements GraphContext {
             await this.xrSessionManager.enterAR(previousCamera ?? undefined);
         }
 
-        console.log('🔍 [XR] XR session created, now setting up XR camera and input...');
+        console.log("🔍 [XR] XR session created, now setting up XR camera and input...");
 
         // Phase 3: Set up XR camera controller and input handler
         const xrHelper = this.xrSessionManager.getXRHelper();
@@ -1102,7 +1112,7 @@ export class Graph implements GraphContext {
         this.scene.metadata = this.scene.metadata || {};
         this.scene.metadata.xrHelper = xrHelper;
 
-        console.log('🔍 [XR] XR helper stored in scene metadata');
+        console.log("🔍 [XR] XR helper stored in scene metadata");
 
         // Create XR input controller
         const {XRInputController} = await import("./cameras/XRInputController");
@@ -1113,12 +1123,12 @@ export class Graph implements GraphContext {
             xrConfig.input,
         );
 
-        console.log('🔍 [XR] XRInputController created');
+        console.log("🔍 [XR] XRInputController created");
 
         // Enable XR input (this sets up controller drag handlers)
         xrInputController.enable();
 
-        console.log('🔍 [XR] XRInputController enabled');
+        console.log("🔍 [XR] XRInputController enabled");
 
         // Note: We're NOT switching the active camera in CameraManager
         // The XR camera is automatically made active by BabylonJS WebXR
@@ -1133,7 +1143,7 @@ export class Graph implements GraphContext {
         this.scene.metadata.xrInputController = xrInputController;
         this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
 
-        console.log('🔍 [XR] XR input update loop registered');
+        console.log("🔍 [XR] XR input update loop registered");
     }
 
     /**
@@ -1144,31 +1154,31 @@ export class Graph implements GraphContext {
             return;
         }
 
-        console.log('🔍 [XR] Exiting XR mode...');
+        console.log("🔍 [XR] Exiting XR mode...");
 
         // Clean up XR input controller
         if (this.scene.metadata?.xrInputController) {
-            console.log('🔍 [XR] Disposing XRInputController');
+            console.log("🔍 [XR] Disposing XRInputController");
             this.scene.metadata.xrInputController.dispose();
             this.scene.metadata.xrInputController = null;
         }
 
         // Remove render loop observer
         if (this.scene.metadata?.xrUpdateObserver) {
-            console.log('🔍 [XR] Removing XR update observer');
+            console.log("🔍 [XR] Removing XR update observer");
             this.scene.onBeforeRenderObservable.remove(this.scene.metadata.xrUpdateObserver);
             this.scene.metadata.xrUpdateObserver = null;
         }
 
         // Clear XR helper from metadata
         if (this.scene.metadata?.xrHelper) {
-            console.log('🔍 [XR] Clearing XR helper from metadata');
+            console.log("🔍 [XR] Clearing XR helper from metadata");
             this.scene.metadata.xrHelper = null;
         }
 
         await this.xrSessionManager.exitXR();
 
-        console.log('🔍 [XR] XR mode exited');
+        console.log("🔍 [XR] XR mode exited");
     }
 
     dispose(): void {

@@ -60,11 +60,8 @@ export class NodeDragHandler {
 
     // Public API for both desktop and XR
     public onDragStart(worldPosition: Vector3): void {
-        // 🔍 TEST 4: Drag Start Positions
-        console.log('🔍 [TEST 4] Drag Start:', {
+        console.log('🔍 [Drag] Drag Start:', {
             nodeId: this.node.id,
-            worldPosition: worldPosition.asArray(),
-            meshPosition: this.node.mesh.position.asArray(),
             isXRMode: this.isXRMode(),
         });
 
@@ -98,94 +95,29 @@ export class NodeDragHandler {
             return;
         }
 
-        // 🔍 TEST 1: XR Mode Detection
-        console.log('🔍 [TEST 1] XR Mode Detection:', {
-            isXRMode: this.isXRMode(),
-            sceneMetadata: {
-                exists: !!this.scene.metadata,
-                xrHelper: {
-                    exists: !!this.scene.metadata?.xrHelper,
-                    baseExperience: {
-                        exists: !!this.scene.metadata?.xrHelper?.baseExperience,
-                        state: this.scene.metadata?.xrHelper?.baseExperience?.state,
-                    },
-                },
-            },
-            activeCamera: {
-                className: this.scene.activeCamera?.getClassName(),
-                metadata: this.scene.activeCamera?.metadata,
-            },
-        });
-
         // Calculate delta from drag start
         const delta = worldPosition.subtract(this.dragState.dragStartWorldPosition);
 
-        // 🔍 TEST 2: Z-Axis Delta Values
-        console.log('🔍 [TEST 2] Delta Calculation:', {
-            worldPosition: worldPosition.asArray(),
-            dragStartWorldPosition: this.dragState.dragStartWorldPosition.asArray(),
-            delta: {
-                x: delta.x,
-                y: delta.y,
-                z: delta.z,
-            },
-            deltaLength: delta.length(),
-        });
-
-        // Validate delta - if it's unreasonably large, controller tracking likely glitched
-        // This prevents nodes from jumping to infinity when VR controller loses/reacquires tracking
-        const MAX_REASONABLE_DELTA = 5.0; // 5 units before amplification (~50 units after)
-        if (delta.length() > MAX_REASONABLE_DELTA) {
-            console.warn('⚠️ [XR] Detected unreasonable delta (controller tracking glitch):', {
-                deltaLength: delta.length(),
-                maxAllowed: MAX_REASONABLE_DELTA,
-                action: 'Resetting drag start position',
-            });
-
-            // Reset drag start to current position (treats this as a new drag start)
-            this.dragState.dragStartWorldPosition = worldPosition.clone();
-            this.dragState.dragStartMeshPosition = this.node.mesh.position.clone();
-            return; // Skip this update
-        }
+        // TODO: Add back delta validation with appropriate threshold for XR mode
+        // The previous MAX_REASONABLE_DELTA of 5.0 was too small for 10x amplification
+        // and was blocking ALL movement in XR
 
         // Apply movement amplification in XR mode
         // In VR, all controller movements are physically constrained (not just Z-axis)
         // so we amplify all axes to make node manipulation practical
         const shouldAmplify = this.isXRMode() || this.enableZAmplificationInDesktop;
 
-        // 🔍 TEST 2: Amplification Config
-        console.log('🔍 [TEST 2] Amplification Config:', {
-            shouldAmplify,
-            zAxisAmplification: this.zAxisAmplification,
-            enableZAmplificationInDesktop: this.enableZAmplificationInDesktop,
-        });
-
         if (shouldAmplify) {
-            console.log('🔍 [TEST 2] BEFORE amplification - delta:', delta.asArray());
             delta.x *= this.zAxisAmplification;
             delta.y *= this.zAxisAmplification;
             delta.z *= this.zAxisAmplification;
-            console.log('🔍 [TEST 2] AFTER amplification - delta:', delta.asArray());
-        } else {
-            console.log('🔍 [TEST 2] Amplification SKIPPED');
         }
 
         // Calculate new position
         const newPosition = this.dragState.dragStartMeshPosition.add(delta);
 
-        // 🔍 TEST 2: Position Calculation
-        console.log('🔍 [TEST 2] Position Update:', {
-            dragStartMeshPosition: this.dragState.dragStartMeshPosition.asArray(),
-            newPosition: newPosition.asArray(),
-            actualMeshPosition: this.node.mesh.position.asArray(),
-        });
-
         // Update mesh position (triggers edge updates automatically)
         this.node.mesh.position.copyFrom(newPosition);
-
-        // 🔍 TEST 2: Verify Position Was Set
-        console.log('🔍 [TEST 2] After copyFrom - mesh.position:',
-            this.node.mesh.position.asArray());
 
         // Update layout engine
         const context = this.getContext();

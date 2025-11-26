@@ -309,3 +309,139 @@ export const DesktopZAmplification: Story = {
         },
     },
 };
+
+/**
+ * Advanced Gestures - Two-Hand Interactions (Phase 5)
+ *
+ * Demonstrates advanced XR gestures for manipulating the entire graph:
+ * - Two-hand pinch zoom: Pinch with both hands and move them closer/farther to zoom
+ * - Two-hand twist rotation: Pinch with both hands and rotate them to spin the graph
+ * - Thumbstick pan: Use controller thumbsticks to translate the graph
+ * - Single-hand squeeze drag: Grab individual nodes (10× Z-axis amplification)
+ *
+ * Instructions:
+ * 1. Enter VR mode
+ * 2. Use both hands to pinch (thumb + index finger together)
+ * 3. Move hands closer together = zoom in
+ * 4. Move hands farther apart = zoom out
+ * 5. Twist both hands together = rotate graph
+ * 6. Use thumbsticks on controllers to pan the view
+ * 7. Squeeze individual nodes to drag them
+ *
+ * Configuration:
+ * - handTracking: true (required for two-hand gestures)
+ * - controllers: true (for thumbstick pan and drag)
+ * - zAxisAmplification: 10.0 (for node dragging)
+ */
+export const AdvancedGestures: Story = {
+    args: {
+        nodeData: Array.from({length: 30}, (_, i) => ({
+            id: `${i}`,
+            label: `Node ${i}`,
+        })),
+        edgeData: Array.from({length: 45}, () => {
+            const src = `${Math.floor(Math.random() * 30)}`;
+            const dst = `${Math.floor(Math.random() * 30)}`;
+            return {src, dst};
+        }),
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42,
+            dimensions: 3,
+            iterations: 150,
+        },
+        xr: {
+            enabled: true,
+            ui: {enabled: true, position: "bottom-right"},
+            input: {
+                handTracking: true, // Required for two-hand gestures
+                controllers: true, // For thumbstick pan and squeeze drag
+                nearInteraction: true,
+                physics: false,
+                zAxisAmplification: 10.0, // For node dragging
+                enableZAmplificationInDesktop: false,
+            },
+        },
+    },
+};
+
+/**
+ * Gesture Testing - Small Graph (Phase 5)
+ *
+ * Simplified graph for testing gesture detection in isolation.
+ * Useful for debugging gesture recognition without visual clutter.
+ *
+ * Test scenarios:
+ * - Two-hand pinch zoom with 5 nodes
+ * - Two-hand twist rotation
+ * - Thumbstick pan
+ * - Individual node drag with Z-axis amplification
+ */
+export const GestureTestingSmall: Story = {
+    args: {
+        nodeData: [
+            {id: "center", label: "Center", position: {x: 0, y: 0, z: 0}},
+            {id: "north", label: "North", position: {x: 0, y: 2, z: 0}},
+            {id: "east", label: "East", position: {x: 2, y: 0, z: 0}},
+            {id: "south", label: "South", position: {x: 0, y: -2, z: 0}},
+            {id: "west", label: "West", position: {x: -2, y: 0, z: 0}},
+        ],
+        edgeData: [
+            {src: "center", dst: "north"},
+            {src: "center", dst: "east"},
+            {src: "center", dst: "south"},
+            {src: "center", dst: "west"},
+        ],
+        layout: "fixed",
+        xr: {
+            enabled: true,
+            ui: {enabled: true, position: "bottom-right"},
+            input: {
+                handTracking: true,
+                controllers: true,
+                nearInteraction: true,
+                physics: false,
+                zAxisAmplification: 10.0,
+                enableZAmplificationInDesktop: false,
+            },
+        },
+    },
+};
+
+/**
+ * Controllers Only - No Hand Tracking (Phase 5)
+ *
+ * Tests gesture features with controllers only, no hand tracking.
+ * Only thumbstick pan is available (two-hand gestures require hand tracking).
+ *
+ * Available interactions:
+ * - Thumbstick pan (left/right controller)
+ * - Squeeze to drag nodes (10× Z-axis amplification)
+ * - No two-hand gestures (requires hand tracking)
+ */
+export const ControllersOnlyGestures: Story = {
+    args: {
+        nodeData: Array.from({length: 20}, (_, i) => ({
+            id: `${i}`,
+            label: `Node ${i}`,
+        })),
+        edgeData: Array.from({length: 25}, (_, i) => {
+            const src = `${Math.floor(i / 2)}`;
+            const dst = `${Math.floor(Math.random() * 20)}`;
+            return {src, dst};
+        }),
+        layout: "circular",
+        xr: {
+            enabled: true,
+            ui: {enabled: true, position: "bottom-right"},
+            input: {
+                handTracking: false, // Disable hand tracking
+                controllers: true, // Controllers for thumbstick pan and drag
+                nearInteraction: false,
+                physics: false,
+                zAxisAmplification: 10.0,
+                enableZAmplificationInDesktop: false,
+            },
+        },
+    },
+};

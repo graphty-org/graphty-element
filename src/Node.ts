@@ -77,9 +77,11 @@ export class Node {
         );
 
         // Add metadata for XR controller raycasting
+        // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
         this.mesh.metadata = {
-            ... this.mesh.metadata,
             graphNode: this,
+            styleId: String(styleId),
+            nodeId: this.id,
         };
 
         // create label
@@ -151,10 +153,21 @@ export class Node {
         );
 
         // Add metadata for XR controller raycasting
+        // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
         this.mesh.metadata = {
-            ... this.mesh.metadata,
             graphNode: this,
+            styleId: String(styleId),
+            nodeId: this.id,
         };
+
+        console.log('🔍 [Node updateStyle] Metadata set:', {
+            nodeId: this.id,
+            meshName: this.mesh.name,
+            meshClass: this.mesh.getClassName(),
+            isInstancedMesh: this.mesh.getClassName() === 'InstancedMesh',
+            metadata: this.mesh.metadata,
+            isPickable: this.mesh.isPickable,
+        });
 
         // recreate label if needed
         if (o.label?.enabled) {

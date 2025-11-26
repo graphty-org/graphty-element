@@ -113,16 +113,21 @@ export class UpdateManager implements Manager {
 
         // Check if layout is running
         if (!this.layoutManager.running) {
-            // Even if layout is not running, we still need to handle zoom if requested
+            // Even if layout is not running, we still need to:
+            // 1. Update edges (for manual node dragging)
+            // 2. Handle zoom if requested
+
+            // Always update edges to handle manual node dragging
+            // Edges have built-in dirty tracking, so they won't do unnecessary work
+            this.updateEdges();
+
+            // Handle zoom to fit if requested
             if (this.needsZoomToFit && !this.hasZoomedToFit) {
                 // Check if we have nodes to calculate bounds from
                 const nodeCount = Array.from(this.layoutManager.nodes).length;
                 if (nodeCount > 0) {
                     // Calculate bounding box and update nodes
                     const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
-
-                    // Update edges
-                    this.updateEdges();
 
                     // Handle zoom to fit
                     this.handleZoomToFit(boundingBoxMin, boundingBoxMax);
