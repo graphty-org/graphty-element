@@ -1,6 +1,5 @@
 import {
     AbstractMesh,
-    Matrix,
     Mesh,
     Ray,
     Vector3,
@@ -12,6 +11,8 @@ import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import {EdgeMesh} from "./meshes/EdgeMesh";
+import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
+import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
@@ -46,16 +47,18 @@ export class Edge {
     dstNode: Node;
     srcNode: Node;
     data: AdHocData;
-    mesh: AbstractMesh;
+    mesh: AbstractMesh | PatternedLineMesh; // PHASE 5: Support both solid lines and patterned lines
     arrowMesh: AbstractMesh | null = null;
-    arrowMeshInstanceIndex = -1; // Thin instance index for filled arrows
     arrowTailMesh: AbstractMesh | null = null;
-    arrowTailMeshInstanceIndex = -1; // Thin instance index for filled arrow tails
     styleId: EdgeStyleId;
     // XXX: performance impact when not needed?
     ray: Ray;
     label: RichTextLabel | null = null;
     private _loggedLineDirection = false; // Debug flag for logging lineDirection
+
+    // Dirty tracking: Cache last node positions to skip unnecessary updates
+    private _lastSrcPos: Vector3 | null = null;
+    private _lastDstPos: Vector3 | null = null;
 
     /**
      * Helper to check if we're using GraphContext
@@ -68,45 +71,6 @@ export class Edge {
 
         // Otherwise, it's a Graph instance which implements GraphContext
         return this.parentGraph;
-    }
-
-    /**
-     * Check if an arrow type is a filled arrow (uses thin instances)
-     */
-    private isFilledArrow(type: string | undefined): boolean {
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot"];
-        return FILLED_ARROWS.includes(type ?? "");
-    }
-
-    /**
-     * Update thin instance transform and lineDirection for filled arrows
-     *
-     * NOTE: This method does NOT call thinInstanceBufferUpdated()!
-     * Buffer updates are batched and called once per frame by the Graph class
-     * to avoid excessive GPU uploads (was 30K calls/sec with per-edge updates)
-     */
-    private updateFilledArrowInstance(
-        arrowMesh: Mesh,
-        instanceIndex: number,
-        position: Vector3,
-        lineDirection: Vector3,
-    ): void {
-        // Create transformation matrix with ONLY translation
-        // Rotation is handled by the shader via tangent billboarding
-        const matrix = Matrix.Translation(position.x, position.y, position.z);
-
-        // Update thin instance matrix
-        arrowMesh.thinInstanceSetMatrixAt(instanceIndex, matrix);
-
-        // Update lineDirection attribute (used by shader for tangent billboarding)
-        arrowMesh.thinInstanceSetAttributeAt("lineDirection", instanceIndex, [
-            lineDirection.x,
-            lineDirection.y,
-            lineDirection.z,
-        ]);
-
-        // NOTE: thinInstanceBufferUpdated() NOT called here!
-        // This is called once per frame by Graph after all edges update
     }
 
     constructor(graph: Graph | GraphContext, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
@@ -132,7 +96,11 @@ export class Edge {
         this.dstNode = dstNode;
 
         // create ray for direction / intercept finding
-        this.ray = new Ray(this.srcNode.mesh.position, this.dstNode.mesh.position);
+        // Ray constructor expects (origin, direction), not (origin, destination)
+        this.ray = new Ray(
+            this.srcNode.mesh.position,
+            this.dstNode.mesh.position.subtract(this.srcNode.mesh.position),
+        );
 
         // copy edgeMeshConfig
         this.styleId = styleId;
@@ -144,6 +112,7 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
+        // console.log("Edge constructor: creating arrowMesh, arrowHead type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(this.styleId),
@@ -156,16 +125,10 @@ export class Edge {
             },
             this.context.getScene(),
         );
-
-        // If this is a filled arrow (uses thin instances), create an instance
-        if (this.arrowMesh && this.isFilledArrow(style.arrowHead?.type)) {
-            // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ("thinInstanceAdd" in this.arrowMesh) {
-                this.arrowMeshInstanceIndex = (this.arrowMesh as Mesh).thinInstanceAdd(Matrix.Identity());
-            }
-        }
+        // console.log("Edge constructor: arrowMesh assigned:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // create arrow tail mesh if needed
+        // console.log("Edge constructor: creating arrowTailMesh, arrowTail type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(this.styleId)}-tail`,
@@ -178,16 +141,10 @@ export class Edge {
             },
             this.context.getScene(),
         );
-
-        // If this is a filled arrow (uses thin instances), create an instance
-        if (this.arrowTailMesh && this.isFilledArrow(style.arrowTail?.type)) {
-            // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ("thinInstanceAdd" in this.arrowTailMesh) {
-                this.arrowTailMeshInstanceIndex = (this.arrowTailMesh as Mesh).thinInstanceAdd(Matrix.Identity());
-            }
-        }
+        // console.log("Edge constructor: arrowTailMesh assigned:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // create edge line mesh
+        // Note: Edge.transformArrowCap() provides start/end positions already adjusted for node surfaces and arrows
         this.mesh = EdgeMesh.create(
             this.context.getMeshCache(),
             {
@@ -211,10 +168,39 @@ export class Edge {
     }
 
     update(): void {
+        this.context.getStatsManager().startMeasurement("Edge.update");
+
         const lnk = this.context.getLayoutManager().layoutEngine?.getEdgePosition(this);
         if (!lnk) {
+            this.context.getStatsManager().endMeasurement("Edge.update");
             return;
         }
+
+        // Dirty tracking: Check if nodes have moved significantly
+        const srcPos = this.srcNode.mesh.position;
+        const dstPos = this.dstNode.mesh.position;
+
+        const srcMoved = !(this._lastSrcPos?.equalsWithEpsilon(srcPos, 0.001) ?? false);
+        const dstMoved = !(this._lastDstPos?.equalsWithEpsilon(dstPos, 0.001) ?? false);
+
+        // console.log("Edge.update dirty check:", {
+        //     srcMoved,
+        //     dstMoved,
+        //     _lastSrcPos: this._lastSrcPos ? {x: this._lastSrcPos.x, y: this._lastSrcPos.y, z: this._lastSrcPos.z} : null,
+        //     _lastDstPos: this._lastDstPos ? {x: this._lastDstPos.x, y: this._lastDstPos.y, z: this._lastDstPos.z} : null,
+        //     srcPos: {x: srcPos.x, y: srcPos.y, z: srcPos.z},
+        //     dstPos: {x: dstPos.x, y: dstPos.y, z: dstPos.z},
+        // });
+
+        if (!srcMoved && !dstMoved) {
+            // Nodes haven't moved, skip update
+            // console.log("Edge.update: Skipping update (nodes haven't moved)");
+            this.context.getStatsManager().endMeasurement("Edge.update");
+            return;
+        }
+
+        // Nodes have moved, perform update
+        // console.log("Edge.update: Performing update (nodes moved)");
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
 
@@ -239,38 +225,50 @@ export class Edge {
             );
             this.label.attachTo(midPoint, "center", 0);
         }
+
+        // Cache positions for next frame
+        this._lastSrcPos = srcPos.clone();
+        this._lastDstPos = dstPos.clone();
+
+        this.context.getStatsManager().endMeasurement("Edge.update");
     }
 
     updateStyle(styleId: EdgeStyleId): void {
+        // console.log("Edge.updateStyle called:", {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
         // Only skip update if styleId is the same AND mesh is not disposed
         // (mesh can be disposed when switching 2D/3D modes via meshCache.clear())
-        if (styleId === this.styleId && !this.mesh.isDisposed()) {
+        // PHASE 5: PatternedLineMesh doesn't have isDisposed(), check if it's AbstractMesh first
+        const meshDisposed = (this.mesh instanceof PatternedLineMesh) ?
+            false : // PatternedLineMesh is always "alive" (check individual meshes if needed)
+            this.mesh.isDisposed();
+
+        if (styleId === this.styleId && !meshDisposed) {
+            // console.log("Edge.updateStyle: skipping update (same style and mesh not disposed)");
             return;
         }
 
+        // console.log("Edge.updateStyle: proceeding with update");
         this.styleId = styleId;
-        // Only dispose if not already disposed
-        if (!this.mesh.isDisposed()) {
+
+        // Invalidate position cache to force edge redraw with new style
+        this._lastSrcPos = null;
+        this._lastDstPos = null;
+        // PHASE 5: Dispose pattern lines or solid lines appropriately
+        if (this.mesh instanceof PatternedLineMesh) {
+            this.mesh.dispose(); // PatternedLineMesh has its own dispose logic
+        } else if (!this.mesh.isDisposed()) {
             this.mesh.dispose();
         }
 
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
+        // console.log("Edge.updateStyle: disposing old arrowMesh:", this.arrowMesh?.name);
         if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
-            // If this was a filled arrow using thin instances, hide it by moving far away
-            const oldStyle = Styles.getStyleForEdgeStyleId(this.styleId);
-            if (this.isFilledArrow(oldStyle.arrowHead?.type) && this.arrowMeshInstanceIndex >= 0) {
-                // Move instance far away to hide it (thin instances can't be easily removed)
-                const hideMatrix = Matrix.Translation(100000, 100000, 100000);
-                (this.arrowMesh as Mesh).thinInstanceSetMatrixAt(this.arrowMeshInstanceIndex, hideMatrix);
-                this.arrowMeshInstanceIndex = -1;
-            } else {
-                // Otherwise dispose the mesh (for non-cached arrows like billboard types)
-                this.arrowMesh.dispose();
-            }
+            this.arrowMesh.dispose();
         }
 
+        // console.log("Edge.updateStyle: creating new arrowMesh, type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(styleId),
@@ -283,30 +281,15 @@ export class Edge {
             },
             this.context.getScene(),
         );
-
-        // If new arrow is filled, create thin instance
-        if (this.arrowMesh && this.isFilledArrow(style.arrowHead?.type)) {
-            // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ("thinInstanceAdd" in this.arrowMesh) {
-                this.arrowMeshInstanceIndex = (this.arrowMesh as Mesh).thinInstanceAdd(Matrix.Identity());
-            }
-        }
+        // console.log("Edge.updateStyle: arrowMesh created:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // recreate arrow tail mesh if needed
+        // console.log("Edge.updateStyle: disposing old arrowTailMesh:", this.arrowTailMesh?.name);
         if (this.arrowTailMesh && !this.arrowTailMesh.isDisposed()) {
-            // If this was a filled arrow using thin instances, hide it by moving far away
-            const oldStyle = Styles.getStyleForEdgeStyleId(this.styleId);
-            if (this.isFilledArrow(oldStyle.arrowTail?.type) && this.arrowTailMeshInstanceIndex >= 0) {
-                // Move instance far away to hide it (thin instances can't be easily removed)
-                const hideMatrix = Matrix.Translation(100000, 100000, 100000);
-                (this.arrowTailMesh as Mesh).thinInstanceSetMatrixAt(this.arrowTailMeshInstanceIndex, hideMatrix);
-                this.arrowTailMeshInstanceIndex = -1;
-            } else {
-                // Otherwise dispose the mesh (for non-cached arrows like billboard types)
-                this.arrowTailMesh.dispose();
-            }
+            this.arrowTailMesh.dispose();
         }
 
+        // console.log("Edge.updateStyle: creating new arrowTailMesh, type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(styleId)}-tail`,
@@ -319,14 +302,7 @@ export class Edge {
             },
             this.context.getScene(),
         );
-
-        // If new arrow tail is filled, create thin instance
-        if (this.arrowTailMesh && this.isFilledArrow(style.arrowTail?.type)) {
-            // Check if mesh has thinInstanceAdd (only true Mesh objects, not AbstractMesh)
-            if ("thinInstanceAdd" in this.arrowTailMesh) {
-                this.arrowTailMeshInstanceIndex = (this.arrowTailMesh as Mesh).thinInstanceAdd(Matrix.Identity());
-            }
-        }
+        // console.log("Edge.updateStyle: arrowTailMesh created:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // recreate edge line mesh
         this.mesh = EdgeMesh.create(
@@ -393,7 +369,14 @@ export class Edge {
     }
 
     transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
-        EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
+        // PHASE 5: Check if mesh is PatternedLineMesh and route accordingly
+        if (this.mesh instanceof PatternedLineMesh) {
+            // Pattern lines: Update mesh positions in world space
+            this.mesh.update(srcPoint, dstPoint);
+        } else {
+            // Solid lines: Transform via position/rotation/scaling
+            EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
+        }
     }
 
     transformArrowCap(): EdgeLine {
@@ -421,6 +404,7 @@ export class Edge {
                 // console.log(`Edge: src=(${fallbackSrc.x.toFixed(3)}, ${fallbackSrc.y.toFixed(3)}, ${fallbackSrc.z.toFixed(3)}), dst=(${fallbackDst.x.toFixed(3)}, ${fallbackDst.y.toFixed(3)}, ${fallbackDst.z.toFixed(3)}), dir=(${direction.x.toFixed(3)}, ${direction.y.toFixed(3)}, ${direction.z.toFixed(3)})`);
 
                 // Get arrow length (including size multiplier)
+                this.context.getStatsManager().startMeasurement("Edge.transformArrowCap.styleAndGeometry");
                 const style = Styles.getStyleForEdgeStyleId(this.styleId);
                 const arrowSize = style.arrowHead?.size ?? 1.0;
                 const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
@@ -428,8 +412,10 @@ export class Edge {
                 // Use actual bounding sphere radii
                 const dstNodeRadius = this.dstNode.mesh.getBoundingInfo().boundingSphere.radiusWorld;
                 const srcNodeRadius = this.srcNode.mesh.getBoundingInfo().boundingSphere.radiusWorld;
+                this.context.getStatsManager().endMeasurement("Edge.transformArrowCap.styleAndGeometry");
 
                 // Calculate surface intersection points
+                this.context.getStatsManager().startMeasurement("Edge.transformArrowCap.vectorMath");
                 const srcSurfacePoint = fallbackSrc.add(direction.scale(srcNodeRadius));
                 const dstSurfacePoint = fallbackDst.subtract(direction.scale(dstNodeRadius));
 
@@ -454,38 +440,20 @@ export class Edge {
                     arrowLength,
                     geometry,
                 );
+                this.context.getStatsManager().endMeasurement("Edge.transformArrowCap.vectorMath");
 
-                // Handle filled arrows (thin instances) vs other arrow types
-                if (this.isFilledArrow(arrowType) && this.arrowMeshInstanceIndex >= 0) {
-                    // Filled arrows: Update thin instance with position and lineDirection
-                    this.updateFilledArrowInstance(
-                        this.arrowMesh as Mesh,
-                        this.arrowMeshInstanceIndex,
-                        arrowPosition,
-                        direction,
-                    );
-                } else {
-                    // Other arrow types: Update position and rotation directly
-                    this.arrowMesh.position = arrowPosition;
+                // Update arrow position directly (no thin instances)
+                this.arrowMesh.position = arrowPosition;
 
-                    // Rotate arrow to point along edge
-                    if (geometry.needsRotation) {
-                        // Use the edge direction (same as used for positioning)
-                        // Triangle in XY plane with tip at origin, pointing in +X direction
-                        // Rotate to align +X with edge direction
-
-                        // Z rotation: horizontal angle in XY plane
-                        const angleZ = Math.atan2(direction.y, direction.x);
-
-                        // Y rotation: tilt forward/back to match edge depth
-                        const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
-                        const angleY = -Math.atan2(direction.z, horizontalDist);
-
-                        // Apply rotations
-                        this.arrowMesh.rotation.x = 0; // No roll needed
-                        this.arrowMesh.rotation.y = angleY;
-                        this.arrowMesh.rotation.z = angleZ;
-                    }
+                // Update lineDirection for filled arrows (shader needs it for billboarding)
+                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
+                    // Filled arrows use shader-based billboarding via lineDirection uniform
+                    FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+                } else if (geometry.needsRotation) {
+                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                    const lookAtPoint = arrowPosition.add(direction);
+                    this.arrowMesh.lookAt(lookAtPoint);
                 }
 
                 return {
@@ -497,6 +465,7 @@ export class Edge {
             this.arrowMesh.setEnabled(true);
 
             // Use common arrow geometry functions for positioning
+            this.context.getStatsManager().startMeasurement("Edge.transformArrowCap.mainPath");
             const arrowStyle = Styles.getStyleForEdgeStyleId(this.styleId);
             const arrowType = arrowStyle.arrowHead?.type;
             const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
@@ -511,45 +480,20 @@ export class Edge {
                 arrowLength,
                 geometry,
             );
+            this.context.getStatsManager().endMeasurement("Edge.transformArrowCap.mainPath");
 
-            // Handle filled arrows (thin instances) vs other arrow types
-            if (this.isFilledArrow(arrowType) && this.arrowMeshInstanceIndex >= 0) {
-                // Filled arrows: Update thin instance with position and lineDirection
-                this.updateFilledArrowInstance(
-                    this.arrowMesh as Mesh,
-                    this.arrowMeshInstanceIndex,
-                    arrowPosition,
-                    direction,
-                );
-            } else {
-                // Other arrow types: Update position and rotation directly
-                this.arrowMesh.position = arrowPosition;
+            // Update arrow position directly (no thin instances)
+            this.arrowMesh.position = arrowPosition;
 
-                // Rotate arrow to point along edge
-                // NOTE: Filled arrows use tangent billboarding shaders and don't need rotation
-                // Only apply rotation to arrows that need it (outline arrows, 3D billboard arrows)
-                if (geometry.needsRotation) {
-                    // Use the edge direction (same as used for positioning)
-                    // Triangle in XY plane with tip at origin, pointing in +X direction
-                    // Rotate to align +X with edge direction
-
-                    // Z rotation: horizontal angle in XY plane
-                    const angleZ = Math.atan2(direction.y, direction.x);
-
-                    // Y rotation: tilt forward/back to match edge depth
-                    const horizontalDist = Math.sqrt((direction.x * direction.x) + (direction.y * direction.y));
-                    const angleY = -Math.atan2(direction.z, horizontalDist);
-
-                    // Apply rotations
-                    this.arrowMesh.rotation.x = 0; // No roll needed
-                    this.arrowMesh.rotation.y = angleY;
-                    this.arrowMesh.rotation.z = angleZ;
-                } else {
-                    // For billboard arrows, reset rotation
-                    this.arrowMesh.rotation.x = 0;
-                    this.arrowMesh.rotation.y = 0;
-                    this.arrowMesh.rotation.z = 0;
-                }
+            // Update lineDirection for filled arrows (shader needs it for billboarding)
+            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
+                // Filled arrows use shader-based billboarding via lineDirection uniform
+                FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+            } else if (geometry.needsRotation) {
+                // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                const lookAtPoint = arrowPosition.add(direction);
+                this.arrowMesh.lookAt(lookAtPoint);
             }
 
             // Handle arrow tail if configured
@@ -581,34 +525,27 @@ export class Edge {
                     // Tail points in opposite direction (away from source)
                     const reversedDirection = direction.scale(-1);
 
-                    // Handle filled arrows (thin instances) vs other arrow types
-                    if (this.isFilledArrow(tailType) && this.arrowTailMeshInstanceIndex >= 0) {
-                        // Filled arrows: Update thin instance with position and lineDirection
-                        this.updateFilledArrowInstance(
-                            this.arrowTailMesh as Mesh,
-                            this.arrowTailMeshInstanceIndex,
-                            tailPosition,
-                            reversedDirection,
-                        );
-                    } else {
-                        // Other arrow types: Update position and rotation directly
-                        this.arrowTailMesh.position = tailPosition;
+                    // Update arrow tail position directly (no thin instances)
+                    this.arrowTailMesh.position = tailPosition;
 
-                        // Rotate arrow tail to point along edge (away from source)
-                        if (tailGeometry.needsRotation) {
-                            // Triangle in XY plane with tip at origin, pointing in +X direction
-                            // Z rotation: horizontal angle in XY plane
-                            const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
+                    // Update lineDirection for filled arrow tails (shader needs it for billboarding)
+                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(tailType)) {
+                        // Filled arrows use shader-based billboarding via lineDirection uniform
+                        FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
+                    } else if (tailGeometry.needsRotation) {
+                        // Other arrow types need explicit rotation
+                        // Triangle in XY plane with tip at origin, pointing in +X direction
+                        // Z rotation: horizontal angle in XY plane
+                        const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
 
-                            // Y rotation: tilt forward/back to match edge depth
-                            const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
-                            const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
+                        // Y rotation: tilt forward/back to match edge depth
+                        const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
+                        const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
 
-                            // Apply rotations
-                            this.arrowTailMesh.rotation.x = 0;
-                            this.arrowTailMesh.rotation.y = angleY;
-                            this.arrowTailMesh.rotation.z = angleZ;
-                        }
+                        // Apply rotations
+                        this.arrowTailMesh.rotation.x = 0;
+                        this.arrowTailMesh.rotation.y = angleY;
+                        this.arrowTailMesh.rotation.z = angleZ;
                     }
 
                     // Adjust line start point to create gap for tail arrow

@@ -23,6 +23,8 @@ import {EDGE_CONSTANTS} from "../constants/meshConstants";
 import {CustomLineRenderer, type LineGeometry} from "./CustomLineRenderer";
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import type {MeshCache} from "./MeshCache";
+import {PatternedLineMesh} from "./PatternedLineMesh";
+import {PatternedLineRenderer} from "./PatternedLineRenderer";
 
 export interface EdgeMeshOptions {
     styleId: string;
@@ -200,15 +202,33 @@ void main() {
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
         scene: Scene,
-    ): AbstractMesh {
-        const cacheKey = `edge-style-${options.styleId}`;
+    ): AbstractMesh | PatternedLineMesh {
+        const lineType = style.line?.type ?? "solid";
+        const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
 
+        // PHASE 5: Pattern lines use PatternedLineRenderer (individual meshes, no caching)
+        // See: design/mesh-based-patterned-lines.md Phase 5
+        // Note: Edge.transformArrowCap() provides start/end already adjusted for node surfaces and arrows
+        if (PATTERNED_TYPES.includes(lineType)) {
+            return PatternedLineRenderer.create(
+                lineType as "dot" | "star" | "box" | "dash" | "diamond" | "dash-dot" | "sinewave" | "zigzag",
+                new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
+                new Vector3(0, 0, 0.5), // Placeholder end (Edge.update() will set real positions)
+                options.width / 40, // Convert back from scaled width - need /40 to match solid line thickness
+                options.color,
+                style.line?.opacity ?? 1.0,
+                scene,
+            );
+        }
+
+        // Solid lines can use caching
+        const cacheKey = `edge-style-${options.styleId}`;
         return cache.get(cacheKey, () => {
             if (style.line?.animationSpeed) {
                 return this.createAnimatedLine(options, style, scene);
             }
 
-            return this.createStaticLine(options, style, scene);
+            return this.createStaticLine(options, style, scene, cache);
         });
     }
 
@@ -228,81 +248,47 @@ void main() {
         const length = this.calculateArrowLength() * size;
 
         // Arrow type routing:
-        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader)
-        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!)
-        // - 3D billboard arrows: Use existing implementation (spheres)
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot"];
-        const OUTLINE_ARROWS = ["empty", "open-diamond", "tee", "vee", "open", "half-open", "crow"];
-        const BILLBOARD_ARROWS = ["open-dot", "sphere-dot", "sphere"];
+        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
+        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
+        // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
+        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"];
+        const OUTLINE_ARROWS = ["open"];
+        const BILLBOARD_ARROWS = ["sphere-dot", "sphere"];
 
-        // Only billboard arrows need fresh mesh per edge
-        // Filled arrows use thin instances with per-instance lineDirection attribute
-        const needsFreshMesh = BILLBOARD_ARROWS.includes(options.type ?? "");
+        // PERFORMANCE FIX: Create individual meshes for all arrow types
+        // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
+        // Individual meshes use direct position/rotation which is much faster for frequent updates
 
-        const createMesh = (): Mesh => {
-            let mesh: Mesh;
+        let mesh: Mesh;
+        const arrowType = options.type ?? "";
 
-            // Route to appropriate renderer based on arrow type
-            const arrowType = options.type ?? "";
-
-            if (FILLED_ARROWS.includes(arrowType)) {
-                // Filled arrows: Use FilledArrowRenderer with thin instances
-                // lineDirection passed per-instance when creating thin instances
-                mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
-            } else if (OUTLINE_ARROWS.includes(arrowType)) {
-                // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-                mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
-            } else if (BILLBOARD_ARROWS.includes(arrowType)) {
-                // 3D billboard arrows: Use existing sphere-based implementation
-                switch (options.type) {
-                    case "open-dot":
-                        mesh = this.createOpenDotArrow(length, width, options.color, scene);
-                        break;
-                    case "sphere-dot":
-                        mesh = this.createSphereDotArrow(length, width, options.color, scene);
-                        break;
-                    case "sphere":
-                        mesh = this.createSphereArrow(length, width, options.color, scene);
-                        break;
-                    default:
-                        throw new Error(`Unsupported arrow type: ${options.type}`);
-                }
-            } else {
-                throw new Error(`Unsupported arrow type: ${options.type}`);
+        if (FILLED_ARROWS.includes(arrowType)) {
+            // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
+            mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
+        } else if (OUTLINE_ARROWS.includes(arrowType)) {
+            // Outline arrows: Use CustomLineRenderer (same shader as lines!)
+            mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
+        } else if (BILLBOARD_ARROWS.includes(arrowType)) {
+            // 3D billboard arrows: Use existing sphere-based implementation
+            switch (options.type) {
+                case "open-dot":
+                    mesh = this.createOpenDotArrow(length, width, options.color, scene);
+                    break;
+                case "sphere-dot":
+                    mesh = this.createSphereDotArrow(length, width, options.color, scene);
+                    break;
+                case "sphere":
+                    mesh = this.createSphereArrow(length, width, options.color, scene);
+                    break;
+                default:
+                    throw new Error(`Unsupported arrow type: ${options.type}`);
             }
-
-            mesh.visibility = opacity;
-            return mesh;
-        };
-
-        // Some arrows don't work with instancing/caching, so create fresh mesh
-        // (billboard arrows and perpendicular dot which needs per-edge orientation)
-        if (needsFreshMesh) {
-            return createMesh();
+        } else {
+            throw new Error(`Unsupported arrow type: ${options.type}`);
         }
 
-        const cacheKey = `edge-arrowhead-v2-style-${styleId}`;
-
-        // Filled arrows use THIN INSTANCES, not InstancedMesh
-        // Return the base mesh directly so Edge can call thinInstanceAdd()
-        if (FILLED_ARROWS.includes(options.type ?? "")) {
-            let baseMesh = cache.meshCacheMap.get(cacheKey);
-            if (!baseMesh) {
-                // Create and cache the base mesh
-                baseMesh = createMesh();
-                baseMesh.name = cacheKey; // Set name to cache key for test compatibility
-                // IMPORTANT: Do NOT set isVisible = false! It hides ALL thin instances.
-                // Instead, move far away to hide the base mesh template.
-                baseMesh.position.set(0, -10000, 0);
-                cache.meshCacheMap.set(cacheKey, baseMesh);
-            }
-
-            return baseMesh; // Return base mesh, not an instance
-        }
-
-        // Outline arrows use regular instancing (InstancedMesh)
-        // MeshCache.get() creates an instance via mesh.createInstance()
-        return cache.get(cacheKey, createMesh);
+        mesh.visibility = opacity;
+        return mesh;
     }
 
     /**
@@ -337,6 +323,27 @@ void main() {
             case "dot":
                 mesh = FilledArrowRenderer.createCircle(scene);
                 break;
+            case "vee":
+                mesh = FilledArrowRenderer.createVee(scene);
+                break;
+            case "tee":
+                mesh = FilledArrowRenderer.createTee(scene);
+                break;
+            case "half-open":
+                mesh = FilledArrowRenderer.createHalfOpen(scene);
+                break;
+            case "crow":
+                mesh = FilledArrowRenderer.createCrow(scene);
+                break;
+            case "open-normal":
+                mesh = FilledArrowRenderer.createOpenNormal(scene);
+                break;
+            case "open-diamond":
+                mesh = FilledArrowRenderer.createOpenDiamond(scene);
+                break;
+            case "open-dot":
+                mesh = FilledArrowRenderer.createOpenCircle(scene);
+                break;
             default:
                 throw new Error(`Unsupported filled arrow type: ${type}`);
         }
@@ -369,8 +376,8 @@ void main() {
 
         // Generate appropriate line geometry
         switch (type) {
-            case "empty":
-                geometry = CustomLineRenderer.createEmptyArrowGeometry(length, width);
+            case "open-normal":
+                geometry = CustomLineRenderer.createOpenNormalArrowGeometry(length, width);
                 break;
             case "open-diamond":
                 geometry = CustomLineRenderer.createOpenDiamondArrowGeometry(length, width);
@@ -379,7 +386,7 @@ void main() {
                 geometry = CustomLineRenderer.createTeeArrowGeometry(width);
                 break;
             case "vee":
-                geometry = CustomLineRenderer.createVeeArrowGeometry(length, width);
+                geometry = CustomLineRenderer.createVeeArrowGeometry(length);
                 break;
             case "open":
                 geometry = CustomLineRenderer.createOpenArrowGeometry(length, width);
@@ -388,7 +395,7 @@ void main() {
                 geometry = CustomLineRenderer.createHalfOpenArrowGeometry(length, width);
                 break;
             case "crow":
-                geometry = CustomLineRenderer.createCrowArrowGeometry(length, width);
+                geometry = CustomLineRenderer.createCrowArrowGeometry(length);
                 break;
             default:
                 throw new Error(`Unsupported outline arrow type: ${type}`);
@@ -405,7 +412,13 @@ void main() {
         );
     }
 
-    private static createStaticLine(options: EdgeMeshOptions, style: EdgeStyleConfig, scene: Scene): Mesh {
+    private static createStaticLine(
+        options: EdgeMeshOptions,
+        style: EdgeStyleConfig,
+        scene: Scene,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Parameter kept for compatibility during Phase 0 refactor
+        _cache: MeshCache,
+    ): Mesh {
         // Use custom line renderer if flag is enabled
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Feature flag for toggling renderer implementation
         if (this.USE_CUSTOM_RENDERER) {
@@ -422,13 +435,16 @@ void main() {
                 ),
             ];
 
+            const lineType = style.line?.type ?? "solid";
+
+            // Solid lines use CustomLineRenderer (shader-based)
             const mesh = CustomLineRenderer.create(
                 {
                     points,
                     width: options.width,
                     color: options.color,
                     opacity: style.line?.opacity,
-                    pattern: style.line?.type ?? "solid",
+                    pattern: lineType,
                 },
                 scene,
             );
@@ -615,21 +631,6 @@ void main() {
         );
     }
 
-    // Dot arrow - screen-space disc matching GreasedLine's rendering
-    private static createDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        // Create a circular dot with radius = width/2 for proper sizing
-        const geometry = CustomLineRenderer.createCircularDotGeometry(width / 2, 32);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
     // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
     private static createSphereArrow(length: number, width: number, color: string, scene: Scene): Mesh {
         // Sphere fits exactly within the allocated arrow space
@@ -805,7 +806,6 @@ void main() {
     static getArrowGeometry(arrowType: string): ArrowGeometry {
         switch (arrowType) {
             // Center-based arrows (sphere-like)
-            case "open-dot":
             case "sphere-dot":
                 return {
                     positioningMode: "center",
@@ -821,24 +821,24 @@ void main() {
                     scaleFactor: 1.0, // Full size
                 };
 
-            // Special tip-based arrows with custom positioning
+            // Special center-based filled arrows (symmetric, positioned by center)
             case "dot":
+            case "open-dot":
                 return {
-                    positioningMode: "center", // Dot is symmetric, position by center
+                    positioningMode: "center", // Dot and open-dot are symmetric, position by center
                     needsRotation: false,
                     positionOffset: 0,
                 };
-            case "vee":
-                return {
-                    positioningMode: "tip",
-                    needsRotation: true, // vee needs rotation
-                    positionOffset: 0.5, // Center at midpoint, so front edge touches surface
-                };
 
             // Filled arrows using FilledArrowRenderer (billboard shaders, no rotation)
-            // These arrows have tip/front edge at origin, extending backward
+            // These arrows have tip/front edge at origin
             case "normal":
-            case "inverted":
+            case "vee":
+            case "tee":
+            case "half-open":
+            case "crow":
+            case "open-normal":
+            case "open-diamond":
             case "diamond":
             case "box":
                 return {
@@ -847,13 +847,18 @@ void main() {
                     positionOffset: 0, // Tip at origin, position mesh at surface
                 };
 
+            // Inverted arrow: geometry extends forward (+X), so we offset backward
+            // to position the base (at +1.0) at the sphere surface
+            // Note: subtract() in calculateArrowPosition means positive offset moves TOWARD sphere
+            case "inverted":
+                return {
+                    positioningMode: "tip",
+                    needsRotation: false, // Billboard shaders handle orientation
+                    positionOffset: 1.0, // Move arrow backward (toward sphere) to place base at surface
+                };
+
             // Outline arrows using CustomLineRenderer (same positioning as old system)
-            case "tee":
-            case "open-diamond":
-            case "empty":
             case "open":
-            case "half-open":
-            case "crow":
             default:
                 return {
                     positioningMode: "tip",
@@ -919,8 +924,8 @@ void main() {
         mesh.scaling.z = length;
     }
 
-    // Empty arrow - hollow triangle using thin outline
-    private static createEmptyArrow(length: number, width: number, color: string, scene: Scene): Mesh {
+    // Open normal arrow - hollow triangle using thin outline
+    private static createOpenNormalArrow(length: number, width: number, color: string, scene: Scene): Mesh {
         // Reuse normal arrow geometry but with thin line width to create outline effect
         const cap = GreasedLineTools.GetArrowCap(
             new Vector3(0, 0, -length),

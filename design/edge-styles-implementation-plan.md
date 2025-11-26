@@ -126,10 +126,13 @@ The edge rendering system must satisfy these critical requirements:
 
 **Status**:
 - ✅ Two-shader architecture (FilledArrowRenderer + CustomLineRenderer)
-- ✅ Filled arrows (normal, inverted, diamond, box, dot)
+- ✅ Filled arrows (normal, inverted, diamond, box, dot) - **ALL use XZ plane (Y=0)**
 - ✅ Arrow positioning and alignment
-- ⚠️ Cylindrical billboarding (planned - see "Remaining Work")
-- ⚠️ Perspective tapering (planned - see "Remaining Work")
+- ✅ Cylindrical billboarding (COMPLETED 2025-11-09)
+- ✅ Perspective tapering (COMPLETED 2025-11-09)
+- ✅ Dot arrow geometry standardized (FIXED 2025-11-13) - Changed from YZ to XZ plane
+
+**Note**: Dot arrow was originally implemented using YZ plane (perpendicular to line), creating a disc-perpendicular-to-line appearance. This was updated on 2025-11-13 to use XZ plane (Y=0) like all other filled arrows, making it camera-facing for consistency.
 
 ---
 
@@ -329,23 +332,23 @@ const positions = [
 ];
 ```
 
-**Circle Arrow Exception** (Already Correct):
+**Circle Arrow** ✅ **FIXED (2025-11-13)**:
 
-Circle geometry is ALREADY in the YZ plane (perpendicular to line direction), which is correct:
+Circle geometry NOW uses XZ plane (Y=0) to match all other filled arrows:
 
 ```typescript
-// Circle - CORRECT (YZ plane, X=0):
+// Circle - CORRECT (XZ plane, Y=0):
 for (let i = 0; i <= segments; i++) {
     const angle = (i / segments) * Math.PI * 2;
     positions.push(
-        0,                         // X = 0 (no extent along line)
-        Math.cos(angle) * radius,  // Y → up (toward camera)
+        Math.cos(angle) * radius,  // X → forward (along line direction)
+        0,                         // Y = 0 (face normal in ±Y, toward camera)
         Math.sin(angle) * radius   // Z → right (perpendicular)
     );
 }
 ```
 
-Circle works because its face is perpendicular to the line direction (X axis), so it naturally faces the camera.
+Circle now follows the same pattern as triangle/diamond/box - face normal in ±Y direction, which maps to shader's "up" vector (toward camera).
 
 ---
 
@@ -354,9 +357,9 @@ Circle works because its face is perpendicular to the line direction (X axis), s
 **CRITICAL GEOMETRY RULE**:
 
 For tangent billboarding in FilledArrowRenderer:
-- **Filled polygons (triangle, diamond, box)**: MUST use **XZ plane (Y=0)**
-- **Circles/discs**: Use **YZ plane (X=0)** (perpendicular to line)
-- **General rule**: Face normal must map to the shader's "up" vector (toward camera)
+- **ALL filled arrows (triangle, diamond, box, circle)**: MUST use **XZ plane (Y=0)**
+- **Face normal**: MUST point in ±Y direction to map to shader's "up" vector (toward camera)
+- **General rule**: All filled arrows follow the same pattern for consistency
 
 **How to verify geometry is correct**:
 1. Arrow should be visible from ALL camera angles
@@ -1958,96 +1961,335 @@ Add arrowTail property handling to `stories/helpers.ts` renderFn():
 
 ---
 
-### Phase 4: Advanced Line Patterns (2 days)
+### Phase 4: Instanced Mesh Line Patterns (3-4 days)
 
-**Objective**: Implement the remaining 4 advanced line patterns (dash-dot, equal-dash, sinewave, zigzag). Basic patterns (solid, dash, dot) are already implemented in CustomLineRenderer's fragment shader. This phase adds geometric patterns that require actual geometry modification.
+**Objective**: Implement line patterns using GPU-instanced meshes. This approach provides superior visual quality with true 3D geometry that can be viewed from any angle, supports arbitrary shape patterns (dots, stars, diamonds, dashes, etc.), and maintains consistent world-space sizing.
 
-**Duration**: 2 days (reduced from 4 days - 3/6 patterns already complete)
+**Duration**: 3-4 days
 
-**Already Complete in Phase 0**:
-- ✅ Solid pattern (pattern=0 in fragment shader)
-- ✅ Dash pattern (pattern=1, configurable dashLength/gapLength)
-- ✅ Dot pattern (pattern=2, uses distance-based discard)
+**Architectural Decision**: Use GPU-instanced meshes for all line patterns (except solid lines which use CustomLineRenderer).
 
-**Remaining Patterns to Implement**:
-- ❌ Dash-dot pattern (alternating dashes and dots)
-- ❌ Equal-dash pattern (uniform dash/gap lengths)
-- ❌ Sinewave pattern (smooth wave along line)
-- ❌ Zigzag pattern (angular wave along line)
+**⚠️ IMPORTANT - Replacing Previous Implementations**:
 
-**Implementation Strategy**:
-- Simple patterns (dash-dot, equal-dash): Add to CustomLineRenderer fragment shader
-- Geometric patterns (sinewave, zigzag): Modify `CustomLineRenderer.createLineGeometry()` to generate wavy point paths
+This phase **completely replaces** all previous line pattern implementations. The following must be removed:
+
+1. **Remove Old Line Types** from EdgeStyle.ts:
+   - `"dots"` (replaced by `"dot"`)
+   - `"equal-dash"` (removed, not in new design)
+
+2. **Remove Shader-Based Pattern Code** from CustomLineRenderer.ts:
+   - All shader-based pattern implementations (fragment shader discard patterns)
+   - Pattern-specific shader code for dash, dot, etc.
+
+3. **Remove Geometry-Based Pattern Code** from CustomLineRenderer.ts:
+   - Geometry modification code for sinewave
+   - Geometry modification code for zigzag
+   - Any pattern generation that modifies line geometry
+
+4. **Remove Old Pattern Tests**:
+   - Tests for shader-based patterns in test/meshes/LinePatterns.test.ts
+   - Tests for geometry-based sinewave/zigzag
+
+5. **Remove Old Pattern Stories**:
+   - stories/LinePatterns.stories.ts (replaced by stories/PatternedLines.stories.ts)
+
+**Migration Path**:
+- `"solid"` → Unchanged (uses CustomLineRenderer)
+- `"dots"` → `"dot"` (new instanced mesh implementation)
+- `"dash"` → New instanced mesh implementation (replacing any shader-based version)
+- `"dash-dot"` → New instanced mesh implementation
+- `"sinewave"` → New instanced period mesh implementation (replacing geometry-based version)
+- `"zigzag"` → New instanced period mesh implementation (replacing geometry-based version)
+- `"equal-dash"` → **REMOVED** (not in new design)
+- `"star"` → **NEW** pattern type
+- `"diamond"` → **NEW** pattern type
+
+✅ **Advantages of Instanced Mesh Approach**:
+- True 3D geometry that can be viewed from any angle
+- Always visible (no edge-on vanishing)
+- Shapes oriented along line direction
+- Perspective depth (distant shapes appear smaller)
+- GPU instancing: 15,000 instances with only 3 draw calls
+- Supports arbitrary shapes (circles, stars, diamonds, boxes, etc.)
+- Natural pattern spacing based on world-space distance
+
+**Prototype Reference**: `tmp/test-3g-oriented-shapes.html` demonstrates the working implementation with circles, stars, and arrows.
+
+**Line Types to Implement**:
+1. **Solid** - CustomLineRenderer (no instancing, continuous line)
+2. **Dot** - Line of circle meshes (instanced)
+3. **Star** - Line of star meshes (instanced)
+4. **Dash** - Line of elongated box meshes (instanced)
+5. **Diamond** - Line of diamond meshes (instanced)
+6. **Dash-dot** - Alternating boxes and circles (instanced)
+7. **Sinewave** - Line of repeating wave period meshes (instanced, with clipping)
+8. **Zigzag** - Line of repeating zigzag period meshes (instanced, with clipping)
+
+**Core Architecture** (from test-3g-oriented-shapes.html):
+
+```typescript
+// 1. Each instance has position + direction along line
+instanceData[shapeType].positions.push(x, y, z);
+instanceData[shapeType].directions.push(dirX, dirY, dirZ);
+
+// 2. Vertex shader transforms vertices through world pipeline
+vec3 forward = normalize(lineDirection);
+vec3 toCamera = normalize(cameraPosition - worldCenter);
+vec3 right = normalize(cross(forward, toCamera));
+vec3 up = cross(right, forward);
+
+// 3. Geometry in XY plane (Z=0) for flat-along-line orientation
+vec3 localVertex = vec3(position.x * instanceScale, position.y * instanceScale, 0.0);
+
+// 4. Rotate by orientation matrix
+vec3 rotatedVertex = orientation * localVertex;
+
+// 5. Transform to world space, then clip space
+vec3 worldPosition = instancePosition + rotatedVertex;
+vec4 vertexClip = projection * view * vec4(worldPosition, 1.0);
+
+// 6. No billboarding - shapes maintain 3D orientation
+gl_Position = vertexClip;
+```
+
+**Key Technical Requirements**:
+1. ✅ **XY Plane Geometry** - All shape vertices in XY plane (Z=0) to lie flat along line
+2. ✅ **Tangent Orientation** - Shapes oriented with line direction (forward = line tangent)
+3. ✅ **Perpendicular Billboarding** - Rotate around line axis to face camera (using `cross(forward, toCamera)`)
+4. ✅ **GPU Instancing** - One base mesh per shape type, instanced for all occurrences
+5. ✅ **World-Space Sizing** - Consistent physical size regardless of camera distance
+6. ✅ **Partial Period Clipping** - For sinewave/zigzag, clip final instance to fit line length exactly
+7. ⚠️ **Perspective Tapering** - Can be added by removing `* w` compensation (like arrowheads)
+
+**Period Mesh Architecture** (Sinewave & Zigzag):
+
+These patterns use **repeating period meshes** where each instance represents one complete wave cycle or zigzag pattern:
+
+**Key Concepts**:
+- **Period Mesh**: A ribbon mesh representing ONE complete pattern cycle
+  - Sinewave: One complete sine wave (0° to 360°)
+  - Zigzag: One complete zig-zag (up-down or M-shape)
+- **Fixed Period Length**: 1.0 units in world space (prevents stretching)
+- **Amplitude**: 3× line width (height of wave/zigzag)
+- **End-to-End Placement**: Instances positioned consecutively along line
+- **Partial Clipping**: Last instance clipped to fit remaining line length
+
+**Period Mesh Requirements**:
+```typescript
+interface PeriodMesh {
+  vertices: Vector3[];      // Ribbon mesh in XY plane (Z=0)
+  periodLength: 1.0;        // Fixed world-space length
+  amplitude: lineWidth * 3; // Height = 3× line width
+  startPoint: (0, 0, 0);    // Must start at origin
+  endPoint: (1.0, 0, 0);    // Must end at period length, Y=0 (seamless connection)
+}
+```
+
+**Clipping Implementation**:
+- Each instance has a `clipFactor` (0.0 to 1.0)
+- Full instances: `clipFactor = 1.0`
+- Partial instance: `clipFactor = remainingLength / periodLength`
+- Vertex shader discards vertices beyond clip point:
+  ```glsl
+  uniform float instanceClipFactor; // Per-instance via attribute
+
+  // In vertex shader
+  float localX = position.x; // X coordinate in period mesh local space
+  if (localX > instanceClipFactor) {
+    // Vertex is beyond clip point, move off-screen
+    gl_Position = vec4(0.0, 0.0, -10.0, 1.0);
+    return;
+  }
+  ```
+
+**Instance Calculation Example**:
+```typescript
+const lineLength = 7.3;      // Line between nodes
+const periodLength = 1.0;    // Fixed period
+const numFullPeriods = Math.floor(7.3 / 1.0) = 7;
+const remainingLength = 7.3 - 7.0 = 0.3;
+const clipFactor = 0.3 / 1.0 = 0.3;
+
+// Instances:
+// [0]: position=0.0, clipFactor=1.0 (full)
+// [1]: position=1.0, clipFactor=1.0 (full)
+// ...
+// [6]: position=6.0, clipFactor=1.0 (full)
+// [7]: position=7.0, clipFactor=0.3 (30% of period rendered)
+```
+
+**Visual Quality Benefits**:
+- ✅ No stretching or distortion (fixed period length)
+- ✅ Pattern looks identical on all lines
+- ✅ Smooth wave curves (20 segments per period)
+- ✅ Perfect line length fit (clipping fills to exact end)
+- ✅ True 3D geometry visible from all angles
 
 **Tests to Write First**:
 
-- `test/meshes/LinePatterns.test.ts`: Test advanced line pattern generation (solid/dash/dot already tested in CustomLineRenderer.test.ts)
+- `test/meshes/PatternedLineRenderer.test.ts`: Test instanced mesh pattern generation
   ```typescript
-  describe("Advanced Line Pattern Generation", () => {
-    test("dash-dot pattern alternates dashes and dots", () => {
-      const points = [new Vector3(0, 0, 0), new Vector3(10, 0, 0)];
-      const mesh = CustomLineRenderer.create(
-        { points, width: 1.0, color: "#FF0000", pattern: "dash-dot" },
-        scene
-      );
+  describe("Instanced Mesh Pattern Generation", () => {
+    test("dot pattern creates circle instances along line", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(10, 0, 0),
+        pattern: "dot",
+        spacing: 0.5,
+      };
 
-      assert.exists(mesh);
-      // Verify shader has dash-dot pattern uniform set
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "circle");
+      assert.isTrue(instances.count > 0);
+      // Verify instances evenly spaced along line
     });
 
-    test("equal-dash pattern creates uniform dashes", () => {
-      const points = [new Vector3(0, 0, 0), new Vector3(10, 0, 0)];
-      const mesh = CustomLineRenderer.create(
-        { points, width: 1.0, color: "#FF0000", pattern: "equal-dash" },
-        scene
-      );
+    test("star pattern creates star instances along line", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(10, 0, 0),
+        pattern: "star",
+        spacing: 0.5,
+      };
 
-      assert.exists(mesh);
-      // Verify equal dash/gap sizes in shader uniforms
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "star");
+      assert.isTrue(instances.count > 0);
     });
 
-    test("sinewave pattern creates smooth wave", () => {
-      const points = [new Vector3(0, 0, 0), new Vector3(10, 0, 0)];
-      const geometry = CustomLineRenderer.createSinewaveGeometry(
-        points,
-        0.5,  // amplitude
-        1.0   // frequency
-      );
+    test("dash pattern creates box instances along line", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(10, 0, 0),
+        pattern: "dash",
+        dashLength: 1.0,
+        gapLength: 0.5,
+      };
 
-      // Should have more points than input (for smoothness)
-      assert.isTrue(geometry.positions.length > points.length * 3);
-      // Verify wave oscillation in positions
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "box");
+      // Verify dash/gap spacing
     });
 
-    test("zigzag pattern creates angular pattern", () => {
-      const points = [new Vector3(0, 0, 0), new Vector3(10, 0, 0)];
-      const geometry = CustomLineRenderer.createZigzagGeometry(
-        points,
-        0.5,  // amplitude
-        2.0   // frequency
-      );
+    test("diamond pattern creates diamond instances along line", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(10, 0, 0),
+        pattern: "diamond",
+        spacing: 0.5,
+      };
 
-      // Should have more points than input
-      assert.isTrue(geometry.positions.length > points.length * 3);
-      // Verify angular changes in positions
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "diamond");
+      assert.isTrue(instances.count > 0);
+    });
+
+    test("dash-dot pattern creates alternating box and circle instances", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(10, 0, 0),
+        pattern: "dash-dot",
+        dashLength: 1.0,
+        gapLength: 0.5,
+      };
+
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      // Should have both box and circle instances
+      assert.isTrue(instances.count > 0);
+    });
+
+    test("sinewave pattern creates wave period instances", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(7.3, 0, 0),  // 7.3 units long
+        pattern: "sinewave",
+        periodLength: 1.0,
+      };
+
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "sinewave-period");
+      // 7 full periods + 1 partial (30%)
+      assert.equal(instances.count, 8);
+
+      // Check clip factors
+      assert.equal(instances.clipFactors[0], 1.0); // First instance full
+      assert.equal(instances.clipFactors[6], 1.0); // 7th instance full
+      assert.closeTo(instances.clipFactors[7], 0.3, 0.01); // Last instance 30%
+    });
+
+    test("zigzag pattern creates zigzag period instances", () => {
+      const line = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(5.5, 0, 0),
+        pattern: "zigzag",
+        periodLength: 1.0,
+      };
+
+      const instances = PatternedLineRenderer.generatePatternInstances(line);
+
+      assert.exists(instances);
+      assert.equal(instances.shapeType, "zigzag-period");
+      // 5 full periods + 1 partial (50%)
+      assert.equal(instances.count, 6);
+      assert.closeTo(instances.clipFactors[5], 0.5, 0.01);
+    });
+
+    test("period patterns have consistent shape regardless of line length", () => {
+      const shortLine = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(2.0, 0, 0),
+        pattern: "sinewave",
+        periodLength: 1.0,
+      };
+      const longLine = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(20.0, 0, 0),
+        pattern: "sinewave",
+        periodLength: 1.0,
+      };
+
+      const shortInstances = PatternedLineRenderer.generatePatternInstances(shortLine);
+      const longInstances = PatternedLineRenderer.generatePatternInstances(longLine);
+
+      // Short line: 2 periods, long line: 20 periods
+      assert.equal(shortInstances.count, 2);
+      assert.equal(longInstances.count, 20);
+
+      // All instances use same period mesh (no stretching)
+      assert.equal(shortInstances.shapeType, longInstances.shapeType);
     });
 
     test("patterns scale with edge length", () => {
-      const shortEdge = [new Vector3(0, 0, 0), new Vector3(2, 0, 0)];
-      const longEdge = [new Vector3(0, 0, 0), new Vector3(20, 0, 0)];
+      const shortLine = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(2, 0, 0),
+        pattern: "dot",
+        spacing: 0.5,
+      };
+      const longLine = {
+        start: new Vector3(0, 0, 0),
+        end: new Vector3(20, 0, 0),
+        pattern: "dot",
+        spacing: 0.5,
+      };
 
-      const shortMesh = CustomLineRenderer.create(
-        { points: shortEdge, width: 1.0, color: "#FF0000", pattern: "dash" },
-        scene
-      );
-      const longMesh = CustomLineRenderer.create(
-        { points: longEdge, width: 1.0, color: "#FF0000", pattern: "dash" },
-        scene
-      );
+      const shortInstances = PatternedLineRenderer.generatePatternInstances(shortLine);
+      const longInstances = PatternedLineRenderer.generatePatternInstances(longLine);
 
-      // Both should render successfully with scaled patterns
-      assert.exists(shortMesh);
-      assert.exists(longMesh);
+      // Long line should have more instances
+      assert.isTrue(longInstances.count > shortInstances.count);
     });
   });
   ```
@@ -2056,7 +2298,7 @@ Add arrowTail property handling to `stories/helpers.ts` renderFn():
   ```typescript
   describe("Line Patterns Integration", () => {
     test("all line patterns render without errors", async () => {
-      const patterns = ["solid", "dash", "dash-dot", "dots", "equal-dash", "sinewave", "zigzag"];
+      const patterns = ["solid", "dot", "star", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
 
       for (const pattern of patterns) {
         const graph = createTestGraph();
@@ -2069,206 +2311,229 @@ Add arrowTail property handling to `stories/helpers.ts` renderFn():
       }
     });
 
-    test("patterns work with line opacity", async () => {
+    test("instanced patterns work with line opacity", async () => {
       const graph = createTestGraph();
       graph.styleTemplate = templateCreator({
-        edgeStyle: { line: { type: "dash", opacity: 0.5 } }
+        edgeStyle: { line: { type: "dot", opacity: 0.5 } }
       });
 
       await waitForGraphToSettle(graph);
 
       // Verify pattern rendered and opacity applied
       const edge = graph.edges[0];
-      assert.equal(edge.mesh.visibility, 0.5);
+      assert.exists(edge.patternMeshes);
+      assert.isTrue(edge.patternMeshes.length > 0);
+    });
+
+    test("period patterns adapt to variable line lengths", async () => {
+      const graph = createTestGraph({
+        // Create nodes with varying distances
+        nodes: [
+          { id: "A", position: { x: 0, y: 0, z: 0 } },
+          { id: "B", position: { x: 2.5, y: 0, z: 0 } },  // Short edge
+          { id: "C", position: { x: 10.7, y: 0, z: 0 } }, // Long edge
+        ],
+        edges: [
+          { src: "A", dst: "B" },
+          { src: "B", dst: "C" },
+        ]
+      });
+
+      graph.styleTemplate = templateCreator({
+        edgeStyle: { line: { type: "sinewave" } }
+      });
+
+      await waitForGraphToSettle(graph);
+
+      // Both edges should render with different numbers of periods
+      const shortEdge = graph.edges[0]; // 2.5 units = 2-3 periods
+      const longEdge = graph.edges[1];  // ~8 units = 8-9 periods
+
+      assert.exists(shortEdge.patternMeshes);
+      assert.exists(longEdge.patternMeshes);
+      assert.isTrue(longEdge.patternMeshes.length > shortEdge.patternMeshes.length);
+    });
+
+    test("period patterns maintain consistent shape", async () => {
+      const graph = createTestGraph();
+      graph.styleTemplate = templateCreator({
+        edgeStyle: { line: { type: "zigzag" } }
+      });
+
+      await waitForGraphToSettle(graph);
+
+      // All edges use same base mesh (no stretching per edge)
+      const edge = graph.edges[0];
+      assert.exists(edge.patternMeshes);
+      // Each instance should have same mesh reference
+      const baseMesh = edge.patternMeshes[0]._source;
+      edge.patternMeshes.forEach(instance => {
+        assert.equal(instance._source, baseMesh);
+      });
     });
   });
   ```
 
 **Implementation**:
 
-**Strategy Overview**:
-1. Shader-based patterns (dash-dot, equal-dash): Extend CustomLineRenderer fragment shader
-2. Geometry-based patterns (sinewave, zigzag): Add geometry generation methods to CustomLineRenderer
-3. Integration: Update EdgeMesh to pass pattern type to CustomLineRenderer
+**📖 Detailed Implementation Guide**: See **`design/instanced-mesh-patterns.md`** for complete implementation details, code examples, and integration guide.
 
-- `src/meshes/CustomLineRenderer.ts`: Extend fragment shader for new patterns
-  ```typescript
-  // Update fragment shader to support 6 pattern types:
-  // 0=solid, 1=dash, 2=dot, 3=dash-dot, 4=equal-dash, 5=sinewave, 6=zigzag
-  Effect.ShadersStore.customLineFragmentShader = `
-precision highp float;
+**Summary**:
 
-varying vec2 vUV;
-varying float vDistance;
+**Key Files to Create/Update**:
+1. ✅ **`src/meshes/PatternedLineRenderer.ts`** (NEW) - Core pattern rendering class
+2. ✅ **`src/Edge.ts`** (UPDATE) - Add pattern mesh support
+3. ✅ **`src/config/EdgeStyle.ts`** (UPDATE) - Updated line types (removed "dots", "equal-dash")
+4. ✅ **Tests** - Unit tests, visual tests, and Storybook stories
+5. ✅ **`stories/PatternedLines.stories.ts`** (NEW) - Replaces LinePatterns.stories.ts
 
-uniform vec3 color;
-uniform float opacity;
-uniform float pattern;        // 0-6 for different patterns
-uniform float dashLength;
-uniform float gapLength;
+**Key Files to Clean Up/Remove**:
+1. ⚠️ **`src/meshes/CustomLineRenderer.ts`** (UPDATE) - Remove shader-based and geometry-based pattern code
+   - Remove pattern shader implementations
+   - Remove sinewave geometry generation
+   - Remove zigzag geometry generation
+   - Keep only solid line rendering
+2. ⚠️ **`test/meshes/LinePatterns.test.ts`** (REMOVE or UPDATE) - Remove tests for old pattern implementations
+3. ⚠️ **`stories/LinePatterns.stories.ts`** (REMOVE) - Replaced by PatternedLines.stories.ts
 
-void main() {
-    // Existing patterns (0, 1, 2) stay the same
+**Pattern Types**:
+- `dot` - Line of circle meshes
+- `star` - Line of star meshes
+- `dash` - Line of elongated box meshes
+- `diamond` - Line of diamond meshes
+- `dash-dot` - Alternating boxes and circles
 
-    if (pattern == 3.0) {
-        // Dash-dot pattern
-        float cycle = dashLength + gapLength + 0.1 + gapLength;  // dash, gap, dot, gap
-        float phase = mod(vDistance, cycle);
+**Quick Reference**:
 
-        if (phase < dashLength) {
-            // In dash
-        } else if (phase < dashLength + gapLength) {
-            discard;  // First gap
-        } else if (phase < dashLength + gapLength + 0.1) {
-            // In dot
-        } else {
-            discard;  // Second gap
-        }
-    } else if (pattern == 4.0) {
-        // Equal-dash (dash and gap have same length)
-        float cycle = dashLength * 2.0;
-        float phase = mod(vDistance, cycle);
-        if (phase > dashLength) {
-            discard;
-        }
-    }
-    // Patterns 5 and 6 (sinewave, zigzag) use geometry, not shader discard
-
-    gl_FragColor = vec4(color, opacity);
+export interface PatternOptions {
+  pattern: "dot" | "star" | "dash" | "diamond" | "dash-dot";
+  spacing: number;
+  size: number;
+  color: string;
+  opacity?: number;
+  dashLength?: number;
+  gapLength?: number;
 }
-`;
-  ```
 
-- `src/meshes/CustomLineRenderer.ts`: Add geometry-based pattern generation
-  ```typescript
+export interface InstanceData {
+  positions: number[];  // vec3 per instance
+  directions: number[]; // vec3 per instance (line tangent)
+  colors: number[];     // vec3 per instance
+  scales: number[];     // float per instance
+  count: number;
+  shapeType: "circle" | "star" | "box" | "diamond";
+}
+
+export class PatternedLineRenderer {
   /**
-   * Generate sinewave geometry along a path
+   * Register shaders (same as test-3g-oriented-shapes.html)
    */
-  static createSinewaveGeometry(
-    points: Vector3[],
-    amplitude: number,
-    frequency: number
-  ): Vector3[] {
-    const result: Vector3[] = [];
-    const totalSegments = (points.length - 1);
+  static registerShaders(): void {
+    Effect.ShadersStore.patternedLineVertexShader = `#version 300 es
+      precision highp float;
 
-    for (let segIdx = 0; segIdx < totalSegments; segIdx++) {
-      const p0 = points[segIdx];
-      const p1 = points[segIdx + 1];
-      const segmentDir = p1.subtract(p0);
-      const segmentLength = segmentDir.length();
-      const tangent = segmentDir.normalize();
+      in vec2 position;              // 2D shape vertex in XZ plane
+      in vec3 instancePosition;      // Instance center in world space
+      in vec3 instanceDirection;     // Line direction for orientation
+      in vec3 instanceColor;
+      in float instanceScale;
 
-      // Perpendicular for wave oscillation
-      const perpendicular = new Vector3(-tangent.y, tangent.x, tangent.z);
+      uniform mat4 view;
+      uniform mat4 projection;
+      uniform vec3 cameraPosition;
 
-      // Generate points along this segment with wave
-      const pointsPerSegment = Math.ceil(segmentLength * 10);  // 10 points per unit
-      for (let i = 0; i <= pointsPerSegment; i++) {
-        const t = i / pointsPerSegment;
-        const basePoint = p0.add(segmentDir.scale(t));
+      out vec3 vColor;
 
-        // Apply sine wave
-        const waveT = (segIdx + t) / totalSegments;
-        const offset = Math.sin(waveT * frequency * Math.PI * 2) * amplitude;
-        const finalPoint = basePoint.add(perpendicular.scale(offset));
-
-        result.push(finalPoint);
+      // Create rotation matrix to align shape with line direction
+      mat3 createOrientation(vec3 direction) {
+        vec3 forward = normalize(direction);
+        vec3 worldUp = abs(forward.y) > 0.99 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+        vec3 right = normalize(cross(worldUp, forward));
+        vec3 up = cross(forward, right);
+        return mat3(right, up, forward);
       }
-    }
 
-    return result;
+      void main() {
+        // Create orientation matrix from line direction
+        mat3 orientation = createOrientation(instanceDirection);
+
+        // Transform 2D vertex to 3D using orientation
+        // XY plane (Z=0) for flat-along-line orientation
+        vec3 localVertex = vec3(position.x * instanceScale, position.y * instanceScale, 0.0);
+
+        // Rotate vertex by orientation matrix
+        vec3 rotatedVertex = orientation * localVertex;
+
+        // Translate to instance position (world space)
+        vec3 worldPosition = instancePosition + rotatedVertex;
+
+        // Transform to clip space
+        vec4 vertexClip = projection * view * vec4(worldPosition, 1.0);
+
+        gl_Position = vertexClip;
+        vColor = instanceColor;
+      }
+    `;
+
+    Effect.ShadersStore.patternedLineFragmentShader = `#version 300 es
+      precision highp float;
+
+      in vec3 vColor;
+      uniform float opacity;
+      out vec4 fragColor;
+
+      void main() {
+        fragColor = vec4(vColor, opacity);
+      }
+    `;
   }
 
   /**
-   * Generate zigzag geometry along a path
+   * Generate pattern instances along a line
    */
-  static createZigzagGeometry(
-    points: Vector3[],
-    amplitude: number,
-    frequency: number
-  ): Vector3[] {
-    const result: Vector3[] = [];
-    const totalSegments = (points.length - 1);
+  static generatePatternInstances(line: LineParams): InstanceData {
+    const { start, end, pattern, spacing, size, color } = line;
+    const direction = end.subtract(start);
+    const length = direction.length();
+    const tangent = direction.normalize();
 
-    for (let segIdx = 0; segIdx < totalSegments; segIdx++) {
-      const p0 = points[segIdx];
-      const p1 = points[segIdx + 1];
-      const segmentDir = p1.subtract(p0);
-      const segmentLength = segmentDir.length();
-      const tangent = segmentDir.normalize();
+    const instances: InstanceData = {
+      positions: [],
+      directions: [],
+      colors: [],
+      scales: [],
+      count: 0,
+      shapeType: this.getShapeType(pattern)
+    };
 
-      const perpendicular = new Vector3(-tangent.y, tangent.x, tangent.z);
+    // Calculate number of instances based on spacing
+    const count = Math.floor(length / spacing);
 
-      // Generate zigzag points
-      const pointsPerSegment = Math.ceil(frequency * 2);  // Zigzag corners
-      for (let i = 0; i <= pointsPerSegment; i++) {
-        const t = i / pointsPerSegment;
-        const basePoint = p0.add(segmentDir.scale(t));
+    for (let i = 0; i <= count; i++) {
+      const t = i / count;
+      const position = start.add(direction.scale(t));
 
-        // Alternate +/- for zigzag
-        const offset = (i % 2 === 0 ? amplitude : -amplitude);
-        const finalPoint = basePoint.add(perpendicular.scale(offset));
-
-        result.push(finalPoint);
-      }
+      instances.positions.push(position.x, position.y, position.z);
+      instances.directions.push(tangent.x, tangent.y, tangent.z);
+      instances.colors.push(/* color values */);
+      instances.scales.push(size);
+      instances.count++;
     }
 
-    return result;
+    return instances;
   }
-  ```
 
-- `src/meshes/CustomLineRenderer.ts`: Update create() to handle patterns
-  ```typescript
-  static create(
-    options: CustomLineOptions,
-    scene: Scene
-  ): Mesh {
-    this.registerShaders();
-
-    // Generate base points (may be modified for geometric patterns)
-    let points = options.points;
-
-    // Apply geometric patterns by modifying points
-    if (options.pattern === "sinewave") {
-      points = this.createSinewaveGeometry(
-        points,
-        options.width * 0.5,  // amplitude
-        2.0  // frequency
-      );
-    } else if (options.pattern === "zigzag") {
-      points = this.createZigzagGeometry(
-        points,
-        options.width * 0.5,  // amplitude
-        3.0  // frequency
-      );
+  private static getShapeType(pattern: string): ShapeType {
+    switch (pattern) {
+      case "dot": return "circle";
+      case "star": return "star";
+      case "dash": return "box";
+      case "diamond": return "diamond";
+      case "dash-dot": return "circle"; // Alternates
+      default: return "circle";
     }
-
-    // Generate geometry from points
-    const geometry = this.createLineGeometry(points);
-
-    // Create mesh and shader material (existing code continues...)
-    const mesh = new Mesh("custom-line", scene);
-    // ... rest of implementation
   }
-  ```
-
-- `src/constants/meshConstants.ts`: Add pattern constants
-  ```typescript
-  export const EDGE_CONSTANTS = {
-    // ... existing ...
-
-    // Line pattern parameters
-    DASH_LENGTH_MULTIPLIER: 3,
-    DASH_GAP_MULTIPLIER: 2,
-    DOT_LENGTH_MULTIPLIER: 0.5,
-    DOT_GAP_MULTIPLIER: 1.5,
-    SINEWAVE_AMPLITUDE_MULTIPLIER: 2,
-    SINEWAVE_FREQUENCY_DEFAULT: 0.5,
-    ZIGZAG_AMPLITUDE_MULTIPLIER: 2,
-    ZIGZAG_FREQUENCY_DEFAULT: 1.0,
-  } as const;
-  ```
+}
 
 **Dependencies**:
 - External: None
@@ -2312,52 +2577,49 @@ Stories:
 1. **SolidLine Story** (baseline):
    - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "solid", width: 0.5, color: "darkgrey" } } })`
    - Controls to include: `["line.width", "line.color", "line.opacity"]`
+   - Verify: Continuous solid line with no patterns
 
-2. **DashedLine Story**:
-   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "dash", width: 0.5, color: "darkgrey" } } })`
-   - Controls to include: `["line.width", "line.color"]`
-   - Verify: Dashes are visible and spacing is proportional to width
+2. **DotPattern Story**:
+   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "dot", width: 0.5, color: "darkgrey", spacing: 0.5 } } })`
+   - Controls to include: `["line.width", "line.color", "pattern.spacing", "pattern.size"]`
+   - Verify: Circle meshes evenly spaced along line, visible from all angles
 
-3. **DashDotLine Story**:
+3. **StarPattern Story**:
+   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "star", width: 0.5, color: "darkgrey", spacing: 0.5 } } })`
+   - Controls to include: `["line.width", "line.color", "pattern.spacing", "pattern.size"]`
+   - Verify: Star meshes evenly spaced along line, oriented with line direction
+
+4. **DashPattern Story**:
+   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "dash", width: 0.5, color: "darkgrey", dashLength: 1.0, gapLength: 0.5 } } })`
+   - Controls to include: `["line.width", "line.color", "pattern.dashLength", "pattern.gapLength"]`
+   - Verify: Elongated box meshes with proper dash/gap spacing
+
+5. **DiamondPattern Story**:
+   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "diamond", width: 0.5, color: "darkgrey", spacing: 0.5 } } })`
+   - Controls to include: `["line.width", "line.color", "pattern.spacing", "pattern.size"]`
+   - Verify: Diamond meshes evenly spaced along line
+
+6. **DashDotPattern Story**:
    - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "dash-dot", width: 0.5, color: "darkgrey" } } })`
    - Controls to include: `["line.width", "line.color"]`
-   - Verify: Alternating dash-dot pattern is clear
+   - Verify: Alternating box and circle meshes
 
-4. **DottedLine Story**:
-   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "dots", width: 0.5, color: "darkgrey" } } })`
-   - Controls to include: `["line.width", "line.color"]`
-   - Verify: Dots are evenly spaced
-
-5. **EqualDashLine Story**:
-   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "equal-dash", width: 0.5, color: "darkgrey" } } })`
-   - Controls to include: `["line.width", "line.color"]`
-   - Verify: Dashes and gaps are equal length
-
-6. **SinewaveLine Story**:
-   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "sinewave", width: 0.5, color: "darkgrey" } } })`
-   - Controls to include: `["line.width", "line.color"]`
-   - Verify: Smooth wave pattern is visible
-
-7. **ZigzagLine Story**:
-   - Args: `styleTemplate: templateCreator({ edgeStyle: { line: { type: "zigzag", width: 0.5, color: "darkgrey" } } })`
-   - Controls to include: `["line.width", "line.color"]`
-   - Verify: Angular zigzag pattern is clear
-
-8. **PatternsWithArrows Story**:
-   - Args: Dashed line with normal arrow head
-   - Controls to include: `["line.width", "arrowHead.size"]`
-   - Verify: Pattern and arrow both render correctly
+7. **PatternsWithArrows Story**:
+   - Args: Dot pattern with normal arrow head
+   - Controls to include: `["line.width", "arrowHead.size", "pattern.spacing"]`
+   - Verify: Pattern meshes and arrow both render correctly
 
 **Manual Verification** (Must complete before marking phase done):
 1. Start Storybook: `npm run storybook`
 2. Navigate to Styles/Edge/Line Patterns section
 3. For EACH pattern story:
-   - Verify pattern is clearly visible and distinct
-   - Adjust line width from 0.1 to 5 and verify pattern scales correctly
-   - For patterns on very short edges (if visible), verify no distortion
-   - For patterns on very long edges, verify pattern repeats correctly
+   - Verify pattern instances are clearly visible and distinct
+   - Rotate camera to verify patterns are visible from all angles (3D geometry)
+   - Adjust pattern spacing/size controls and verify real-time updates
+   - For patterns on very short edges, verify instances render correctly
+   - For patterns on very long edges, verify pattern spacing remains consistent
 4. Test that patterns work with arrows (PatternsWithArrows story)
-5. Take screenshots of all 7 patterns at width=0.5 and width=2.0
+5. Take screenshots of all 6 patterns from multiple camera angles
 
 ---
 

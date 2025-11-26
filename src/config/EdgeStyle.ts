@@ -14,7 +14,7 @@ const ArrowType = z.enum([
     "open-dot",
     "none",
     "tee",
-    "empty",
+    "open-normal",
     "diamond",
     "open-diamond",
     "crow",
@@ -33,14 +33,16 @@ const ArrowStyle = z.strictObject({
 });
 
 const LineType = z.enum([
-    // https://manual.cytoscape.org/en/stable/Styles.html#available-shapes-and-line-styles
-    "solid",
-    "dash",
-    "dash-dot",
-    "dots",
-    "equal-dash",
-    "sinewave",
-    "zigzag",
+    // Phase 4: Instanced Mesh Line Patterns
+    "solid", // CustomLineRenderer (continuous line)
+    "dot", // Circle instances
+    "star", // Star instances
+    "box", // Square box instances (1:1 aspect ratio)
+    "dash", // Elongated box instances (3:1 aspect ratio)
+    "diamond", // Diamond instances
+    "dash-dot", // Alternating boxes and circles
+    "sinewave", // Repeating wave period meshes
+    "zigzag", // Repeating zigzag period meshes
 ]);
 
 const LineStyle = z.strictObject({

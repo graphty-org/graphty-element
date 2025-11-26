@@ -97,8 +97,25 @@ describe("Obsolescence Scenarios", () => {
             {description: "Set layout"},
         );
 
-        // Wait for layout-set to start
+        // Wait for layout-set to complete
         await new Promise((resolve) => setTimeout(resolve, 10));
+
+        // Create a promise that resolves when layout reaches 90% progress
+        let resolveProgressWait: () => void;
+        const progressWaitPromise = new Promise<void>((resolve) => {
+            resolveProgressWait = resolve;
+        });
+
+        // Listen for progress events
+        eventManager.onGraphEvent.add((event) => {
+            if (event.type === "operation-progress") {
+                const progressEvent = event as Record<string, unknown>;
+                if (progressEvent.progress !== undefined &&
+                    (progressEvent.progress as number) >= 90) {
+                    resolveProgressWait();
+                }
+            }
+        });
 
         // Start a layout operation that will be near completion
         const layoutOp = queueManager.queueOperation(
@@ -121,8 +138,8 @@ describe("Obsolescence Scenarios", () => {
             {description: "Nearly complete layout"},
         );
 
-        // Wait for layout to reach high progress - give it more time
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // Wait for layout to reach 90% progress
+        await progressWaitPromise;
 
         // Queue a data operation that would normally obsolete the layout
         queueManager.queueOperation(

@@ -7,7 +7,6 @@ import {
     AbstractMesh,
     Color4,
     Engine,
-    Mesh,
     PhotoDome,
     Scene,
     Vector3,
@@ -248,6 +247,8 @@ export class Graph implements GraphContext {
             if (event.type === "data-added") {
                 if (event.shouldStartLayout) {
                     this.layoutManager.running = true;
+                    // Start tracking layout session performance
+                    this.statsManager.startLayoutSession();
                 }
 
                 if (event.shouldZoomToFit) {
@@ -385,32 +386,12 @@ export class Graph implements GraphContext {
      * All update logic is now handled by UpdateManager
      */
     update(): void {
+        // Start frame profiling (tracks operations for blocking detection)
+        this.statsManager.startFrameProfiling();
+
         this.statsManager.measure("Graph.update", () => {
             this.statsManager.measure("Graph.updateManager", () => {
                 this.updateManager.update();
-            });
-
-            this.statsManager.measure("Graph.batchArrows", () => {
-                // PERFORMANCE: Batch thin instance buffer updates
-                // After all edges have updated their thin instances, notify BabylonJS once per mesh
-                // This replaces the old approach of calling thinInstanceBufferUpdated() per-edge (30K calls/sec!)
-
-                // Collect unique thin instance meshes (typically just 1-2 meshes for all arrows)
-                // Use scene.meshes which is much faster than iterating all edges
-                const thinInstanceMeshes: Mesh[] = [];
-                for (const mesh of this.scene.meshes) {
-                    // Only check meshes that are Mesh instances (not AbstractMesh)
-                    if (mesh instanceof Mesh && mesh.thinInstanceCount > 0 && mesh.name.includes("arrow")) {
-                        thinInstanceMeshes.push(mesh);
-                    }
-                }
-
-                // Notify BabylonJS to upload updated buffers to GPU (once per mesh, not per edge!)
-                // This is typically just 1-2 meshes for all arrowheads/tails
-                for (const mesh of thinInstanceMeshes) {
-                    mesh.thinInstanceBufferUpdated("matrix");
-                    mesh.thinInstanceBufferUpdated("lineDirection");
-                }
             });
 
             this.statsManager.measure("Graph.settlementCheck", () => {
@@ -431,6 +412,8 @@ export class Graph implements GraphContext {
                 // Report performance when transitioning from unsettled to settled
                 if (this.layoutManager.isSettled && !this.wasSettled) {
                     this.wasSettled = true;
+                    // End layout session tracking
+                    this.statsManager.endLayoutSession();
                     const snapshot = this.statsManager.getSnapshot();
                     // eslint-disable-next-line no-console
                     console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
@@ -440,11 +423,16 @@ export class Graph implements GraphContext {
                 } else if (!this.layoutManager.isSettled && this.wasSettled) {
                     // Reset when layout becomes unsettled (so we can report next settlement)
                     this.wasSettled = false;
+                    // Restart layout session tracking
+                    this.statsManager.startLayoutSession();
                     // eslint-disable-next-line no-console
                     console.log("🔄 Layout became unsettled, will report on next settlement");
                 }
             });
         });
+
+        // End frame profiling (correlates operations with inter-frame time)
+        this.statsManager.endFrameProfiling();
     }
 
     async setStyleTemplate(t: StyleSchema, options?: QueueableOptions): Promise<Styles> {

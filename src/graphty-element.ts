@@ -16,17 +16,27 @@ import {Graph} from "./Graph";
 export class Graphty extends LitElement {
     #graph: Graph;
     #element: Element;
+    #resizeObserver: ResizeObserver | null = null;
 
     constructor() {
         super();
 
         this.#element = document.createElement("div");
+        // Ensure the container div fills the graphty-element
+        this.#element.setAttribute("style", "width: 100%; height: 100%; display: block;");
         this.#graph = new Graph(this.#element);
     }
 
     connectedCallback(): void {
         super.connectedCallback();
         this.renderRoot.appendChild(this.#element);
+
+        // Watch for container size changes and resize the canvas accordingly
+        this.#resizeObserver = new ResizeObserver(() => {
+            // Resize the Babylon.js engine when the container size changes
+            this.#graph.engine.resize();
+        });
+        this.#resizeObserver.observe(this);
 
         // Parse URL parameters
         this.parseURLParams();
@@ -94,7 +104,14 @@ export class Graphty extends LitElement {
     }
 
     disconnectedCallback(): void {
+        // Disconnect the resize observer
+        if (this.#resizeObserver) {
+            this.#resizeObserver.disconnect();
+            this.#resizeObserver = null;
+        }
+
         this.#graph.shutdown();
+        super.disconnectedCallback();
     }
 
     // Private backing fields for reactive properties
