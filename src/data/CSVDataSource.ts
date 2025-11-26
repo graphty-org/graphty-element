@@ -2,19 +2,14 @@ import Papa from "papaparse";
 
 import {AdHocData} from "../config";
 import {type CSVVariant, type CSVVariantInfo, detectCSVVariant} from "./csv-variant-detection.js";
-import {DataSource, DataSourceChunk} from "./DataSource.js";
+import {BaseDataSourceConfig, DataSource, DataSourceChunk} from "./DataSource.js";
 
-export interface CSVDataSourceConfig {
-    data?: string;
-    file?: File;
-    url?: string;
+export interface CSVDataSourceConfig extends BaseDataSourceConfig {
     delimiter?: string;
     variant?: CSVVariant; // Allow explicit variant override
     sourceColumn?: string;
     targetColumn?: string;
     idColumn?: string;
-    chunkSize?: number;
-    errorLimit?: number;
     // For paired files
     nodeFile?: File;
     edgeFile?: File;
@@ -26,17 +21,19 @@ export class CSVDataSource extends DataSource {
     static readonly type = "csv";
 
     private config: CSVDataSourceConfig;
-    private chunkSize: number;
 
     constructor(config: CSVDataSourceConfig) {
-        super(config.errorLimit ?? 100);
+        super(config.errorLimit ?? 100, config.chunkSize);
         this.config = {
             delimiter: ",",
             chunkSize: 1000,
             errorLimit: 100,
             ... config,
         };
-        this.chunkSize = this.config.chunkSize ?? 1000;
+    }
+
+    protected getConfig(): BaseDataSourceConfig {
+        return this.config;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -149,7 +146,6 @@ export class CSVDataSource extends DataSource {
         }
 
         // Route to appropriate parser based on variant
-        console.log("CSV: Routing to parser for variant:", variantInfo.variant, "hasHeaders:", variantInfo.hasHeaders, "rows:", fullParse.data.length);
         switch (variantInfo.variant) {
             case "neo4j":
                 yield* this.parseNeo4jFormat(
@@ -169,7 +165,6 @@ export class CSVDataSource extends DataSource {
                 );
                 break;
             case "adjacency-list":
-                console.log("CSV: Parsing adjacency list, first row:", fullParse.data[0]);
                 yield* this.parseAdjacencyList(
                     fullParse.data as string[][],
                 );
@@ -185,6 +180,67 @@ export class CSVDataSource extends DataSource {
         }
     }
 
+    /**
+     * Create an edge from CSV row data
+     * Returns null if source or target is missing (and logs error)
+     *
+     * @param src Source node ID (will be converted to string)
+     * @param dst Target node ID (will be converted to string)
+     * @param row Full row data for additional properties
+     * @param sourceColName Name of source column (for error messages)
+     * @param targetColName Name of target column (for error messages)
+     * @param rowIndex Row index (for error messages)
+     */
+    private createEdge(
+        src: unknown,
+        dst: unknown,
+        row: Record<string, unknown>,
+        sourceColName: string,
+        targetColName: string,
+        rowIndex: number,
+    ): AdHocData | null {
+        // Validate source and target exist
+        if (src === null || src === undefined || src === "") {
+            this.errorAggregator.addError({
+                message: `Missing source in row ${rowIndex} (column: ${sourceColName})`,
+                line: rowIndex,
+                category: "missing-data",
+                field: "source",
+            });
+            return null;
+        }
+
+        if (dst === null || dst === undefined || dst === "") {
+            this.errorAggregator.addError({
+                message: `Missing target in row ${rowIndex} (column: ${targetColName})`,
+                line: rowIndex,
+                category: "missing-data",
+                field: "target",
+            });
+            return null;
+        }
+
+        // Convert to strings (CSV parsers may return numbers/booleans)
+        const srcStr = typeof src === "string" || typeof src === "number" ? String(src) : JSON.stringify(src);
+        const dstStr = typeof dst === "string" || typeof dst === "number" ? String(dst) : JSON.stringify(dst);
+
+        // Create edge with all row properties except source/target columns
+        // (they're now in src/dst)
+        const edge: Record<string, unknown> = {
+            src: srcStr,
+            dst: dstStr,
+        };
+
+        // Copy all other properties from row except source/target columns
+        for (const key in row) {
+            if (key !== sourceColName && key !== targetColName) {
+                edge[key] = row[key];
+            }
+        }
+
+        return edge as AdHocData;
+    }
+
     private *parseEdgeList(rows: Record<string, unknown>[]): Generator<DataSourceChunk, void, unknown> {
         const edges: unknown[] = [];
         const nodeIds = new Set<string>();
@@ -195,54 +251,26 @@ export class CSVDataSource extends DataSource {
         for (let i = 0; i < rows.length; i++) {
             try {
                 const row = rows[i];
-                const src = row[sourceCol];
-                const dst = row[targetCol];
+                const edge = this.createEdge(
+                    row[sourceCol],
+                    row[targetCol],
+                    row,
+                    sourceCol,
+                    targetCol,
+                    i + 1,
+                );
 
-                if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.errorAggregator.addError({
-                        message: `Row ${i + 1}: Missing source or target`,
-                        line: i,
-                        category: "missing-value",
-                        field: src === null || src === undefined ? "source" : "target",
-                    });
-                    continue;
-                }
+                if (edge) {
+                    // Track unique node IDs
+                    nodeIds.add(edge.src as string);
+                    nodeIds.add(edge.dst as string);
 
-                // Convert to strings safely
-                let srcStr: string;
-                if (typeof src === "string") {
-                    srcStr = src;
-                } else if (typeof src === "number") {
-                    srcStr = src.toString();
-                } else {
-                    srcStr = JSON.stringify(src);
-                }
+                    edges.push(edge);
 
-                let dstStr: string;
-                if (typeof dst === "string") {
-                    dstStr = dst;
-                } else if (typeof dst === "number") {
-                    dstStr = dst.toString();
-                } else {
-                    dstStr = JSON.stringify(dst);
-                }
-
-                // Track unique node IDs
-                nodeIds.add(srcStr);
-                nodeIds.add(dstStr);
-
-                // Create edge with all row data
-                const edge: Record<string, unknown> = {
-                    src: srcStr,
-                    dst: dstStr,
-                    ... row,
-                };
-
-                edges.push(edge);
-
-                // Yield chunk when full
-                if (edges.length >= this.chunkSize) {
-                    yield {nodes: [] as AdHocData[], edges: edges.splice(0, this.chunkSize) as AdHocData[]};
+                    // Yield chunk when full
+                    if (edges.length >= this.chunkSize) {
+                        yield {nodes: [] as AdHocData[], edges: edges.splice(0, this.chunkSize) as AdHocData[]};
+                    }
                 }
             } catch (error) {
                 const canContinue = this.errorAggregator.addError({
@@ -409,49 +437,37 @@ export class CSVDataSource extends DataSource {
         info: CSVVariantInfo,
     ): Generator<DataSourceChunk, void, unknown> {
         // Gephi uses capitalized column names: Source, Target, Type, Id, Label, Weight
-        // Just use the standard edge list parser with Gephi-specific column names
         const edges: unknown[] = [];
         const nodeIds = new Set<string>();
+        const sourceCol = info.sourceColumn ?? "Source";
+        const targetCol = info.targetColumn ?? "Target";
 
         for (let i = 0; i < rows.length; i++) {
             try {
                 const row = rows[i];
-                const src = row[info.sourceColumn ?? "Source"];
-                const dst = row[info.targetColumn ?? "Target"];
+                const edge = this.createEdge(
+                    row[sourceCol],
+                    row[targetCol],
+                    row,
+                    sourceCol,
+                    targetCol,
+                    i + 1,
+                );
 
-                if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.errorAggregator.addError({
-                        message: `Row ${i + 1}: Missing source or target`,
-                        line: i,
-                        category: "missing-value",
-                        field: src === null || src === undefined ? "source" : "target",
-                    });
-                    continue;
-                }
+                if (edge) {
+                    // Track unique node IDs
+                    nodeIds.add(edge.src as string);
+                    nodeIds.add(edge.dst as string);
 
-                // Convert to strings safely
-                const srcStr = typeof src === "string" || typeof src === "number" ? String(src) : JSON.stringify(src);
-                const dstStr = typeof dst === "string" || typeof dst === "number" ? String(dst) : JSON.stringify(dst);
+                    edges.push(edge);
 
-                // Track unique node IDs
-                nodeIds.add(srcStr);
-                nodeIds.add(dstStr);
-
-                // Create edge with all row data
-                const edge: Record<string, unknown> = {
-                    src: srcStr,
-                    dst: dstStr,
-                    ... row,
-                };
-
-                edges.push(edge);
-
-                // Yield chunk when full
-                if (edges.length >= this.chunkSize) {
-                    yield {
-                        nodes: [] as AdHocData[],
-                        edges: edges.splice(0, this.chunkSize) as AdHocData[],
-                    };
+                    // Yield chunk when full
+                    if (edges.length >= this.chunkSize) {
+                        yield {
+                            nodes: [] as AdHocData[],
+                            edges: edges.splice(0, this.chunkSize) as AdHocData[],
+                        };
+                    }
                 }
             } catch (error) {
                 const canContinue = this.errorAggregator.addError({
@@ -480,46 +496,34 @@ export class CSVDataSource extends DataSource {
         // Cytoscape has an 'interaction' column for edge type
         const edges: unknown[] = [];
         const nodeIds = new Set<string>();
+        const sourceCol = info.sourceColumn ?? "source";
+        const targetCol = info.targetColumn ?? "target";
 
         for (let i = 0; i < rows.length; i++) {
             try {
                 const row = rows[i];
-                const src = row[info.sourceColumn ?? "source"];
-                const dst = row[info.targetColumn ?? "target"];
+                const edge = this.createEdge(
+                    row[sourceCol],
+                    row[targetCol],
+                    row,
+                    sourceCol,
+                    targetCol,
+                    i + 1,
+                );
 
-                if (src === null || src === undefined || dst === null || dst === undefined) {
-                    this.errorAggregator.addError({
-                        message: `Row ${i + 1}: Missing source or target`,
-                        line: i,
-                        category: "missing-value",
-                        field: src === null || src === undefined ? "source" : "target",
-                    });
-                    continue;
-                }
+                if (edge) {
+                    // Track unique node IDs
+                    nodeIds.add(edge.src as string);
+                    nodeIds.add(edge.dst as string);
 
-                const srcStr = typeof src === "string" || typeof src === "number" ? String(src) : JSON.stringify(src);
-                const dstStr = typeof dst === "string" || typeof dst === "number" ? String(dst) : JSON.stringify(dst);
+                    edges.push(edge);
 
-                nodeIds.add(srcStr);
-                nodeIds.add(dstStr);
-
-                const edge: Record<string, unknown> = {
-                    src: srcStr,
-                    dst: dstStr,
-                    ... row,
-                };
-
-                if (info.interactionColumn && info.interactionColumn in row) {
-                    edge.interaction = row[info.interactionColumn];
-                }
-
-                edges.push(edge);
-
-                if (edges.length >= this.chunkSize) {
-                    yield {
-                        nodes: [] as AdHocData[],
-                        edges: edges.splice(0, this.chunkSize) as AdHocData[],
-                    };
+                    if (edges.length >= this.chunkSize) {
+                        yield {
+                            nodes: [] as AdHocData[],
+                            edges: edges.splice(0, this.chunkSize) as AdHocData[],
+                        };
+                    }
                 }
             } catch (error) {
                 const canContinue = this.errorAggregator.addError({
@@ -547,11 +551,10 @@ export class CSVDataSource extends DataSource {
         // Can optionally have weights: node neighbor1:weight1 neighbor2:weight2
         const edges: unknown[] = [];
         const nodeIds = new Set<string>();
-        console.log("CSV: parseAdjacencyList called with", rows.length, "rows");
 
-        for (const row of rows) {
+        for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+            const row = rows[rowIndex];
             if (row.length < 2) {
-                console.log("CSV: Skipping short row:", row);
                 continue;
             }
 
@@ -567,37 +570,42 @@ export class CSVDataSource extends DataSource {
 
                 // Check for weight notation: neighbor:weight
                 let targetNode = neighbor;
-                let weight: number | undefined;
+                const rowData: Record<string, unknown> = {};
 
                 if (neighbor.includes(":")) {
                     const parts = neighbor.split(":");
                     targetNode = parts[0];
-                    weight = parseFloat(parts[1]);
+                    const weight = parseFloat(parts[1]);
+                    if (!isNaN(weight)) {
+                        rowData.weight = weight;
+                    }
                 }
 
-                nodeIds.add(targetNode);
+                const edge = this.createEdge(
+                    sourceNode,
+                    targetNode,
+                    rowData,
+                    "source",
+                    "target",
+                    rowIndex + 1,
+                );
 
-                const edge: Record<string, unknown> = {
-                    src: sourceNode,
-                    dst: targetNode,
-                };
+                if (edge) {
+                    nodeIds.add(edge.src as string);
+                    nodeIds.add(edge.dst as string);
 
-                if (weight !== undefined && !isNaN(weight)) {
-                    edge.weight = weight;
-                }
+                    edges.push(edge);
 
-                edges.push(edge);
-
-                if (edges.length >= this.chunkSize) {
-                    yield {
-                        nodes: [] as AdHocData[],
-                        edges: edges.splice(0, this.chunkSize) as AdHocData[],
-                    };
+                    if (edges.length >= this.chunkSize) {
+                        yield {
+                            nodes: [] as AdHocData[],
+                            edges: edges.splice(0, this.chunkSize) as AdHocData[],
+                        };
+                    }
                 }
             }
         }
 
-        console.log("CSV: parseAdjacencyList yielding", edges.length, "edges and", nodeIds.size, "nodes");
         // Create nodes for all unique node IDs
         const nodes = Array.from(nodeIds).map((id) => ({id}));
         yield {nodes: nodes as unknown as AdHocData[], edges: edges as AdHocData[]};
@@ -608,12 +616,23 @@ export class CSVDataSource extends DataSource {
         void,
         unknown
     > {
+        // Validate that both URLs or both files are provided
+        const hasNodeSource = !!(this.config.nodeURL ?? this.config.nodeFile);
+        const hasEdgeSource = !!(this.config.edgeURL ?? this.config.edgeFile);
+
+        if (!hasNodeSource || !hasEdgeSource) {
+            throw new Error(
+                "parsePairedFiles requires both node and edge sources. " +
+                "Provide either (nodeURL + edgeURL) or (nodeFile + edgeFile).",
+            );
+        }
+
         // Load and parse node file
         const nodes: unknown[] = [];
         if (this.config.nodeFile ?? this.config.nodeURL) {
             const nodeContent = this.config.nodeFile ?
                 await this.config.nodeFile.text() :
-                await (await fetch(this.config.nodeURL ?? "")).text();
+                await (await this.fetchWithRetry(this.config.nodeURL ?? "")).text();
 
             const nodeParse = Papa.parse(nodeContent, {
                 header: true,
@@ -635,7 +654,7 @@ export class CSVDataSource extends DataSource {
         if (this.config.edgeFile ?? this.config.edgeURL) {
             const edgeContent = this.config.edgeFile ?
                 await this.config.edgeFile.text() :
-                await (await fetch(this.config.edgeURL ?? "")).text();
+                await (await this.fetchWithRetry(this.config.edgeURL ?? "")).text();
 
             const edgeParse = Papa.parse(edgeContent, {
                 header: true,
@@ -653,28 +672,7 @@ export class CSVDataSource extends DataSource {
             }
         }
 
-        // Yield all data
-        yield {nodes: nodes as AdHocData[], edges: edges as AdHocData[]};
-    }
-
-    private async getContent(): Promise<string> {
-        if (this.config.data) {
-            return this.config.data;
-        }
-
-        if (this.config.file) {
-            return await this.config.file.text();
-        }
-
-        if (this.config.url) {
-            const response = await fetch(this.config.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch CSV from ${this.config.url}: ${response.status}`);
-            }
-
-            return await response.text();
-        }
-
-        throw new Error("CSVDataSource requires data, file, or url");
+        // Yield data in chunks using inherited helper
+        yield* this.chunkData(nodes as AdHocData[], edges as AdHocData[]);
     }
 }

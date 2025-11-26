@@ -98,14 +98,11 @@ export class LayoutManager implements Manager {
                 });
             }
 
-            console.log(`[LAYOUTMANAGER] 🎯 Setting layout: ${type}`);
             const engine = LayoutEngine.get(type, layoutOpts);
 
             if (!engine) {
                 throw new TypeError(`No layout named: ${type}`);
             }
-
-            console.log(`[LAYOUTMANAGER] ✅ Layout engine created: ${engine.type}`);
 
             // Store the current layout options for change detection
             this.currentLayoutOptions = layoutOpts;

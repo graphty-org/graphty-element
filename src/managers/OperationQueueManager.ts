@@ -312,7 +312,7 @@ export class OperationQueueManager implements Manager {
                 // Check progress if respectProgress is enabled
                 if (respectProgress && this.runningOperations.has(operation.id)) {
                     const progress = this.operationProgress.get(operation.id);
-                    if (progress && progress.percent > PROGRESS_CANCELLATION_THRESHOLD) {
+                    if (progress && progress.percent >= PROGRESS_CANCELLATION_THRESHOLD) {
                         // Don't cancel near-complete operations
                         continue;
                     }

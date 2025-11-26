@@ -4,7 +4,7 @@ import * as z4 from "zod/v4/core";
 
 // import {JSONParser} from "@streamparser/json";
 import type {PartiallyOptional} from "../config/common";
-import {DataSource, DataSourceChunk} from "./DataSource";
+import {BaseDataSourceConfig, DataSource, DataSourceChunk} from "./DataSource";
 
 const JsonNodeConfig = z.strictObject({
     path: z.string().default("nodes"),
@@ -17,7 +17,11 @@ const JsonEdgeConfig = z.strictObject({
 }).prefault({});
 
 export const JsonDataSourceConfig = z.object({
-    data: z.string(),
+    data: z.string().optional(),
+    file: z.instanceof(File).optional(),
+    url: z.string().optional(),
+    chunkSize: z.number().optional(),
+    errorLimit: z.number().optional(),
     node: JsonNodeConfig,
     edge: JsonEdgeConfig,
 });
@@ -27,13 +31,14 @@ export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigTyp
 
 export class JsonDataSource extends DataSource {
     static type = "json";
-    url: string;
     opts: JsonDataSourceConfigType;
 
     constructor(anyOpts: object) {
-        super(); // JsonDataSource uses default error limit
-
         const opts = JsonDataSourceConfig.parse(anyOpts);
+
+        // Pass errorLimit and chunkSize to base class
+        super(opts.errorLimit ?? 100, opts.chunkSize ?? DataSource.DEFAULT_CHUNK_SIZE);
+
         this.opts = opts;
         if (opts.node.schema) {
             this.nodeSchema = opts.node.schema;
@@ -42,77 +47,40 @@ export class JsonDataSource extends DataSource {
         if (opts.edge.schema) {
             this.edgeSchema = opts.edge.schema;
         }
-
-        this.url = opts.data;
     }
 
-    private async fetchWithRetry(url: string, retries = 3, timeout = 30000): Promise<Response> {
-        for (let attempt = 0; attempt < retries; attempt++) {
-            try {
-                // Create an AbortController for timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => {
-                    controller.abort();
-                }, timeout);
+    protected getConfig(): BaseDataSourceConfig {
+        // JsonDataSource has special handling for 'data' field:
+        // If data starts with http/https/data:, treat it as URL
+        // Otherwise treat it as inline JSON
+        const isUrl = (this.opts.data?.startsWith("http://") ?? false) ||
+                     (this.opts.data?.startsWith("https://") ?? false) ||
+                     (this.opts.data?.startsWith("data:") ?? false);
 
-                try {
-                    const response = await fetch(url, {signal: controller.signal});
-                    clearTimeout(timeoutId);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    return response;
-                } catch (error) {
-                    clearTimeout(timeoutId);
-
-                    if (error instanceof Error && error.name === "AbortError") {
-                        throw new Error(`Request timeout after ${timeout}ms`);
-                    }
-
-                    throw error;
-                }
-            } catch (error) {
-                const isLastAttempt = attempt === retries - 1;
-
-                if (isLastAttempt) {
-                    throw new Error(`Failed to fetch data after ${retries} attempts: ${error instanceof Error ? error.message : String(error)}`);
-                }
-
-                // Exponential backoff: wait 1s, 2s, 4s...
-                const delay = Math.pow(2, attempt) * 1000;
-                await new Promise((resolve) => setTimeout(resolve, delay));
-            }
-        }
-
-        // This should never be reached due to the throw in the last attempt
-        throw new Error("Unexpected error in fetchWithRetry");
+        return {
+            data: isUrl ? undefined : this.opts.data,
+            file: this.opts.file,
+            url: isUrl ? this.opts.data : this.opts.url,
+            chunkSize: this.opts.chunkSize,
+            errorLimit: this.opts.errorLimit,
+        };
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
-        let response: Response;
         let data: unknown;
 
+        // Get JSON content (could be from data, file, or url)
+        const jsonString = await this.getContent();
+
+        // Parse JSON
         try {
-            response = await this.fetchWithRetry(this.url);
+            data = JSON.parse(jsonString);
         } catch (error) {
-            throw new Error(`Failed to fetch data from ${this.url}: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error(`Failed to parse JSON: ${error instanceof Error ? error.message : String(error)}`);
         }
 
-        if (!response.body) {
-            throw new Error("JSON response had no body");
-        }
-
-        try {
-            data = await response.json();
-        } catch (error) {
-            throw new Error(`Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`);
-        }
-
+        // Extract nodes using JMESPath
         let nodes: unknown;
-        let edges: unknown;
-
         try {
             nodes = jmespath.search(data, this.opts.node.path);
         } catch (error) {
@@ -120,9 +88,11 @@ export class JsonDataSource extends DataSource {
         }
 
         if (!Array.isArray(nodes)) {
-            throw new TypeError(`JsonDataProvider expected 'nodes' at path '${this.opts.node.path}' to be an array of objects, got ${typeof nodes}`);
+            throw new TypeError(`JsonDataSource expected 'nodes' at path '${this.opts.node.path}' to be an array of objects, got ${typeof nodes}`);
         }
 
+        // Extract edges using JMESPath
+        let edges: unknown;
         try {
             edges = jmespath.search(data, this.opts.edge.path);
         } catch (error) {
@@ -130,9 +100,10 @@ export class JsonDataSource extends DataSource {
         }
 
         if (!Array.isArray(edges)) {
-            throw new TypeError(`JsonDataProvider expected 'edges' at path '${this.opts.edge.path}' to be an array of objects, got ${typeof edges}`);
+            throw new TypeError(`JsonDataSource expected 'edges' at path '${this.opts.edge.path}' to be an array of objects, got ${typeof edges}`);
         }
 
-        yield {nodes, edges};
+        // Yield data in chunks using inherited helper
+        yield* this.chunkData(nodes, edges);
     }
 }

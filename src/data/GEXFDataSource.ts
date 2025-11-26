@@ -1,15 +1,10 @@
 import {XMLParser} from "fast-xml-parser";
 
 import type {AdHocData} from "../config/common.js";
-import {DataSource, DataSourceChunk} from "./DataSource.js";
+import {BaseDataSourceConfig, DataSource, DataSourceChunk} from "./DataSource.js";
 
-export interface GEXFDataSourceConfig {
-    data?: string;
-    file?: File;
-    url?: string;
-    chunkSize?: number;
-    errorLimit?: number;
-}
+// GEXF has no additional config currently, so just use the base config
+export type GEXFDataSourceConfig = BaseDataSourceConfig;
 
 interface GEXFAttribute {
     id: string;
@@ -21,12 +16,14 @@ export class GEXFDataSource extends DataSource {
     static readonly type = "gexf";
 
     private config: GEXFDataSourceConfig;
-    private chunkSize: number;
 
     constructor(config: GEXFDataSourceConfig) {
-        super(config.errorLimit ?? 100);
+        super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
-        this.chunkSize = config.chunkSize ?? 1000;
+    }
+
+    protected getConfig(): BaseDataSourceConfig {
+        return this.config;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -71,39 +68,8 @@ export class GEXFDataSource extends DataSource {
         const nodes = this.parseNodes(graph.nodes?.node, nodeAttributes);
         const edges = this.parseEdges(graph.edges?.edge, edgeAttributes);
 
-        // Yield in chunks
-        for (let i = 0; i < nodes.length; i += this.chunkSize) {
-            const nodeChunk = nodes.slice(i, i + this.chunkSize);
-            const edgeChunk = i === 0 ? edges : []; // Yield all edges with first chunk
-
-            yield {nodes: nodeChunk, edges: edgeChunk};
-        }
-
-        // If no nodes, still yield edges
-        if (nodes.length === 0 && edges.length > 0) {
-            yield {nodes: [], edges};
-        }
-    }
-
-    private async getContent(): Promise<string> {
-        if (this.config.data) {
-            return this.config.data;
-        }
-
-        if (this.config.file) {
-            return await this.config.file.text();
-        }
-
-        if (this.config.url) {
-            const response = await fetch(this.config.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch GEXF from ${this.config.url}: ${response.status}`);
-            }
-
-            return await response.text();
-        }
-
-        throw new Error("GEXFDataSource requires data, file, or url");
+        // Use shared chunking helper
+        yield* this.chunkData(nodes, edges);
     }
 
     private parseAttributeDefinitions(

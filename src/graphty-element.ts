@@ -224,7 +224,6 @@ export class Graphty extends LitElement {
     #tryInitializeDataSource(): void {
         // Only initialize once, and only if both dataSource and dataSourceConfig are set
         if (!this.#dataSourceInitialized && this.#dataSource && this.#dataSourceConfig) {
-            console.log(`[GRAPHTY-ELEMENT] 🔄 Initializing dataSource: ${this.#dataSource}`);
             this.#dataSourceInitialized = true;
             void this.#graph.addDataFromSource(this.#dataSource, this.#dataSourceConfig);
         }

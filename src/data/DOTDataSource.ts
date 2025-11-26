@@ -1,13 +1,8 @@
 import type {AdHocData} from "../config/common.js";
-import {DataSource, DataSourceChunk} from "./DataSource.js";
+import {BaseDataSourceConfig, DataSource, DataSourceChunk} from "./DataSource.js";
 
-export interface DOTDataSourceConfig {
-    data?: string;
-    file?: File;
-    url?: string;
-    chunkSize?: number;
-    errorLimit?: number;
-}
+// DOT has no additional config currently, so just use the base config
+export type DOTDataSourceConfig = BaseDataSourceConfig;
 
 interface DOTNode {
     id: string;
@@ -24,12 +19,14 @@ export class DOTDataSource extends DataSource {
     static readonly type = "dot";
 
     private config: DOTDataSourceConfig;
-    private chunkSize: number;
 
     constructor(config: DOTDataSourceConfig) {
-        super(config.errorLimit ?? 100);
+        super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
-        this.chunkSize = config.chunkSize ?? 1000;
+    }
+
+    protected getConfig(): BaseDataSourceConfig {
+        return this.config;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -39,39 +36,8 @@ export class DOTDataSource extends DataSource {
         // Parse DOT
         const {nodes, edges} = this.parseDOT(dotContent);
 
-        // Yield in chunks
-        for (let i = 0; i < nodes.length; i += this.chunkSize) {
-            const nodeChunk = nodes.slice(i, i + this.chunkSize);
-            const edgeChunk = i === 0 ? edges : []; // Yield all edges with first chunk
-
-            yield {nodes: nodeChunk, edges: edgeChunk};
-        }
-
-        // If no nodes, still yield edges
-        if (nodes.length === 0 && edges.length > 0) {
-            yield {nodes: [], edges};
-        }
-    }
-
-    private async getContent(): Promise<string> {
-        if (this.config.data) {
-            return this.config.data;
-        }
-
-        if (this.config.file) {
-            return await this.config.file.text();
-        }
-
-        if (this.config.url) {
-            const response = await fetch(this.config.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch DOT from ${this.config.url}: ${response.status}`);
-            }
-
-            return await response.text();
-        }
-
-        throw new Error("DOTDataSource requires data, file, or url");
+        // Use shared chunking helper
+        yield* this.chunkData(nodes, edges);
     }
 
     private parseDOT(content: string): {nodes: AdHocData[], edges: AdHocData[]} {

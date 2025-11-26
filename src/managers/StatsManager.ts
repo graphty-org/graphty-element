@@ -483,11 +483,14 @@ export class StatsManager implements Manager {
 
         const snapshot = this.getSnapshot();
 
+        // eslint-disable-next-line no-console
         console.group("📊 Performance Report");
 
         // CPU metrics
         if (snapshot.cpu.length > 0) {
+            // eslint-disable-next-line no-console
             console.group("CPU Metrics");
+            // eslint-disable-next-line no-console
             console.table(
                 snapshot.cpu.map((m) => ({
                     "Label": m.label,
@@ -511,27 +514,39 @@ export class StatsManager implements Manager {
                 );
             });
 
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
         // GPU metrics
         if (snapshot.gpu) {
+            // eslint-disable-next-line no-console
             console.group("GPU Metrics");
+            // eslint-disable-next-line no-console
             console.log("Frame Time:", snapshot.gpu.gpuFrameTime.avg.toFixed(2), "ms (avg)");
+            // eslint-disable-next-line no-console
             console.log("Shader Compilation:", snapshot.gpu.shaderCompilation.total.toFixed(2), "ms (total)");
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
         // Scene metrics
         if (snapshot.scene) {
+            // eslint-disable-next-line no-console
             console.group("Scene Metrics");
+            // eslint-disable-next-line no-console
             console.log("Draw Calls:", snapshot.scene.drawCalls.avg.toFixed(0), "(avg)");
+            // eslint-disable-next-line no-console
             console.log("Render Time:", snapshot.scene.renderTime.avg.toFixed(2), "ms (avg)");
+            // eslint-disable-next-line no-console
             console.log("Frame Time:", snapshot.scene.frameTime.avg.toFixed(2), "ms (avg)");
+            // eslint-disable-next-line no-console
             console.log("Active Meshes Evaluation:", snapshot.scene.activeMeshesEvaluation.avg.toFixed(2), "ms (avg)");
+            // eslint-disable-next-line no-console
             console.groupEnd();
         }
 
+        // eslint-disable-next-line no-console
         console.groupEnd();
     }
 }

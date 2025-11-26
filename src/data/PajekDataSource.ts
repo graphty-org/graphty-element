@@ -1,13 +1,8 @@
 import type {AdHocData} from "../config/common.js";
-import {DataSource, DataSourceChunk} from "./DataSource.js";
+import {BaseDataSourceConfig, DataSource, DataSourceChunk} from "./DataSource.js";
 
-export interface PajekDataSourceConfig {
-    data?: string;
-    file?: File;
-    url?: string;
-    chunkSize?: number;
-    errorLimit?: number;
-}
+// Pajek has no additional config currently, so just use the base config
+export type PajekDataSourceConfig = BaseDataSourceConfig;
 
 interface ParsedVertex {
     id: string;
@@ -28,12 +23,14 @@ export class PajekDataSource extends DataSource {
     static readonly type = "pajek";
 
     private config: PajekDataSourceConfig;
-    private chunkSize: number;
 
     constructor(config: PajekDataSourceConfig) {
-        super(config.errorLimit ?? 100);
+        super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
-        this.chunkSize = config.chunkSize ?? 1000;
+    }
+
+    protected getConfig(): BaseDataSourceConfig {
+        return this.config;
     }
 
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
@@ -47,39 +44,8 @@ export class PajekDataSource extends DataSource {
         const nodes = vertices.map((v) => this.vertexToNode(v));
         const edgeData = edges.map((e) => this.edgeToEdgeData(e));
 
-        // Yield in chunks
-        for (let i = 0; i < nodes.length; i += this.chunkSize) {
-            const nodeChunk = nodes.slice(i, i + this.chunkSize);
-            const edgeChunk = i === 0 ? edgeData : []; // Yield all edges with first chunk
-
-            yield {nodes: nodeChunk, edges: edgeChunk};
-        }
-
-        // If no nodes, still yield edges
-        if (nodes.length === 0 && edgeData.length > 0) {
-            yield {nodes: [], edges: edgeData};
-        }
-    }
-
-    private async getContent(): Promise<string> {
-        if (this.config.data) {
-            return this.config.data;
-        }
-
-        if (this.config.file) {
-            return await this.config.file.text();
-        }
-
-        if (this.config.url) {
-            const response = await fetch(this.config.url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch Pajek file from ${this.config.url}: ${response.status}`);
-            }
-
-            return await response.text();
-        }
-
-        throw new Error("PajekDataSource requires data, file, or url");
+        // Use shared chunking helper
+        yield* this.chunkData(nodes, edgeData);
     }
 
     private parsePajek(content: string): {vertices: ParsedVertex[], edges: ParsedEdge[]} {
