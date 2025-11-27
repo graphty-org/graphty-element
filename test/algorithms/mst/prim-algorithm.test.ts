@@ -29,7 +29,7 @@ describe("PrimAlgorithm", () => {
             assert.strictEqual(styles.layers.length, 2); // MST edges and non-MST edges
         });
 
-        it("first layer highlights MST edges with green color", () => {
+        it("first layer highlights MST edges with calculated color", () => {
             const styles = PrimAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -37,14 +37,17 @@ describe("PrimAlgorithm", () => {
             assert.ok(mstEdgeLayer);
             assert.ok(mstEdgeLayer.edge);
 
-            // Should have selector for inMST == true
-            assert.ok(mstEdgeLayer.edge.selector);
-            assert.ok(mstEdgeLayer.edge.selector.includes("inMST"));
+            // Should use calculatedStyle for color (colorblind-safe)
+            assert.ok(mstEdgeLayer.edge.calculatedStyle);
+            assert.ok(mstEdgeLayer.edge.calculatedStyle.inputs);
+            assert.ok(mstEdgeLayer.edge.calculatedStyle.inputs[0].includes("inMST"));
+            assert.ok(mstEdgeLayer.edge.calculatedStyle.output.includes("color"));
+            assert.ok(mstEdgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
 
-            // Should have green color for MST edges
+            // Should have line width defined
             assert.ok(mstEdgeLayer.edge.style);
             assert.ok(mstEdgeLayer.edge.style.line);
-            assert.ok(mstEdgeLayer.edge.style.line.color);
+            assert.ok(mstEdgeLayer.edge.style.line.width);
         });
 
         it("second layer dims non-MST edges", () => {
@@ -93,21 +96,23 @@ describe("PrimAlgorithm", () => {
     });
 
     describe("MST Edge Detection", () => {
-        it("selector uses correct algorithm result path for MST edges", () => {
+        it("calculatedStyle uses correct algorithm result path for MST edges", () => {
             const styles = PrimAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const mstEdgeLayer = styles.layers[0];
             assert.ok(mstEdgeLayer.edge);
 
-            const {selector} = mstEdgeLayer.edge;
-            assert.ok(selector);
+            // First layer uses calculatedStyle with input referencing algorithmResults
+            const {calculatedStyle} = mstEdgeLayer.edge;
+            assert.ok(calculatedStyle);
 
+            const input = calculatedStyle.inputs[0];
             // Should reference algorithmResults.graphty.prim.inMST
-            assert.ok(selector.includes("algorithmResults"));
-            assert.ok(selector.includes("graphty"));
-            assert.ok(selector.includes("prim"));
-            assert.ok(selector.includes("inMST"));
+            assert.ok(input.includes("algorithmResults"));
+            assert.ok(input.includes("graphty"));
+            assert.ok(input.includes("prim"));
+            assert.ok(input.includes("inMST"));
         });
 
         it("selector uses correct algorithm result path for non-MST edges", () => {

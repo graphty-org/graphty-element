@@ -20,18 +20,22 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
         layers: [
             {
                 edge: {
-                    selector: "algorithmResults.graphty.\"bipartite-matching\".inMatching == `true`",
+                    selector: "",
                     style: {
                         enabled: true,
                         line: {
-                            color: "#9b59b6", // Purple for matched edges
                             width: 2,
                         },
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.\"bipartite-matching\".inMatching"],
+                        output: "style.line.color",
+                        expr: "{ return StyleHelpers.color.binary.blueHighlight(arguments[0]) }",
                     },
                 },
                 metadata: {
                     name: "Matching - Matched Edges",
-                    description: "Highlights edges in maximum matching (purple)",
+                    description: "Highlights edges in maximum matching (blue) - colorblind-safe",
                 },
             },
             {
@@ -40,7 +44,6 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            color: "#95a5a6", // Gray for non-matched edges
                             width: 1,
                             opacity: 0.3,
                         },
@@ -53,32 +56,19 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
             },
             {
                 node: {
-                    selector: "algorithmResults.graphty.\"bipartite-matching\".partition == `left`",
+                    selector: "",
                     style: {
                         enabled: true,
-                        texture: {
-                            color: "#3498db", // Blue for left partition
-                        },
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.\"bipartite-matching\".partition"],
+                        output: "style.texture.color",
+                        expr: "{ return arguments[0] === 'left' ? StyleHelpers.color.categorical.okabeIto(0) : StyleHelpers.color.categorical.okabeIto(1) }",
                     },
                 },
                 metadata: {
-                    name: "Matching - Left Partition",
-                    description: "Colors left partition nodes blue",
-                },
-            },
-            {
-                node: {
-                    selector: "algorithmResults.graphty.\"bipartite-matching\".partition == `right`",
-                    style: {
-                        enabled: true,
-                        texture: {
-                            color: "#e74c3c", // Red for right partition
-                        },
-                    },
-                },
-                metadata: {
-                    name: "Matching - Right Partition",
-                    description: "Colors right partition nodes red",
+                    name: "Matching - Partition Colors",
+                    description: "Colors nodes by partition (left/right) - colorblind-safe",
                 },
             },
         ],

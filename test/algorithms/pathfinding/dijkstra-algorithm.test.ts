@@ -39,9 +39,9 @@ describe("DijkstraAlgorithm", () => {
             assert.ok(edgeLayer);
             assert.ok(edgeLayer.edge);
 
-            // Edge should use selector to filter path edges
-            assert.ok(edgeLayer.edge.selector);
-            assert.ok(edgeLayer.edge.selector.includes("isInPath"));
+            // Edge should use calculatedStyle for dynamic color (colorblind-safe)
+            assert.ok(edgeLayer.edge.calculatedStyle);
+            assert.ok(edgeLayer.edge.calculatedStyle.inputs[0].includes("isInPath"));
         });
 
         it("has node layer for path highlighting", () => {
@@ -53,34 +53,37 @@ describe("DijkstraAlgorithm", () => {
             assert.ok(nodeLayer);
             assert.ok(nodeLayer.node);
 
-            // Node should use selector to filter path nodes
-            assert.ok(nodeLayer.node.selector);
-            assert.ok(nodeLayer.node.selector.includes("isInPath"));
+            // Node should use calculatedStyle for dynamic color (colorblind-safe)
+            assert.ok(nodeLayer.node.calculatedStyle);
+            assert.ok(nodeLayer.node.calculatedStyle.inputs[0].includes("isInPath"));
         });
 
-        it("edge style has distinct color for path", () => {
+        it("edge style uses calculatedStyle for colorblind-safe color", () => {
             const styles = DijkstraAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const edgeLayer = styles.layers.find((layer) => layer.edge);
-            assert.ok(edgeLayer?.edge?.style);
+            assert.ok(edgeLayer?.edge);
 
-            // Should have line styling for path edges
+            // Should use calculatedStyle with StyleHelpers
+            assert.ok(edgeLayer.edge.calculatedStyle);
+            assert.ok(edgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
+            assert.ok(edgeLayer.edge.calculatedStyle.output.includes("color"));
             assert.ok(edgeLayer.edge.style.line);
-            assert.ok(edgeLayer.edge.style.line.color);
             assert.ok(edgeLayer.edge.style.line.width);
         });
 
-        it("node style has distinct color and optional glow for path nodes", () => {
+        it("node style uses calculatedStyle for colorblind-safe color", () => {
             const styles = DijkstraAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const nodeLayer = styles.layers.find((layer) => layer.node);
-            assert.ok(nodeLayer?.node?.style);
+            assert.ok(nodeLayer?.node);
 
-            // Should have texture color for path nodes
-            assert.ok(nodeLayer.node.style.texture);
-            assert.ok(nodeLayer.node.style.texture.color);
+            // Should use calculatedStyle with StyleHelpers
+            assert.ok(nodeLayer.node.calculatedStyle);
+            assert.ok(nodeLayer.node.calculatedStyle.expr.includes("StyleHelpers"));
+            assert.ok(nodeLayer.node.calculatedStyle.output.includes("color"));
         });
 
         it("layers have metadata", () => {
@@ -119,35 +122,35 @@ describe("DijkstraAlgorithm", () => {
         });
     });
 
-    describe("JMESPath Selectors", () => {
-        it("edge selector uses JMESPath syntax for path filtering", () => {
+    describe("CalculatedStyle Inputs", () => {
+        it("edge calculatedStyle input references correct algorithm result path", () => {
             const styles = DijkstraAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const edgeLayer = styles.layers.find((layer) => layer.edge);
-            assert.ok(edgeLayer?.edge?.selector);
+            assert.ok(edgeLayer?.edge?.calculatedStyle);
 
-            // Should use JMESPath backtick syntax for boolean comparison
-            const {selector} = edgeLayer.edge;
-            assert.ok(
-                selector.includes("algorithmResults.graphty.dijkstra.isInPath") ||
-                selector.includes("`true`"),
-            );
+            // Should reference algorithmResults.graphty.dijkstra.isInPath
+            const input = edgeLayer.edge.calculatedStyle.inputs[0];
+            assert.ok(input.includes("algorithmResults"));
+            assert.ok(input.includes("graphty"));
+            assert.ok(input.includes("dijkstra"));
+            assert.ok(input.includes("isInPath"));
         });
 
-        it("node selector uses JMESPath syntax for path filtering", () => {
+        it("node calculatedStyle input references correct algorithm result path", () => {
             const styles = DijkstraAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const nodeLayer = styles.layers.find((layer) => layer.node);
-            assert.ok(nodeLayer?.node?.selector);
+            assert.ok(nodeLayer?.node?.calculatedStyle);
 
-            // Should use JMESPath backtick syntax for boolean comparison
-            const {selector} = nodeLayer.node;
-            assert.ok(
-                selector.includes("algorithmResults.graphty.dijkstra.isInPath") ||
-                selector.includes("`true`"),
-            );
+            // Should reference algorithmResults.graphty.dijkstra.isInPath
+            const input = nodeLayer.node.calculatedStyle.inputs[0];
+            assert.ok(input.includes("algorithmResults"));
+            assert.ok(input.includes("graphty"));
+            assert.ok(input.includes("dijkstra"));
+            assert.ok(input.includes("isInPath"));
         });
     });
 });

@@ -1,73 +1,41 @@
 import {assert, describe, it} from "vitest";
 
 import {PageRankAlgorithm} from "../../../src/algorithms/PageRankAlgorithm";
-import {AdHocData} from "../../../src/config";
-
-interface MockGraphOpts {
-    dataPath?: string;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function mockGraph(opts: MockGraphOpts = {}): Promise<any> {
-    const nodes = new Map<string | number, AdHocData>();
-    const edges = new Map<string | number, AdHocData>();
-
-    if (typeof opts.dataPath === "string") {
-        const imp = await import(opts.dataPath);
-        for (const n of imp.nodes) {
-            nodes.set(n.id, n);
-        }
-        for (const e of imp.edges) {
-            edges.set(`${e.srcId}:${e.dstId}`, e);
-        }
-    }
-
-    const fakeGraph = {
-        nodes,
-        edges,
-        getDataManager() {
-            return {
-                nodes,
-                edges,
-            };
-        },
-    };
-
-    return fakeGraph;
-}
+import {createMockGraph, getGraphResult, getNodeResult} from "../../helpers/mockGraph";
 
 describe("PageRankAlgorithm", () => {
     it("exists", async() => {
-        new PageRankAlgorithm(await mockGraph());
+        new PageRankAlgorithm(await createMockGraph());
     });
 
     it("calculates pagerank scores", async() => {
-        const fakeGraph = await mockGraph({dataPath: "../../../test/helpers/data4.json"});
-        const pr = new PageRankAlgorithm(fakeGraph);
+        const graph = await createMockGraph({dataPath: "./data4.json"});
+        const pr = new PageRankAlgorithm(graph);
 
         await pr.run();
 
         // Check that all nodes have pagerank results
-        for (const node of fakeGraph.nodes.values()) {
-            assert.property(node.algorithmResults, "graphty");
-            assert.property(node.algorithmResults.graphty, "pagerank");
-            assert.property(node.algorithmResults.graphty.pagerank, "rank");
-            assert.property(node.algorithmResults.graphty.pagerank, "rankPct");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dm = graph.getDataManager() as any;
+        for (const [nodeId] of dm.nodes) {
+            const rank = getNodeResult(graph, nodeId, "graphty", "pagerank", "rank");
+            const rankPct = getNodeResult(graph, nodeId, "graphty", "pagerank", "rankPct");
 
             // Verify rank is a number and in valid range
-            assert.isNumber(node.algorithmResults.graphty.pagerank.rank);
-            assert.isAtLeast(node.algorithmResults.graphty.pagerank.rank, 0);
+            assert.isNumber(rank);
+            assert.isAtLeast(rank, 0);
 
             // Verify rankPct is normalized [0,1]
-            assert.isNumber(node.algorithmResults.graphty.pagerank.rankPct);
-            assert.isAtLeast(node.algorithmResults.graphty.pagerank.rankPct, 0);
-            assert.isAtMost(node.algorithmResults.graphty.pagerank.rankPct, 1);
+            assert.isNumber(rankPct);
+            assert.isAtLeast(rankPct, 0);
+            assert.isAtMost(rankPct, 1);
         }
 
         // Sum of all ranks should be approximately 1.0
         let totalRank = 0;
-        for (const node of fakeGraph.nodes.values()) {
-            totalRank += node.algorithmResults.graphty.pagerank.rank as number;
+        for (const [nodeId] of dm.nodes) {
+            const rank = getNodeResult(graph, nodeId, "graphty", "pagerank", "rank");
+            totalRank += rank as number;
         }
         assert.approximately(totalRank, 1.0, 0.0001);
     });
@@ -121,5 +89,46 @@ describe("PageRankAlgorithm", () => {
 
         // PageRank focuses on size, leaving color for Degree algorithm
         assert.strictEqual(outputs.length, 1, "Should have exactly one style layer");
+    });
+
+    it("stores graph-level convergence info", async() => {
+        const graph = await createMockGraph({dataPath: "./data4.json"});
+        const pr = new PageRankAlgorithm(graph);
+        await pr.run();
+
+        // Graph-level results should be present
+        const iterations = getGraphResult(graph, "graphty", "pagerank", "iterations");
+        const converged = getGraphResult(graph, "graphty", "pagerank", "converged");
+        const dampingFactor = getGraphResult(graph, "graphty", "pagerank", "dampingFactor");
+        const maxRank = getGraphResult(graph, "graphty", "pagerank", "maxRank");
+
+        assert.isDefined(iterations);
+        assert.isDefined(converged);
+        assert.isDefined(dampingFactor);
+        assert.isDefined(maxRank);
+
+        // Check specific values
+        assert.isNumber(iterations);
+        assert.isAtLeast(iterations, 1, "Should have at least 1 iteration");
+
+        assert.strictEqual(dampingFactor, 0.85, "Damping factor should be 0.85");
+
+        assert.isNumber(maxRank);
+        assert.isAtLeast(maxRank, 0, "Max rank should be non-negative");
+    });
+
+    it("handles empty graph gracefully", async() => {
+        const graph = await createMockGraph({
+            nodes: [],
+            edges: [],
+        });
+
+        const pr = new PageRankAlgorithm(graph);
+        await pr.run();
+
+        // Empty graph should not throw and should not have graph results
+        // With empty graph, run() returns early without setting graphResults
+        const iterations = getGraphResult(graph, "graphty", "pagerank", "iterations");
+        assert.isUndefined(iterations);
     });
 });

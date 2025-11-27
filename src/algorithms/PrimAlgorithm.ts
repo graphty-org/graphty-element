@@ -29,18 +29,22 @@ export class PrimAlgorithm extends Algorithm {
         layers: [
             {
                 edge: {
-                    selector: "algorithmResults.graphty.prim.inMST == `true`",
+                    selector: "",
                     style: {
                         enabled: true,
                         line: {
-                            color: "#27ae60", // Green for MST edges
                             width: 4,
                         },
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.prim.inMST"],
+                        output: "style.line.color",
+                        expr: "{ return StyleHelpers.color.binary.greenSuccess(arguments[0]) }",
                     },
                 },
                 metadata: {
                     name: "Prim - MST Edges",
-                    description: "Highlights minimum spanning tree edges in green",
+                    description: "Highlights minimum spanning tree edges (green) - colorblind-safe",
                 },
             },
             {
@@ -49,7 +53,6 @@ export class PrimAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            color: "#95a5a6", // Gray for non-MST edges
                             width: 1,
                             opacity: 0.3,
                         },

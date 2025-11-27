@@ -75,3 +75,45 @@ export function toAlgorithmGraph(g: Graph, options: GraphConverterOptions = {}):
 
     return graph;
 }
+
+/**
+ * Convert a graphty-element Graph to adjacency map format
+ * Used by algorithms like labelPropagation and leiden that expect Map<string, Map<string, number>>
+ *
+ * @param g - The graphty-element Graph instance
+ * @param options - Conversion options
+ * @returns An adjacency map where outer map keys are node IDs, inner maps are neighbor -> weight
+ */
+export function toAdjacencyMap(g: Graph, options: GraphConverterOptions = {}): Map<string, Map<string, number>> {
+    const {weightAttribute = "value"} = options;
+
+    const adjacencyMap = new Map<string, Map<string, number>>();
+
+    // Initialize all nodes with empty neighbor maps
+    for (const node of g.getDataManager().nodes.values()) {
+        adjacencyMap.set(String(node.id), new Map<string, number>());
+    }
+
+    // Add edges (both directions for undirected graph)
+    for (const edge of g.getDataManager().edges.values()) {
+        const srcId = String(edge.srcId);
+        const dstId = String(edge.dstId);
+
+        // Get weight from edge data
+        const edgeData = edge.data as Record<string, unknown> | undefined;
+        const edgeObject = edge as unknown as Record<string, unknown>;
+        let rawWeight = edgeData?.[weightAttribute];
+
+        if (rawWeight === undefined) {
+            rawWeight = edgeObject[weightAttribute];
+        }
+
+        const weight: number = typeof rawWeight === "number" ? rawWeight : 1;
+
+        // Add edge in both directions (undirected)
+        adjacencyMap.get(srcId)?.set(dstId, weight);
+        adjacencyMap.get(dstId)?.set(srcId, weight);
+    }
+
+    return adjacencyMap;
+}

@@ -25,18 +25,22 @@ export class MinCutAlgorithm extends Algorithm {
         layers: [
             {
                 edge: {
-                    selector: "algorithmResults.graphty.\"min-cut\".inCut == `true`",
+                    selector: "",
                     style: {
                         enabled: true,
                         line: {
-                            color: "#e67e22", // Orange for cut edges
                             width: 5,
                         },
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.\"min-cut\".inCut"],
+                        output: "style.line.color",
+                        expr: "{ return StyleHelpers.color.binary.orangeWarning(arguments[0]) }",
                     },
                 },
                 metadata: {
                     name: "Min Cut - Cut Edges",
-                    description: "Highlights edges in the minimum cut (orange)",
+                    description: "Highlights edges in the minimum cut (orange) - colorblind-safe",
                 },
             },
             {
@@ -45,7 +49,6 @@ export class MinCutAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            color: "#95a5a6", // Gray for non-cut edges
                             width: 1,
                             opacity: 0.4,
                         },
@@ -58,32 +61,19 @@ export class MinCutAlgorithm extends Algorithm {
             },
             {
                 node: {
-                    selector: "algorithmResults.graphty.\"min-cut\".partition == `1`",
+                    selector: "",
                     style: {
                         enabled: true,
-                        texture: {
-                            color: "#3498db", // Blue for partition 1
-                        },
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.\"min-cut\".partition"],
+                        output: "style.texture.color",
+                        expr: "{ return StyleHelpers.color.categorical.okabeIto(Number(arguments[0] ?? 1) - 1) }",
                     },
                 },
                 metadata: {
-                    name: "Min Cut - Partition 1",
-                    description: "Colors nodes in partition 1 (blue)",
-                },
-            },
-            {
-                node: {
-                    selector: "algorithmResults.graphty.\"min-cut\".partition == `2`",
-                    style: {
-                        enabled: true,
-                        texture: {
-                            color: "#e74c3c", // Red for partition 2
-                        },
-                    },
-                },
-                metadata: {
-                    name: "Min Cut - Partition 2",
-                    description: "Colors nodes in partition 2 (red)",
+                    name: "Min Cut - Partition Colors",
+                    description: "Colors nodes by partition - colorblind-safe",
                 },
             },
         ],

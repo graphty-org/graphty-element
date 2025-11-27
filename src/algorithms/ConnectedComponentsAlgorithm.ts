@@ -1,5 +1,8 @@
-import {SuggestedStylesConfig} from "../config";
+import {connectedComponents} from "@graphty/algorithms";
+
+import type {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import {toAlgorithmGraph} from "./utils/graphConverter";
 
 export class ConnectedComponentsAlgorithm extends Algorithm {
     static namespace = "graphty";
@@ -16,7 +19,7 @@ export class ConnectedComponentsAlgorithm extends Algorithm {
                     calculatedStyle: {
                         inputs: ["algorithmResults.graphty.connected-components.componentId"],
                         output: "style.texture.color",
-                        expr: "{ return StyleHelpers.color.categorical.carbon(arguments[0]) }",
+                        expr: "{ return StyleHelpers.color.categorical.carbon(arguments[0] ?? 0) }",
                     },
                 },
                 metadata: {
@@ -33,14 +36,17 @@ export class ConnectedComponentsAlgorithm extends Algorithm {
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());
-        const n = nodes.length;
 
-        if (n === 0) {
+        if (nodes.length === 0) {
             return;
         }
 
-        // Find connected components using BFS
-        const components = this.findConnectedComponents(nodes);
+        // Convert to @graphty/algorithms format (truly undirected for connected components)
+        // addReverseEdges: false creates an undirected graph required by connectedComponents
+        const graphData = toAlgorithmGraph(g, {addReverseEdges: false});
+
+        // Run Connected Components algorithm - returns NodeId[][] directly
+        const components = connectedComponents(graphData);
 
         // Store component assignments for each node
         const componentMap = new Map<number | string, number>();
@@ -58,98 +64,6 @@ export class ConnectedComponentsAlgorithm extends Algorithm {
 
         // Store graph-level results
         this.addGraphResult("componentCount", components.length);
-    }
-
-    /**
-     * Find connected components using BFS
-     * Treats the graph as undirected (both edge directions count)
-     */
-    private findConnectedComponents(nodes: (number | string)[]): (number | string)[][] {
-        const visited = new Set<string>();
-        const components: (number | string)[][] = [];
-
-        // Build adjacency list for efficient neighbor lookup (undirected)
-        const adjacency = this.buildAdjacency();
-
-        for (const node of nodes) {
-            const nodeStr = String(node);
-
-            if (visited.has(nodeStr)) {
-                continue;
-            }
-
-            // BFS to find all nodes in this component
-            const component: (number | string)[] = [];
-            const queue = [node];
-
-            while (queue.length > 0) {
-                const current = queue.shift();
-                if (current === undefined) {
-                    break;
-                }
-
-                const currentStr = String(current);
-
-                if (visited.has(currentStr)) {
-                    continue;
-                }
-
-                visited.add(currentStr);
-                component.push(current);
-
-                // Get neighbors from adjacency list
-                const neighbors = adjacency.get(currentStr);
-                if (neighbors) {
-                    for (const neighborStr of neighbors) {
-                        if (!visited.has(neighborStr)) {
-                            // Find the original node ID (preserve type)
-                            const neighborNode = nodes.find((n) => String(n) === neighborStr);
-                            if (neighborNode !== undefined) {
-                                queue.push(neighborNode);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (component.length > 0) {
-                components.push(component);
-            }
-        }
-
-        return components;
-    }
-
-    /**
-     * Build adjacency list from graph edges (undirected)
-     */
-    private buildAdjacency(): Map<string, Set<string>> {
-        const adjacency = new Map<string, Set<string>>();
-        const {edges, nodes} = this.graph.getDataManager();
-
-        // Initialize all nodes
-        for (const nodeId of nodes.keys()) {
-            adjacency.set(String(nodeId), new Set());
-        }
-
-        // Add edges (undirected - add both directions)
-        for (const edge of edges.values()) {
-            const src = String(edge.srcId);
-            const dst = String(edge.dstId);
-
-            const srcSet = adjacency.get(src);
-            const dstSet = adjacency.get(dst);
-
-            if (srcSet) {
-                srcSet.add(dst);
-            }
-
-            if (dstSet) {
-                dstSet.add(src);
-            }
-        }
-
-        return adjacency;
     }
 }
 

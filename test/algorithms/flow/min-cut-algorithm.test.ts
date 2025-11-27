@@ -46,25 +46,23 @@ describe("MinCutAlgorithm", () => {
             assert.ok(edgeStyle.line);
         });
 
-        it("highlights cut edges with distinct color", () => {
+        it("highlights cut edges with calculatedStyle (colorblind-safe)", () => {
             const styles = MinCutAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const cutEdgeLayer = styles.layers.find((l) => {
-                const selector = l.edge?.selector;
-                return selector?.includes("inCut") && selector.includes("true");
-            });
+            // First edge layer uses calculatedStyle for color
+            const cutEdgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle);
             assert.ok(cutEdgeLayer);
             const {edge} = cutEdgeLayer;
             assert.ok(edge);
-            const {style: edgeStyle} = edge;
-            assert.ok(edgeStyle);
-            const {line} = edgeStyle;
-            assert.ok(line);
-            assert.ok(line.color);
+            assert.ok(edge.calculatedStyle);
+            assert.ok(edge.calculatedStyle.inputs[0].includes("inCut"));
+            assert.ok(edge.calculatedStyle.output.includes("color"));
+            assert.ok(edge.calculatedStyle.expr.includes("StyleHelpers"));
 
             // Width should be increased for visibility
-            const {width} = line;
+            assert.ok(edge.style.line);
+            const {width} = edge.style.line;
             assert.ok(typeof width === "number");
             assert.ok(width >= 2);
         });
@@ -163,24 +161,21 @@ describe("MinCutAlgorithm", () => {
     });
 
     describe("Style Configuration", () => {
-        it("cut edges have distinct styling", () => {
+        it("cut edges use calculatedStyle for dynamic styling", () => {
             const styles = MinCutAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const cutEdgeLayer = styles.layers.find((l) => {
-                const selector = l.edge?.selector;
-                return selector?.includes("inCut") && selector.includes("true");
-            });
+            // First edge layer uses calculatedStyle
+            const cutEdgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle);
             assert.ok(cutEdgeLayer);
             const {edge} = cutEdgeLayer;
             assert.ok(edge);
-            const {style: edgeStyle} = edge;
-            assert.ok(edgeStyle);
+            assert.ok(edge.calculatedStyle);
 
-            // Should have visible styling
-            const hasColor = edgeStyle.line?.color !== undefined;
-            const hasWidth = edgeStyle.line?.width !== undefined;
-            assert.ok(hasColor || hasWidth);
+            // Should have visible styling (width or calculated color)
+            const hasCalculatedColor = edge.calculatedStyle.output.includes("color");
+            const hasWidth = edge.style.line?.width !== undefined;
+            assert.ok(hasCalculatedColor || hasWidth);
         });
 
         it("non-cut edges may have reduced visibility", () => {

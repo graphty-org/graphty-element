@@ -29,7 +29,7 @@ describe("BipartiteMatchingAlgorithm", () => {
             assert.ok(styles.layers.length >= 1); // At least the matching edges layer
         });
 
-        it("first layer highlights matched edges", () => {
+        it("first layer highlights matched edges with calculatedStyle", () => {
             const styles = BipartiteMatchingAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -37,14 +37,16 @@ describe("BipartiteMatchingAlgorithm", () => {
             assert.ok(matchedEdgeLayer);
             assert.ok(matchedEdgeLayer.edge);
 
-            // Should have selector for inMatching == true
-            assert.ok(matchedEdgeLayer.edge.selector);
-            assert.ok(matchedEdgeLayer.edge.selector.includes("inMatching"));
+            // Should use calculatedStyle for dynamic color (colorblind-safe)
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle);
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle.inputs[0].includes("inMatching"));
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle.output.includes("color"));
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
 
-            // Should have style for matched edges
+            // Should have style for line width
             assert.ok(matchedEdgeLayer.edge.style);
             assert.ok(matchedEdgeLayer.edge.style.line);
-            assert.ok(matchedEdgeLayer.edge.style.line.color);
+            assert.ok(matchedEdgeLayer.edge.style.line.width);
         });
 
         it("layers have metadata", () => {
@@ -69,21 +71,23 @@ describe("BipartiteMatchingAlgorithm", () => {
     });
 
     describe("Matching Edge Detection", () => {
-        it("selector uses correct algorithm result path for matched edges", () => {
+        it("calculatedStyle uses correct algorithm result path for matched edges", () => {
             const styles = BipartiteMatchingAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
             const matchedEdgeLayer = styles.layers[0];
             assert.ok(matchedEdgeLayer.edge);
 
-            const {selector} = matchedEdgeLayer.edge;
-            assert.ok(selector);
+            // First layer uses calculatedStyle with input referencing algorithmResults
+            const {calculatedStyle} = matchedEdgeLayer.edge;
+            assert.ok(calculatedStyle);
 
+            const input = calculatedStyle.inputs[0];
             // Should reference algorithmResults.graphty.bipartite-matching.inMatching
-            assert.ok(selector.includes("algorithmResults"));
-            assert.ok(selector.includes("graphty"));
-            assert.ok(selector.includes("bipartite-matching"));
-            assert.ok(selector.includes("inMatching"));
+            assert.ok(input.includes("algorithmResults"));
+            assert.ok(input.includes("graphty"));
+            assert.ok(input.includes("bipartite-matching"));
+            assert.ok(input.includes("inMatching"));
         });
     });
 
