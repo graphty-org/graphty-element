@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <key id="d1" for="edge" yfiles.type="edgegraphics"/>
+  <graph id="G" edgedefault="directed">
+    <!-- Central hub node -->
+    <node id="hub">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="0.0" width="60.0" height="60.0"/>
+          <y:Fill color="#FF6B6B" transparent="false"/>
+          <y:BorderStyle color="#C92A2A" type="line" width="2.0"/>
+          <y:NodeLabel>Hub</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <!-- Surrounding nodes in circular pattern -->
+    <node id="n1">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="120.0" y="0.0" width="50.0" height="50.0"/>
+          <y:Fill color="#4ECDC4" transparent="false"/>
+          <y:BorderStyle color="#087F7B" type="line" width="1.5"/>
+          <y:NodeLabel>Alpha</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <node id="n2">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="85.0" y="85.0" width="50.0" height="50.0"/>
+          <y:Fill color="#45B7D1" transparent="false"/>
+          <y:BorderStyle color="#1971C2" type="line" width="1.5"/>
+          <y:NodeLabel>Beta</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <node id="n3">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="-85.0" y="85.0" width="50.0" height="50.0"/>
+          <y:Fill color="#96CEB4" transparent="false"/>
+          <y:BorderStyle color="#2F9E44" type="line" width="1.5"/>
+          <y:NodeLabel>Gamma</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <node id="n4">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="-120.0" y="0.0" width="50.0" height="50.0"/>
+          <y:Fill color="#FFEAA7" transparent="false"/>
+          <y:BorderStyle color="#E67700" type="line" width="1.5"/>
+          <y:NodeLabel>Delta</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <node id="n5">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="-120.0" width="50.0" height="50.0"/>
+          <y:Fill color="#DFE6E9" transparent="false"/>
+          <y:BorderStyle color="#74829C" type="line" width="1.5"/>
+          <y:NodeLabel>Epsilon</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+    </node>
+
+    <!-- Edges from hub to surrounding nodes -->
+    <edge id="e1" source="hub" target="n1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e2" source="hub" target="n2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e3" source="hub" target="n3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e4" source="hub" target="n4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e5" source="hub" target="n5">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <!-- Cross connections between surrounding nodes -->
+    <edge id="e6" source="n1" target="n2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#ADB5BD" type="line" width="1.5"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e7" source="n3" target="n4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#ADB5BD" type="line" width="1.5"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e8" source="n5" target="n1">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#ADB5BD" type="line" width="1.5"/>
+          <y:Arrows source="none" target="none"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+</graphml>

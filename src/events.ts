@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -71,6 +71,50 @@ export interface GraphGenericEvent {
         | "animation-progress" | "animation-cancelled"
         | "screenshot-enhancing" | "screenshot-ready";
     [key: string]: unknown;
+}
+
+// Data loading events
+export interface DataLoadingProgressEvent {
+    type: "data-loading-progress";
+    format: string;
+    bytesProcessed: number;
+    totalBytes?: number;
+    percentage?: number;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    chunksProcessed: number;
+}
+
+export interface DataLoadingErrorEvent {
+    type: "data-loading-error";
+    error: Error;
+    context: "detection" | "validation" | "parsing";
+    format?: string;
+    line?: number;
+    nodeId?: unknown;
+    edgeId?: string;
+    canContinue: boolean;
+}
+
+export interface DataLoadingErrorSummaryEvent {
+    type: "data-loading-error-summary";
+    format: string;
+    totalErrors: number;
+    primaryCategory?: string;
+    message: string;
+    suggestion?: string;
+    detailedReport: string;
+}
+
+export interface DataLoadingCompleteEvent {
+    type: "data-loading-complete";
+    format: string;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    duration: number; // milliseconds
+    errors: number;
+    warnings: number;
+    success: boolean;
 }
 
 // node events

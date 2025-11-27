@@ -125,38 +125,14 @@ export class UpdateManager implements Manager {
         // Always update camera
         this.camera.update();
 
-        // Check if layout is running
-        if (!this.layoutManager.running) {
-            // Even if layout is not running, we still need to handle zoom if requested
-            if (this.needsZoomToFit && !this.hasZoomedToFit) {
-                // Check if we have nodes to calculate bounds from
-                const nodeCount = Array.from(this.layoutManager.nodes).length;
-                if (nodeCount > 0) {
-                    // Calculate bounding box and update nodes
-                    const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
-
-                    // Update edges
-                    this.updateEdges();
-
-                    // Handle zoom to fit
-                    this.handleZoomToFit(boundingBoxMin, boundingBoxMax);
-
-                    // Update statistics
-                    this.updateStatistics();
-                }
-            }
-
-            return;
+        // Update layout engine (only if running)
+        if (this.layoutManager.running) {
+            this.updateLayout();
         }
 
-        // Normal update when layout is running
-        // Update layout engine
-        this.updateLayout();
-
-        // Calculate bounding box and update nodes
+        // Always update nodes and edges (regardless of layout running state)
+        // This ensures edges render even when layout isn't running
         const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
-
-        // Update edges
         this.updateEdges();
 
         // Handle zoom to fit if needed

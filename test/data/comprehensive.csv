@@ -1,0 +1,11 @@
+source,target,weight,protocol,latency,bandwidth,active,description
+server-1,client-1,1.5,HTTP/2,15,1000.75,true,"Primary connection from server to client"
+client-1,database-1,2.0,SQL,5,500.25,true,"Database queries from client"
+server-1,database-1,0.8,TCP,2,2000.0,true,"Direct server-to-database connection"
+server-1,cache-1,3.5,"Redis Protocol",1,1500.5,true,"Server to cache for fast access"
+cache-1,database-1,1.2,Internal,3,800.0,true,"Cache miss fallback to database"
+"node with spaces",cache-1,0.5,Unknown,50,100.0,false,"Connection from special node"
+monitoring-1,server-1,0.3,Metrics,10,50.0,true,"Monitor server metrics"
+monitoring-1,client-1,0.3,Metrics,10,50.0,true,"Monitor client metrics"
+database-1,backup-1,0.7,Backup,20,300.0,true,"Database backup connection"
+backup-1,backup-2,0.6,Sync,25,200.0,true,"Backup synchronization"

@@ -1,0 +1,154 @@
+// Comprehensive DOT Test File
+// Tests various Graphviz DOT features
+
+digraph ComprehensiveTest {
+  // Graph attributes
+  label="Comprehensive DOT Test\nMultiple Features";
+  rankdir=LR;
+
+  /* Node definitions with various attributes */
+  server [
+    label="Primary Server",
+    shape=box,
+    style=filled,
+    fillcolor="#FF5733",
+    fontsize=14,
+    type="server",
+    priority=10
+  ];
+
+  client [
+    label="Web Client",
+    shape=ellipse,
+    style="filled,rounded",
+    fillcolor="#33FF57",
+    fontsize=12,
+    type="client",
+    priority=5
+  ];
+
+  database [
+    label=<
+      <table border="0" cellborder="1" cellspacing="0">
+        <tr><td bgcolor="lightblue"><b>PostgreSQL</b></td></tr>
+        <tr><td>Database Server</td></tr>
+      </table>
+    >,
+    shape=plaintext,
+    type="database",
+    priority=8
+  ];
+
+  "node with spaces" [
+    label="Quoted ID Node",
+    shape=diamond,
+    style=filled,
+    fillcolor="#3357FF"
+  ];
+
+  cache [
+    label="Redis\nCache",
+    shape=hexagon,
+    style=filled,
+    fillcolor=yellow
+  ];
+
+  // Subgraph for monitoring cluster
+  subgraph cluster_monitoring {
+    label="Monitoring Services";
+    style=filled;
+    color=lightgrey;
+
+    metrics [
+      label="Metrics Collector",
+      shape=box,
+      style="filled,dashed",
+      fillcolor=lightgreen
+    ];
+
+    logs [
+      label="Log Aggregator",
+      shape=box,
+      style="filled,dashed",
+      fillcolor=lightcoral
+    ];
+
+    // Edge within subgraph
+    metrics -> logs [label="forwards", weight=1.0];
+  }
+
+  // Subgraph for backup cluster
+  subgraph cluster_backup {
+    label="Backup Services";
+    style=filled;
+    color=lightblue;
+
+    backup1 [label="Primary Backup"];
+    backup2 [label="Secondary Backup"];
+
+    backup1 -> backup2 [style=dotted, label="sync"];
+  }
+
+  /* Main edges with attributes */
+  server -> client [
+    label="HTTP/2",
+    weight=1.5,
+    color=red,
+    style=bold,
+    protocol="https",
+    latency=15
+  ];
+
+  client -> database [
+    label="SQL Queries",
+    weight=2.0,
+    color=blue,
+    style=solid,
+    protocol="tcp",
+    latency=5
+  ];
+
+  server -> database [
+    label="Direct\nConnection",
+    weight=0.8,
+    color=green,
+    style=dashed
+  ];
+
+  server -> cache [
+    label="Cache Access",
+    weight=3.5,
+    color=orange,
+    arrowhead=diamond
+  ];
+
+  cache -> database [
+    label="Cache Miss",
+    weight=1.2,
+    color=purple,
+    style=dotted
+  ];
+
+  "node with spaces" -> cache [
+    label="Special Connection",
+    weight=0.5
+  ];
+
+  // Connections to monitoring
+  server -> metrics [label="send metrics", style=dashed, color=grey];
+  client -> metrics [label="send metrics", style=dashed, color=grey];
+  database -> logs [label="send logs", style=dashed, color=grey];
+
+  // Connections to backup
+  database -> backup1 [label="backup", style=bold, color=darkgreen];
+
+  // Multi-line comment explaining the architecture
+  /*
+   * This graph represents a web application architecture with:
+   * - Frontend (client)
+   * - Backend (server)
+   * - Data layer (database, cache)
+   * - Monitoring infrastructure (metrics, logs)
+   * - Backup services (backup1, backup2)
+   */
+}

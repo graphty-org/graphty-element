@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {"id": 1, "label": "Router-1", "device": "router", "uptime": 99.9},
+    {"id": 2, "label": "Router-2", "device": "router", "uptime": 98.5},
+    {"id": 3, "label": "Switch-1", "device": "switch", "uptime": 99.7},
+    {"id": 4, "label": "Switch-2", "device": "switch", "uptime": 97.8},
+    {"id": 5, "label": "Firewall-1", "device": "firewall", "uptime": 99.95}
+  ],
+  "edges": [
+    {"from": 1, "to": 2, "bandwidth": 1000, "latency": 2},
+    {"from": 2, "to": 3, "bandwidth": 500, "latency": 5},
+    {"from": 1, "to": 3, "bandwidth": 2000, "latency": 1},
+    {"from": 3, "to": 4, "bandwidth": 1500, "latency": 3},
+    {"from": 4, "to": 5, "bandwidth": 800, "latency": 4},
+    {"from": 5, "to": 1, "bandwidth": 1200, "latency": 2}
+  ]
+}

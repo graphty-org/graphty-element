@@ -585,6 +585,53 @@ export class Graph implements GraphContext {
         return this.dataManager.addDataFromSource(type, opts);
     }
 
+    /**
+     * Load graph data from a File object with auto-format detection
+     * @param file - File object from file input
+     * @param options - Loading options
+     */
+    async loadFromFile(
+        file: File,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        const {detectFormat} = await import("./data/format-detection.js");
+
+        // Detect format if not explicitly provided
+        let format = options?.format;
+
+        if (!format) {
+            // Read first 2KB for format detection
+            const sample = await file.slice(0, 2048).text();
+            const detected = detectFormat(file.name, sample);
+
+            if (!detected) {
+                throw new Error(
+                    `Could not detect file format from '${file.name}'. ` +
+                    "Supported formats: JSON, GraphML, GEXF, CSV, GML, DOT, Pajek. " +
+                    "Try specifying format explicitly: loadFromFile(file, { format: \"graphml\" })",
+                );
+            }
+
+            format = detected;
+        }
+
+        // Read full file content
+        const content = await file.text();
+
+        // Load using appropriate DataSource
+        await this.addDataFromSource(format, {
+            data: content,
+            filename: file.name,
+            size: file.size,
+            ... options,
+        });
+    }
+
     async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
         await this.addNodes([node], idPath, options);
     }
