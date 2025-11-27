@@ -50,9 +50,9 @@ export class CalculatedValue {
         const isBlockStatement = trimmedExpr.startsWith("{") && trimmedExpr.endsWith("}");
 
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        this.exprFn = Function("StyleHelpers", "...args", isBlockStatement
-            ? `const arguments = args; ${trimmedExpr}`
-            : `const arguments = args; return (${expr});`);
+        this.exprFn = Function("StyleHelpers", "...args", isBlockStatement ?
+            `const arguments = args; ${trimmedExpr}` :
+            `const arguments = args; return (${expr});`);
     }
 
     run(data: AdHocData, schema?: z4.$ZodType): void {

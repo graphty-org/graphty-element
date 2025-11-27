@@ -120,6 +120,7 @@
     "lit": "^3.0.0"
   },
   "dependencies": {
+    "@graphty/algorithms": "^1.2.0",
     "@graphty/layout": "^1.2.8",
     "colorjs.io": "^0.5.2",
     "d3-force-3d": "^3.0.6",

@@ -27,7 +27,7 @@ describe("ChangeManager", () => {
         const cm = new ChangeManager();
         const algObj = cm.watch("algorithmResults", {} as unknown as AdHocData);
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
-        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, `arguments[0] * 2`));
+        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, "arguments[0] * 2"));
 
         // run test
         deepSet(algObj, inputPath, 5);
@@ -44,7 +44,7 @@ describe("ChangeManager", () => {
         const cm = new ChangeManager();
         const algObj = cm.watch("algorithmResults", {} as unknown as AdHocData);
         const styleObj = cm.addData("style", {} as unknown as AdHocData, NodeStyle);
-        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, `arguments[0] * 2`));
+        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, "arguments[0] * 2"));
 
         // run test
         deepSet(algObj, inputPath, 5);
@@ -61,7 +61,7 @@ describe("ChangeManager", () => {
         const cm = new ChangeManager();
         const algObj = cm.watch("algorithmResults", {} as unknown as AdHocData);
         cm.addData("style", {} as unknown as AdHocData, NodeStyle);
-        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, `arguments[0] * 2`));
+        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, "arguments[0] * 2"));
 
         // run test
         expect(() => {
@@ -76,7 +76,7 @@ describe("ChangeManager", () => {
         const cm = new ChangeManager();
         const algObj = cm.watch("algorithmResults", {} as unknown as AdHocData);
         const styleObj = cm.addData("style", {} as unknown as AdHocData, NodeStyle);
-        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, `"lightblue"`));
+        cm.addCalculatedValue(new CalculatedValue([`algorithmResults.${inputPath}`], outputPath, "\"lightblue\""));
 
         // run test
         deepSet(algObj, inputPath, 5);
@@ -95,8 +95,8 @@ describe("ChangeManager", () => {
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
 
         // Add two calculated values watching the same input
-        cm.addCalculatedValue(new CalculatedValue([`data.${inputPath}`], "style.line.color", `arguments[0] > 5 ? "#00FF00" : "#FF0000"`));
-        cm.addCalculatedValue(new CalculatedValue([`data.${inputPath}`], "style.line.width", `arguments[0] * 2`));
+        cm.addCalculatedValue(new CalculatedValue([`data.${inputPath}`], "style.line.color", "arguments[0] > 5 ? \"#00FF00\" : \"#FF0000\""));
+        cm.addCalculatedValue(new CalculatedValue([`data.${inputPath}`], "style.line.width", "arguments[0] * 2"));
 
         // Set the value - both CVs should run
         deepSet(dataObj, inputPath, 8);
@@ -116,7 +116,7 @@ describe("ChangeManager", () => {
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
 
         const cvs = [
-            new CalculatedValue(["data.value"], "style.result", `arguments[0] * 3`),
+            new CalculatedValue(["data.value"], "style.result", "arguments[0] * 3"),
         ];
 
         // Load without running immediately
@@ -138,7 +138,7 @@ describe("ChangeManager", () => {
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
 
         const cvs = [
-            new CalculatedValue(["data.value"], "style.result", `arguments[0] * 3`),
+            new CalculatedValue(["data.value"], "style.result", "arguments[0] * 3"),
         ];
 
         // Load and run immediately
@@ -153,8 +153,8 @@ describe("ChangeManager", () => {
         cm.watch("data", {a: 5, b: 10} as unknown as AdHocData);
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
 
-        cm.addCalculatedValue(new CalculatedValue(["data.a"], "style.resultA", `arguments[0] + 100`));
-        cm.addCalculatedValue(new CalculatedValue(["data.b"], "style.resultB", `arguments[0] + 200`));
+        cm.addCalculatedValue(new CalculatedValue(["data.a"], "style.resultA", "arguments[0] + 100"));
+        cm.addCalculatedValue(new CalculatedValue(["data.b"], "style.resultB", "arguments[0] + 200"));
 
         // Run all CVs
         cm.runAllCalculatedValues();
@@ -172,11 +172,11 @@ describe("ChangeManager", () => {
         const styleObj = cm.addData("style", {} as unknown as AdHocData);
 
         // Add initial CV
-        cm.addCalculatedValue(new CalculatedValue(["data.old"], "style.result", `arguments[0]`));
+        cm.addCalculatedValue(new CalculatedValue(["data.old"], "style.result", "arguments[0]"));
 
         // Load new CVs - should clear old ones
         const newCvs = [
-            new CalculatedValue(["data.new"], "style.result", `arguments[0] * 2`),
+            new CalculatedValue(["data.new"], "style.result", "arguments[0] * 2"),
         ];
         cm.loadCalculatedValues(newCvs, false);
 

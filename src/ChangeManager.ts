@@ -63,6 +63,7 @@ export class ChangeManager {
                 cvSet = new Set<CalculatedValue>();
                 this.watchedInputs.set(i, cvSet);
             }
+
             cvSet.add(cv);
         });
     }

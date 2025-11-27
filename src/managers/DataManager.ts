@@ -34,6 +34,9 @@ export class DataManager implements Manager {
     nodeCache = new Map<NodeIdType, Node>();
     edgeCache = new EdgeMap();
 
+    // Graph-level algorithm results storage
+    graphResults?: AdHocData;
+
     // Mesh cache for performance
     meshCache: MeshCache;
 
@@ -117,6 +120,9 @@ export class DataManager implements Manager {
         this.edges.clear();
         this.nodeCache.clear();
         this.edgeCache.clear();
+
+        // Clear graph-level results
+        this.graphResults = undefined;
 
         // Clear mesh cache
         this.meshCache.clear();
@@ -408,6 +414,9 @@ export class DataManager implements Manager {
         this.edges.clear();
         this.nodeCache.clear();
         this.edgeCache.clear();
+
+        // Clear graph-level results
+        this.graphResults = undefined;
 
         // Clear mesh cache
         this.meshCache.clear();

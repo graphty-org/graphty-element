@@ -110,9 +110,9 @@ export class Styles {
 
     getStyleForNode(data: AdHocData, algorithmResults?: AdHocData): NodeStyleId {
         // Combine data and algorithmResults for selector matching
-        const combinedData = algorithmResults
-            ? {...data, algorithmResults}
-            : data;
+        const combinedData = algorithmResults ?
+            {... data, algorithmResults} :
+            data;
 
         const styles: NodeStyleConfig[] = [];
         for (const layer of this.layers) {
@@ -177,9 +177,9 @@ export class Styles {
 
     getStyleForEdge(data: AdHocData, algorithmResults?: AdHocData): EdgeStyleId {
         // Combine data and algorithmResults for selector matching
-        const combinedData = algorithmResults
-            ? {...data, algorithmResults}
-            : data;
+        const combinedData = algorithmResults ?
+            {... data, algorithmResults} :
+            data;
 
         const styles: EdgeStyleConfig[] = [];
         for (const layer of this.layers) {

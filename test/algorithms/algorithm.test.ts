@@ -1,7 +1,7 @@
 import {assert, describe, it} from "vitest";
 
-import {DegreeAlgorithm} from "../src/algorithms/DegreeAlgorithm";
-import {AdHocData} from "../src/config";
+import {DegreeAlgorithm} from "../../src/algorithms/DegreeAlgorithm";
+import {AdHocData} from "../../src/config";
 
 interface MockGraphOpts {
     dataPath?: string;
@@ -42,7 +42,7 @@ describe("DegreeAlgorithm", () => {
     });
 
     it("calculates node degree", async() => {
-        const fakeGraph = await mockGraph({dataPath: "./helpers/data4.json"});
+        const fakeGraph = await mockGraph({dataPath: "../../test/helpers/data4.json"});
         const da = new DegreeAlgorithm(fakeGraph);
 
         await da.run();
