@@ -48,8 +48,6 @@ export const Basic: Story = {
             edgeStyle: {
                 line: {
                     bezier: true,
-                    color: "#FF6B6B",
-                    width: 2,
                 },
             },
         }),
@@ -63,7 +61,6 @@ export const WithArrows: Story = {
                 line: {
                     bezier: true,
                     color: "#4ECDC4",
-                    width: 2,
                 },
                 arrowHead: {
                     type: "normal",
@@ -89,11 +86,11 @@ export const DifferentArrowTypes: Story = {
         styleTemplate: templateCreator({
             edgeStyles: {
                 "bezier-diamond": {
-                    line: {bezier: true, color: "#FF6B6B", width: 2},
+                    line: {bezier: true, color: "#FF6B6B"},
                     arrowHead: {type: "diamond", color: "#FF6B6B", size: 1.5},
                 },
                 "bezier-dot": {
-                    line: {bezier: true, color: "#95E1D3", width: 2},
+                    line: {bezier: true, color: "#95E1D3"},
                     arrowHead: {type: "dot", color: "#95E1D3", size: 1.5},
                 },
             },
@@ -114,7 +111,6 @@ export const SelfLoop: Story = {
                 line: {
                     bezier: true,
                     color: "#F38181",
-                    width: 2,
                 },
                 arrowHead: {
                     type: "normal",
@@ -133,7 +129,6 @@ export const WithOpacity: Story = {
                 line: {
                     bezier: true,
                     color: "#AA96DA",
-                    width: 3,
                     opacity: 0.5,
                 },
                 arrowHead: {
@@ -173,7 +168,6 @@ export const ComplexGraph: Story = {
                 line: {
                     bezier: true,
                     color: "#FECA57",
-                    width: 2,
                 },
                 arrowHead: {
                     type: "normal",
@@ -206,7 +200,6 @@ export const ThreeD: Story = {
                 line: {
                     bezier: true,
                     color: "#48DBFB",
-                    width: 2.5,
                 },
                 arrowHead: {
                     type: "normal",

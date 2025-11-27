@@ -458,10 +458,8 @@ export class Edge {
             // PHASE 5: Bezier curves have baked-in geometry, no transformation needed
             // The curve geometry is already in world coordinates from createBezierLine()
             // Transforming would move/rotate/scale the curve incorrectly
-            console.log("[Edge.transformEdgeMesh] Skipping transform for bezier curve");
         } else {
             // Solid lines: Transform via position/rotation/scaling
-            console.log("[Edge.transformEdgeMesh] Transforming solid line from", srcPoint, "to", dstPoint);
             EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
         }
     }

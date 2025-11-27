@@ -224,6 +224,12 @@ export class TrackingMockMaterial {
         this.wireframe = enabled;
     }
 
+    // Metadata
+    setMetadata(key: string, value: unknown): void {
+        this._record("setMetadata", [key, value]);
+        this.metadata[key] = value;
+    }
+
     // Disposal
     dispose(): void {
         this._record("dispose", []);

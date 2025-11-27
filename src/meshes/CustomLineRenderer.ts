@@ -88,8 +88,7 @@ attribute vec2 uv;
 attribute vec3 segmentStart;  // Segment start position (for consistent perpendicular)
 attribute vec3 segmentEnd;    // Segment end position (for consistent perpendicular)
 
-// Uniforms
-uniform mat4 world;
+// Uniforms (world matrix provided by instancesDeclaration include)
 uniform mat4 viewProjection;
 uniform mat4 projection;
 uniform vec2 resolution;
@@ -226,8 +225,7 @@ precision highp float;
 // Attributes
 attribute vec3 position;
 
-// Uniforms
-uniform mat4 world;
+// Uniforms (world matrix provided by instancesDeclaration include)
 uniform mat4 viewProjection;
 uniform float pointSize;  // Size of points in pixels
 
@@ -727,7 +725,7 @@ void main(void) {
             {
                 attributes: ["position", "direction", "side", "distance", "uv", "segmentStart", "segmentEnd"],
                 uniforms: [
-                    "world",
+                    "world", // Required for Babylon.js to bind the matrix, even though instancesDeclaration also declares it
                     "viewProjection",
                     "projection",
                     "resolution",
@@ -736,7 +734,8 @@ void main(void) {
                     "opacity",
                 ],
                 // Enable instancing only when requested (cached edges need it, bezier curves don't)
-                defines: defines.length > 0 ? defines : undefined,
+                // Always pass array (even if empty) - Babylon.js crashes on undefined
+                defines: defines,
             },
         );
 
@@ -839,7 +838,7 @@ void main(void) {
             {
                 attributes: ["position", "direction", "side", "distance", "uv", "segmentStart", "segmentEnd"],
                 uniforms: [
-                    "world",
+                    "world", // Required for Babylon.js to bind the matrix, even though instancesDeclaration also declares it
                     "viewProjection",
                     "projection",
                     "resolution",
