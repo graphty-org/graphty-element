@@ -53,13 +53,13 @@ function mockGraphWithNegativeCycle(): any {
     const edges = new Map<string | number, AdHocData>();
     let graphResults: AdHocData | undefined;
 
-    nodes.set("A", {id: "A"});
-    nodes.set("B", {id: "B"});
-    nodes.set("C", {id: "C"});
+    nodes.set("A", {id: "A"} as unknown as AdHocData);
+    nodes.set("B", {id: "B"} as unknown as AdHocData);
+    nodes.set("C", {id: "C"} as unknown as AdHocData);
 
-    edges.set("A:B", {srcId: "A", dstId: "B", value: 1});
-    edges.set("B:C", {srcId: "B", dstId: "C", value: 2});
-    edges.set("C:A", {srcId: "C", dstId: "A", value: -4});
+    edges.set("A:B", {srcId: "A", dstId: "B", value: 1} as unknown as AdHocData);
+    edges.set("B:C", {srcId: "B", dstId: "C", value: 2} as unknown as AdHocData);
+    edges.set("C:A", {srcId: "C", dstId: "A", value: -4} as unknown as AdHocData);
 
     return {
         nodes,

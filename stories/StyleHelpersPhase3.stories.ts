@@ -40,7 +40,7 @@ export const CombinedColorAndSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.degree.degreePct"],
                             output: "style.texture.color",
@@ -51,7 +51,7 @@ export const CombinedColorAndSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.degree.degreePct"],
                             output: "style.shape.size",
@@ -77,7 +77,7 @@ export const CombinedFullSpectrum: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.pagerank.rankPct"],
                             output: "style.texture.color",
@@ -88,7 +88,7 @@ export const CombinedFullSpectrum: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.pagerank.rankPct"],
                             output: "style.shape.size",
@@ -99,7 +99,7 @@ export const CombinedFullSpectrum: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.pagerank.rankPct"],
                             output: "style.texture.opacity",
@@ -125,7 +125,7 @@ export const CombinedCategoryAndImportance: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: [
                                 "algorithmResults.graphty.louvain.communityId",
@@ -139,7 +139,7 @@ export const CombinedCategoryAndImportance: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: [
                                 "algorithmResults.graphty.louvain.communityId",
@@ -169,7 +169,7 @@ export const CombinedEdgeFlow: Story = {
                 {
                     edge: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["data.value"],
                             output: "style.line.color",
@@ -180,7 +180,7 @@ export const CombinedEdgeFlow: Story = {
                 {
                     edge: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["data.value"],
                             output: "style.line.width",
@@ -203,16 +203,30 @@ export const CombinedEdgeFlow: Story = {
 export const AnimationEasedSize: Story = {
     args: {
         styleTemplate: templateCreator({
-            nodeCalculatedStyle: {
-                inputs: ["algorithmResults.graphty.degree.degreePct"],
-                output: "style.texture.color",
-                expr: "StyleHelpers.color.sequential.viridis(arguments[0])",
-            },
-            nodeSizeCalculatedStyle: {
-                inputs: ["algorithmResults.graphty.degree.degreePct"],
-                output: "style.shape.size",
-                expr: "StyleHelpers.animation.interpolate(1, 7, arguments[0], StyleHelpers.animation.easeInOut)",
-            },
+            layers: [
+                {
+                    node: {
+                        selector: "",
+                        style: {enabled: true},
+                        calculatedStyle: {
+                            inputs: ["algorithmResults.graphty.degree.degreePct"],
+                            output: "style.texture.color",
+                            expr: "StyleHelpers.color.sequential.viridis(arguments[0])",
+                        },
+                    },
+                },
+                {
+                    node: {
+                        selector: "",
+                        style: {enabled: true},
+                        calculatedStyle: {
+                            inputs: ["algorithmResults.graphty.degree.degreePct"],
+                            output: "style.shape.size",
+                            expr: "StyleHelpers.animation.interpolate(1, 7, arguments[0], StyleHelpers.animation.easeInOut)",
+                        },
+                    },
+                },
+            ],
             algorithms: ["graphty:degree"],
         }),
         runAlgorithmsOnLoad: true,

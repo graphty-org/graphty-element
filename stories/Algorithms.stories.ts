@@ -307,13 +307,11 @@ export const BipartiteMatching: Story = {
         // Store current positions before style application (applyStylesToExistingNodes resets them)
         const savedPositions = new Map<string, {x: number, y: number, z: number}>();
         for (const [id, node] of dm.nodes) {
-            if (node.mesh) {
-                savedPositions.set(String(id), {
-                    x: node.mesh.position.x,
-                    y: node.mesh.position.y,
-                    z: node.mesh.position.z,
-                });
-            }
+            savedPositions.set(String(id), {
+                x: node.mesh.position.x,
+                y: node.mesh.position.y,
+                z: node.mesh.position.z,
+            });
         }
 
         // Apply suggested styles
@@ -326,7 +324,7 @@ export const BipartiteMatching: Story = {
         // Restore positions after style application
         for (const [id, node] of dm.nodes) {
             const savedPos = savedPositions.get(String(id));
-            if (savedPos && node.mesh) {
+            if (savedPos) {
                 node.mesh.position.x = savedPos.x;
                 node.mesh.position.y = savedPos.y;
                 node.mesh.position.z = savedPos.z;

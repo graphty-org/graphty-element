@@ -52,14 +52,14 @@ function mockSmallGraph(): any {
     let graphResults: AdHocData | undefined;
 
     // Create a simple 4-node graph: A -- B -- C -- D
-    nodes.set("A", {id: "A"});
-    nodes.set("B", {id: "B"});
-    nodes.set("C", {id: "C"});
-    nodes.set("D", {id: "D"});
+    nodes.set("A", {id: "A"} as unknown as AdHocData);
+    nodes.set("B", {id: "B"} as unknown as AdHocData);
+    nodes.set("C", {id: "C"} as unknown as AdHocData);
+    nodes.set("D", {id: "D"} as unknown as AdHocData);
 
-    edges.set("A:B", {srcId: "A", dstId: "B", value: 1});
-    edges.set("B:C", {srcId: "B", dstId: "C", value: 2});
-    edges.set("C:D", {srcId: "C", dstId: "D", value: 3});
+    edges.set("A:B", {srcId: "A", dstId: "B", value: 1} as unknown as AdHocData);
+    edges.set("B:C", {srcId: "B", dstId: "C", value: 2} as unknown as AdHocData);
+    edges.set("C:D", {srcId: "C", dstId: "D", value: 3} as unknown as AdHocData);
 
     return {
         nodes,

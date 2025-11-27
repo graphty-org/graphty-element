@@ -327,7 +327,7 @@ export const CombinedPlasmaLogSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.degree.degreePct"],
                             output: "style.texture.color",
@@ -338,7 +338,7 @@ export const CombinedPlasmaLogSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.pagerank.rankPct"],
                             output: "style.shape.size",
@@ -364,7 +364,7 @@ export const CombinedCategoricalSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.louvain.communityId"],
                             output: "style.texture.color",
@@ -375,7 +375,7 @@ export const CombinedCategoricalSize: Story = {
                 {
                     node: {
                         selector: "",
-                        style: {},
+                        style: {enabled: true},
                         calculatedStyle: {
                             inputs: ["algorithmResults.graphty.pagerank.rankPct"],
                             output: "style.shape.size",

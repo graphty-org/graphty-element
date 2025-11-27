@@ -9,8 +9,7 @@ import _ from "lodash";
 
 import {CalculatedValue} from "./CalculatedValue";
 import {ChangeManager} from "./ChangeManager";
-import type {AdHocData, EdgeStyleConfig} from "./config";
-import {EdgeStyle} from "./config";
+import {type AdHocData, EdgeStyle, type EdgeStyleConfig} from "./config";
 import {EDGE_CONSTANTS} from "./constants/meshConstants";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";

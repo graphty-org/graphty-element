@@ -141,10 +141,12 @@ describe("Algorithm Infrastructure", () => {
 
             const dm = fakeGraph.getDataManager();
             assert.property(dm, "graphResults");
-            assert.property(dm.graphResults, "test-namespace");
-            assert.property(dm.graphResults["test-namespace"], "test-graph-algo");
-            assert.strictEqual(dm.graphResults["test-namespace"]["test-graph-algo"].totalWeight, 42);
-            assert.strictEqual(dm.graphResults["test-namespace"]["test-graph-algo"].componentCount, 3);
+            const graphResults = dm.graphResults as Record<string, Record<string, Record<string, unknown>>>;
+            assert.isDefined(graphResults);
+            assert.property(graphResults, "test-namespace");
+            assert.property(graphResults["test-namespace"], "test-graph-algo");
+            assert.strictEqual(graphResults["test-namespace"]["test-graph-algo"].totalWeight, 42);
+            assert.strictEqual(graphResults["test-namespace"]["test-graph-algo"].componentCount, 3);
         });
 
         it("retrieves graph results via Algorithm.results", async() => {
@@ -232,8 +234,10 @@ describe("Algorithm Infrastructure", () => {
 
             // Check that both sets of results exist
             const dm = fakeGraph.getDataManager();
-            assert.property(dm.graphResults, "test-namespace");
-            assert.property(dm.graphResults["test-namespace"], "test-graph-algo");
+            const graphResults = dm.graphResults as Record<string, Record<string, unknown>>;
+            assert.isDefined(graphResults);
+            assert.property(graphResults, "test-namespace");
+            assert.property(graphResults["test-namespace"], "test-graph-algo");
 
             // Check edge results are still there
             for (const edge of dm.edges.values()) {
