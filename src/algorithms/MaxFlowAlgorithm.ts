@@ -27,7 +27,7 @@ export class MaxFlowAlgorithm extends Algorithm {
                     selector: "",
                     style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"max-flow\".flowPct"],
+                        inputs: ["algorithmResults.graphty.max-flow.flowPct"],
                         output: "style.line.width",
                         expr: "{ return StyleHelpers.edgeWidth.linear(arguments[0], 1, 8) }",
                     },
@@ -42,7 +42,7 @@ export class MaxFlowAlgorithm extends Algorithm {
                     selector: "",
                     style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"max-flow\".flowPct"],
+                        inputs: ["algorithmResults.graphty.max-flow.flowPct"],
                         output: "style.line.color",
                         expr: "{ return StyleHelpers.color.sequential.blues(arguments[0]) }",
                     },
@@ -59,31 +59,18 @@ export class MaxFlowAlgorithm extends Algorithm {
                         enabled: true,
                     },
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"max-flow\".isSource"],
+                        inputs: [
+                            "algorithmResults.graphty.max-flow.isSource",
+                            "algorithmResults.graphty.max-flow.isSink",
+                        ],
                         output: "style.texture.color",
-                        expr: "{ return StyleHelpers.color.binary.greenSuccess(arguments[0]) }",
+                        // Source = green, Sink = orange, Others = gray
+                        expr: "{ if (arguments[0]) return '#009E73'; if (arguments[1]) return '#E69F00'; return '#999999'; }",
                     },
                 },
                 metadata: {
-                    name: "Max Flow - Source Node",
-                    description: "Highlights the source node (green) - colorblind-safe",
-                },
-            },
-            {
-                node: {
-                    selector: "",
-                    style: {
-                        enabled: true,
-                    },
-                    calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"max-flow\".isSink"],
-                        output: "style.texture.color",
-                        expr: "{ return StyleHelpers.color.binary.orangeWarning(arguments[0]) }",
-                    },
-                },
-                metadata: {
-                    name: "Max Flow - Sink Node",
-                    description: "Highlights the sink node (orange) - colorblind-safe",
+                    name: "Max Flow - Source/Sink Nodes",
+                    description: "Highlights source (green) and sink (orange) nodes - colorblind-safe",
                 },
             },
         ],
