@@ -5,7 +5,7 @@
  * Focused on successful execution rather than complex scenarios.
  */
 
-import {MeshBuilder, NullEngine, Scene, Vector3} from "@babylonjs/core";
+import {AbstractMesh, MeshBuilder, NullEngine, Scene, Vector3} from "@babylonjs/core";
 import {afterEach, assert, beforeEach, describe, test} from "vitest";
 
 import {EdgeMesh} from "../../src/meshes/EdgeMesh";
@@ -256,10 +256,10 @@ describe("Simple Real Mesh Tests", () => {
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(5, 3, 2);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
-            assert.isNotNull(mesh.position);
-            assert.isNotNull(mesh.scaling);
+            assert.isNotNull((mesh as AbstractMesh).position);
+            assert.isNotNull((mesh as AbstractMesh).scaling);
         });
     });
 

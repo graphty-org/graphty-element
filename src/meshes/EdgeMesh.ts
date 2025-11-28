@@ -218,13 +218,33 @@ void main() {
         return isOrtho && is2DGraph;
     }
 
+    /**
+     * Creates an edge mesh based on the specified style configuration.
+     *
+     * This factory method handles all edge types:
+     * - Solid lines (with optional animation)
+     * - Patterned lines (dot, dash, diamond, sinewave, zigzag, etc.)
+     * - Bezier curves (smooth curved lines between nodes)
+     * - 2D and 3D rendering modes
+     *
+     * Solid lines in 3D mode are cached via MeshCache for performance.
+     * Bezier curves and patterned lines are created per-edge (no caching).
+     *
+     * @param cache - MeshCache instance for caching reusable meshes
+     * @param options - Edge mesh options including styleId, width, and color
+     * @param style - Full edge style configuration
+     * @param scene - Babylon.js scene
+     * @param srcPoint - Optional source point for bezier curves
+     * @param dstPoint - Optional destination point for bezier curves
+     * @returns The created edge mesh (AbstractMesh or PatternedLineMesh)
+     */
     static create(
         cache: MeshCache,
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
         scene: Scene,
-        srcPoint?: Vector3, // Optional source point for bezier curves
-        dstPoint?: Vector3, // Optional destination point for bezier curves
+        srcPoint?: Vector3,
+        dstPoint?: Vector3,
     ): AbstractMesh | PatternedLineMesh {
         const lineType = style.line?.type ?? "solid";
         const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
@@ -306,6 +326,23 @@ void main() {
         });
     }
 
+    /**
+     * Creates an arrow head mesh for edge endpoints.
+     *
+     * Supports multiple arrow types:
+     * - Filled: normal, inverted, diamond, box, dot, vee, tee, half-open, crow
+     * - Open: open-normal, open-diamond, open-dot
+     * - Spheres: sphere, sphere-dot
+     *
+     * In 2D mode, uses StandardMaterial with XY rotation.
+     * In 3D mode, uses shader-based billboard rendering.
+     *
+     * @param _cache - MeshCache instance (currently unused, kept for API compatibility)
+     * @param _styleId - Style ID (currently unused, kept for API compatibility)
+     * @param options - Arrow head options including type, width, color, size, and opacity
+     * @param scene - Babylon.js scene
+     * @returns The created arrow mesh, or null if type is "none" or undefined
+     */
     static createArrowHead(
         _cache: MeshCache,
         _styleId: string,
@@ -393,7 +430,7 @@ void main() {
             case "dot":
                 mesh = FilledArrowRenderer.createCircle(scene);
                 break;
-            case "sphere-dot":
+            case "sphere-dot": {
                 // sphere-dot needs different handling for 2D vs 3D:
                 // - 2D: shader-based filled circle (handled in createArrowHead)
                 // - 3D: 3D sphere mesh (handled here)
@@ -422,6 +459,7 @@ void main() {
                 sphereMesh.visibility = opacity;
                 // Return directly - don't apply shader since this is a standard material mesh
                 return sphereMesh;
+            }
             case "vee":
                 mesh = FilledArrowRenderer.createVee(scene);
                 break;
@@ -675,10 +713,20 @@ void main() {
         return data;
     }
 
+    /**
+     * Gets the default arrow width based on constants.
+     *
+     * @returns The default arrow width value from EDGE_CONSTANTS
+     */
     static calculateArrowWidth(): number {
         return EDGE_CONSTANTS.DEFAULT_ARROW_WIDTH;
     }
 
+    /**
+     * Gets the default arrow length based on constants.
+     *
+     * @returns The default arrow length value from EDGE_CONSTANTS
+     */
     static calculateArrowLength(): number {
         return EDGE_CONSTANTS.DEFAULT_ARROW_LENGTH;
     }
@@ -790,6 +838,20 @@ void main() {
         return surfacePoint.subtract(direction.scale(actualSize));
     }
 
+    /**
+     * Transforms an edge mesh to span between two points.
+     *
+     * Positions the mesh at the midpoint between source and destination,
+     * orients it to look at the destination, and scales it to match the
+     * distance between the two points.
+     *
+     * Note: This method is used for straight-line edges only.
+     * Bezier curves have their geometry baked in world coordinates.
+     *
+     * @param mesh - The edge mesh to transform
+     * @param srcPoint - The source point (start of edge)
+     * @param dstPoint - The destination point (end of edge)
+     */
     static transformMesh(
         mesh: AbstractMesh,
         srcPoint: Vector3,

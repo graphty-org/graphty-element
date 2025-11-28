@@ -14,6 +14,7 @@ import {Vector3} from "@babylonjs/core";
 import {afterEach, assert, describe, test} from "vitest";
 
 import {Graph} from "../../src/Graph";
+import {arrowConfig, asData, styleTemplate, type TestGraph} from "../helpers/testSetup";
 
 // Constants matching mesh calculations
 const NODE_RADIUS = 0.75; // DEFAULT_NODE_SIZE * ICOSPHERE_RADIUS_MULTIPLIER
@@ -52,10 +53,13 @@ function calculateExpectedArrowPosition(
 async function waitForRender(graph: Graph): Promise<void> {
     await graph.operationQueue.waitForCompletion();
 
+    // Access private members via TestGraph type for testing
+    const testGraph = graph as unknown as TestGraph;
+
     // Manually update node mesh positions from layout engine
     // (In a real browser, this happens in the render loop via UpdateManager)
-    for (const node of graph.dataManager.nodes.values()) {
-        const pos = graph.layoutManager.layoutEngine?.getNodePosition(node);
+    for (const node of testGraph.dataManager.nodes.values()) {
+        const pos = testGraph.layoutManager.layoutEngine?.getNodePosition(node);
         if (pos) {
             node.mesh.position.x = pos.x;
             node.mesh.position.y = pos.y;
@@ -64,7 +68,7 @@ async function waitForRender(graph: Graph): Promise<void> {
     }
 
     // Manually update edges (which calculates arrow positions)
-    for (const edge of graph.dataManager.edges.values()) {
+    for (const edge of testGraph.dataManager.edges.values()) {
         edge.update();
     }
 
@@ -75,13 +79,14 @@ async function waitForRender(graph: Graph): Promise<void> {
 }
 
 describe("Arrowhead Position Tests - 2D Mode", () => {
-    let container: HTMLElement;
-    let graph: Graph;
+    let container: HTMLElement | undefined;
+    let graph: Graph | undefined;
 
     afterEach(() => {
         if (graph) {
             graph.dispose();
         }
+
         if (container?.parentNode) {
             container.remove();
         }
@@ -91,8 +96,8 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
      * Helper to create a 2D graph with specified nodes and edges
      */
     async function create2DGraph(
-        nodes: Array<{id: string; x: number; y: number}>,
-        edges: Array<{source: string; target: string}>,
+        nodes: {id: string, x: number, y: number}[],
+        edges: {source: string, target: string}[],
     ): Promise<Graph> {
         container = document.createElement("div");
         container.style.width = "800px";
@@ -101,26 +106,21 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
 
         graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "normal",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "normal"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
@@ -131,16 +131,16 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
         // Add nodes with position object for FixedLayout to read
         // FixedLayout reads from node.data.position.{x,y,z}
         for (const node of nodes) {
-            await graph.addNode({
+            await graph.addNode(asData({
                 id: node.id,
                 position: {x: node.x, y: node.y, z: 0},
-            });
+            }));
         }
 
         // Add edges
         for (const edge of edges) {
             await graph.addEdge(
-                {id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target},
+                asData({id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target}),
                 "source",
                 "target",
             );
@@ -159,7 +159,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -186,7 +186,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -213,7 +213,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -240,7 +240,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -267,7 +267,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -288,11 +288,11 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
     test("pentagon graph - all arrows at correct positions", async() => {
         // Create pentagon vertices
         const pentagonNodes = [
-            {id: "A", x: 0, y: 3},          // top
-            {id: "B", x: 2.85, y: 0.93},    // top-right
-            {id: "C", x: 1.76, y: -2.43},   // bottom-right
-            {id: "D", x: -1.76, y: -2.43},  // bottom-left
-            {id: "E", x: -2.85, y: 0.93},   // top-left
+            {id: "A", x: 0, y: 3}, // top
+            {id: "B", x: 2.85, y: 0.93}, // top-right
+            {id: "C", x: 1.76, y: -2.43}, // bottom-right
+            {id: "D", x: -1.76, y: -2.43}, // bottom-left
+            {id: "E", x: -2.85, y: 0.93}, // top-left
         ];
 
         const pentagonEdges = [
@@ -308,12 +308,14 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
         // Verify each edge's arrow position
         for (const edgeDef of pentagonEdges) {
             const edgeId = `${edgeDef.source}:${edgeDef.target}`;
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
             assert(edge.arrowMesh, `Edge ${edgeId} should have arrow mesh`);
 
-            const srcNode = pentagonNodes.find((n) => n.id === edgeDef.source)!;
-            const dstNode = pentagonNodes.find((n) => n.id === edgeDef.target)!;
+            const srcNode = pentagonNodes.find((n) => n.id === edgeDef.source);
+            const dstNode = pentagonNodes.find((n) => n.id === edgeDef.target);
+            assert(srcNode, `Source node ${edgeDef.source} should exist`);
+            assert(dstNode, `Target node ${edgeDef.target} should exist`);
 
             const srcPos = new Vector3(srcNode.x, srcNode.y, 0);
             const dstPos = new Vector3(dstNode.x, dstNode.y, 0);
@@ -350,7 +352,7 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
         const zTolerance = 0.001;
         for (const edgeDef of edges) {
             const edgeId = `${edgeDef.source}:${edgeDef.target}`;
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
             assert(edge.arrowMesh, `Edge ${edgeId} should have arrow mesh`);
 
@@ -363,13 +365,14 @@ describe("Arrowhead Position Tests - 2D Mode", () => {
 });
 
 describe("Arrowhead Position Tests - 3D Mode", () => {
-    let container: HTMLElement;
-    let graph: Graph;
+    let container: HTMLElement | undefined;
+    let graph: Graph | undefined;
 
     afterEach(() => {
         if (graph) {
             graph.dispose();
         }
+
         if (container?.parentNode) {
             container.remove();
         }
@@ -379,8 +382,8 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
      * Helper to create a 3D graph with specified nodes and edges
      */
     async function create3DGraph(
-        nodes: Array<{id: string; x: number; y: number; z: number}>,
-        edges: Array<{source: string; target: string}>,
+        nodes: {id: string, x: number, y: number, z: number}[],
+        edges: {source: string, target: string}[],
     ): Promise<Graph> {
         container = document.createElement("div");
         container.style.width = "800px";
@@ -389,26 +392,21 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
 
         graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: false,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: false,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "normal",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "normal"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
@@ -418,16 +416,16 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
 
         // Add nodes with position object for FixedLayout to read
         for (const node of nodes) {
-            await graph.addNode({
+            await graph.addNode(asData({
                 id: node.id,
                 position: {x: node.x, y: node.y, z: node.z},
-            });
+            }));
         }
 
         // Add edges
         for (const edge of edges) {
             await graph.addEdge(
-                {id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target},
+                asData({id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target}),
                 "source",
                 "target",
             );
@@ -446,7 +444,7 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -473,7 +471,7 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -500,7 +498,7 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -527,7 +525,7 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -569,12 +567,14 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
         // Verify each edge's arrow position
         for (const edgeDef of tetraEdges) {
             const edgeId = `${edgeDef.source}:${edgeDef.target}`;
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
             assert(edge.arrowMesh, `Edge ${edgeId} should have arrow mesh`);
 
-            const srcNode = tetraNodes.find((n) => n.id === edgeDef.source)!;
-            const dstNode = tetraNodes.find((n) => n.id === edgeDef.target)!;
+            const srcNode = tetraNodes.find((n) => n.id === edgeDef.source);
+            const dstNode = tetraNodes.find((n) => n.id === edgeDef.target);
+            assert(srcNode, `Source node ${edgeDef.source} should exist`);
+            assert(dstNode, `Target node ${edgeDef.target} should exist`);
 
             const srcPos = new Vector3(srcNode.x, srcNode.y, srcNode.z);
             const dstPos = new Vector3(dstNode.x, dstNode.y, dstNode.z);
@@ -613,7 +613,7 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
 
         for (const tc of testCases) {
             const edgeId = `${tc.src}:${tc.dst}`;
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
             assert(edge.arrowMesh, `Edge ${edgeId} should have arrow mesh`);
 
@@ -667,12 +667,14 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
         // Verify each edge's arrow position
         for (const edgeDef of cubeEdges) {
             const edgeId = `${edgeDef.source}:${edgeDef.target}`;
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
             assert(edge.arrowMesh, `Edge ${edgeId} should have arrow mesh`);
 
-            const srcNode = cubeNodes.find((n) => n.id === edgeDef.source)!;
-            const dstNode = cubeNodes.find((n) => n.id === edgeDef.target)!;
+            const srcNode = cubeNodes.find((n) => n.id === edgeDef.source);
+            const dstNode = cubeNodes.find((n) => n.id === edgeDef.target);
+            assert(srcNode, `Source node ${edgeDef.source} should exist`);
+            assert(dstNode, `Target node ${edgeDef.target} should exist`);
 
             const srcPos = new Vector3(srcNode.x, srcNode.y, srcNode.z);
             const dstPos = new Vector3(dstNode.x, dstNode.y, dstNode.z);
@@ -691,13 +693,14 @@ describe("Arrowhead Position Tests - 3D Mode", () => {
 });
 
 describe("Arrow Position Edge Cases", () => {
-    let container: HTMLElement;
-    let graph: Graph;
+    let container: HTMLElement | undefined;
+    let graph: Graph | undefined;
 
     afterEach(() => {
         if (graph) {
             graph.dispose();
         }
+
         if (container?.parentNode) {
             container.remove();
         }
@@ -705,8 +708,8 @@ describe("Arrow Position Edge Cases", () => {
 
     async function createGraph(
         twoD: boolean,
-        nodes: Array<{id: string; x: number; y: number; z: number}>,
-        edges: Array<{source: string; target: string}>,
+        nodes: {id: string, x: number, y: number, z: number}[],
+        edges: {source: string, target: string}[],
     ): Promise<Graph> {
         container = document.createElement("div");
         container.style.width = "800px";
@@ -715,26 +718,21 @@ describe("Arrow Position Edge Cases", () => {
 
         graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "normal",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "normal"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
@@ -744,15 +742,15 @@ describe("Arrow Position Edge Cases", () => {
 
         // Add nodes with position object for FixedLayout to read
         for (const node of nodes) {
-            await graph.addNode({
+            await graph.addNode(asData({
                 id: node.id,
                 position: {x: node.x, y: node.y, z: node.z},
-            });
+            }));
         }
 
         for (const edge of edges) {
             await graph.addEdge(
-                {id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target},
+                asData({id: `${edge.source}:${edge.target}`, source: edge.source, target: edge.target}),
                 "source",
                 "target",
             );
@@ -774,7 +772,7 @@ describe("Arrow Position Edge Cases", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -803,7 +801,7 @@ describe("Arrow Position Edge Cases", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 
@@ -831,7 +829,7 @@ describe("Arrow Position Edge Cases", () => {
             [{source: "A", target: "B"}],
         );
 
-        const edge = graph.dataManager.edges.get("A:B");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("A:B");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow mesh should exist");
 

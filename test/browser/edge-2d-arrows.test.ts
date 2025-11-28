@@ -2,6 +2,7 @@ import {StandardMaterial} from "@babylonjs/core";
 import {assert, beforeEach, describe, test} from "vitest";
 
 import {Graph} from "../../src/Graph";
+import {arrowConfig, asData, styleTemplate, TestGraph} from "../helpers/testSetup";
 
 describe("Edge 2D Arrows Integration", () => {
     let container: HTMLElement;
@@ -15,41 +16,35 @@ describe("Edge 2D Arrows Integration", () => {
         const graph = new Graph(container);
 
         // Set 2D mode via style template
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
+                            enabled: true,
                             line: {
                                 color: "#666666",
                                 width: 0.05,
                             },
-                            arrowHead: {
-                                type: "diamond",
-                                color: "#ff0000",
-                            },
+                            arrowHead: arrowConfig({type: "diamond", color: "#ff0000"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         // Wait for style template operation to complete
         await graph.operationQueue.waitForCompletion();
 
         // Add nodes
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
 
         // Add edge with source and target path parameters
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         // Wait for all operations to complete
         await graph.operationQueue.waitForCompletion();
@@ -60,7 +55,7 @@ describe("Edge 2D Arrows Integration", () => {
         });
 
         // Get the edge from dataManager
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist in dataManager");
 
         // Verify arrow head exists
@@ -85,32 +80,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 2D material in 2D mode with normal type", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "normal",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "normal"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -118,7 +108,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
         assert(
@@ -133,32 +123,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 2D material in 2D mode with box type", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "box",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "box"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -166,7 +151,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
         assert(
@@ -181,32 +166,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 2D material in 2D mode with dot type", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "dot",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "dot"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -214,7 +194,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
         assert(
@@ -229,32 +209,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 2D material in 2D mode with vee type", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "vee",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "vee"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -262,7 +237,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
         assert(
@@ -277,32 +252,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 2D material in 2D mode with tee type", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "tee",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "tee"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -310,7 +280,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
         assert(
@@ -325,32 +295,27 @@ describe("Edge 2D Arrows Integration", () => {
     test("Arrow head uses 3D shader in 3D mode", async() => {
         const graph = new Graph(container);
 
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: false,
-                addDefaultStyle: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: false,
+            addDefaultStyle: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
-                            arrowHead: {
-                                type: "diamond",
-                            },
+                            enabled: true,
+                            arrowHead: arrowConfig({type: "diamond"}),
                         },
                     },
                 },
             ],
-        });
+        }));
 
         await graph.operationQueue.waitForCompletion();
 
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
-        await graph.addEdge({id: "edge1", source: "node1", target: "node2"}, "source", "target");
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
+        await graph.addEdge(asData({id: "edge1", source: "node1", target: "node2"}), "source", "target");
 
         await graph.operationQueue.waitForCompletion();
 
@@ -358,7 +323,7 @@ describe("Edge 2D Arrows Integration", () => {
             setTimeout(resolve, 100);
         });
 
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist");
         assert(edge.arrowMesh, "Arrow head should exist");
 

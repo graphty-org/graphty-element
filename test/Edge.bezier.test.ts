@@ -4,6 +4,7 @@ import {assert, beforeEach, describe, test} from "vitest";
 import type {EdgeStyleConfig} from "../src/config";
 import {EdgeMesh} from "../src/meshes/EdgeMesh";
 import {MeshCache} from "../src/meshes/MeshCache";
+import {isDisposed} from "./helpers/testSetup";
 
 describe("Bezier Curve Edge Integration", () => {
     let scene: Scene;
@@ -42,7 +43,7 @@ describe("Bezier Curve Edge Integration", () => {
         );
 
         assert.exists(mesh, "Bezier mesh should be created");
-        assert.isFalse(mesh.isDisposed(), "Mesh should not be disposed");
+        assert.isFalse(isDisposed(mesh), "Mesh should not be disposed");
     });
 
     test("creates straight line mesh when bezier disabled", () => {
@@ -67,7 +68,7 @@ describe("Bezier Curve Edge Integration", () => {
         );
 
         assert.exists(mesh, "Straight line mesh should be created");
-        assert.isFalse(mesh.isDisposed(), "Mesh should not be disposed");
+        assert.isFalse(isDisposed(mesh), "Mesh should not be disposed");
     });
 
     test("bezier curve works with different positions", () => {
@@ -97,7 +98,7 @@ describe("Bezier Curve Edge Integration", () => {
         );
 
         assert.exists(mesh, "Bezier mesh with custom positions should be created");
-        assert.isFalse(mesh.isDisposed(), "Mesh should not be disposed");
+        assert.isFalse(isDisposed(mesh), "Mesh should not be disposed");
     });
 
     test("bezier curve handles self-loops", () => {
@@ -126,7 +127,7 @@ describe("Bezier Curve Edge Integration", () => {
         );
 
         assert.exists(mesh, "Bezier self-loop mesh should be created");
-        assert.isFalse(mesh.isDisposed(), "Mesh should not be disposed");
+        assert.isFalse(isDisposed(mesh), "Mesh should not be disposed");
     });
 
     test("bezier curve respects opacity setting", () => {
@@ -234,6 +235,6 @@ describe("Bezier Curve Edge Integration", () => {
         );
 
         assert.exists(mesh, "Bezier mesh for short distance should be created");
-        assert.isFalse(mesh.isDisposed(), "Mesh should not be disposed");
+        assert.isFalse(isDisposed(mesh), "Mesh should not be disposed");
     });
 });

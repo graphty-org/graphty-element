@@ -69,7 +69,7 @@ export class CustomLineRenderer {
         // 1. The global BABYLON loaded via <script> tag
         // 2. The ES module import from @babylonjs/core
         // We need to register in both because ShaderMaterial might use either one
-        const globalShaderStore = typeof window !== 'undefined' && (window as typeof globalThis & { BABYLON?: {Effect: typeof Effect} }).BABYLON?.Effect.ShadersStore;
+        const globalShaderStore = typeof window !== "undefined" && (window as typeof globalThis & {BABYLON?: {Effect: typeof Effect}}).BABYLON?.Effect.ShadersStore;
         const moduleShaderStore = Effect.ShadersStore;
 
         // Vertex Shader: Screen-space width expansion

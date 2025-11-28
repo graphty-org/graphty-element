@@ -11,7 +11,7 @@ function createTestScene(): {scene: Scene, engine: Engine, cleanup: () => void} 
     const camera = new ArcRotateCamera("camera", 0, 0, 10, Vector3.Zero(), scene);
     scene.activeCamera = camera;
 
-    const cleanup = () => {
+    const cleanup = (): void => {
         scene.dispose();
         engine.dispose();
     };

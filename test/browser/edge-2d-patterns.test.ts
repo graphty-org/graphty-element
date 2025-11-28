@@ -3,6 +3,7 @@ import {assert, beforeEach, describe, test} from "vitest";
 
 import {Graph} from "../../src/Graph";
 import type {PatternedLineMesh} from "../../src/meshes/PatternedLineMesh";
+import {asData, styleTemplate, type TestGraph} from "../helpers/testSetup";
 
 describe("Edge 2D Patterns Integration", () => {
     let container: HTMLElement;
@@ -16,17 +17,14 @@ describe("Edge 2D Patterns Integration", () => {
         const graph = new Graph(container);
 
         // Set 2D mode via style template with diamond pattern
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
+                            enabled: true,
                             line: {
                                 type: "diamond",
                                 color: "darkgrey",
@@ -35,21 +33,21 @@ describe("Edge 2D Patterns Integration", () => {
                     },
                 },
             ],
-        });
+        }));
 
         // Wait for style template operation to complete
         await graph.operationQueue.waitForCompletion();
 
         // Add nodes
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
 
         // Add edge
-        await graph.addEdge({
+        await graph.addEdge(asData({
             id: "edge1",
             source: "node1",
             target: "node2",
-        }, "source", "target");
+        }), "source", "target");
 
         // Wait for all operations to complete
         await graph.operationQueue.waitForCompletion();
@@ -60,7 +58,7 @@ describe("Edge 2D Patterns Integration", () => {
         });
 
         // Get the edge from dataManager
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist in dataManager");
 
         // Verify edge mesh is a PatternedLineMesh
@@ -89,17 +87,14 @@ describe("Edge 2D Patterns Integration", () => {
         const graph = new Graph(container);
 
         // Set 3D mode via style template with diamond pattern
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: false,
-            },
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: false,
             layers: [
                 {
                     edge: {
                         selector: "",
                         style: {
+                            enabled: true,
                             line: {
                                 type: "diamond",
                                 color: "darkgrey",
@@ -108,21 +103,21 @@ describe("Edge 2D Patterns Integration", () => {
                     },
                 },
             ],
-        });
+        }));
 
         // Wait for style template operation to complete
         await graph.operationQueue.waitForCompletion();
 
         // Add nodes
-        await graph.addNode({id: "node1", x: 0, y: 0, z: 0});
-        await graph.addNode({id: "node2", x: 1, y: 0, z: 0});
+        await graph.addNode(asData({id: "node1", x: 0, y: 0, z: 0}));
+        await graph.addNode(asData({id: "node2", x: 1, y: 0, z: 0}));
 
         // Add edge
-        await graph.addEdge({
+        await graph.addEdge(asData({
             id: "edge1",
             source: "node1",
             target: "node2",
-        }, "source", "target");
+        }), "source", "target");
 
         // Wait for all operations to complete
         await graph.operationQueue.waitForCompletion();
@@ -133,7 +128,7 @@ describe("Edge 2D Patterns Integration", () => {
         });
 
         // Get the edge from dataManager
-        const edge = graph.dataManager.edges.get("node1:node2");
+        const edge = (graph as unknown as TestGraph).dataManager.edges.get("node1:node2");
         assert(edge, "Edge should exist in dataManager");
 
         // Verify edge mesh is a PatternedLineMesh
@@ -162,13 +157,9 @@ describe("Edge 2D Patterns Integration", () => {
         const graph = new Graph(container);
 
         // Set 2D mode via style template
-        await graph.setStyleTemplate({
-            graphtyTemplate: true,
-            majorVersion: "1",
-            graph: {
-                twoD: true,
-            },
-        });
+        await graph.setStyleTemplate(styleTemplate({
+            twoD: true,
+        }));
 
         // Wait for style template operation to complete
         await graph.operationQueue.waitForCompletion();
@@ -180,21 +171,18 @@ describe("Edge 2D Patterns Integration", () => {
             const nodeId1 = `node${(index * 2)}`;
             const nodeId2 = `node${(index * 2) + 1}`;
 
-            await graph.addNode({id: nodeId1, x: index, y: 0, z: 0});
-            await graph.addNode({id: nodeId2, x: index + 1, y: 0, z: 0});
+            await graph.addNode(asData({id: nodeId1, x: index, y: 0, z: 0}));
+            await graph.addNode(asData({id: nodeId2, x: index + 1, y: 0, z: 0}));
 
             // Update style template for this specific edge pattern
-            await graph.setStyleTemplate({
-                graphtyTemplate: true,
-                majorVersion: "1",
-                graph: {
-                    twoD: true,
-                },
+            await graph.setStyleTemplate(styleTemplate({
+                twoD: true,
                 layers: [
                     {
                         edge: {
                             selector: "",
                             style: {
+                                enabled: true,
                                 line: {
                                     type: pattern,
                                     color: "darkgrey",
@@ -203,17 +191,17 @@ describe("Edge 2D Patterns Integration", () => {
                         },
                     },
                 ],
-            });
+            }));
 
             await graph.operationQueue.waitForCompletion();
 
             // Add edge
             await graph.addEdge(
-                {
+                asData({
                     id: `edge${index}`,
                     source: nodeId1,
                     target: nodeId2,
-                },
+                }),
                 "source",
                 "target",
             );
@@ -233,7 +221,7 @@ describe("Edge 2D Patterns Integration", () => {
             const nodeId2 = `node${(index * 2) + 1}`;
             const edgeId = `${nodeId1}:${nodeId2}`;
 
-            const edge = graph.dataManager.edges.get(edgeId);
+            const edge = (graph as unknown as TestGraph).dataManager.edges.get(edgeId);
             assert(edge, `Edge ${edgeId} should exist`);
 
             assert("meshes" in edge.mesh, `Edge ${edgeId} should be a PatternedLineMesh with meshes property`);

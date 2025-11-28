@@ -5,7 +5,7 @@
  * properties and invariants hold across a wide range of inputs.
  */
 
-import {Vector3} from "@babylonjs/core";
+import {NullEngine, Scene, Vector3} from "@babylonjs/core";
 import fc from "fast-check";
 import {assert, describe, test} from "vitest";
 
@@ -153,6 +153,7 @@ describe("CustomLineRenderer Zigzag Geometry", () => {
                 perpAxis = "y";
                 break;
             }
+
             if (Math.abs(p.z) > 0.001) {
                 perpAxis = "z";
                 break;
@@ -182,7 +183,6 @@ describe("CustomLineRenderer Zigzag Geometry", () => {
 
 describe("CustomLineRenderer Mesh Creation", () => {
     test("create returns mesh with shader material", () => {
-        const {NullEngine, Scene} = require("@babylonjs/core");
         const engine = new NullEngine();
         const scene = new Scene(engine);
 
@@ -204,7 +204,6 @@ describe("CustomLineRenderer Mesh Creation", () => {
     });
 
     test("create sets custom vertex attributes", () => {
-        const {NullEngine, Scene} = require("@babylonjs/core");
         const engine = new NullEngine();
         const scene = new Scene(engine);
 
@@ -236,7 +235,6 @@ describe("CustomLineRenderer Mesh Creation", () => {
     });
 
     test("create disables frustum culling", () => {
-        const {NullEngine, Scene} = require("@babylonjs/core");
         const engine = new NullEngine();
         const scene = new Scene(engine);
 
@@ -257,7 +255,6 @@ describe("CustomLineRenderer Mesh Creation", () => {
     });
 
     test("createStraightLine is convenience method for two-point line", () => {
-        const {NullEngine, Scene} = require("@babylonjs/core");
         const engine = new NullEngine();
         const scene = new Scene(engine);
 
@@ -279,7 +276,6 @@ describe("CustomLineRenderer Mesh Creation", () => {
     });
 
     test("createFromGeometry creates mesh from pre-computed geometry", () => {
-        const {NullEngine, Scene} = require("@babylonjs/core");
         const engine = new NullEngine();
         const scene = new Scene(engine);
 

@@ -45,6 +45,15 @@ export class PatternedLineMesh {
     isPickable = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: any = {};
+    // Properties to maintain compatibility with AbstractMesh interface in tests
+    position = new Vector3(0, 0, 0);
+    scaling = new Vector3(1, 1, 1);
+    visibility = 1;
+    name = "PatternedLineMesh";
+    isDisposed = false;
+    sourceMesh: Mesh | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    material: any = null;
 
     constructor(
         pattern: PatternType,
@@ -149,6 +158,7 @@ export class PatternedLineMesh {
             mesh.dispose();
         }
         this.meshes = [];
+        this.isDisposed = true;
     }
 
     /**

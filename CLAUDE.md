@@ -287,6 +287,96 @@ Common warnings during visual tests:
 
 - Do not increase playwright timeout times to try and address timeout issues. The timeout is probably due to another problem
 
+## Edge Styling System
+
+### Overview
+
+The edge styling system supports comprehensive customization of edge appearance in 2D and 3D modes:
+
+- **Line Types**: solid, dash, dot, star, diamond, dash-dot, sinewave, zigzag
+- **Arrow Types**: normal, inverted, dot, diamond, box, vee, tee, half-open, crow, open-normal, open-diamond, open-dot, sphere, sphere-dot
+- **Bezier Curves**: Smooth curved edges with automatic control point calculation
+- **Opacity**: Full transparency control (0.0 - 1.0)
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/Edge.ts` | Edge class - manages edge instances and updates |
+| `src/meshes/EdgeMesh.ts` | Edge mesh factory - creates line and arrow meshes |
+| `src/meshes/CustomLineRenderer.ts` | Shader-based line rendering |
+| `src/meshes/PatternedLineMesh.ts` | Patterned line rendering (dot, dash, etc.) |
+| `src/meshes/FilledArrowRenderer.ts` | Filled arrow head rendering |
+| `src/constants/meshConstants.ts` | Edge constants (widths, lengths, densities) |
+
+### Edge Configuration
+
+```typescript
+// Example edge style configuration
+const edgeStyle = {
+  line: {
+    type: "solid",     // Line pattern
+    width: 0.5,        // Line width
+    color: "#FFFFFF",  // Line color
+    opacity: 1.0,      // Transparency (0-1)
+    bezier: false,     // Enable curved edges
+  },
+  arrowHead: {
+    type: "normal",    // Arrow head style
+    size: 1.0,         // Size multiplier
+    color: "#FF0000",  // Arrow color
+    opacity: 1.0,      // Transparency (0-1)
+  },
+  arrowTail: {
+    type: "none",      // Arrow tail style (same options as head)
+  },
+};
+```
+
+### Performance Considerations
+
+- **Mesh Caching**: Solid lines in 3D mode use MeshCache for instancing
+- **Bezier Curves**: Each bezier edge has unique geometry (not cached)
+- **Patterned Lines**: Created per-edge (PatternedLineMesh)
+- **Arrow Heads**: Individual meshes for fast position updates
+
+### Testing Edge Styles
+
+```bash
+# Run edge-specific tests
+npx vitest run test/edge-cases/EdgeCases.test.ts
+npx vitest run test/meshes/BezierCurves.test.ts
+npx vitest run test/performance/phase7-benchmarks.test.ts
+
+# Run Storybook for visual inspection
+npm run storybook
+# Then navigate to: Styles > Edge
+```
+
+### Arrow Geometry System
+
+The `ArrowGeometry` interface defines positioning behavior:
+
+```typescript
+interface ArrowGeometry {
+  positioningMode: "center" | "tip";  // How arrow is positioned
+  needsRotation: boolean;              // Whether mesh needs rotation
+  positionOffset: number;              // Offset from surface point
+  scaleFactor?: number;                // Optional size multiplier
+}
+```
+
+Use `EdgeMesh.getArrowGeometry(arrowType)` to get metadata for any arrow type.
+
+### Bezier Curve Implementation
+
+Bezier curves use cubic Bezier interpolation with automatic control points:
+
+1. Control points are calculated perpendicular to the edge direction
+2. Point density scales with edge length (BEZIER_POINT_DENSITY constant)
+3. Self-loops (source === destination) render as circular arcs
+4. Short edges (< 0.01 units) are treated as self-loops
+
 ## Debugging Tools
 
 ### Capturing Layout Positions

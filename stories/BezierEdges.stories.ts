@@ -26,7 +26,7 @@ const meta: Meta = {
         }),
         nodeData: [
             {id: "A", position: {x: -5, y: 0, z: 0}},
-            {id: "B", position: {x: 5, y: 5, z: 0}},  // Changed Y from 0 to 5 to create height variation
+            {id: "B", position: {x: 5, y: 5, z: 0}}, // Changed Y from 0 to 5 to create height variation
             {id: "C", position: {x: 0, y: 5, z: 0}},
         ],
         edgeData: [
@@ -80,20 +80,30 @@ export const DifferentArrowTypes: Story = {
             {id: "C", position: {x: 8, y: 0, z: 0}},
         ],
         edgeData: [
-            {src: "A", dst: "B", styleId: "bezier-diamond"},
-            {src: "B", dst: "C", styleId: "bezier-dot"},
+            {src: "A", dst: "B"},
+            {src: "B", dst: "C"},
         ],
         styleTemplate: templateCreator({
-            edgeStyles: {
-                "bezier-diamond": {
-                    line: {bezier: true, color: "#FF6B6B"},
-                    arrowHead: {type: "diamond", color: "#FF6B6B", size: 1.5},
+            layers: [
+                {
+                    edge: {
+                        selector: "[src == 'A']",
+                        style: {
+                            line: {bezier: true, color: "#FF6B6B"},
+                            arrowHead: {type: "diamond", color: "#FF6B6B", size: 1.5},
+                        },
+                    },
                 },
-                "bezier-dot": {
-                    line: {bezier: true, color: "#95E1D3"},
-                    arrowHead: {type: "dot", color: "#95E1D3", size: 1.5},
+                {
+                    edge: {
+                        selector: "[src == 'B']",
+                        style: {
+                            line: {bezier: true, color: "#95E1D3"},
+                            arrowHead: {type: "dot", color: "#95E1D3", size: 1.5},
+                        },
+                    },
                 },
-            },
+            ],
         }),
     },
 };

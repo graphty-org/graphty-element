@@ -1,4 +1,5 @@
 import {
+    AbstractMesh,
     ArcRotateCamera,
     Camera,
     InstancedMesh,
@@ -196,12 +197,12 @@ describe("EdgeMesh", () => {
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(4, 3, 0);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
-            assert.equal(mesh.position.x, 2); // midpoint x
-            assert.equal(mesh.position.y, 1.5); // midpoint y
-            assert.equal(mesh.position.z, 0); // midpoint z
-            assert.equal(mesh.scaling.z, 5); // length = sqrt(4^2 + 3^2) = 5
+            assert.equal((mesh as AbstractMesh).position.x, 2); // midpoint x
+            assert.equal((mesh as AbstractMesh).position.y, 1.5); // midpoint y
+            assert.equal((mesh as AbstractMesh).position.z, 0); // midpoint z
+            assert.equal((mesh as AbstractMesh).scaling.z, 5); // length = sqrt(4^2 + 3^2) = 5
         });
 
         test("transformMesh handles negative coordinates", () => {
@@ -215,12 +216,12 @@ describe("EdgeMesh", () => {
             const srcPoint = new Vector3(-2, -2, -2);
             const dstPoint = new Vector3(2, 2, 2);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
-            assert.equal(mesh.position.x, 0); // midpoint
-            assert.equal(mesh.position.y, 0); // midpoint
-            assert.equal(mesh.position.z, 0); // midpoint
-            assert.closeTo(mesh.scaling.z, Math.sqrt(48), 0.001); // length
+            assert.equal((mesh as AbstractMesh).position.x, 0); // midpoint
+            assert.equal((mesh as AbstractMesh).position.y, 0); // midpoint
+            assert.equal((mesh as AbstractMesh).position.z, 0); // midpoint
+            assert.closeTo((mesh as AbstractMesh).scaling.z, Math.sqrt(48), 0.001); // length
         });
     });
 
@@ -339,11 +340,6 @@ describe("EdgeMesh", () => {
 
             // Middle points should deviate from straight line (have some Y offset)
             // The bezier curve creates a perpendicular offset
-            const midIdx = Math.floor(points.length / 2);
-            const midPoint = points[midIdx];
-
-            // For horizontal line, the perpendicular offset should be in Y
-            // The offset magnitude depends on BEZIER_CONTROL_POINT_OFFSET constant
             // Just verify the curve isn't a straight line
             let hasOffset = false;
             for (const point of points) {
@@ -414,6 +410,7 @@ describe("EdgeMesh", () => {
                 if (point.y > 0.5) {
                     hasPositiveY = true;
                 }
+
                 if (point.y < -0.5) {
                     hasNegativeY = true;
                 }

@@ -221,7 +221,7 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
         if (style.line?.bezier) {
             // Dispose old mesh
-            const vertexCount = this.mesh instanceof PatternedLineMesh ? '(PatternedLineMesh)' : this.mesh.getTotalVertices();
+            const vertexCount = this.mesh instanceof PatternedLineMesh ? "(PatternedLineMesh)" : this.mesh.getTotalVertices();
             console.log("[Edge.update] Disposing old mesh for bezier curve, vertices:", vertexCount);
             if (this.mesh instanceof PatternedLineMesh) {
                 this.mesh.dispose();

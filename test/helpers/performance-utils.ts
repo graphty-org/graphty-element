@@ -402,6 +402,13 @@ export function generateEdges(
 }
 
 /**
+ * Type for accessing private layoutManager in tests
+ */
+interface GraphWithLayout extends Omit<Graph, "layoutManager"> {
+    layoutManager?: {isSettled: boolean};
+}
+
+/**
  * Waits for physics layout to settle
  */
 export async function waitForLayoutSettle(graph: Graph, timeoutMs: number): Promise<void> {
@@ -410,9 +417,7 @@ export async function waitForLayoutSettle(graph: Graph, timeoutMs: number): Prom
 
         const checkSettle = (): void => {
             // Check if graph is settled via layoutManager
-            const graphWithLayout = graph as Graph & {
-                layoutManager?: {isSettled: boolean};
-            };
+            const graphWithLayout = graph as unknown as GraphWithLayout;
             const isSettled = graphWithLayout.layoutManager?.isSettled ?? false;
 
             if (isSettled || Date.now() - startTime > timeoutMs) {

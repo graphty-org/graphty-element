@@ -7,6 +7,7 @@
 
 import {
     AbstractMesh,
+    Mesh,
     NullEngine,
     Scene,
     Vector3,
@@ -14,6 +15,23 @@ import {
 import {assert, beforeEach, describe, test, vi} from "vitest";
 
 import type {EdgeStyleConfig} from "../../src/config";
+import type {PatternedLineMesh} from "../../src/meshes/PatternedLineMesh";
+import {asData} from "../helpers/testSetup";
+
+/**
+ * Helper to check if a mesh is disposed, handling both AbstractMesh (method) and PatternedLineMesh (property)
+ */
+function isDisposed(mesh: AbstractMesh | PatternedLineMesh): boolean {
+    if ("isDisposed" in mesh) {
+        if (typeof mesh.isDisposed === "function") {
+            return mesh.isDisposed();
+        }
+
+        return mesh.isDisposed;
+    }
+
+    return false;
+}
 import {Edge} from "../../src/Edge";
 import {DataManager} from "../../src/managers/DataManager";
 import {EventManager} from "../../src/managers/EventManager";
@@ -114,8 +132,8 @@ function createMockNode(
     id: string,
     position: Vector3,
 ): Node {
-    // Create a minimal node mesh
-    const mesh = new AbstractMesh(`node-${id}`, scene);
+    // Create a minimal node mesh - use Mesh since AbstractMesh is abstract
+    const mesh = new Mesh(`node-${id}`, scene);
     mesh.position = position.clone();
     // Set bounding info for ray intersection calculations
     mesh.getBoundingInfo().boundingSphere.radiusWorld = 0.5;
@@ -220,10 +238,10 @@ describe("Edge Integration", () => {
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
 
-            const edge = new Edge(context, "src", "dst", defaultStyleId, {});
+            const edge = new Edge(context, "src", "dst", defaultStyleId, asData({}));
 
             assert.exists(edge.mesh);
-            assert.isFalse(edge.mesh.isDisposed());
+            assert.isFalse(isDisposed(edge.mesh));
             assert.equal(edge.srcId, "src");
             assert.equal(edge.dstId, "dst");
             assert.equal(edge.id, "src:dst");
@@ -238,11 +256,11 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", arrowHeadStyleId, {});
+            const edge = new Edge(context, "src", "dst", arrowHeadStyleId, asData({}));
 
             assert.exists(edge.mesh);
             assert.exists(edge.arrowMesh);
-            assert.isFalse(edge.arrowMesh.isDisposed());
+            assert.isFalse(isDisposed(edge.arrowMesh));
         });
 
         test("creates edge with arrowTail when configured", () => {
@@ -254,11 +272,11 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", arrowTailStyleId, {});
+            const edge = new Edge(context, "src", "dst", arrowTailStyleId, asData({}));
 
             assert.exists(edge.mesh);
             assert.exists(edge.arrowTailMesh);
-            assert.isFalse(edge.arrowTailMesh.isDisposed());
+            assert.isFalse(isDisposed(edge.arrowTailMesh));
         });
 
         test("creates edge with bidirectional arrows", () => {
@@ -270,13 +288,13 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", bidirectionalStyleId, {});
+            const edge = new Edge(context, "src", "dst", bidirectionalStyleId, asData({}));
 
             assert.exists(edge.mesh);
             assert.exists(edge.arrowMesh);
             assert.exists(edge.arrowTailMesh);
-            assert.isFalse(edge.arrowMesh.isDisposed());
-            assert.isFalse(edge.arrowTailMesh.isDisposed());
+            assert.isFalse(isDisposed(edge.arrowMesh));
+            assert.isFalse(isDisposed(edge.arrowTailMesh));
         });
 
         test("updates edge style correctly", () => {
@@ -288,7 +306,7 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", initialStyleId, {});
+            const edge = new Edge(context, "src", "dst", initialStyleId, asData({}));
 
             assert.equal(edge.styleId, initialStyleId);
             assert.isNull(edge.arrowMesh);
@@ -309,7 +327,7 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", styleAId, {});
+            const edge = new Edge(context, "src", "dst", styleAId, asData({}));
 
             const oldMesh = edge.mesh;
             const oldArrowMesh = edge.arrowMesh;
@@ -318,14 +336,14 @@ describe("Edge Integration", () => {
             edge.updateStyle(styleBId);
 
             // Old meshes should be disposed
-            assert.isTrue(oldMesh.isDisposed());
+            assert.isTrue(isDisposed(oldMesh));
             assert.exists(oldArrowMesh);
-            assert.isTrue(oldArrowMesh.isDisposed());
+            assert.isTrue(isDisposed(oldArrowMesh));
 
             // New meshes should exist and not be disposed
-            assert.isFalse(edge.mesh.isDisposed());
+            assert.isFalse(isDisposed(edge.mesh));
             assert.exists(edge.arrowMesh);
-            assert.isFalse(edge.arrowMesh.isDisposed());
+            assert.isFalse(isDisposed(edge.arrowMesh));
         });
     });
 
@@ -448,7 +466,7 @@ describe("Edge Integration", () => {
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
             const mesh = EdgeMesh.create(meshCache, options, style, scene);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
             // Midpoint should be at (5, 0, 0)
             assert.closeTo(mesh.position.x, 5, 0.001);
@@ -464,7 +482,7 @@ describe("Edge Integration", () => {
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
             const mesh = EdgeMesh.create(meshCache, options, style, scene);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
             // Length = sqrt(3² + 4²) = 5
             assert.closeTo(mesh.scaling.z, 5, 0.001);
@@ -478,7 +496,7 @@ describe("Edge Integration", () => {
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
             const mesh = EdgeMesh.create(meshCache, options, style, scene);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
             // Midpoint should be at (0.5, 1, 1)
             assert.closeTo(mesh.position.x, 0.5, 0.001);
@@ -497,7 +515,7 @@ describe("Edge Integration", () => {
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
             const mesh = EdgeMesh.create(meshCache, options, style, scene);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
             // Midpoint should be at origin
             assert.closeTo(mesh.position.x, 0, 0.001);
@@ -516,7 +534,7 @@ describe("Edge Integration", () => {
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
             const mesh = EdgeMesh.create(meshCache, options, style, scene);
 
-            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
 
             // After lookAt(dstPoint), the mesh's Z scale is stretched along the edge direction
             // The scaling.z is set to the edge length, which is 5
@@ -539,7 +557,7 @@ describe("Edge Integration", () => {
             nodes.set("dst", dstNode);
 
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
-            const edge = new Edge(context, "src", "dst", defaultStyleId, {});
+            const edge = new Edge(context, "src", "dst", defaultStyleId, asData({}));
 
             assert.exists(edge.ray);
             // Ray direction should point from source to destination
@@ -559,7 +577,7 @@ describe("Edge Integration", () => {
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
 
             assert.throws(
-                () => new Edge(context, "src", "dst", defaultStyleId, {}),
+                () => new Edge(context, "src", "dst", defaultStyleId, asData({})),
                 /Node 'src' hasn't been created yet/,
             );
         });
@@ -573,7 +591,7 @@ describe("Edge Integration", () => {
             const context = createMockGraphContext(scene, meshCache, styles, nodes);
 
             assert.throws(
-                () => new Edge(context, "src", "dst", defaultStyleId, {}),
+                () => new Edge(context, "src", "dst", defaultStyleId, asData({})),
                 /Node 'dst' hasn't been created yet/,
             );
         });
