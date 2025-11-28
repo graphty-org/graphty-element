@@ -17,9 +17,19 @@ const config: StorybookConfig = {
         disableTelemetry: true,
     },
     async viteFinal(config, {configType}) {
+        const fs = await import("fs");
+        const path = await import("path");
+        const os = await import("os");
+
+        const sslDir = path.join(os.homedir(), "ssl");
+
         const server = {
             host: true,
             allowedHosts: true,
+            https: {
+                key: fs.readFileSync(path.join(sslDir, "atoms.key")),
+                cert: fs.readFileSync(path.join(sslDir, "STAR_ato_ms.crt")),
+            },
         };
 
         const {mergeConfig} = await import("vite");

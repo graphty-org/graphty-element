@@ -64,13 +64,13 @@ export class MaxFlowAlgorithm extends Algorithm {
                             "algorithmResults.graphty.max-flow.isSink",
                         ],
                         output: "style.texture.color",
-                        // Source = green, Sink = orange, Others = gray
-                        expr: "{ if (arguments[0]) return '#009E73'; if (arguments[1]) return '#E69F00'; return '#999999'; }",
+                        // Source = index 0, Sink = index 1, Others = index 2 (using Okabe-Ito colorblind-safe palette)
+                        expr: "{ if (arguments[0]) return StyleHelpers.color.categorical.okabeIto(0); if (arguments[1]) return StyleHelpers.color.categorical.okabeIto(1); return StyleHelpers.color.categorical.okabeIto(2); }",
                     },
                 },
                 metadata: {
                     name: "Max Flow - Source/Sink Nodes",
-                    description: "Highlights source (green) and sink (orange) nodes - colorblind-safe",
+                    description: "Highlights source and sink nodes using colorblind-safe Okabe-Ito palette",
                 },
             },
         ],

@@ -67,7 +67,7 @@
     "build": "tsc --project tsconfig.build.json && vite build",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",
-    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p 9025 --no-open",
+    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p 9025 --no-open --https --ssl-cert ~/ssl/STAR_ato_ms.crt --ssl-key ~/ssl/atoms.key",
     "chromatic": "npx chromatic --exit-zero-on-changes",
     "prepare": "husky",
     "build-storybook": "storybook build",
@@ -122,8 +122,10 @@
   "dependencies": {
     "@graphty/algorithms": "^1.2.0",
     "@graphty/layout": "^1.2.8",
+    "@types/papaparse": "^5.5.0",
     "colorjs.io": "^0.5.2",
     "d3-force-3d": "^3.0.6",
+    "fast-xml-parser": "^5.3.1",
     "hammerjs": "^2.0.8",
     "jmespath": "^0.16.0",
     "lodash": "^4.17.21",
@@ -131,6 +133,7 @@
     "ngraph.graph": "^20.0.1",
     "on-change": "^5.0.1",
     "p-queue": "^8.1.1",
+    "papaparse": "^5.5.3",
     "pupt": "^1.2.1",
     "toposort": "^2.0.2",
     "zod": "^3.25.28"

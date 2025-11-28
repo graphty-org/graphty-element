@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {"key": "user-1", "attributes": {"label": "Alice", "role": "admin", "score": 95.5}},
+    {"key": "user-2", "attributes": {"label": "Bob", "role": "user", "score": 78.3}},
+    {"key": "user-3", "attributes": {"label": "Carol", "role": "moderator", "score": 88.7}},
+    {"key": "user-4", "attributes": {"label": "Dave", "role": "user", "score": 82.1}},
+    {"key": "user-5", "attributes": {"label": "Eve", "role": "admin", "score": 91.2}}
+  ],
+  "edges": [
+    {"source": "user-1", "target": "user-2", "weight": 0.8, "type": "follows"},
+    {"source": "user-2", "target": "user-3", "weight": 0.6, "type": "follows"},
+    {"source": "user-1", "target": "user-3", "weight": 1.0, "type": "manages"},
+    {"source": "user-3", "target": "user-4", "weight": 0.7, "type": "follows"},
+    {"source": "user-4", "target": "user-5", "weight": 0.5, "type": "follows"},
+    {"source": "user-5", "target": "user-1", "weight": 0.9, "type": "manages"}
+  ]
+}

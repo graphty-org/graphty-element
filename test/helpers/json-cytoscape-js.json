@@ -1,0 +1,19 @@
+{
+  "elements": {
+    "nodes": [
+      {"data": {"id": "protein-A", "name": "Protein A", "mass": 45.5}},
+      {"data": {"id": "protein-B", "name": "Protein B", "mass": 52.3}},
+      {"data": {"id": "protein-C", "name": "Protein C", "mass": 38.7}},
+      {"data": {"id": "protein-D", "name": "Protein D", "mass": 41.2}},
+      {"data": {"id": "protein-E", "name": "Protein E", "mass": 49.8}}
+    ],
+    "edges": [
+      {"data": {"source": "protein-A", "target": "protein-B", "interaction": "binds", "score": 0.95}},
+      {"data": {"source": "protein-B", "target": "protein-C", "interaction": "inhibits", "score": 0.75}},
+      {"data": {"source": "protein-A", "target": "protein-D", "interaction": "activates", "score": 0.88}},
+      {"data": {"source": "protein-C", "target": "protein-D", "interaction": "regulates", "score": 0.65}},
+      {"data": {"source": "protein-D", "target": "protein-A", "interaction": "feedback", "score": 0.70}},
+      {"data": {"source": "protein-E", "target": "protein-C", "interaction": "binds", "score": 0.82}}
+    ]
+  }
+}

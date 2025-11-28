@@ -24,6 +24,7 @@ export default defineConfig({
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
+                        "test/managers/UpdateManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         // Browser-only tests
                         "test/browser/**/*.test.ts",
@@ -52,6 +53,7 @@ export default defineConfig({
                         "test/managers/DataManager.test.ts",
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
+                        "test/managers/UpdateManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         "test/performance/**/*.test.ts",
                         "test/examples/**/*.test.ts",
@@ -72,6 +74,9 @@ export default defineConfig({
                         headless: true,
                         provider: "playwright",
                         instances: [{browser: "chromium"}],
+                        // Disable file parallelism to prevent route.fulfill errors
+                        // when browser contexts are garbage collected during parallel execution
+                        fileParallelism: false,
                     },
                 },
             },
@@ -100,10 +105,13 @@ export default defineConfig({
                         headless: true,
                         provider: "playwright",
                         instances: [{browser: "chromium"}],
+                        // Disable file parallelism to prevent route.fulfill errors
+                        // when browser contexts are garbage collected during parallel execution
+                        fileParallelism: false,
                     },
                     setupFiles: [".storybook/vitest.setup.ts"],
-                    // Reduce parallelism to prevent browser resource contention
-                    // Note: Use pool: 'forks' and poolOptions.forks.singleFork for sequential execution
+                    // Storybook tests load complex 3D scenes and need longer timeout
+                    testTimeout: 30000,
                 },
             },
         ],

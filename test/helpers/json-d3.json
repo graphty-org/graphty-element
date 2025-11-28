@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {"id": "server-1", "type": "server", "priority": 10},
+    {"id": "client-1", "type": "client", "priority": 5},
+    {"id": "database-1", "type": "database", "priority": 8},
+    {"id": "cache-1", "type": "cache", "priority": 7},
+    {"id": "api-1", "type": "api", "priority": 6}
+  ],
+  "links": [
+    {"source": "server-1", "target": "client-1", "weight": 1.5, "protocol": "HTTP/2"},
+    {"source": "client-1", "target": "database-1", "weight": 2.0, "protocol": "SQL"},
+    {"source": "server-1", "target": "database-1", "weight": 0.8, "protocol": "TCP"},
+    {"source": "server-1", "target": "cache-1", "weight": 3.5, "protocol": "Redis"},
+    {"source": "cache-1", "target": "database-1", "weight": 1.2, "protocol": "Internal"},
+    {"source": "api-1", "target": "server-1", "weight": 2.5, "protocol": "REST"}
+  ]
+}

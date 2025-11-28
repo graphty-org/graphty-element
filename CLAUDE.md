@@ -335,3 +335,4 @@ To use the captured positions:
 ```
 - use ./tmp for any temporary images, debugging files, debugging scripts, etc.
 - check and see if storybook is running on port 9025 before starting storybook on a new port
+- do not attempt to use nanobanana confirm whether elements of the scene are correct -- the 3D nature of our scenes makes it difficult to determine the positioning, overlapping, or other aspects of the scene. ask the user to provide the final visual verification of scenes.

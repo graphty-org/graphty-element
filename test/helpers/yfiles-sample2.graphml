@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" yfiles.type="nodegraphics"/>
+  <key id="d1" for="edge" yfiles.type="edgegraphics"/>
+  <key id="d2" for="node" attr.name="z" attr.type="double"/>
+  <graph id="G" edgedefault="directed">
+    <!-- Left node at (-3, 0, 0) -->
+    <node id="n1">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="-3.0" y="0.0" width="1.0" height="1.0"/>
+          <y:Fill color="#4ECDC4" transparent="false"/>
+          <y:BorderStyle color="#087F7B" type="line" width="1.0"/>
+          <y:NodeLabel>Left</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Right node at (3, 0, 0) -->
+    <node id="n2">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="3.0" y="0.0" width="1.0" height="1.0"/>
+          <y:Fill color="#FF6B6B" transparent="false"/>
+          <y:BorderStyle color="#C92A2A" type="line" width="1.0"/>
+          <y:NodeLabel>Right</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Top node at (0, 3, 0) -->
+    <node id="n3">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="3.0" width="1.0" height="1.0"/>
+          <y:Fill color="#96CEB4" transparent="false"/>
+          <y:BorderStyle color="#2F9E44" type="line" width="1.0"/>
+          <y:NodeLabel>Top</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Bottom node at (0, -3, 0) -->
+    <node id="n4">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="0.0" y="-3.0" width="1.0" height="1.0"/>
+          <y:Fill color="#FFEAA7" transparent="false"/>
+          <y:BorderStyle color="#E67700" type="line" width="1.0"/>
+          <y:NodeLabel>Bottom</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Top-Right node at (2, 2, 0) -->
+    <node id="n5">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="2.0" y="2.0" width="1.0" height="1.0"/>
+          <y:Fill color="#A29BFE" transparent="false"/>
+          <y:BorderStyle color="#6C5CE7" type="line" width="1.0"/>
+          <y:NodeLabel>TR</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Bottom-Left node at (-2, -2, 0) -->
+    <node id="n6">
+      <data key="d0">
+        <y:ShapeNode>
+          <y:Geometry x="-2.0" y="-2.0" width="1.0" height="1.0"/>
+          <y:Fill color="#FD79A8" transparent="false"/>
+          <y:BorderStyle color="#E84393" type="line" width="1.0"/>
+          <y:NodeLabel>BL</y:NodeLabel>
+          <y:Shape type="ellipse"/>
+        </y:ShapeNode>
+      </data>
+      <data key="d2">0.0</data>
+    </node>
+
+    <!-- Edges forming one connected component -->
+    <edge id="e1" source="n1" target="n2">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e2" source="n1" target="n3">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e3" source="n2" target="n4">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#495057" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e4" source="n3" target="n5">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#ADB5BD" type="line" width="1.5"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e5" source="n4" target="n6">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#ADB5BD" type="line" width="1.5"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <edge id="e6" source="n5" target="n6">
+      <data key="d1">
+        <y:PolyLineEdge>
+          <y:LineStyle color="#868E96" type="line" width="1.5"/>
+          <y:Arrows source="none" target="standard"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+</graphml>
