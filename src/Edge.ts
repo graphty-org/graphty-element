@@ -58,6 +58,10 @@ export class Edge {
     label: RichTextLabel | null = null;
     arrowHeadText: RichTextLabel | null = null;
     arrowTailText: RichTextLabel | null = null;
+    private _arrowHeadTextOffset = 0.3;
+    private _arrowTailTextOffset = 0.3;
+    private _labelOffset = 0;
+    private _labelAttachPosition: AttachPosition = "center";
     private _loggedLineDirection = false; // Debug flag for logging lineDirection
 
     // Dirty tracking: Cache last node positions to skip unnecessary updates
@@ -164,17 +168,24 @@ export class Edge {
 
         // create label if configured
         if (style.label?.enabled) {
-            this.label = this.createLabel(style);
+            const {label, offset, attachPosition} = this.createLabel(style);
+            this.label = label;
+            this._labelOffset = offset;
+            this._labelAttachPosition = attachPosition;
         }
 
         // create arrow head text if configured
         if (style.arrowHead?.text) {
-            this.arrowHeadText = this.createArrowText(style.arrowHead.text, "arrowHead");
+            const {label, offset} = this.createArrowText(style.arrowHead.text, "arrowHead");
+            this.arrowHeadText = label;
+            this._arrowHeadTextOffset = offset;
         }
 
         // create arrow tail text if configured
         if (style.arrowTail?.text) {
-            this.arrowTailText = this.createArrowText(style.arrowTail.text, "arrowTail");
+            const {label, offset} = this.createArrowText(style.arrowTail.text, "arrowTail");
+            this.arrowTailText = label;
+            this._arrowTailTextOffset = offset;
         }
     }
 
@@ -259,17 +270,17 @@ export class Edge {
                 (lnk.src.y + lnk.dst.y) / 2,
                 ((lnk.src.z ?? 0) + (lnk.dst.z ?? 0)) / 2,
             );
-            this.label.attachTo(midPoint, "center", 0);
+            this.label.attachTo(midPoint, this._labelAttachPosition, this._labelOffset);
         }
 
         // Update arrow head text position if exists
         if (this.arrowHeadText && this.arrowMesh) {
-            this.arrowHeadText.attachTo(this.arrowMesh.position, "top", 0.3);
+            this.arrowHeadText.attachTo(this.arrowMesh.position, "top", this._arrowHeadTextOffset);
         }
 
         // Update arrow tail text position if exists
         if (this.arrowTailText && this.arrowTailMesh) {
-            this.arrowTailText.attachTo(this.arrowTailMesh.position, "top", 0.3);
+            this.arrowTailText.attachTo(this.arrowTailMesh.position, "top", this._arrowTailTextOffset);
         }
 
         // Cache positions for next frame
@@ -381,7 +392,10 @@ export class Edge {
                 this.label.dispose();
             }
 
-            this.label = this.createLabel(style);
+            const {label, offset, attachPosition} = this.createLabel(style);
+            this.label = label;
+            this._labelOffset = offset;
+            this._labelAttachPosition = attachPosition;
         } else if (this.label) {
             this.label.dispose();
             this.label = null;
@@ -393,7 +407,9 @@ export class Edge {
                 this.arrowHeadText.dispose();
             }
 
-            this.arrowHeadText = this.createArrowText(style.arrowHead.text, "arrowHead");
+            const {label, offset} = this.createArrowText(style.arrowHead.text, "arrowHead");
+            this.arrowHeadText = label;
+            this._arrowHeadTextOffset = offset;
         } else if (this.arrowHeadText) {
             this.arrowHeadText.dispose();
             this.arrowHeadText = null;
@@ -405,7 +421,9 @@ export class Edge {
                 this.arrowTailText.dispose();
             }
 
-            this.arrowTailText = this.createArrowText(style.arrowTail.text, "arrowTail");
+            const {label, offset} = this.createArrowText(style.arrowTail.text, "arrowTail");
+            this.arrowTailText = label;
+            this._arrowTailTextOffset = offset;
         } else if (this.arrowTailText) {
             this.arrowTailText.dispose();
             this.arrowTailText = null;
@@ -768,10 +786,13 @@ export class Edge {
         };
     }
 
-    private createLabel(styleConfig: EdgeStyleConfig): RichTextLabel {
+    private createLabel(styleConfig: EdgeStyleConfig): {label: RichTextLabel, offset: number, attachPosition: AttachPosition} {
         const labelText = this.extractLabelText(styleConfig.label);
         const labelOptions = this.createLabelOptions(labelText, styleConfig);
-        return new RichTextLabel(this.context.getScene(), labelOptions);
+        const offset = styleConfig.label?.attachOffset ?? 0;
+        const labelLocation = styleConfig.label?.location ?? "center";
+        const attachPosition = (labelLocation === "automatic" ? "center" : labelLocation) as AttachPosition;
+        return {label: new RichTextLabel(this.context.getScene(), labelOptions), offset, attachPosition};
     }
 
     private extractLabelText(labelConfig?: Record<string, unknown>): string {
@@ -875,7 +896,7 @@ export class Edge {
         return finalLabelOptions;
     }
 
-    private createArrowText(textConfig: Record<string, unknown>, source: "arrowHead" | "arrowTail"): RichTextLabel {
+    private createArrowText(textConfig: Record<string, unknown>, source: "arrowHead" | "arrowTail"): {label: RichTextLabel, offset: number} {
         // Extract text from config - either direct text or textPath
         let labelText: string = source === "arrowHead" ? "→" : "←";
 
@@ -894,6 +915,9 @@ export class Edge {
             }
         }
 
+        // Extract offset from config
+        const offset = typeof textConfig.attachOffset === "number" ? textConfig.attachOffset : 0.3;
+
         // Build label options from text config
         const labelOptions: RichTextLabelOptions = {
             text: labelText,
@@ -901,7 +925,7 @@ export class Edge {
             textColor: typeof textConfig.textColor === "string" ? textConfig.textColor : "#FFFFFF",
             backgroundColor: typeof textConfig.backgroundColor === "string" ? textConfig.backgroundColor : "#333333",
             attachPosition: "top" as AttachPosition,
-            attachOffset: 0.3,
+            attachOffset: offset,
         };
 
         // Pass through additional styling options if provided
@@ -909,7 +933,7 @@ export class Edge {
             labelOptions.cornerRadius = textConfig.cornerRadius;
         }
 
-        return new RichTextLabel(this.context.getScene(), labelOptions);
+        return {label: new RichTextLabel(this.context.getScene(), labelOptions), offset};
     }
 }
 

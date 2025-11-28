@@ -19,7 +19,6 @@ const ArrowType = z.enum([
     "open-diamond",
     "crow",
     "box",
-    "open",
     "half-open",
     "vee",
 ]);

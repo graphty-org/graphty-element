@@ -332,7 +332,7 @@ void main() {
      * Supports multiple arrow types:
      * - Filled: normal, inverted, diamond, box, dot, vee, tee, half-open, crow
      * - Open: open-normal, open-diamond, open-dot
-     * - Spheres: sphere, sphere-dot
+     * - Spheres: sphere-dot
      *
      * In 2D mode, uses StandardMaterial with XY rotation.
      * In 3D mode, uses shader-based billboard rendering.
@@ -362,10 +362,8 @@ void main() {
         const is2D = this.is2DMode(scene);
 
         // Arrow type routing:
-        // - Filled arrows: Use FilledArrowRenderer for ALL arrows (unified implementation)
-        // - Billboard arrows: Only "sphere" type (3D sphere mesh)
+        // All arrows use FilledArrowRenderer (unified implementation)
         const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot", "sphere-dot"];
-        const BILLBOARD_ARROWS = ["sphere"];
 
         // PERFORMANCE FIX: Create individual meshes for all arrow types
         // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
@@ -382,13 +380,6 @@ void main() {
             } else {
                 // 3D mode: Use shader-based arrows (ShaderMaterial, billboard)
                 mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
-            }
-        } else if (BILLBOARD_ARROWS.includes(arrowType)) {
-            // 3D billboard arrows: Only "sphere" uses CreateSphere
-            if (options.type === "sphere") {
-                mesh = this.createSphereArrow(length, width, options.color, scene);
-            } else {
-                throw new Error(`Unsupported arrow type: ${options.type}`);
             }
         } else {
             throw new Error(`Unsupported arrow type: ${options.type}`);
@@ -652,32 +643,6 @@ void main() {
         });
     }
 
-    // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
-    private static createSphereArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Sphere fits exactly within the allocated arrow space
-        const sphereDiameter = length;
-
-        // Create a 3D sphere positioned at z=0 (node surface)
-        // This will appear as a filled circle from all viewing angles
-        const mesh = MeshBuilder.CreateSphere(
-            "sphere-arrow",
-            {
-                diameter: sphereDiameter,
-                segments: 16,
-            },
-            scene,
-        );
-
-        // Apply color
-        const material = new StandardMaterial("sphere-material", scene);
-        material.diffuseColor = Color3.FromHexString(color);
-        material.emissiveColor = Color3.FromHexString(color);
-        material.disableLighting = true;
-        mesh.material = material;
-
-        return mesh;
-    }
-
     // Helper to create a circular texture with anti-aliasing (white circle on transparent background)
     private static createCircleTextureData(size: number): Uint8Array {
         const data = new Uint8Array(size * size * 4);
@@ -754,14 +719,6 @@ void main() {
                     scaleFactor: 0.25, // Small dot-sized sphere (1/4 size)
                 };
 
-            case "sphere":
-                return {
-                    positioningMode: "center",
-                    needsRotation: false,
-                    positionOffset: 0,
-                    scaleFactor: 1.0, // Full size (CreateSphere uses different sizing)
-                };
-
             // Filled arrows using FilledArrowRenderer (billboard shaders, no rotation)
             // These arrows have tip/front edge at origin
             case "normal":
@@ -789,8 +746,6 @@ void main() {
                     positionOffset: 1.0, // Move arrow backward (toward sphere) to place base at surface
                 };
 
-            // Outline arrows using CustomLineRenderer (same positioning as old system)
-            case "open":
             default:
                 return {
                     positioningMode: "tip",

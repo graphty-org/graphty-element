@@ -1,4 +1,4 @@
-import type {Vector3} from "@babylonjs/core";
+import type {Mesh, Vector3} from "@babylonjs/core";
 
 import type {CameraManager} from "../cameras/CameraManager";
 import {Edge} from "../Edge";
@@ -121,8 +121,8 @@ export class UpdateManager implements Manager {
                     // Calculate bounding box and update nodes
                     const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
 
-                    // Update edges
-                    this.updateEdges();
+                    // Update edges (also expands bounding box for edge labels)
+                    this.updateEdges(boundingBoxMin, boundingBoxMax);
 
                     // Handle zoom to fit
                     this.handleZoomToFit(boundingBoxMin, boundingBoxMax);
@@ -142,8 +142,8 @@ export class UpdateManager implements Manager {
         // Calculate bounding box and update nodes
         const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
 
-        // Update edges
-        this.updateEdges();
+        // Update edges (also expands bounding box for edge labels)
+        this.updateEdges(boundingBoxMin, boundingBoxMax);
 
         // Handle zoom to fit if needed
         this.handleZoomToFit(boundingBoxMin, boundingBoxMax);
@@ -191,43 +191,14 @@ export class UpdateManager implements Manager {
                 boundingBoxMax = pos.clone();
             }
 
-            // Calculate visual bounds including label
-            // if (node.label?.labelMesh) {
-            //     // The label mesh position should be current after node.update()
-            //     // Get the label's bounding info which includes its actual rendered size
-            //     const labelBoundingInfo = node.label.labelMesh.getBoundingInfo();
-            //     const labelMin = labelBoundingInfo.boundingBox.minimumWorld;
-            //     const labelMax = labelBoundingInfo.boundingBox.maximumWorld;
-
-            //     // Update bounding box to include label bounds
-            //     if (labelMin.x < boundingBoxMin.x) {
-            //         boundingBoxMin.x = labelMin.x;
-            //     }
-
-            //     if (labelMax.x > boundingBoxMax.x) {
-            //         boundingBoxMax.x = labelMax.x;
-            //     }
-
-            //     if (labelMin.y < boundingBoxMin.y) {
-            //         boundingBoxMin.y = labelMin.y;
-            //     }
-
-            //     if (labelMax.y > boundingBoxMax.y) {
-            //         boundingBoxMax.y = labelMax.y;
-            //     }
-
-            //     if (labelMin.z < boundingBoxMin.z) {
-            //         boundingBoxMin.z = labelMin.z;
-            //     }
-
-            //     if (labelMax.z > boundingBoxMax.z) {
-            //         boundingBoxMax.z = labelMax.z;
-            //     }
-            // }
-
             this.updateBoundingBoxAxis(pos, boundingBoxMin, boundingBoxMax, sz, "x");
             this.updateBoundingBoxAxis(pos, boundingBoxMin, boundingBoxMax, sz, "y");
             this.updateBoundingBoxAxis(pos, boundingBoxMin, boundingBoxMax, sz, "z");
+
+            // Include node label in bounding box
+            if (node.label?.labelMesh) {
+                this.expandBoundingBoxForLabel(node.label.labelMesh, boundingBoxMin, boundingBoxMax);
+            }
         }
 
         this.statsManager.nodeUpdate.endMonitoring();
@@ -253,9 +224,25 @@ export class UpdateManager implements Manager {
     }
 
     /**
-     * Update all edges
+     * Expand bounding box to include a label mesh
      */
-    private updateEdges(): void {
+    private expandBoundingBoxForLabel(labelMesh: Mesh, min: Vector3, max: Vector3): void {
+        const labelBoundingInfo = labelMesh.getBoundingInfo();
+        const labelMin = labelBoundingInfo.boundingBox.minimumWorld;
+        const labelMax = labelBoundingInfo.boundingBox.maximumWorld;
+
+        min.x = Math.min(min.x, labelMin.x);
+        min.y = Math.min(min.y, labelMin.y);
+        min.z = Math.min(min.z, labelMin.z);
+        max.x = Math.max(max.x, labelMax.x);
+        max.y = Math.max(max.y, labelMax.y);
+        max.z = Math.max(max.z, labelMax.z);
+    }
+
+    /**
+     * Update all edges and expand bounding box for edge labels
+     */
+    private updateEdges(boundingBoxMin?: Vector3, boundingBoxMax?: Vector3): void {
         this.statsManager.edgeUpdate.beginMonitoring();
 
         // Update rays for all edges (static method on Edge class)
@@ -264,6 +251,24 @@ export class UpdateManager implements Manager {
         // Update individual edges
         for (const edge of this.layoutManager.edges) {
             edge.update();
+
+            // Include edge labels in bounding box if we have one
+            if (boundingBoxMin && boundingBoxMax) {
+                // Edge label (at midpoint)
+                if (edge.label?.labelMesh) {
+                    this.expandBoundingBoxForLabel(edge.label.labelMesh, boundingBoxMin, boundingBoxMax);
+                }
+
+                // Arrow head text label
+                if (edge.arrowHeadText?.labelMesh) {
+                    this.expandBoundingBoxForLabel(edge.arrowHeadText.labelMesh, boundingBoxMin, boundingBoxMax);
+                }
+
+                // Arrow tail text label
+                if (edge.arrowTailText?.labelMesh) {
+                    this.expandBoundingBoxForLabel(edge.arrowTailText.labelMesh, boundingBoxMin, boundingBoxMax);
+                }
+            }
         }
 
         this.statsManager.edgeUpdate.endMonitoring();
