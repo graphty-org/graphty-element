@@ -128,11 +128,11 @@ export class OrbitCameraController {
 
                     // Distance needed to fit this corner horizontally
                     // d > z + |x| / tan(fovX/2)
-                    const distanceForX = z + Math.abs(x) / Math.tan(halfFovX);
+                    const distanceForX = z + (Math.abs(x) / Math.tan(halfFovX));
 
                     // Distance needed to fit this corner vertically
                     // d > z + |y| / tan(fovY/2)
-                    const distanceForY = z + Math.abs(y) / Math.tan(halfFovY);
+                    const distanceForY = z + (Math.abs(y) / Math.tan(halfFovY));
 
                     maxRequiredDistance = Math.max(maxRequiredDistance, distanceForX, distanceForY);
                 }

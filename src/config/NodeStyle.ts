@@ -61,7 +61,7 @@ export const NodeStyle = z.strictObject({
     }).optional(),
     label: RichTextStyle.prefault({location: "top", textColor: "#000000"}).optional(),
     tooltip: RichTextStyle.prefault({location: "top-right", textColor: "#000000", backgroundColor: "#FFFFFF"}).optional(),
-    enabled: z.boolean().default(true),
+    enabled: z.boolean().default(true).optional(),
 });
 
 export type NodeStyleConfig = z.infer<typeof NodeStyle>;

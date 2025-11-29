@@ -92,7 +92,7 @@ export default defineConfig({
                     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
                     storybookTest({
                         configDir: path.join(dirname, ".storybook"),
-                        storybookUrl: "http://localhost:9025",
+                        storybookUrl: "http://dev.ato.ms:9026",
                     }),
                 ],
                 test: {
@@ -116,7 +116,9 @@ export default defineConfig({
                     },
                     setupFiles: [".storybook/vitest.setup.ts"],
                     // Reduce parallelism to prevent browser resource contention
-                    // Note: Use pool: 'forks' and poolOptions.forks.singleFork for sequential execution
+                    // Run storybook tests sequentially to avoid timeouts from resource contention
+                    // @ts-expect-error - fileParallelism works at runtime despite not being in project types
+                    fileParallelism: false,
                 },
             },
         ],

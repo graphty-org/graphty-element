@@ -397,5 +397,5 @@ export const nodeShapes = [
     "goldberg",
     "icosphere",
     "geodesic",
-];
+] as const;
 

@@ -518,19 +518,18 @@ describe("Edge Performance Report", () => {
         console.log(report);
 
         // Try to save file if running in Node.js (not browser)
-        if (typeof process !== "undefined" && process.cwd) {
-            try {
-                const reportPath = path.join(process.cwd(), "tmp", "edge-performance-report.md");
-                const tmpDir = path.dirname(reportPath);
-                if (!fs.existsSync(tmpDir)) {
-                    fs.mkdirSync(tmpDir, {recursive: true});
-                }
-                fs.writeFileSync(reportPath, report, "utf-8");
-                // eslint-disable-next-line no-console
-                console.log(`Report saved to: ${reportPath}`);
-            } catch {
-                // Silently ignore file write errors in browser
+        try {
+            const reportPath = path.join(process.cwd(), "tmp", "edge-performance-report.md");
+            const tmpDir = path.dirname(reportPath);
+            if (!fs.existsSync(tmpDir)) {
+                fs.mkdirSync(tmpDir, {recursive: true});
             }
+
+            fs.writeFileSync(reportPath, report, "utf-8");
+            // eslint-disable-next-line no-console
+            console.log(`Report saved to: ${reportPath}`);
+        } catch {
+            // Silently ignore file write errors in browser
         }
     });
 
@@ -703,8 +702,8 @@ describe("Edge Performance Report", () => {
 
         // Test additional line styles at 1000 edges (reduced to prevent queue overflow)
         // Testing only one representative from each category
-        const additionalLines = ["star"];  // Most complex line pattern
-        const additionalArrows = ["open-diamond"];  // Representative open arrow
+        const additionalLines = ["star"]; // Most complex line pattern
+        const additionalArrows = ["open-diamond"]; // Representative open arrow
 
         for (const lineStyle of additionalLines) {
             test(`1000 edges - ${lineStyle}/none - 3D rotation`, async() => {

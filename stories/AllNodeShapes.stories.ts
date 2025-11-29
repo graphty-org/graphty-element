@@ -1,5 +1,6 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
+import type {StyleLayerType} from "../src/config";
 import {Graphty} from "../src/graphty-element";
 import {eventWaitingDecorator, nodeShapes, renderFn, templateCreator} from "./helpers";
 
@@ -24,8 +25,8 @@ export default meta;
 type Story = StoryObj<Graphty>;
 
 // Generate node data for all shapes in a 5x5 grid with 3D depth
-const generateNodeData = () => {
-    const nodes: Array<{id: string; position: {x: number; y: number; z: number}}> = [];
+const generateNodeData = (): {id: string, position: {x: number, y: number, z: number}}[] => {
+    const nodes: {id: string, position: {x: number, y: number, z: number}}[] = [];
     const spacing = 4;
     const cols = 5;
 
@@ -46,7 +47,7 @@ const generateNodeData = () => {
 };
 
 // Generate layer styles for each shape with label
-const generateLayers = () => {
+const generateLayers = (): StyleLayerType[] => {
     return nodeShapes.map((shape) => ({
         node: {
             selector: `id == '${shape}'`,

@@ -24,10 +24,10 @@ const ArrowType = z.enum([
 ]);
 
 const ArrowStyle = z.strictObject({
-    type: ArrowType.default("normal"),
-    size: z.number().positive().default(1),
-    color: ColorStyle.default("white"),
-    opacity: z.number().min(0).max(1).default(1),
+    type: ArrowType.default("normal").optional(),
+    size: z.number().positive().default(1).optional(),
+    color: ColorStyle.default("white").optional(),
+    opacity: z.number().min(0).max(1).default(1).optional(),
     text: RichTextStyle.optional(),
 });
 
@@ -60,7 +60,7 @@ export const EdgeStyle = z.strictObject({
     label: RichTextStyle.prefault({location: "top"}).optional(),
     tooltip: RichTextStyle.prefault({location: "bottom"}).optional(),
     // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
-    enabled: z.boolean().default(true),
+    enabled: z.boolean().default(true).optional(),
 });
 
 export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;
