@@ -123,10 +123,6 @@ export default defineConfig({
                         fileParallelism: false,
                     },
                     setupFiles: [".storybook/vitest.setup.ts"],
-                    // Reduce parallelism to prevent browser resource contention
-                    // Run storybook tests sequentially to avoid timeouts from resource contention
-                    // @ts-expect-error - fileParallelism works at runtime despite not being in project types
-                    fileParallelism: false,
                     // Storybook tests load complex 3D scenes and need longer timeout
                     testTimeout: 30000,
                 },

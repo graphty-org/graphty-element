@@ -158,4 +158,50 @@ describe("UpdateManager", () => {
             assert.isNotNull(updateManager);
         });
     });
+
+    describe("layout step regression test", () => {
+        it("should call layoutManager.step() when layout is running", () => {
+            // This is a regression test for a bug where updateLayout() was accidentally
+            // removed from the update() method, causing the force-directed layout
+            // algorithm to never run (step count stayed at 0, nodes overlapped).
+
+            const layoutManager = graph.getLayoutManager();
+
+            // Spy on layoutManager.step
+            const stepSpy = vi.spyOn(layoutManager, "step");
+
+            // Ensure layout is running (simulates active force-directed layout)
+            layoutManager.running = true;
+
+            // Call update - this MUST call layoutManager.step()
+            updateManager.update();
+
+            // Verify layoutManager.step() was called
+            assert.isTrue(
+                stepSpy.mock.calls.length > 0,
+                "layoutManager.step() must be called when layout is running - " +
+                "without this, force-directed layouts never animate and nodes overlap",
+            );
+        });
+
+        it("should NOT call layoutManager.step() when layout is not running", () => {
+            const layoutManager = graph.getLayoutManager();
+
+            // Spy on layoutManager.step
+            const stepSpy = vi.spyOn(layoutManager, "step");
+
+            // Ensure layout is NOT running
+            layoutManager.running = false;
+
+            // Call update
+            updateManager.update();
+
+            // Verify layoutManager.step() was NOT called
+            assert.equal(
+                stepSpy.mock.calls.length,
+                0,
+                "layoutManager.step() should not be called when layout is not running",
+            );
+        });
+    });
 });

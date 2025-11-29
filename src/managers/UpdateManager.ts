@@ -149,8 +149,10 @@ export class UpdateManager implements Manager {
             return;
         }
 
-        // Always update nodes and edges (regardless of layout running state)
-        // This ensures edges render even when layout isn't running
+        // Update layout engine (step the force-directed algorithm)
+        this.updateLayout();
+
+        // Update nodes and edges
         const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
 
         // Update edges (also expands bounding box for edge labels)

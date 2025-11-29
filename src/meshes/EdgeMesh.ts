@@ -515,7 +515,7 @@ void main() {
             const mesh = CustomLineRenderer.create(
                 {
                     points,
-                    width: options.width,
+                    width: options.width * 20, // Scale factor to match GreasedLine sizing
                     color: options.color,
                     opacity: style.line?.opacity,
                     enableInstancing: true, // Required for MeshCache InstancedMesh
