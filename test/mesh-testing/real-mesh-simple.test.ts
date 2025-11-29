@@ -251,15 +251,15 @@ describe("Simple Real Mesh Tests", () => {
             };
 
             const style = {enabled: true, line: {}};
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(5, 3, 2);
 
-            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
 
-            assert.isNotNull((mesh as AbstractMesh).position);
-            assert.isNotNull((mesh as AbstractMesh).scaling);
+            assert.isNotNull(mesh.position);
+            assert.isNotNull(mesh.scaling);
         });
     });
 

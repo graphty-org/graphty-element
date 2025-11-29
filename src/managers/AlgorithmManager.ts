@@ -78,6 +78,11 @@ export class AlgorithmManager implements Manager {
             }
 
             await alg.run(this.graph);
+
+            // Re-apply styles to all nodes and edges after algorithm completes
+            // This ensures algorithm results are used in style selector matching
+            this.graph.getDataManager().applyStylesToExistingNodes();
+            this.graph.getDataManager().applyStylesToExistingEdges();
         } catch (error) {
             // Emit error event for any error (not found or execution)
             const algorithmError = error instanceof Error ? error : new Error(String(error));

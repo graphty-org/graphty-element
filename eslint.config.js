@@ -59,7 +59,7 @@ export default tseslint.config(
              **********************/
             "camelcase": ["error", {properties: "always"}], // alwaysUseCamelCase
             "curly": ["error", "all"], // force using curly braces, even when they could be skipped
-            "no-warning-comments": ["warn", {terms: ["TODO", "FIXME"]}], // warn on TODO and FIXME comments
+            "no-warning-comments": "off", // TODO/FIXME comments are acceptable as development notes
             "one-var": ["error", "never"], // each variable declaration on it's own line
             "sort-vars": "error", // put variable declarations in alphabetical order
             "prefer-template": "error", // use template literals instead of string concatenation
@@ -153,6 +153,13 @@ export default tseslint.config(
             "consistent-return": "error", // either always return a value, or don't
             "@stylistic/wrap-iife": ["error", "inside"], // prevent weird IIFE errors
             "@stylistic/no-mixed-operators": ["error", {allowSamePrecedence: true}], // don't mix && and ||
+            "no-restricted-syntax": [ // prevent architectural violations
+                "error",
+                {
+                    selector: "MemberExpression[property.name=\"layers\"] CallExpression[callee.property.name=/^(push|splice|unshift|pop|shift)$/]",
+                    message: "Do not mutate layers directly. Use StyleManager.addLayer() or StyleManager.insertLayer().",
+                },
+            ],
         },
     },
     {

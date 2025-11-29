@@ -34,7 +34,7 @@ describe("EdgeMesh", () => {
             };
             const style = {line: {width: 0.5, color: "#FF0000"}, enabled: true};
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             assert.exists(mesh);
             assert.equal(mesh.name, "edge-style-test-static");
@@ -58,7 +58,7 @@ describe("EdgeMesh", () => {
                 enabled: true,
             };
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
 
             assert.exists(mesh);
             assert.equal(mesh.name, "edge-style-test-animated");
@@ -109,7 +109,7 @@ describe("EdgeMesh", () => {
                 enabled: true,
             };
 
-            const mesh = EdgeMesh.create(meshCache, options, style, scene);
+            const mesh = EdgeMesh.create(meshCache, options, style, scene) as AbstractMesh;
             const material = mesh.material as StandardMaterial;
 
             // uScale is a property of RawTexture but not in the type definitions
@@ -192,17 +192,17 @@ describe("EdgeMesh", () => {
                 {styleId: "test-transform", width: 0.25, color: "#FF0000"},
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             const srcPoint = new Vector3(0, 0, 0);
             const dstPoint = new Vector3(4, 3, 0);
 
-            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
 
-            assert.equal((mesh as AbstractMesh).position.x, 2); // midpoint x
-            assert.equal((mesh as AbstractMesh).position.y, 1.5); // midpoint y
-            assert.equal((mesh as AbstractMesh).position.z, 0); // midpoint z
-            assert.equal((mesh as AbstractMesh).scaling.z, 5); // length = sqrt(4^2 + 3^2) = 5
+            assert.equal(mesh.position.x, 2); // midpoint x
+            assert.equal(mesh.position.y, 1.5); // midpoint y
+            assert.equal(mesh.position.z, 0); // midpoint z
+            assert.equal(mesh.scaling.z, 5); // length = sqrt(4^2 + 3^2) = 5
         });
 
         test("transformMesh handles negative coordinates", () => {
@@ -211,17 +211,17 @@ describe("EdgeMesh", () => {
                 {styleId: "test-negative", width: 0.25, color: "#FF0000"},
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             const srcPoint = new Vector3(-2, -2, -2);
             const dstPoint = new Vector3(2, 2, 2);
 
-            EdgeMesh.transformMesh(mesh as AbstractMesh, srcPoint, dstPoint);
+            EdgeMesh.transformMesh(mesh, srcPoint, dstPoint);
 
-            assert.equal((mesh as AbstractMesh).position.x, 0); // midpoint
-            assert.equal((mesh as AbstractMesh).position.y, 0); // midpoint
-            assert.equal((mesh as AbstractMesh).position.z, 0); // midpoint
-            assert.closeTo((mesh as AbstractMesh).scaling.z, Math.sqrt(48), 0.001); // length
+            assert.equal(mesh.position.x, 0); // midpoint
+            assert.equal(mesh.position.y, 0); // midpoint
+            assert.equal(mesh.position.z, 0); // midpoint
+            assert.closeTo(mesh.scaling.z, Math.sqrt(48), 0.001); // length
         });
     });
 
@@ -266,7 +266,7 @@ describe("EdgeMesh", () => {
                 options,
                 {line: {width: 0.25, color: "#FF0000"}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             // Clear cache to ensure new mesh creation
             meshCache.clear();
@@ -276,7 +276,7 @@ describe("EdgeMesh", () => {
                 options,
                 {line: {width: 0.25, color: "#FF0000", animationSpeed: 0.1}, enabled: true},
                 scene,
-            );
+            ) as AbstractMesh;
 
             assert.notEqual(staticMesh, animatedMesh);
             assert.equal(staticMesh.name, "edge-style-same-edge");

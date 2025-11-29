@@ -1,0 +1,9 @@
+Source,Target,Type,Weight,Protocol,Latency
+server-1,client-1,Directed,1.5,HTTP/2,15
+client-1,database-1,Directed,2.0,SQL,5
+server-1,database-1,Directed,0.8,TCP,2
+server-1,cache-1,Directed,3.5,Redis,1
+cache-1,database-1,Directed,1.2,Internal,3
+api-1,server-1,Directed,2.5,REST,10
+monitor-1,server-1,Directed,0.3,Metrics,8
+monitor-1,database-1,Directed,0.3,Metrics,8

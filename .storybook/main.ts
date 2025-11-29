@@ -17,10 +17,33 @@ const config: StorybookConfig = {
         disableTelemetry: true,
     },
     async viteFinal(config, {configType}) {
-        const server = {
+        const fs = await import("fs");
+        const path = await import("path");
+        const os = await import("os");
+
+        // SSL configuration via environment variables or default paths
+        // Environment variables: SSL_KEY_PATH, SSL_CERT_PATH
+        // Default paths: ~/ssl/atoms.key, ~/ssl/STAR_ato_ms.crt
+        const sslDir = path.join(os.homedir(), "ssl");
+        const sslKeyPath = process.env.SSL_KEY_PATH ?? path.join(sslDir, "atoms.key");
+        const sslCertPath = process.env.SSL_CERT_PATH ?? path.join(sslDir, "STAR_ato_ms.crt");
+
+        // Check if SSL files exist before trying to use them
+        const sslKeyExists = fs.existsSync(sslKeyPath);
+        const sslCertExists = fs.existsSync(sslCertPath);
+        const useHttps = sslKeyExists && sslCertExists;
+
+        const server: Record<string, unknown> = {
             host: true,
             allowedHosts: true,
         };
+
+        if (useHttps) {
+            server.https = {
+                key: fs.readFileSync(sslKeyPath),
+                cert: fs.readFileSync(sslCertPath),
+            };
+        }
 
         const {mergeConfig} = await import("vite");
 
@@ -32,13 +55,10 @@ const config: StorybookConfig = {
             // Your production configuration goes here.
         }
 
-        // console.log("config", config);
-        // console.log("server config", server);
         const merged = mergeConfig(config, {
             // Your environment configuration here
             server,
         });
-        // console.log("merged config", merged);
         return merged;
     },
 };

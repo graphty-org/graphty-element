@@ -1,0 +1,22 @@
+{
+    "nodes": [
+        {"id": "L1", "data": {"name": "Left 1", "partition": "left"}},
+        {"id": "L2", "data": {"name": "Left 2", "partition": "left"}},
+        {"id": "L3", "data": {"name": "Left 3", "partition": "left"}},
+        {"id": "L4", "data": {"name": "Left 4", "partition": "left"}},
+        {"id": "R1", "data": {"name": "Right 1", "partition": "right"}},
+        {"id": "R2", "data": {"name": "Right 2", "partition": "right"}},
+        {"id": "R3", "data": {"name": "Right 3", "partition": "right"}},
+        {"id": "R4", "data": {"name": "Right 4", "partition": "right"}}
+    ],
+    "edges": [
+        {"src": "L1", "dst": "R1", "data": {"value": 1}},
+        {"src": "L1", "dst": "R2", "data": {"value": 1}},
+        {"src": "L2", "dst": "R1", "data": {"value": 1}},
+        {"src": "L2", "dst": "R3", "data": {"value": 1}},
+        {"src": "L3", "dst": "R2", "data": {"value": 1}},
+        {"src": "L3", "dst": "R4", "data": {"value": 1}},
+        {"src": "L4", "dst": "R3", "data": {"value": 1}},
+        {"src": "L4", "dst": "R4", "data": {"value": 1}}
+    ]
+}

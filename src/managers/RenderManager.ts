@@ -49,7 +49,9 @@ export class RenderManager implements Manager {
         if (this.config.useWebGPU) {
             this.engine = new WebGPUEngine(this.canvas);
         } else {
-            this.engine = new Engine(this.canvas, true);
+            this.engine = new Engine(this.canvas, true, {
+                preserveDrawingBuffer: true, // Required for screenshots
+            });
         }
 
         // Create scene

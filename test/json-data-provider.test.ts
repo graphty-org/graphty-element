@@ -1,4 +1,4 @@
-import {assert, describe, expect, it} from "vitest";
+import {assert, describe, it} from "vitest";
 import {z} from "zod/v4";
 
 import {AdHocData} from "../src/config";
@@ -71,7 +71,16 @@ describe("JsonDataSource", () => {
             });
             const jdp = new JsonDataSource({data, node: {schema}});
 
-            await expect(jdp.getData().next()).rejects.toThrow(/Invalid input: expected boolean, received string/);
+            // Validation errors are now collected in ErrorAggregator instead of throwing
+            const chunks = [];
+            for await (const chunk of jdp.getData()) {
+                chunks.push(chunk);
+            }
+
+            // Should have validation errors
+            const errors = jdp.getErrorAggregator().getErrors();
+            assert.isTrue(errors.length > 0, "Should have validation errors");
+            assert.include(errors[0].message, "Validation failed");
         });
     });
 });

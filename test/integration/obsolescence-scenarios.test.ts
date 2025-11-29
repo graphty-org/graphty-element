@@ -107,11 +107,10 @@ describe("Obsolescence Scenarios", () => {
         // Wait for layout-set to complete
         await new Promise((resolve) => setTimeout(resolve, 10));
 
-        // Start a layout operation that will be near completion
-        const layoutOp = queueManager.queueOperation(
+        const layoutOpId = queueManager.queueOperation(
             "layout-update",
             async(context) => {
-                // Quickly get to 95% progress
+                // Progress through to 95%
                 for (let i = 0; i <= 95; i += 5) {
                     if (context.signal.aborted) {
                         throw new Error("AbortError");
@@ -161,7 +160,7 @@ describe("Obsolescence Scenarios", () => {
 
         // Layout should not be in obsoleted list
         assert.isFalse(
-            obsoletedOperations.includes(layoutOp),
+            obsoletedOperations.includes(layoutOpId),
             "Near-complete layout should not be obsoleted",
         );
     });

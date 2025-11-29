@@ -84,6 +84,20 @@ export class UpdateManager implements Manager {
     }
 
     /**
+     * Disable zoom to fit
+     */
+    disableZoomToFit(): void {
+        this.needsZoomToFit = false;
+    }
+
+    /**
+     * Get current zoom to fit state
+     */
+    isZoomToFitEnabled(): boolean {
+        return this.needsZoomToFit;
+    }
+
+    /**
      * Get the current render frame count
      */
     getRenderFrameCount(): number {
@@ -135,11 +149,8 @@ export class UpdateManager implements Manager {
             return;
         }
 
-        // Normal update when layout is running
-        // Update layout engine
-        this.updateLayout();
-
-        // Calculate bounding box and update nodes
+        // Always update nodes and edges (regardless of layout running state)
+        // This ensures edges render even when layout isn't running
         const {boundingBoxMin, boundingBoxMax} = this.updateNodes();
 
         // Update edges (also expands bounding box for edge labels)

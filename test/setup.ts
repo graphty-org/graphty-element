@@ -1,9 +1,21 @@
 import {Logger} from "@babylonjs/core";
 import {Vector2, Vector3} from "@babylonjs/core/Maths/math.vector";
-import {afterEach, expect} from "vitest";
+import {afterEach, expect, vi} from "vitest";
 
 import type {Graph} from "../src/Graph";
 import {MockDeviceInputSystem} from "../src/input/mock-device-input-system";
+
+// Mock CreateScreenshotAsync to return a valid 1x1 PNG data URL
+// This allows testing screenshot logic without requiring actual WebGL rendering
+vi.mock("@babylonjs/core", async() => {
+    const actual = await vi.importActual<typeof import("@babylonjs/core")>("@babylonjs/core");
+    // 1x1 white PNG: 67 bytes base64-encoded
+    const mockPngDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    return {
+        ... actual,
+        CreateScreenshotAsync: vi.fn().mockResolvedValue(mockPngDataUrl),
+    };
+});
 
 // Type augmentation for Chrome-specific performance.memory API
 declare global {

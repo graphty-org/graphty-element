@@ -288,7 +288,6 @@ void main() {
         // See: design/mesh-based-patterned-lines.md Phase 5
         // Note: Edge.transformArrowCap() provides start/end already adjusted for node surfaces and arrows
         if (PATTERNED_TYPES.includes(lineType)) {
-            console.log("[EdgeMesh.create] Using PatternedLineRenderer for pattern:", lineType);
             return PatternedLineRenderer.create(
                 lineType as "dot" | "star" | "box" | "dash" | "diamond" | "dash-dot" | "sinewave" | "zigzag",
                 new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
@@ -304,7 +303,6 @@ void main() {
         // PHASE 2: Solid lines in 2D mode use Simple2DLineRenderer
         // 2D mode uses world-space StandardMaterial meshes instead of billboard shaders
         if (lineType === "solid" && this.is2DMode(scene)) {
-            console.log("[EdgeMesh.create] Using Simple2DLineRenderer for 2D solid line");
             return Simple2DLineRenderer.create(
                 new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
                 new Vector3(0, 0, 0.5), // Placeholder end (Edge.update() will set real positions)
@@ -512,21 +510,12 @@ void main() {
                 ),
             ];
 
-            const lineType = style.line?.type ?? "solid";
-
-            console.log("[EdgeMesh] Creating line with CustomLineRenderer:", {
-                lineType,
-                color: options.color,
-                width: options.width,
-                scaledWidth: options.width * 20,
-            });
-
             // CustomLineRenderer only handles solid lines
             // All patterns are handled by PatternedLineMesh
             const mesh = CustomLineRenderer.create(
                 {
                     points,
-                    width: options.width * 20, // Scale factor to match GreasedLine sizing
+                    width: options.width,
                     color: options.color,
                     opacity: style.line?.opacity,
                     enableInstancing: true, // Required for MeshCache InstancedMesh

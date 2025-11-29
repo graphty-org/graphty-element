@@ -106,25 +106,6 @@ describe("Dash Pattern Spacing", () => {
                 expectedRatio,
             };
 
-            console.log("=== DASH PATTERN MEASUREMENT ===");
-            console.log("Canvas size:", measurements.canvasSize);
-            console.log("Number of dashes:", measurements.dashSegments.length);
-            console.log("Number of gaps:", measurements.gaps.length);
-            console.log("Average dash length (pixels):", measurements.avgDashLength.toFixed(2));
-            console.log("Average gap length (pixels):", measurements.avgGapLength.toFixed(2));
-            console.log("Actual gap/dash ratio:", measurements.gapToDashRatio.toFixed(3));
-            console.log("Expected gap/dash ratio:", measurements.expectedRatio.toFixed(3));
-            console.log("Ratio error:", `${((measurements.gapToDashRatio - measurements.expectedRatio) / measurements.expectedRatio * 100).toFixed(1)}%`);
-            console.log("\nDash segments (pixels):");
-            measurements.dashSegments.forEach((seg, i) => {
-                console.log(`  Dash ${i + 1}: ${seg.start} to ${seg.end} (${seg.length}px)`);
-            });
-            console.log("\nGap segments (pixels):");
-            measurements.gaps.forEach((gap, i) => {
-                console.log(`  Gap ${i + 1}: ${gap.start} to ${gap.end} (${gap.length}px)`);
-            });
-            console.log("================================");
-
             // Assert that the ratio is close to expected (within 10% tolerance)
             const tolerance = 0.1;
             expect(measurements.gapToDashRatio).toBeGreaterThan(expectedRatio * (1 - tolerance));

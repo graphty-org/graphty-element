@@ -65,14 +65,6 @@ export class PatternedLineMesh {
         scene: Scene,
         is2DMode = false,
     ) {
-        console.log("[PatternedLineMesh] Constructor called:", {
-            pattern,
-            width,
-            color,
-            opacity,
-            distance: Vector3.Distance(start, end),
-        });
-
         this.pattern = pattern;
         this.scene = scene;
         this.width = width;
@@ -81,8 +73,6 @@ export class PatternedLineMesh {
         this.is2DMode = is2DMode;
 
         this.createInitialMeshes(start, end);
-
-        console.log("[PatternedLineMesh] Created with", this.meshes.length, "meshes");
     }
 
     /**
@@ -265,14 +255,6 @@ export class PatternedLineMesh {
         const meshWidth = this.getRenderedMeshSize();
         const meshRadius = meshWidth / 2;
 
-        console.log("[PatternedLineMesh.calculateDiscretePositions] Spacing calculation:", {
-            pattern: this.pattern,
-            width: this.width,
-            meshWidth: meshWidth,
-            totalLength: totalLength,
-            meshCount: this.meshes.length,
-        });
-
         // start and end are ALREADY adjusted for node surface and arrow
         // First mesh left edge should be at distance 0 from start
         // Last mesh right edge should be at distance totalLength from start
@@ -285,16 +267,6 @@ export class PatternedLineMesh {
         if (meshCount === 2) {
             const firstPos = lineStart + meshRadius;
             const lastPos = lineEnd - meshRadius;
-            const actualGap = (lastPos - meshRadius) - (firstPos + meshRadius);
-
-            console.log("[PatternedLineMesh.calculateDiscretePositions] 2-mesh spacing:", {
-                firstPos,
-                lastPos,
-                actualGap,
-                meshWidth,
-                gapToMeshWidthRatio: actualGap / meshWidth,
-                gapToLineWidthRatio: actualGap / this.width,
-            });
 
             return [
                 start.add(direction.scale(firstPos)), // First mesh center
@@ -317,18 +289,6 @@ export class PatternedLineMesh {
         const minSpacing = meshWidth * 0.5;
         const remainder = dynamicLength - (numInterior * meshWidth) - (numGaps * minSpacing);
         const actualSpacing = minSpacing + (remainder / numGaps);
-
-        console.log("[PatternedLineMesh.calculateDiscretePositions] Multi-mesh spacing:", {
-            numInterior,
-            numGaps,
-            minSpacing,
-            actualSpacing,
-            meshWidth,
-            spacingToMeshWidthRatio: actualSpacing / meshWidth,
-            spacingToLineWidthRatio: actualSpacing / this.width,
-            expectedRatioIfBasedOnMeshWidth: 0.5,
-            actualRatioBasedOnLineWidth: minSpacing / this.width,
-        });
 
         // Build positions
         const positions: Vector3[] = [];

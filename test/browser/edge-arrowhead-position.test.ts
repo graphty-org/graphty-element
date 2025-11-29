@@ -7,8 +7,12 @@
  * Key constants:
  * - DEFAULT_NODE_SIZE = 1
  * - ICOSPHERE_RADIUS_MULTIPLIER = 0.75 (node radius = 0.75)
- * - DEFAULT_ARROW_LENGTH = 0.5
- * - For "normal" arrows (positionOffset=0), tip is exactly at node surface
+ * - DEFAULT_ARROW_LENGTH = 0.5 (used for arrow mesh size, not positioning)
+ * - For "normal" arrows (positionOffset=0), the arrow tip is exactly at node surface
+ *
+ * Arrow positioning is handled by EdgeMesh.calculateArrowPosition() which uses
+ * the positionOffset from EdgeMesh.getArrowGeometry(). For "normal" arrows,
+ * positionOffset=0 means the arrow mesh is placed at the surface point.
  */
 import {Vector3} from "@babylonjs/core";
 import {afterEach, assert, describe, test} from "vitest";
@@ -18,30 +22,29 @@ import {arrowConfig, asData, styleTemplate, type TestGraph} from "../helpers/tes
 
 // Constants matching mesh calculations
 const NODE_RADIUS = 0.75; // DEFAULT_NODE_SIZE * ICOSPHERE_RADIUS_MULTIPLIER
-const ARROW_LENGTH = 0.5; // DEFAULT_ARROW_LENGTH
 const POSITION_TOLERANCE = 0.1; // Allow some tolerance for floating point and ray intersection
 
 /**
  * Calculate expected arrow position given source and destination nodes
  *
- * The arrow mesh is positioned so that the LINE ends at the arrow's back edge.
- * The surface point is at the node surface, and the arrow (length 0.5) is placed
- * such that the line can end at the back of the arrow.
+ * For "normal" arrows with positionOffset=0 (tip-based positioning),
+ * the arrow mesh is positioned so that its tip is exactly at the node surface.
+ * The arrow geometry has its tip at the origin, so the mesh position equals
+ * the surface point.
  *
- * Arrow position = surfacePoint - direction * arrowLength
- * (This accounts for the arrow's geometry - the arrow mesh origin is at its back edge
- * or center depending on geometry, and the line ends at the arrow's back)
+ * See EdgeMesh.getArrowGeometry() and EdgeMesh.calculateArrowPosition() for
+ * the authoritative implementation.
  */
 function calculateExpectedArrowPosition(
     srcPos: Vector3,
     dstPos: Vector3,
 ): Vector3 {
     const direction = dstPos.subtract(srcPos).normalize();
-    // Surface point at destination node
+    // Surface point at destination node - this is where the arrow tip should be
     const surfacePoint = dstPos.subtract(direction.scale(NODE_RADIUS));
-    // Arrow is positioned back from surface by arrow length
-    // (The actual calculation involves ray intersection which may differ slightly)
-    return surfacePoint.subtract(direction.scale(ARROW_LENGTH));
+    // For "normal" arrows with positionOffset=0, arrow is positioned at surface point
+    // (no additional offset needed)
+    return surfacePoint;
 }
 
 /**

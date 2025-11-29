@@ -1,6 +1,6 @@
 import {set as deepSet} from "lodash";
 
-import {AdHocData} from "../config";
+import {AdHocData, SuggestedStylesConfig, SuggestedStylesProvider} from "../config";
 import {Edge} from "../Edge";
 import {Graph} from "../Graph";
 
@@ -39,6 +39,7 @@ const algorithmRegistry = new Map<string, AlgorithmClass>();
 export abstract class Algorithm {
     static type: string;
     static namespace: string;
+    static suggestedStyles?: SuggestedStylesProvider;
     protected graph: Graph;
 
     constructor(g: Graph) {
@@ -55,14 +56,25 @@ export abstract class Algorithm {
 
     get results(): AdHocData {
         const algorithmResults = {} as AdHocData;
+
+        // Node results
         for (const n of this.graph.getDataManager().nodes.values()) {
             deepSet(algorithmResults, `node.${n.id}`, n.algorithmResults);
         }
 
-        // TODO: edge and graph
+        // Edge results
+        for (const e of this.graph.getDataManager().edges.values()) {
+            const edgeKey = `${e.srcId}:${e.dstId}`;
+            deepSet(algorithmResults, `edge.${edgeKey}`, e.algorithmResults);
+        }
+
+        // Graph results
+        const dm = this.graph.getDataManager();
+        if (dm.graphResults) {
+            algorithmResults.graph = dm.graphResults;
+        }
 
         return algorithmResults;
-        // return structuredClone(algorithmResults) as AdHocData;
     }
 
     abstract run(g: Graph): Promise<void>;
@@ -90,16 +102,17 @@ export abstract class Algorithm {
         // replace algorithmResults with graph.nodes; set result on each node.algorithmResult
     }
 
-    addEdgeResult(_e: Edge, _result: unknown): void {
-        // Edge result added - parameters are intentionally unused
-        void _e;
-        void _result;
+    addEdgeResult(edge: Edge, resultName: string, result: unknown): void {
+        const p = this.#createPath(resultName);
+        deepSet(edge, p, result);
     }
 
-    addGraphResult(_g: Graph, _result: unknown): void {
-        // Graph result added - parameters are intentionally unused
-        void _g;
-        void _result;
+    addGraphResult(resultName: string, result: unknown): void {
+        const dm = this.graph.getDataManager();
+        dm.graphResults ??= {} as AdHocData;
+
+        const path = [this.namespace, this.type, resultName];
+        deepSet(dm.graphResults, path, result);
     }
 
     static register<T extends AlgorithmClass>(cls: T): T {
@@ -118,5 +131,23 @@ export abstract class Algorithm {
         }
 
         return null;
+    }
+
+    static getClass(namespace: string, type: string): (AlgorithmClass & typeof Algorithm) | null {
+        return algorithmRegistry.get(`${namespace}:${type}`) as (AlgorithmClass & typeof Algorithm) | null ?? null;
+    }
+
+    /**
+     * Check if this algorithm has suggested styles
+     */
+    static hasSuggestedStyles(): boolean {
+        return !!this.suggestedStyles;
+    }
+
+    /**
+     * Get suggested styles for this algorithm
+     */
+    static getSuggestedStyles(): SuggestedStylesConfig | null {
+        return this.suggestedStyles ? this.suggestedStyles() : null;
     }
 }

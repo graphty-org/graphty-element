@@ -34,6 +34,9 @@ export class DataManager implements Manager {
     nodeCache = new Map<NodeIdType, Node>();
     edgeCache = new EdgeMap();
 
+    // Graph-level algorithm results storage
+    graphResults?: AdHocData;
+
     // Mesh cache for performance
     meshCache: MeshCache;
 
@@ -71,20 +74,23 @@ export class DataManager implements Manager {
     /**
      * Apply styles to all existing nodes
      */
-    private applyStylesToExistingNodes(): void {
+    applyStylesToExistingNodes(): void {
         for (const n of this.nodes.values()) {
-            const styleId = this.styles.getStyleForNode(n.data);
-            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data));
-            n.updateStyle(styleId);
+            // Run calculated values immediately since node data (including algorithmResults) is already populated
+            // This sets values in n.styleUpdates (same as changeManager.dataObjects.style)
+            n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data), true);
+            // Call update() to merge calculated style updates with the base style
+            // update() checks styleUpdates and creates a new styleId that includes calculated values
+            n.update();
         }
     }
 
     /**
      * Apply styles to all existing edges
      */
-    private applyStylesToExistingEdges(): void {
+    applyStylesToExistingEdges(): void {
         for (const e of this.edges.values()) {
-            const styleId = this.styles.getStyleForEdge(e.data);
+            const styleId = this.styles.getStyleForEdge(e.data, e.algorithmResults);
             e.updateStyle(styleId);
         }
     }
@@ -116,6 +122,9 @@ export class DataManager implements Manager {
         this.edges.clear();
         this.nodeCache.clear();
         this.edgeCache.clear();
+
+        // Clear graph-level results
+        this.graphResults = undefined;
 
         // Clear mesh cache
         this.meshCache.clear();
@@ -354,36 +363,97 @@ export class DataManager implements Manager {
     // Data source operations
 
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
+        const startTime = Date.now();
+        let nodesLoaded = 0;
+        let edgesLoaded = 0;
+        let chunksProcessed = 0;
+
         try {
             const source = DataSource.get(type, opts);
             if (!source) {
                 throw new TypeError(`No data source named: ${type}`);
             }
 
-            let chunksLoaded = 0;
+            // Get file size for progress tracking (if available)
+            const fileSize = (opts as {size?: number}).size;
+
             try {
                 for await (const chunk of source.getData()) {
                     this.addNodes(chunk.nodes);
                     this.addEdges(chunk.edges);
-                    chunksLoaded++;
+
+                    nodesLoaded += chunk.nodes.length;
+                    edgesLoaded += chunk.edges.length;
+                    chunksProcessed++;
+
+                    // Emit progress event
+                    if (this.graphContext) {
+                        this.eventManager.emitDataLoadingProgress(
+                            type,
+                            chunksProcessed * 64 * 1024, // Approximate bytes (chunk size)
+                            fileSize,
+                            nodesLoaded,
+                            edgesLoaded,
+                            chunksProcessed,
+                        );
+                    }
+                }
+
+                // Emit error summary if there were errors
+                if (this.graphContext) {
+                    const errorAggregator = source.getErrorAggregator();
+                    if (errorAggregator.getErrorCount() > 0) {
+                        const summary = errorAggregator.getSummary();
+                        this.eventManager.emitDataLoadingErrorSummary(
+                            type,
+                            summary.totalErrors,
+                            summary.message,
+                            errorAggregator.getDetailedReport(),
+                            summary.primaryCategory,
+                            summary.suggestion,
+                        );
+                    }
+                }
+
+                // Emit completion event
+                if (this.graphContext) {
+                    const duration = Date.now() - startTime;
+                    const errorCount = source.getErrorAggregator().getErrorCount();
+                    this.eventManager.emitDataLoadingComplete(
+                        type,
+                        nodesLoaded,
+                        edgesLoaded,
+                        duration,
+                        errorCount,
+                        0, // warnings
+                        true,
+                    );
+                }
+
+                // Keep existing data-loaded event for backward compatibility
+                if (this.graphContext) {
+                    this.eventManager.emitGraphDataLoaded(this.graphContext, chunksProcessed, type);
                 }
             } catch (error) {
-                // Emit error event with partial load information
+                // Emit error event
                 if (this.graphContext) {
+                    this.eventManager.emitDataLoadingError(
+                        error instanceof Error ? error : new Error(String(error)),
+                        "parsing",
+                        type,
+                        {canContinue: false},
+                    );
+
+                    // Keep existing error event for backward compatibility
                     this.eventManager.emitGraphError(
                         this.graphContext,
                         error instanceof Error ? error : new Error(String(error)),
                         "data-loading",
-                        {chunksLoaded, dataSourceType: type},
+                        {chunksLoaded: chunksProcessed, dataSourceType: type},
                     );
                 }
 
-                throw new Error(`Failed to load data from source '${type}' after ${chunksLoaded} chunks: ${error instanceof Error ? error.message : String(error)}`);
-            }
-
-            // Emit success event
-            if (this.graphContext) {
-                this.eventManager.emitGraphDataLoaded(this.graphContext, chunksLoaded, type);
+                throw new Error(`Failed to load data from source '${type}' after ${chunksProcessed} chunks: ${error instanceof Error ? error.message : String(error)}`);
             }
         } catch (error) {
             // Re-throw if already a processed error
@@ -407,6 +477,9 @@ export class DataManager implements Manager {
         this.edges.clear();
         this.nodeCache.clear();
         this.edgeCache.clear();
+
+        // Clear graph-level results
+        this.graphResults = undefined;
 
         // Clear mesh cache
         this.meshCache.clear();

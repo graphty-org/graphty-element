@@ -26,18 +26,22 @@ export type EdgeStyleId = number & {__brand: "EdgeStyleId"};
 
 export class Styles {
     readonly config: StyleSchemaV1;
-    readonly layers: StyleLayerType[];
+    #layers: StyleLayerType[];
     #emptyNodeStyle: NodeStyleConfig;
     #emptyEdgeStyle: EdgeStyleConfig;
 
+    get layers(): readonly StyleLayerType[] {
+        return this.#layers;
+    }
+
     constructor(config: StyleSchemaV1) {
         this.config = config;
-        this.layers = config.layers;
+        this.#layers = config.layers;
         this.#emptyNodeStyle = NodeStyle.parse({});
         this.#emptyEdgeStyle = EdgeStyle.parse({});
 
         if (this.config.graph.addDefaultStyle) {
-            this.layers.unshift({
+            this.#layers.unshift({
                 node: {
                     selector: "",
                     style: NodeStyle.parse(defaultNodeStyle),
@@ -87,23 +91,34 @@ export class Styles {
     }
 
     addLayer(layer: StyleLayerType): void {
-        this.layers.push(layer);
+        this.#layers.push(layer);
 
         // TODO: recalculate
     }
 
     insertLayer(position: number, layer: StyleLayerType): void {
-        this.layers.splice(position, 0, layer);
+        this.#layers.splice(position, 0, layer);
 
         // TODO: recalculate
     }
 
-    getStyleForNode(data: AdHocData): NodeStyleId {
+    removeLayersByMetadata(predicate: (metadata: unknown) => boolean): boolean {
+        const originalLength = this.#layers.length;
+        this.#layers = this.#layers.filter((layer) => !predicate(layer.metadata));
+        return this.#layers.length !== originalLength;
+    }
+
+    getStyleForNode(data: AdHocData, algorithmResults?: AdHocData): NodeStyleId {
+        // Combine data and algorithmResults for selector matching
+        const combinedData = algorithmResults ?
+            {... data, algorithmResults} :
+            data;
+
         const styles: NodeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {node} = layer;
 
-            const nodeMatch = selectorMatchesNode(node, data);
+            const nodeMatch = selectorMatchesNode(node, combinedData);
 
             if (nodeMatch && node?.style) {
                 styles.unshift(node.style);
@@ -135,14 +150,44 @@ export class Styles {
         return ret;
     }
 
-    getStyleForEdge(data: AdHocData): EdgeStyleId {
+    getCalculatedStylesForEdge(data: AdHocData): CalculatedValue[] {
+        const ret: CalculatedValue[] = [];
+        for (const layer of this.layers) {
+            const {edge} = layer;
+
+            // Check if edge selector matches
+            let edgeMatch = edge?.selector !== undefined && edge.selector.length === 0;
+            if (!edgeMatch && edge?.selector) {
+                // try JMES match
+                const searchResult = jmespath.search(data, `[${edge.selector}]`);
+                if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
+                    edgeMatch = searchResult[0];
+                }
+            }
+
+            if (edgeMatch && edge?.calculatedStyle) {
+                const {inputs, output, expr} = edge.calculatedStyle;
+                const cv = new CalculatedValue(inputs, output, expr);
+                ret.unshift(cv);
+            }
+        }
+
+        return ret;
+    }
+
+    getStyleForEdge(data: AdHocData, algorithmResults?: AdHocData): EdgeStyleId {
+        // Combine data and algorithmResults for selector matching
+        const combinedData = algorithmResults ?
+            {... data, algorithmResults} :
+            data;
+
         const styles: EdgeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {edge} = layer;
             let edgeMatch = edge?.selector !== undefined && edge.selector.length === 0;
             if (!edgeMatch) {
                 // try JMES match
-                const searchResult = jmespath.search(data, `[${edge?.selector}]`);
+                const searchResult = jmespath.search(combinedData, `[${edge?.selector}]`);
                 if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean") {
                     edgeMatch = searchResult[0];
                 }
