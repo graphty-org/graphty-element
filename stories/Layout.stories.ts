@@ -136,6 +136,12 @@ export const D3: Story = {
                     velocityDecay: 0.4,
                 },
             },
+            behavior: {
+                layout: {
+                    // D3 physics-based layout needs preSteps for Chromatic
+                    preSteps: isChromatic() ? 15000 : 200,
+                },
+            },
         }),
         d3AlphaMin: 0.1,
         d3AlphaTarget: 0,

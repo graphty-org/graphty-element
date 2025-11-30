@@ -4,7 +4,7 @@ import "../../src/algorithms";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import type {Graphty} from "../../src/graphty-element";
-import {eventWaitingDecorator, templateCreator} from "../helpers";
+import {eventWaitingDecorator, templateCreator, waitForGraphSettled} from "../helpers";
 
 export type Story = StoryObj<Graphty>;
 
@@ -30,6 +30,13 @@ export const algorithmMetaBase: Omit<Meta, "title"> = {
         layoutConfig: {
             seed: 42, // Fixed seed for consistent layouts in visual tests
         },
+        styleTemplate: templateCreator({
+            behavior: {
+                layout: {
+                    preSteps: 8000, // Extra preSteps for ngraph physics layout
+                },
+            },
+        }),
     },
 };
 
@@ -41,12 +48,17 @@ export const createAlgorithmStory = (algorithmId: string): Story => ({
     args: {
         styleTemplate: templateCreator({
             algorithms: [algorithmId],
+            behavior: {
+                layout: {
+                    preSteps: 8000, // Extra preSteps for ngraph physics layout
+                },
+            },
         }),
         runAlgorithmsOnLoad: true,
     },
     play: async({canvasElement}) => {
-        // Wait for the graph to load and settle
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Wait for the graph to fully settle before applying algorithm styles
+        await waitForGraphSettled(canvasElement);
 
         // Get the graphty-element
         const element = canvasElement.querySelector("graphty-element");
