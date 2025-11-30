@@ -31,21 +31,6 @@ export class BFSAlgorithm extends Algorithm {
                     description: "Colors nodes by BFS level from source (viridis gradient)",
                 },
             },
-            {
-                node: {
-                    selector: "",
-                    style: {enabled: true},
-                    calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.bfs.levelPct"],
-                        output: "style.shape.size",
-                        expr: "{ return StyleHelpers.size.linear(1 - (arguments[0] ?? 0), 1, 3) }",
-                    },
-                },
-                metadata: {
-                    name: "BFS - Level Size",
-                    description: "Larger nodes are closer to source",
-                },
-            },
         ],
         description: "Visualizes breadth-first traversal levels from source node",
         category: "hierarchy",

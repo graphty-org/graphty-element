@@ -30,21 +30,6 @@ export class DFSAlgorithm extends Algorithm {
                     description: "Colors nodes by DFS discovery time (inferno gradient: black to yellow)",
                 },
             },
-            {
-                node: {
-                    selector: "",
-                    style: {enabled: true},
-                    calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.dfs.discoveryTimePct"],
-                        output: "style.shape.size",
-                        expr: "{ return StyleHelpers.size.linear(1 - (arguments[0] ?? 0), 1, 3) }",
-                    },
-                },
-                metadata: {
-                    name: "DFS - Discovery Time Size",
-                    description: "Larger nodes are discovered earlier",
-                },
-            },
         ],
         description: "Visualizes depth-first traversal discovery order from source node",
         category: "hierarchy",

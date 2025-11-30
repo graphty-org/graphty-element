@@ -19,39 +19,32 @@ export class BellmanFordAlgorithm extends Algorithm {
         layers: [
             {
                 edge: {
-                    selector: "algorithmResults.graphty.\"bellman-ford\".isInPath == `true`",
-                    style: {
-                        enabled: true,
-                        line: {
-                            color: "#3498db",
-                            width: 4,
-                        },
+                    selector: "",
+                    style: {enabled: true},
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.bellman-ford.isInPath"],
+                        output: "style.line.color",
+                        expr: "{ return StyleHelpers.color.binary.blueHighlight(arguments[0]) }",
                     },
                 },
                 metadata: {
                     name: "Bellman-Ford - Path Edges",
-                    description: "Highlights shortest path edges in blue",
+                    description: "Highlights shortest path edges (blue) - colorblind-safe",
                 },
             },
             {
                 node: {
-                    selector: "algorithmResults.graphty.\"bellman-ford\".isInPath == `true`",
-                    style: {
-                        enabled: true,
-                        texture: {
-                            color: "#3498db",
-                        },
-                        effect: {
-                            glow: {
-                                color: "#3498db",
-                                strength: 1.5,
-                            },
-                        },
+                    selector: "",
+                    style: {enabled: true},
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.bellman-ford.isInPath"],
+                        output: "style.texture.color",
+                        expr: "{ return StyleHelpers.color.binary.blueHighlight(arguments[0]) }",
                     },
                 },
                 metadata: {
                     name: "Bellman-Ford - Path Nodes",
-                    description: "Highlights path nodes with blue color and glow",
+                    description: "Highlights path nodes (blue) - colorblind-safe",
                 },
             },
             {

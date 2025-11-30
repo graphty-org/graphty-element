@@ -26,14 +26,9 @@ export class MinCutAlgorithm extends Algorithm {
             {
                 edge: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                        line: {
-                            width: 5,
-                        },
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"min-cut\".inCut"],
+                        inputs: ["algorithmResults.graphty.min-cut.inCut"],
                         output: "style.line.color",
                         expr: "{ return StyleHelpers.color.binary.orangeWarning(arguments[0]) }",
                     },
@@ -49,7 +44,6 @@ export class MinCutAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            width: 1,
                             opacity: 0.4,
                         },
                     },
@@ -62,11 +56,9 @@ export class MinCutAlgorithm extends Algorithm {
             {
                 node: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"min-cut\".partition"],
+                        inputs: ["algorithmResults.graphty.min-cut.partition"],
                         output: "style.texture.color",
                         expr: "{ return StyleHelpers.color.categorical.okabeIto(Number(arguments[0] ?? 1) - 1) }",
                     },

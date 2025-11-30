@@ -30,12 +30,7 @@ export class PrimAlgorithm extends Algorithm {
             {
                 edge: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                        line: {
-                            width: 4,
-                        },
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
                         inputs: ["algorithmResults.graphty.prim.inMST"],
                         output: "style.line.color",
@@ -53,7 +48,6 @@ export class PrimAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            width: 1,
                             opacity: 0.3,
                         },
                     },
