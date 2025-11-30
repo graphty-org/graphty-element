@@ -2,6 +2,11 @@
 // See: https://github.com/graphty-org/graphty-element/issues/54
 import "@babylonjs/core/Meshes/instancedMesh";
 
+// IMPORTANT: Import graphty-element as a side-effect to ensure the @customElement decorator runs
+// and registers the <graphty-element> custom element. This prevents tree-shaking from removing
+// the custom element registration when consumers do `import "@graphty/graphty-element";`
+import "./src/graphty-element";
+
 export type {StyleSchema, StyleSchemaV1} from "./src/config";
 export {StyleTemplate} from "./src/config";
 export {DataSource} from "./src/data/DataSource";
