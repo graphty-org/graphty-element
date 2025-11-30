@@ -34,7 +34,7 @@ describe("MinCutAlgorithm", () => {
             assert.ok(styles);
 
             // Find an edge layer with calculatedStyle for cut edges
-            const cutEdgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs?.[0]?.includes("inCut"));
+            const cutEdgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs[0]?.includes("inCut"));
             assert.ok(cutEdgeLayer, "Should have edge layer for cut edges");
             const {edge} = cutEdgeLayer;
             assert.ok(edge);

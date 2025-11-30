@@ -212,7 +212,7 @@ describe("BellmanFordAlgorithm", () => {
             const styles = BellmanFordAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const edgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs?.[0]?.includes("isInPath"));
+            const edgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs[0]?.includes("isInPath"));
             assert.ok(edgeLayer);
             assert.ok(edgeLayer.edge);
             assert.ok(edgeLayer.edge.calculatedStyle);
@@ -223,7 +223,7 @@ describe("BellmanFordAlgorithm", () => {
             const styles = BellmanFordAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const nodeLayer = styles.layers.find((l) => l.node?.calculatedStyle?.inputs?.[0]?.includes("isInPath"));
+            const nodeLayer = styles.layers.find((l) => l.node?.calculatedStyle?.inputs[0]?.includes("isInPath"));
             assert.ok(nodeLayer);
             assert.ok(nodeLayer.node);
             assert.ok(nodeLayer.node.calculatedStyle);
