@@ -42,7 +42,7 @@ import {
 } from "./events";
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
-import {Node} from "./Node";
+import {Node, type NodeIdType} from "./Node";
 import {ScreenshotCapture} from "./screenshot/ScreenshotCapture.js";
 import {ScreenshotError, ScreenshotErrorCode} from "./screenshot/ScreenshotError.js";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
@@ -99,6 +99,9 @@ export class Graph implements GraphContext {
 
     // Active video capture for cancellation support
     private activeCapture: import("./video/MediaRecorderCapture.js").MediaRecorderCapture | null = null;
+
+    // Storage for Z positions when switching from 3D to 2D mode
+    private savedZPositions = new Map<NodeIdType, number>();
 
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
@@ -515,12 +518,22 @@ export class Graph implements GraphContext {
         const currentTwoD = this.styles.config.graph.twoD;
 
         // Clear mesh cache if switching between 2D and 3D modes
-        if (previousTwoD !== currentTwoD) {
+        const modeSwitching = previousTwoD !== currentTwoD;
+        if (modeSwitching) {
             this.dataManager.meshCache.clear();
 
             // Update scene metadata for 2D mode detection
             this.scene.metadata = this.scene.metadata ?? {};
             this.scene.metadata.twoD = currentTwoD;
+
+            // Save Z positions BEFORE any updates that might change them
+            // (updateStyles calls node.update() which applies layout positions)
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: save current Z positions
+                for (const node of this.getNodes()) {
+                    this.savedZPositions.set(node.id, node.mesh.position.z);
+                }
+            }
         }
 
         // Always activate appropriate camera when styles are loaded
@@ -535,6 +548,29 @@ export class Graph implements GraphContext {
 
         // Update LayoutManager with new styles reference
         this.layoutManager.updateStyles(this.styles);
+
+        // Handle Z-coordinate flattening/restoration AFTER style updates
+        // (style updates call node.update() which applies layout positions including Z)
+        if (modeSwitching) {
+            const nodes = this.getNodes();
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: flatten Z positions to 0
+                for (const node of nodes) {
+                    node.mesh.position.z = 0;
+                }
+            } else if (!currentTwoD && previousTwoD) {
+                // Switching from 2D to 3D: restore saved Z positions (or leave at 0)
+                for (const node of nodes) {
+                    const savedZ = this.savedZPositions.get(node.id);
+                    if (savedZ !== undefined) {
+                        node.mesh.position.z = savedZ;
+                    }
+                    // If no saved Z, leave at current position (0)
+                }
+                // Clear saved positions after restoration
+                this.savedZPositions.clear();
+            }
+        }
 
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
