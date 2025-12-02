@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/graphty-org/graphty-element/compare/v1.2.0...v1.2.1) (2025-12-02)
+
+
+### Bug Fixes
+
+* prevent over enthusiastic tree shaking ([c1e926a](https://github.com/graphty-org/graphty-element/commit/c1e926ab6419968180c22444d13d7196eff7d2da))
+
 # [1.2.0](https://github.com/graphty-org/graphty-element/compare/v1.1.1...v1.2.0) (2025-11-30)
 
 
