@@ -58,6 +58,21 @@ const config: StorybookConfig = {
         const merged = mergeConfig(config, {
             // Your environment configuration here
             server,
+            // Exclude @mlc-ai/web-llm from optimization - it's dynamically loaded at runtime
+            optimizeDeps: {
+                exclude: ["@mlc-ai/web-llm"],
+            },
+            resolve: {
+                alias: {
+                    // Alias @mlc-ai/web-llm to a virtual module that will be loaded from CDN at runtime
+                    "@mlc-ai/web-llm": path.join(__dirname, "webllm-stub.js"),
+                },
+            },
+            build: {
+                rollupOptions: {
+                    external: ["@mlc-ai/web-llm"], // Dynamically loaded at runtime for in-browser LLM
+                },
+            },
         });
         return merged;
     },

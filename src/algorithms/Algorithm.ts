@@ -150,4 +150,20 @@ export abstract class Algorithm {
     static getSuggestedStyles(): SuggestedStylesConfig | null {
         return this.suggestedStyles ? this.suggestedStyles() : null;
     }
+
+    /**
+     * Get all registered algorithm names.
+     * @param namespace - Optional namespace to filter by
+     * @returns Array of algorithm names in "namespace:type" format
+     */
+    static getRegisteredAlgorithms(namespace?: string): string[] {
+        const algorithms: string[] = [];
+        for (const key of algorithmRegistry.keys()) {
+            if (!namespace || key.startsWith(`${namespace}:`)) {
+                algorithms.push(key);
+            }
+        }
+
+        return algorithms.sort();
+    }
 }
