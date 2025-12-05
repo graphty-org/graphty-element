@@ -84,19 +84,19 @@ export const ngraph: Story = {
                 layout: "ngraph",
                 layoutOptions: {
                     dim: 3,
-                    seed: 12, // Fixed seed for consistent layouts in visual tests
+                    seed: 42, // Fixed seed for consistent layouts in visual tests (same as other working ngraph stories)
                 },
             },
             behavior: {
                 layout: {
                     // Physics-based layouts need preSteps for visual stability
-                    // Chromatic needs more steps for consistent snapshots, regular tests need minimal steps
-                    preSteps: isChromatic() ? 15000 : 200,
+                    // Use constant value like other working ngraph stories (NodeStyles, GraphStyles)
+                    preSteps: 8000,
                 },
             },
         }),
         // Individual parameter args for controls
-        ngraphSeed: 12,
+        ngraphSeed: 42,
         // ngraphSpringLength: 30,
         // ngraphSpringCoefficient: 0.0008,
         // ngraphGravity: -1.2,
