@@ -48,6 +48,17 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
+        // Add styleTemplate with preSteps for physics-based layout (ngraph)
+        // data3.json has 77 nodes, which needs more preSteps to settle
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 8000, // Extra preSteps for data3.json (77 nodes) with ngraph
+                },
+            },
+        }),
     },
     play: async({canvasElement}) => {
         await waitForGraphSettled(canvasElement);

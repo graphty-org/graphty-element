@@ -74,12 +74,65 @@ export const eventWaitingDecorator = (story: any): any => {
     return result;
 };
 
+// Helper to wait for data to load - useful for URL-based data sources
+export async function waitForDataLoaded(canvasElement: HTMLElement): Promise<void> {
+    const graphtyElement = canvasElement.querySelector("graphty-element");
+    if (!graphtyElement) {
+        return;
+    }
+
+    const state = eventWaitingState.get(graphtyElement as HTMLElement);
+    if (state?.promises.has("data-loaded")) {
+        const dataPromise = state.promises.get("data-loaded");
+        if (!dataPromise) {
+            return;
+        }
+
+        // Longer timeout for network requests (10 seconds)
+        const timeoutPromise = new Promise<void>((resolve) => {
+            setTimeout(() => {
+                // Data may already be loaded (e.g., inline data) or failed
+                resolve();
+            }, 10000);
+        });
+
+        await Promise.race([dataPromise, timeoutPromise]);
+    } else {
+        // Fallback: wait for data-loaded event with timeout
+        await new Promise<void>((resolve) => {
+            let resolved = false;
+
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }, 10000);
+
+            const handleDataLoaded = (): void => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            };
+
+            graphtyElement.addEventListener("data-loaded", handleDataLoaded, {once: true});
+        });
+    }
+}
+
 // Helper to wait for graph to settle - now uses pre-attached listeners
+// For URL-based data sources, this function first waits for data to load
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
         return;
     }
+
+    // First, wait for data to load (important for URL-based data sources)
+    // This ensures the layout has a chance to run before we wait for settling
+    await waitForDataLoaded(canvasElement);
 
     // For static layouts, the settled event may fire immediately on the first render
     // We need to give the render loop a chance to run
@@ -94,11 +147,12 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
             return;
         }
 
+        // Longer timeout for physics-based layouts to settle (5 seconds)
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 // For static layouts, this is not an error - they may have already settled
                 resolve();
-            }, 500); // Much shorter timeout since static layouts settle immediately
+            }, 5000);
         });
 
         await Promise.race([settledPromise, timeoutPromise]);
@@ -111,13 +165,14 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
         await new Promise<void>((resolve) => {
             let settled = false;
 
+            // Longer timeout for physics-based layouts (5 seconds)
             const timeout = setTimeout(() => {
                 if (!settled) {
                     // Not a warning - static layouts may have already settled
                     settled = true;
                     resolve();
                 }
-            }, 500); // Much shorter timeout
+            }, 5000);
 
             const handleSettled = (): void => {
                 if (!settled) {
