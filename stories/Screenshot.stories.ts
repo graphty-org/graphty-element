@@ -538,6 +538,11 @@ const largeGraphData = generateLargeGraph();
 
 export const Phase3InteractiveTests: Story = {
     name: "Phase 3: Timing & Queue Tests",
+    parameters: {
+        // Disable Chromatic snapshot for this interactive test story
+        // The play function tests timing features that exceed Chromatic's 15-second interaction timeout
+        chromatic: {disableSnapshot: true},
+    },
     args: {
         nodeData: largeGraphData.nodes,
         edgeData: largeGraphData.edges,
