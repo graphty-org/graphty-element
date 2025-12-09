@@ -48,6 +48,10 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
+        },
         // Add styleTemplate with preSteps for physics-based layout (ngraph)
         // data3.json has 77 nodes, which needs more preSteps to settle
         styleTemplate: StyleTemplate.parse({
@@ -73,6 +77,10 @@ export const ModifiedJson: Story = {
             edge: {
                 path: "links",
             },
+        },
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
         },
         // Put edge field mappings in styleTemplate where they belong
         styleTemplate: StyleTemplate.parse({

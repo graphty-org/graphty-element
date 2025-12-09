@@ -78,14 +78,13 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 
 export const ngraph: Story = {
     args: {
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests (same as other working ngraph stories)
+        },
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
-                layout: "ngraph",
-                layoutOptions: {
-                    dim: 3,
-                    seed: 42, // Fixed seed for consistent layouts in visual tests (same as other working ngraph stories)
-                },
             },
             behavior: {
                 layout: {
