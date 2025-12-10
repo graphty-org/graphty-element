@@ -681,6 +681,91 @@ export class Graph implements GraphContext {
         });
     }
 
+    /**
+     * Load graph data from a URL with auto-format detection
+     *
+     * @remarks
+     * This method attempts to detect the format from the URL extension first.
+     * If the extension is not recognized (e.g., `.txt`), it fetches the content
+     * and uses content-based detection. The content is then passed directly to
+     * the data source to avoid a double-fetch.
+     *
+     * @param url - URL to fetch graph data from
+     * @param options - Loading options
+     *
+     * @example
+     * ```typescript
+     * // Auto-detect format from extension
+     * await graph.loadFromUrl("https://example.com/data.graphml");
+     *
+     * // Auto-detect from content when extension doesn't match
+     * await graph.loadFromUrl("https://example.com/data.txt");
+     *
+     * // Explicitly specify format
+     * await graph.loadFromUrl("https://example.com/data.txt", { format: "graphml" });
+     * ```
+     */
+    async loadFromUrl(
+        url: string,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        const {detectFormat} = await import("./data/format-detection.js");
+
+        let format = options?.format;
+        let fetchedContent: string | undefined;
+
+        if (!format) {
+            // First try extension-based detection (no fetch needed)
+            const detectedFromExtension = detectFormat(url, "");
+
+            if (detectedFromExtension) {
+                format = detectedFromExtension;
+            } else {
+                // Extension didn't match - fetch content for detection
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch URL '${url}': ${response.status} ${response.statusText}`,
+                    );
+                }
+
+                fetchedContent = await response.text();
+
+                const sample = fetchedContent.slice(0, 2048);
+                const detectedFromContent = detectFormat(url, sample);
+
+                if (!detectedFromContent) {
+                    throw new Error(
+                        `Could not detect file format from '${url}'. ` +
+                        "Supported formats: JSON, GraphML, GEXF, CSV, GML, DOT, Pajek. " +
+                        "Try specifying format explicitly: loadFromUrl(url, { format: \"graphml\" })",
+                    );
+                }
+
+                format = detectedFromContent;
+            }
+        }
+
+        // If we already fetched content for detection, pass it as data to avoid double-fetch
+        // Otherwise pass URL and let DataSource handle the fetch
+        if (fetchedContent !== undefined) {
+            await this.addDataFromSource(format, {
+                data: fetchedContent,
+                ... options,
+            });
+        } else {
+            await this.addDataFromSource(format, {
+                url,
+                ... options,
+            });
+        }
+    }
+
     async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
         await this.addNodes([node], idPath, options);
     }
