@@ -64,7 +64,7 @@
     "lint:pkg": "knip",
     "lint:all": "npm run lint && npm run lint:pkg",
     "dev": "vite --force --mode development",
-    "build": "tsc --project tsconfig.build.json && vite build",
+    "build": "vite build && tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",
     "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p 9025 --no-open --https --ssl-cert ~/ssl/STAR_ato_ms.crt --ssl-key ~/ssl/atoms.key",
