@@ -439,38 +439,42 @@ export class Graph implements GraphContext {
             });
 
             this.statsManager.measure("Graph.settlementCheck", () => {
-                // Check if layout has settled
-                if (this.layoutManager.isSettled && this.layoutManager.running) {
-                    this.eventManager.emitGraphSettled(this);
-                    this.layoutManager.running = false;
+                // Only process settlement events if there are nodes - an empty graph
+                // has nothing to settle, so we shouldn't emit events or log
+                if (this.dataManager.nodes.size > 0) {
+                    // Check if layout has settled
+                    if (this.layoutManager.isSettled && this.layoutManager.running) {
+                        this.eventManager.emitGraphSettled(this);
+                        this.layoutManager.running = false;
 
-                    // Start label animations after layout has settled
-                    for (const node of this.dataManager.nodes.values()) {
-                        node.label?.startAnimation();
+                        // Start label animations after layout has settled
+                        for (const node of this.dataManager.nodes.values()) {
+                            node.label?.startAnimation();
+                        }
+
+                        // Force a final zoom to fit after layout has truly settled
+                        this.updateManager.enableZoomToFit();
                     }
 
-                    // Force a final zoom to fit after layout has truly settled
-                    this.updateManager.enableZoomToFit();
-                }
-
-                // Report performance when transitioning from unsettled to settled
-                if (this.layoutManager.isSettled && !this.wasSettled) {
-                    this.wasSettled = true;
-                    // End layout session tracking
-                    this.statsManager.endLayoutSession();
-                    const snapshot = this.statsManager.getSnapshot();
-                    // eslint-disable-next-line no-console
-                    console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
-                    this.statsManager.reportDetailed();
-                    // Reset measurements after reporting so next settlement shows fresh data
-                    this.statsManager.resetMeasurements();
-                } else if (!this.layoutManager.isSettled && this.wasSettled) {
-                    // Reset when layout becomes unsettled (so we can report next settlement)
-                    this.wasSettled = false;
-                    // Restart layout session tracking
-                    this.statsManager.startLayoutSession();
-                    // eslint-disable-next-line no-console
-                    console.log("🔄 Layout became unsettled, will report on next settlement");
+                    // Report performance when transitioning from unsettled to settled
+                    if (this.layoutManager.isSettled && !this.wasSettled) {
+                        this.wasSettled = true;
+                        // End layout session tracking
+                        this.statsManager.endLayoutSession();
+                        const snapshot = this.statsManager.getSnapshot();
+                        // eslint-disable-next-line no-console
+                        console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
+                        this.statsManager.reportDetailed();
+                        // Reset measurements after reporting so next settlement shows fresh data
+                        this.statsManager.resetMeasurements();
+                    } else if (!this.layoutManager.isSettled && this.wasSettled) {
+                        // Reset when layout becomes unsettled (so we can report next settlement)
+                        this.wasSettled = false;
+                        // Restart layout session tracking
+                        this.statsManager.startLayoutSession();
+                        // eslint-disable-next-line no-console
+                        console.log("🔄 Layout became unsettled, will report on next settlement");
+                    }
                 }
             });
         });

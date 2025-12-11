@@ -416,12 +416,14 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
     }
 
     // Set layout properties if provided
-    if (args.layout) {
-        g.layout = args.layout;
-    }
-
+    // IMPORTANT: Set layoutConfig BEFORE layout so that when layout triggers
+    // setLayout(), it already has access to the seed value for deterministic layouts
     if (args.layoutConfig) {
         g.layoutConfig = args.layoutConfig;
+    }
+
+    if (args.layout) {
+        g.layout = args.layout;
     }
 
     return g;
