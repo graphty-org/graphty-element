@@ -4,6 +4,8 @@
  * @module ai/AiManager
  */
 
+import {debounce} from "lodash";
+
 import type {Graph} from "../Graph";
 import {AiController, type ExecutionResult} from "./AiController";
 import {type AiStatus, AiStatusManager, type StatusChangeCallback} from "./AiStatus";
@@ -12,11 +14,15 @@ import {CommandRegistry} from "./commands";
 import {setCameraPosition, zoomToNodes} from "./commands/CameraCommands";
 import {setDimension, setLayout} from "./commands/LayoutCommands";
 import {setImmersiveMode} from "./commands/ModeCommands";
-import {findNodes, queryGraph} from "./commands/QueryCommands";
+import {findNodes, getSchema, queryGraph} from "./commands/QueryCommands";
 import {clearStyles, findAndStyleEdges, findAndStyleNodes} from "./commands/StyleCommands";
 import {ApiKeyManager} from "./keys";
 import {createProvider, type ProviderType} from "./providers";
 import type {LlmProvider} from "./providers/types";
+import {SchemaManager} from "./schema";
+
+/** Default debounce delay for schema updates in milliseconds */
+const SCHEMA_UPDATE_DEBOUNCE_MS = 300;
 
 /**
  * Configuration options for initializing the AiManager.
@@ -48,6 +54,9 @@ export class AiManager {
     private commandRegistry: CommandRegistry;
     private apiKeyManager: ApiKeyManager;
     private statusManager: AiStatusManager;
+    private schemaManager: SchemaManager | null = null;
+    private dataAddedListenerId: symbol | null = null;
+    private debouncedSchemaUpdate: ReturnType<typeof debounce> | null = null;
     private disposed = false;
     private initialized = false;
 
@@ -92,14 +101,51 @@ export class AiManager {
             this.registerBuiltinCommands();
         }
 
+        // Initialize schema manager and set up data change listeners
+        this.initializeSchemaManager();
+
         // Create the controller
         this.controller = new AiController({
             provider: this.provider,
             commandRegistry: this.commandRegistry,
             graph: this.graph,
+            schemaManager: this.schemaManager,
         });
 
         this.initialized = true;
+    }
+
+    /**
+     * Initialize the schema manager and set up event listeners for data changes.
+     */
+    private initializeSchemaManager(): void {
+        if (!this.graph) {
+            return;
+        }
+
+        // Create schema manager
+        this.schemaManager = new SchemaManager(this.graph);
+
+        // Extract initial schema
+        this.schemaManager.extract();
+
+        // Set up debounced schema update
+        this.debouncedSchemaUpdate = debounce(() => {
+            if (this.schemaManager) {
+                this.schemaManager.invalidateCache();
+            }
+        }, SCHEMA_UPDATE_DEBOUNCE_MS);
+
+        // Listen for data-added events to update schema
+        try {
+            const {eventManager} = this.graph;
+            this.dataAddedListenerId = eventManager.addListener("data-added", () => {
+                this.debouncedSchemaUpdate?.();
+            });
+        } catch {
+            // EventManager may not be available in all contexts (e.g., tests)
+            // Schema will still work, just won't auto-update
+        }
     }
 
     /**
@@ -109,6 +155,7 @@ export class AiManager {
         // Query commands
         this.registerCommand(queryGraph);
         this.registerCommand(findNodes);
+        this.registerCommand(getSchema);
 
         // Layout commands
         this.registerCommand(setLayout);
@@ -260,6 +307,14 @@ export class AiManager {
     }
 
     /**
+     * Get the schema manager (for advanced use).
+     * @returns The schema manager or null if not initialized
+     */
+    getSchemaManager(): SchemaManager | null {
+        return this.schemaManager;
+    }
+
+    /**
      * Dispose of the manager and clean up resources.
      */
     dispose(): void {
@@ -269,6 +324,26 @@ export class AiManager {
 
         this.disposed = true;
         this.initialized = false;
+
+        // Cancel any pending debounced updates
+        if (this.debouncedSchemaUpdate) {
+            this.debouncedSchemaUpdate.cancel();
+            this.debouncedSchemaUpdate = null;
+        }
+
+        // Remove event listener
+        if (this.dataAddedListenerId && this.graph) {
+            try {
+                const {eventManager} = this.graph;
+                eventManager.removeListener(this.dataAddedListenerId);
+            } catch {
+                // EventManager may not be available
+            }
+            this.dataAddedListenerId = null;
+        }
+
+        // Clean up schema manager
+        this.schemaManager = null;
 
         if (this.controller) {
             this.controller.dispose();

@@ -179,11 +179,18 @@ function findMatchingNodeIds(graph: Graph, selector: string): string[] {
     }
 
     // Try JMESPath matching
+    // Wrap data in array so we can use JMESPath filter expression [?condition]
     try {
+        // Normalize selector: JMESPath npm library only supports single quotes for string literals,
+        // not double quotes. LLMs like Anthropic send double quotes, so convert them.
+        const normalizedSelector = selector.replace(/"/g, "'");
+        const query = `[?${normalizedSelector}]`;
+
         for (const [id, node] of nodes) {
             const {data} = node;
-            const searchResult = jmespath.search(data, `[${selector}]`);
-            if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean" && searchResult[0]) {
+            // Use JMESPath filter syntax: [?selector] returns array of matches
+            const searchResult = jmespath.search([data], query);
+            if (Array.isArray(searchResult) && searchResult.length > 0) {
                 matchingIds.push(String(id));
             }
         }
@@ -217,11 +224,18 @@ function findMatchingEdgeIds(graph: Graph, selector: string): string[] {
     }
 
     // Try JMESPath matching
+    // Wrap data in array so we can use JMESPath filter expression [?condition]
     try {
+        // Normalize selector: JMESPath npm library only supports single quotes for string literals,
+        // not double quotes. LLMs like Anthropic send double quotes, so convert them.
+        const normalizedSelector = selector.replace(/"/g, "'");
+        const query = `[?${normalizedSelector}]`;
+
         for (const [id, edge] of edges) {
             const {data} = edge;
-            const searchResult = jmespath.search(data, `[${selector}]`);
-            if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean" && searchResult[0]) {
+            // Use JMESPath filter syntax: [?selector] returns array of matches
+            const searchResult = jmespath.search([data], query);
+            if (Array.isArray(searchResult) && searchResult.length > 0) {
                 matchingIds.push(String(id));
             }
         }
@@ -241,9 +255,9 @@ const dynamicLayers = new Map<string, number>();
  */
 export const findAndStyleNodes: GraphCommand = {
     name: "findAndStyleNodes",
-    description: "Find nodes matching a JMESPath selector and apply styles to them. Use an empty selector to match all nodes. Common selectors: 'data.type == \"server\"', 'data.label contains \"important\"'. Styles include color, size, shape, glow effects, and outlines.",
+    description: "Find nodes matching a JMESPath selector and apply styles to them. Use an empty selector to match all nodes. Common selectors: 'type == \"server\"', 'label contains \"important\"'. Note: selectors search within node data directly, so use 'type' not 'data.type'. Styles include color, size, shape, glow effects, and outlines.",
     parameters: z.object({
-        selector: z.string().describe("JMESPath expression to match nodes (empty string matches all)"),
+        selector: z.string().describe("JMESPath expression to match nodes (empty string matches all). Search is performed on node data, so use property names directly like 'type' not 'data.type'."),
         style: NodeStyleParamsSchema,
         layerName: z.string().optional().describe("Name for this style layer (for later removal)"),
     }),
@@ -254,7 +268,7 @@ export const findAndStyleNodes: GraphCommand = {
         },
         {
             input: "Highlight server nodes in blue",
-            params: {selector: "data.type == 'server'", style: {color: "#0000ff", glowColor: "#0000ff", glowStrength: 1}, layerName: "servers"},
+            params: {selector: "type == 'server'", style: {color: "#0000ff", glowColor: "#0000ff", glowStrength: 1}, layerName: "servers"},
         },
         {
             input: "Make nodes larger",
@@ -281,6 +295,10 @@ export const findAndStyleNodes: GraphCommand = {
         };
 
         try {
+            // Normalize selector: JMESPath npm library only supports single quotes for string literals,
+            // not double quotes. LLMs like Anthropic send double quotes, so convert them.
+            const normalizedSelector = selector ? selector.replace(/"/g, "'") : "";
+
             // Find matching nodes
             const matchingIds = findMatchingNodeIds(graph, selector);
 
@@ -295,10 +313,10 @@ export const findAndStyleNodes: GraphCommand = {
             // Convert simplified style to internal format
             const nodeStyle = convertNodeStyle(styleParams);
 
-            // Create the style layer
+            // Create the style layer with normalized selector
             const styleLayer = {
                 node: {
-                    selector: selector || "",
+                    selector: normalizedSelector,
                     style: nodeStyle,
                 },
                 metadata: {
@@ -336,9 +354,9 @@ export const findAndStyleNodes: GraphCommand = {
  */
 export const findAndStyleEdges: GraphCommand = {
     name: "findAndStyleEdges",
-    description: "Find edges matching a JMESPath selector and apply styles to them. Use an empty selector to match all edges. Common selectors: 'data.weight > 0.5', 'data.type == \"dependency\"'. Styles include color, width, and line patterns.",
+    description: "Find edges matching a JMESPath selector and apply styles to them. Use an empty selector to match all edges. Common selectors: 'weight > 0.5', 'type == \"dependency\"'. Note: selectors search within edge data directly, so use 'weight' not 'data.weight'. Styles include color, width, and line patterns.",
     parameters: z.object({
-        selector: z.string().describe("JMESPath expression to match edges (empty string matches all)"),
+        selector: z.string().describe("JMESPath expression to match edges (empty string matches all). Search is performed on edge data, so use property names directly like 'weight' not 'data.weight'."),
         style: EdgeStyleParamsSchema,
         layerName: z.string().optional().describe("Name for this style layer (for later removal)"),
     }),
@@ -349,7 +367,7 @@ export const findAndStyleEdges: GraphCommand = {
         },
         {
             input: "Highlight heavy edges",
-            params: {selector: "data.weight > 0.7", style: {color: "#ff0000", width: 3}, layerName: "heavy-edges"},
+            params: {selector: "weight > 0.7", style: {color: "#ff0000", width: 3}, layerName: "heavy-edges"},
         },
         {
             input: "Make edges dashed",
@@ -372,6 +390,10 @@ export const findAndStyleEdges: GraphCommand = {
         };
 
         try {
+            // Normalize selector: JMESPath npm library only supports single quotes for string literals,
+            // not double quotes. LLMs like Anthropic send double quotes, so convert them.
+            const normalizedSelector = selector ? selector.replace(/"/g, "'") : "";
+
             // Find matching edges
             const matchingIds = findMatchingEdgeIds(graph, selector);
 
@@ -386,10 +408,10 @@ export const findAndStyleEdges: GraphCommand = {
             // Convert simplified style to internal format
             const edgeStyle = convertEdgeStyle(styleParams);
 
-            // Create the style layer
+            // Create the style layer with normalized selector
             const styleLayer = {
                 edge: {
-                    selector: selector || "",
+                    selector: normalizedSelector,
                     style: edgeStyle,
                 },
                 metadata: {

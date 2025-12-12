@@ -148,11 +148,18 @@ function findMatchingNodeIds(graph: Graph, selector: string): string[] {
     }
 
     // Try JMESPath matching
+    // Wrap data in array so we can use JMESPath filter expression [?condition]
     try {
+        // Normalize selector: JMESPath npm library only supports single quotes for string literals,
+        // not double quotes. LLMs like Anthropic send double quotes, so convert them.
+        const normalizedSelector = selector.replace(/"/g, "'");
+        const query = `[?${normalizedSelector}]`;
+
         for (const [id, node] of nodes) {
             const {data} = node;
-            const searchResult = jmespath.search(data, `[${selector}]`);
-            if (Array.isArray(searchResult) && typeof searchResult[0] === "boolean" && searchResult[0]) {
+            // Use JMESPath filter syntax: [?selector] returns array of matches
+            const searchResult = jmespath.search([data], query);
+            if (Array.isArray(searchResult) && searchResult.length > 0) {
                 matchingIds.push(String(id));
             }
         }
@@ -177,7 +184,7 @@ export const zoomToNodes: GraphCommand = {
     }),
     examples: [
         {input: "Zoom to fit all nodes", params: {selector: ""}},
-        {input: "Zoom to server nodes", params: {selector: "data.type == 'server'"}},
+        {input: "Zoom to server nodes", params: {selector: "type == 'server'"}},
         {input: "Fit graph with more padding", params: {selector: "", padding: 1.5}},
     ],
 

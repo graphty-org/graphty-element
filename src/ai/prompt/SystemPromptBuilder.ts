@@ -5,6 +5,8 @@
 
 import type {Graph} from "../../Graph";
 import type {GraphCommand} from "../commands/types";
+import {formatSchemaForPrompt} from "../schema/SchemaFormatter";
+import type {SchemaSummary} from "../schema/types";
 
 /**
  * Options for building system prompts.
@@ -16,6 +18,8 @@ export interface SystemPromptOptions {
     includeLayout?: boolean;
     /** Include available commands as tools */
     includeCommands?: boolean;
+    /** Include data schema information */
+    includeSchema?: boolean;
     /** Custom additional context */
     additionalContext?: string;
 }
@@ -27,6 +31,7 @@ export interface SystemPromptOptions {
 export class SystemPromptBuilder {
     private commands: GraphCommand[] = [];
     private graph: Graph | null = null;
+    private schemaSummary: SchemaSummary | null = null;
 
     /**
      * Set the graph instance for context.
@@ -45,6 +50,21 @@ export class SystemPromptBuilder {
     }
 
     /**
+     * Set the schema summary for data context.
+     * @param schema - The schema summary to include in prompts
+     */
+    setSchema(schema: SchemaSummary): void {
+        this.schemaSummary = schema;
+    }
+
+    /**
+     * Clear the schema summary.
+     */
+    clearSchema(): void {
+        this.schemaSummary = null;
+    }
+
+    /**
      * Build the system prompt with current context.
      * @param options - Build options
      * @returns The complete system prompt
@@ -54,6 +74,7 @@ export class SystemPromptBuilder {
             includeStats = true,
             includeLayout = true,
             includeCommands = true,
+            includeSchema = true,
             additionalContext,
         } = options;
 
@@ -65,6 +86,11 @@ export class SystemPromptBuilder {
         // Graph statistics
         if (includeStats && this.graph) {
             sections.push(this.buildStatsSection());
+        }
+
+        // Data schema (after stats, before layout)
+        if (includeSchema && this.schemaSummary) {
+            sections.push(this.buildSchemaSection());
         }
 
         // Layout information
@@ -120,6 +146,17 @@ You can help users:
     }
 
     /**
+     * Build the schema section.
+     */
+    private buildSchemaSection(): string {
+        if (!this.schemaSummary) {
+            return "";
+        }
+
+        return formatSchemaForPrompt(this.schemaSummary);
+    }
+
+    /**
      * Build the layout section.
      */
     private buildLayoutSection(): string {
@@ -158,12 +195,13 @@ ${commandDescriptions}`;
     private buildInstructionsSection(): string {
         return `## Instructions
 1. When the user asks about the graph, use the queryGraph tool to get accurate information.
-2. When the user wants to change the layout, use the setLayout tool.
-3. When the user wants to switch dimensions (2D/3D), use the setDimension tool.
-4. When the user wants VR/AR mode, use the setImmersiveMode tool.
-5. If no tool is needed, respond conversationally and helpfully.
-6. Always explain what you're doing when executing commands.
-7. If a command fails, explain the error and suggest alternatives.`;
+2. When the user asks about node types, edge types, or available properties, use the getSchema tool.
+3. When the user wants to change the layout, use the setLayout tool.
+4. When the user wants to switch dimensions (2D/3D), use the setDimension tool.
+5. When the user wants VR/AR mode, use the setImmersiveMode tool.
+6. If no tool is needed, respond conversationally and helpfully.
+7. Always explain what you're doing when executing commands.
+8. If a command fails, explain the error and suggest alternatives.`;
     }
 
     /**

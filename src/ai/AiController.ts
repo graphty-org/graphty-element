@@ -8,6 +8,7 @@ import {type AiStatus, AiStatusManager, type StatusChangeCallback} from "./AiSta
 import type {CommandRegistry} from "./commands";
 import type {CommandContext, CommandResult} from "./commands/types";
 import type {LlmProvider, Message, ToolCall} from "./providers/types";
+import type {SchemaManager} from "./schema";
 
 /** Event emitter callback type */
 export type AiEventEmitter = (event: AiEvent) => void;
@@ -22,6 +23,8 @@ export interface AiControllerOptions {
     graph: CommandContext["graph"];
     /** Optional event emitter for AI events */
     emitEvent?: AiEventEmitter;
+    /** Optional schema manager for data schema in prompts */
+    schemaManager?: SchemaManager | null;
 }
 
 /** Combined result from execution */
@@ -39,6 +42,7 @@ export class AiController {
     private commandRegistry: CommandRegistry;
     private graph: CommandContext["graph"];
     private statusManager: AiStatusManager;
+    private schemaManager: SchemaManager | null;
     private abortController: AbortController | null = null;
     private disposed = false;
     private emitEvent: AiEventEmitter | undefined;
@@ -52,6 +56,7 @@ export class AiController {
         this.commandRegistry = options.commandRegistry;
         this.graph = options.graph;
         this.statusManager = new AiStatusManager();
+        this.schemaManager = options.schemaManager ?? null;
         this.emitEvent = options.emitEvent;
 
         // Subscribe to status changes to emit events
@@ -250,11 +255,14 @@ export class AiController {
                 `- ${cmd.name}: ${cmd.description}`,
             ).join("\n");
 
+            // Build schema section if available
+            const schemaSection = this.buildSchemaSection();
+
             const systemPrompt = `You are an AI assistant that helps users interact with a graph visualization.
 
 Available commands:
 ${commandDescriptions}
-
+${schemaSection}
 When the user asks you to perform an action, use the appropriate tool. If no tool is needed, respond conversationally.`;
 
             messages.push({role: "system", content: systemPrompt});
@@ -263,6 +271,24 @@ When the user asks you to perform an action, use the appropriate tool. If no too
         messages.push({role: "user", content: input});
 
         return messages;
+    }
+
+    /**
+     * Build the schema section for the system prompt.
+     * @returns Formatted schema section or empty string if no schema
+     */
+    private buildSchemaSection(): string {
+        if (!this.schemaManager) {
+            return "";
+        }
+
+        const schema = this.schemaManager.getSchema();
+
+        if (!schema || (schema.nodeCount === 0 && schema.edgeCount === 0)) {
+            return "";
+        }
+
+        return `\n${this.schemaManager.getFormattedSchema()}\n`;
     }
 
     /**

@@ -125,6 +125,7 @@
     "@ai-sdk/openai": "^2.0.74",
     "@graphty/algorithms": "^1.2.0",
     "@graphty/layout": "^1.2.8",
+    "@jsonhero/schema-infer": "^0.1.5",
     "@types/papaparse": "^5.5.0",
     "ai": "^5.0.104",
     "colorjs.io": "^0.5.2",
