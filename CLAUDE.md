@@ -423,6 +423,7 @@ To use the captured positions:
 2. Copy the output file to your desired location (e.g., `cp test/helpers/cat-social-network-2-fixed-positions-actual-engine.json test/helpers/my-fixed-positions.json`)
 3. Use the fixed layout type in your story/test with the generated data
 ```
-- use ./tmp for any temporary images, debugging files, debugging scripts, etc.
+- use ./tmp for any temporary images, screenshots, debugging files, debugging scripts, etc.
+- do not create __screenshots__ directories under ./test unless you intend for them to be committed
 - check and see if storybook is running on port 9025 before starting storybook on a new port
 - do not attempt to use nanobanana confirm whether elements of the scene are correct -- the 3D nature of our scenes makes it difficult to determine the positioning, overlapping, or other aspects of the scene. ask the user to provide the final visual verification of scenes.
