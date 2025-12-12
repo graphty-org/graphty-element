@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/graphty-org/graphty-element/compare/v1.2.2...v1.2.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* build and ship typescript types and export default styles ([0ec479c](https://github.com/graphty-org/graphty-element/commit/0ec479cf8f682a75728bf2d458757c591feb21a7))
+
 ## [1.2.2](https://github.com/graphty-org/graphty-element/compare/v1.2.1...v1.2.2) (2025-12-09)
 
 
