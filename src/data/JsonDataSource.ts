@@ -22,6 +22,9 @@ export const JsonDataSourceConfig = z.object({
     url: z.string().optional(),
     chunkSize: z.number().optional(),
     errorLimit: z.number().optional(),
+    nodeIdPath: z.string().optional(),
+    edgeSrcIdPath: z.string().optional(),
+    edgeDstIdPath: z.string().optional(),
     node: JsonNodeConfig,
     edge: JsonEdgeConfig,
 });
@@ -215,11 +218,17 @@ export class JsonDataSource extends DataSource {
         }
 
         // Check for id field (common requirement - accept common identifier field names)
+        // If a custom nodeIdPath is specified, also accept that field
         const nodeObj = node as Record<string, unknown>;
-        const hasId = "id" in nodeObj || "name" in nodeObj || "key" in nodeObj || "label" in nodeObj;
+        const customIdPath = this.opts.nodeIdPath;
+        const hasId = "id" in nodeObj || "name" in nodeObj || "key" in nodeObj || "label" in nodeObj ||
+                      (customIdPath !== undefined && customIdPath in nodeObj);
         if (!hasId) {
+            const expectedFields = customIdPath ?
+                `'id', 'name', 'key', 'label', or '${customIdPath}'` :
+                "'id', 'name', 'key', or 'label'";
             const canContinue = this.errorAggregator.addError({
-                message: `Node at index ${index} is missing identifier field (expected 'id', 'name', 'key', or 'label')`,
+                message: `Node at index ${index} is missing identifier field (expected ${expectedFields})`,
                 category: "missing-value",
                 field: "nodes.id",
                 line: index,

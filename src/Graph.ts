@@ -751,17 +751,24 @@ export class Graph implements GraphContext {
             }
         }
 
+        // Merge graph config with explicit options (explicit options take precedence)
+        const mergedOptions = {
+            nodeIdPath: options?.nodeIdPath ?? this.styles.config.data.knownFields.nodeIdPath,
+            edgeSrcIdPath: options?.edgeSrcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath,
+            edgeDstIdPath: options?.edgeDstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath,
+        };
+
         // If we already fetched content for detection, pass it as data to avoid double-fetch
         // Otherwise pass URL and let DataSource handle the fetch
         if (fetchedContent !== undefined) {
             await this.addDataFromSource(format, {
                 data: fetchedContent,
-                ... options,
+                ... mergedOptions,
             });
         } else {
             await this.addDataFromSource(format, {
                 url,
-                ... options,
+                ... mergedOptions,
             });
         }
     }
