@@ -1,28 +1,11 @@
 import {Quaternion, Ray, type Scene, Vector3, type WebXRDefaultExperience, type WebXRInputSource} from "@babylonjs/core";
 
 import type {NodeDragHandler} from "../NodeBehavior";
+import {applyDeadzone} from "./InputUtils";
 import type {PivotController} from "./PivotController";
 
-/**
- * Apply deadzone to thumbstick input to prevent drift.
- * Remaps values from [threshold, 1] to [0, 1] for smooth start.
- * Also applies quadratic curve for smooth acceleration.
- *
- * @param value - Raw thumbstick value (-1 to 1)
- * @param threshold - Deadzone threshold (default 0.15)
- * @returns Adjusted value with deadzone and curve applied
- */
-export function applyDeadzone(value: number, threshold = 0.15): number {
-    if (Math.abs(value) < threshold) {
-        return 0;
-    }
-
-    const sign = Math.sign(value);
-    const magnitude = (Math.abs(value) - threshold) / (1 - threshold);
-
-    // Apply quadratic curve for smooth acceleration
-    return sign * Math.pow(magnitude, 2);
-}
+// Re-export applyDeadzone for backwards compatibility
+export {applyDeadzone} from "./InputUtils";
 
 /**
  * Internal state for tracking hand position and pinch gesture.

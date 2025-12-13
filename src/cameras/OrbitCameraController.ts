@@ -1,4 +1,6 @@
-import {Axis, Camera, Color4, Scalar, Scene, Space, TransformNode, UniversalCamera, Vector3} from "@babylonjs/core";
+import {Camera, Color4, Scalar, Scene, type TransformNode, UniversalCamera, Vector3} from "@babylonjs/core";
+
+import {PivotController} from "./PivotController";
 
 export interface OrbitConfig {
     trackballRotationSpeed: number;
@@ -14,11 +16,20 @@ export interface OrbitConfig {
 
 export class OrbitCameraController {
     public scene: Scene;
-    public pivot: TransformNode;
     public camera: UniversalCamera;
     public cameraDistance: number;
-    private canvasElement: Element;
     public config: OrbitConfig;
+
+    private pivotController: PivotController;
+    private canvasElement: Element;
+
+    /**
+     * Expose pivot TransformNode for compatibility with existing code.
+     * This is the underlying pivot from PivotController.
+     */
+    public get pivot(): TransformNode {
+        return this.pivotController.pivot;
+    }
 
     constructor(canvas: Element, scene: Scene, config: OrbitConfig) {
         this.canvasElement = canvas;
@@ -26,7 +37,10 @@ export class OrbitCameraController {
 
         this.scene = scene;
         this.scene.clearColor = new Color4(0, 0, 0, 1);
-        this.pivot = new TransformNode("pivot", this.scene);
+
+        // Use shared PivotController instead of raw TransformNode
+        this.pivotController = new PivotController(scene);
+
         this.cameraDistance = 10;
 
         this.camera = new UniversalCamera("camera", new Vector3(0, 0, -this.cameraDistance), this.scene);
@@ -38,23 +52,46 @@ export class OrbitCameraController {
         this.updateCameraPosition();
     }
 
+    /**
+     * Rotate the scene by dx (yaw) and dy (pitch) amounts.
+     * Delegates to PivotController for consistent rotation behavior.
+     */
     public rotate(dx: number, dy: number): void {
-        this.pivot.rotate(Axis.Y, -dx * this.config.trackballRotationSpeed, Space.LOCAL);
-        this.pivot.rotate(Axis.X, -dy * this.config.trackballRotationSpeed, Space.LOCAL);
-        // Update camera position since it's not parented
+        // Delegate to PivotController
+        // Note: negative values because mouse movement is inverted from rotation direction
+        this.pivotController.rotate(
+            -dx * this.config.trackballRotationSpeed,
+            -dy * this.config.trackballRotationSpeed,
+        );
         this.updateCameraPosition();
     }
 
+    /**
+     * Spin the scene around the Z-axis (roll).
+     * Delegates to PivotController for consistent rotation behavior.
+     */
     public spin(dz: number): void {
-        this.pivot.rotate(Axis.Z, dz, Space.LOCAL);
-        // Update camera position since it's not parented
+        this.pivotController.spin(dz);
         this.updateCameraPosition();
     }
 
+    /**
+     * Zoom by adjusting camera distance.
+     * Note: This uses camera-distance based zoom (not scale-based like XR).
+     * This feels more natural for desktop interaction.
+     */
     public zoom(delta: number): void {
-        this.cameraDistance = Scalar.Clamp(this.cameraDistance + delta, this.config.minZoomDistance, this.config.maxZoomDistance);
+        this.cameraDistance = Scalar.Clamp(
+            this.cameraDistance + delta,
+            this.config.minZoomDistance,
+            this.config.maxZoomDistance,
+        );
     }
 
+    /**
+     * Update camera position relative to the pivot.
+     * Parents camera to pivot and positions at negative Z distance.
+     */
     public updateCameraPosition(): void {
         // Parent the camera to the pivot for proper transformation
         this.camera.parent = this.pivot;
@@ -66,6 +103,10 @@ export class OrbitCameraController {
         this.camera.rotation.set(0, 0, 0);
     }
 
+    /**
+     * Zoom the camera to fit a bounding box in view.
+     * Positions the pivot at the center and adjusts camera distance.
+     */
     public zoomToBoundingBox(min: Vector3, max: Vector3): void {
         const center = min.add(max).scale(0.5);
         const size = max.subtract(min);
