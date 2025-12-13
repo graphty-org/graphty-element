@@ -1,5 +1,6 @@
 import {Algorithm} from "../algorithms/Algorithm";
 import type {Graph} from "../Graph";
+import type {AlgorithmSpecificOptions} from "../utils/queue-migration";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
@@ -69,12 +70,24 @@ export class AlgorithmManager implements Manager {
 
     /**
      * Run a specific algorithm by namespace and type
+     * @param namespace - Algorithm namespace (e.g., "graphty")
+     * @param type - Algorithm type (e.g., "dijkstra")
+     * @param algorithmOptions - Optional algorithm-specific options (source, target, etc.)
      */
-    async runAlgorithm(namespace: string, type: string): Promise<void> {
+    async runAlgorithm(
+        namespace: string,
+        type: string,
+        algorithmOptions?: AlgorithmSpecificOptions,
+    ): Promise<void> {
         try {
             const alg = Algorithm.get(this.graph, namespace, type);
             if (!alg) {
                 throw new Error(`algorithm not found: ${namespace}:${type}`);
+            }
+
+            // Configure the algorithm if options are provided and configure method exists
+            if (algorithmOptions && "configure" in alg && typeof alg.configure === "function") {
+                alg.configure(algorithmOptions);
             }
 
             await alg.run(this.graph);

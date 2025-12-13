@@ -781,7 +781,7 @@ export class Graph implements GraphContext {
 
     async runAlgorithm(namespace: string, type: string, options?: RunAlgorithmOptions): Promise<void> {
         if (options?.skipQueue) {
-            await this.algorithmManager.runAlgorithm(namespace, type);
+            await this.algorithmManager.runAlgorithm(namespace, type, options.algorithmOptions);
 
             if (options.applySuggestedStyles) {
                 this.applySuggestedStyles(`${namespace}:${type}`);
@@ -797,7 +797,7 @@ export class Graph implements GraphContext {
                     throw new Error("Operation cancelled");
                 }
 
-                await this.algorithmManager.runAlgorithm(namespace, type);
+                await this.algorithmManager.runAlgorithm(namespace, type, options?.algorithmOptions);
                 if (options?.applySuggestedStyles) {
                     this.applySuggestedStyles(`${namespace}:${type}`);
                 }
