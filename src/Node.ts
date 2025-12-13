@@ -92,6 +92,11 @@ export class Node {
     update(): void {
         this.context.getStatsManager().startMeasurement("Node.update");
 
+        // Check if mesh was disposed (e.g., from 2D/3D mode switch) and recreate it
+        if (this.mesh.isDisposed()) {
+            this.updateStyle(this.styleId);
+        }
+
         const newStyleKeys = Object.keys(this.styleUpdates);
         if (newStyleKeys.length > 0) {
             let style = Styles.getStyleForNodeStyleId(this.styleId);

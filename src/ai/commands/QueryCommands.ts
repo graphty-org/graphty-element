@@ -327,9 +327,11 @@ export const getSchema: GraphCommand = {
                         if (p.enumValues && p.enumValues.length > 0) {
                             desc += ` (values: ${p.enumValues.join(", ")})`;
                         }
+
                         if (p.range) {
                             desc += ` (range: ${p.range.min}-${p.range.max})`;
                         }
+
                         return desc;
                     });
 
@@ -346,9 +348,11 @@ export const getSchema: GraphCommand = {
                         if (p.enumValues && p.enumValues.length > 0) {
                             desc += ` (values: ${p.enumValues.join(", ")})`;
                         }
+
                         if (p.range) {
                             desc += ` (range: ${p.range.min}-${p.range.max})`;
                         }
+
                         return desc;
                     });
 

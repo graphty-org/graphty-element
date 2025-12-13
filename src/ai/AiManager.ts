@@ -15,6 +15,7 @@ import {setCameraPosition, zoomToNodes} from "./commands/CameraCommands";
 import {setDimension, setLayout} from "./commands/LayoutCommands";
 import {setImmersiveMode} from "./commands/ModeCommands";
 import {findNodes, getSchema, queryGraph} from "./commands/QueryCommands";
+import {describeProperty, sampleData} from "./commands/SchemaCommands";
 import {clearStyles, findAndStyleEdges, findAndStyleNodes} from "./commands/StyleCommands";
 import {ApiKeyManager} from "./keys";
 import {createProvider, type ProviderType} from "./providers";
@@ -156,6 +157,10 @@ export class AiManager {
         this.registerCommand(queryGraph);
         this.registerCommand(findNodes);
         this.registerCommand(getSchema);
+
+        // Schema exploration commands
+        this.registerCommand(sampleData);
+        this.registerCommand(describeProperty);
 
         // Layout commands
         this.registerCommand(setLayout);

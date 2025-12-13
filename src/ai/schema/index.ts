@@ -12,3 +12,15 @@ export type {
     SchemaExtractorOptions,
     SchemaSummary,
 } from "./types";
+export type {HistogramBin, NumericStatistics} from "./utils";
+export {
+    analyzeDominantType,
+    calculateStatistics,
+    collectPropertyValues,
+    generateHistogram,
+    getAvailableProperties,
+    getNestedProperty,
+    getValueType,
+    truncateObjectStrings,
+    truncateString,
+} from "./utils";

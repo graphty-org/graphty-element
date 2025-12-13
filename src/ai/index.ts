@@ -30,6 +30,8 @@ export {
     // Style commands
     clearStyles,
     CommandRegistry,
+    // Schema commands
+    describeProperty,
     findAndStyleEdges,
     findAndStyleNodes,
     findNodes,
@@ -38,6 +40,7 @@ export {
     // Query commands
     queryGraph,
     runAlgorithm,
+    sampleData,
     // Camera commands
     setCameraPosition,
     setDimension,
@@ -83,3 +86,18 @@ export {createSystemPromptBuilder, SystemPromptBuilder} from "./prompt/SystemPro
 // Input Adapters (Phase 6)
 export type {InputAdapter, InputCallback, InputOptions} from "./input";
 export {TextInputAdapter, VoiceInputAdapter} from "./input";
+
+// Schema Discovery (Phase 4-6)
+export type {
+    HistogramBin,
+    NumericStatistics,
+    PropertySummary,
+    PropertyType,
+    SchemaExtractorOptions,
+    SchemaSummary,
+} from "./schema";
+export {
+    formatSchemaForPrompt,
+    SchemaExtractor,
+    SchemaManager,
+} from "./schema";

@@ -34,3 +34,6 @@ export {listAlgorithms, runAlgorithm} from "./AlgorithmCommands";
 
 // Capture Commands
 export {captureScreenshot, captureVideo} from "./CaptureCommands";
+
+// Schema Commands
+export {describeProperty, sampleData} from "./SchemaCommands";
