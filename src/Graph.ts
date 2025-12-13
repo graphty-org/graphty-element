@@ -1058,26 +1058,28 @@ export class Graph implements GraphContext {
         );
 
         // Wire up button click handlers
-        this.xrUIManager.onEnterXR = async(mode) => {
-            try {
-                console.log(`[XR] Attempting to enter ${mode} mode...`);
-                await this.enterXR(mode);
-                console.log(`[XR] Successfully entered ${mode} mode`);
-            } catch (error) {
-                console.error("Failed to enter XR mode:", error);
+        this.xrUIManager.onEnterXR = (mode) => {
+            void (async() => {
+                try {
+                    console.log(`[XR] Attempting to enter ${mode} mode...`);
+                    await this.enterXR(mode);
+                    console.log(`[XR] Successfully entered ${mode} mode`);
+                } catch (error) {
+                    console.error("Failed to enter XR mode:", error);
 
-                // Show user-friendly alert on error
-                const errorMsg = error instanceof Error ? error.message : String(error);
-                alert(`XR Session Failed:\n${errorMsg}\n\nCheck console for details.`);
+                    // Show user-friendly alert on error
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    alert(`XR Session Failed:\n${errorMsg}\n\nCheck console for details.`);
 
-                // Emit error event
-                this.eventManager.emitGraphError(
-                    this,
-                    error instanceof Error ? error : new Error(String(error)),
-                    "xr",
-                    {mode},
-                );
-            }
+                    // Emit error event
+                    this.eventManager.emitGraphError(
+                        this,
+                        error instanceof Error ? error : new Error(String(error)),
+                        "xr",
+                        {mode},
+                    );
+                }
+            })();
         };
     }
 
@@ -1109,38 +1111,27 @@ export class Graph implements GraphContext {
         }
 
         // Store XR helper in scene metadata for isXRMode() detection
-        this.scene.metadata = this.scene.metadata || {};
+        this.scene.metadata = this.scene.metadata ?? {};
         this.scene.metadata.xrHelper = xrHelper;
 
         console.log("🔍 [XR] XR helper stored in scene metadata");
 
-        // Create XR input controller
-        const {XRInputController} = await import("./cameras/XRInputController");
-        const xrConfig = this.graphContext.getConfig().xr ?? defaultXRConfig;
-        const xrInputController = new XRInputController(
-            this.scene,
-            this.xrSessionManager,
-            xrConfig.input,
-        );
+        // Create XR pivot camera controller (handles input via pivot-based system)
+        const {XRPivotCameraController} = await import("./cameras/XRPivotCameraController");
+        const xrCameraController = new XRPivotCameraController(this.scene, xrHelper);
 
-        console.log("🔍 [XR] XRInputController created");
+        console.log("🔍 [XR] XRPivotCameraController created");
 
-        // Enable XR input (this sets up controller drag handlers)
-        xrInputController.enable();
-
-        console.log("🔍 [XR] XRInputController enabled");
-
-        // Note: We're NOT switching the active camera in CameraManager
-        // The XR camera is automatically made active by BabylonJS WebXR
-        // But we do need to update XRInputController every frame
+        // Note: XRPivotCameraController automatically enables input when XR state changes
+        // We just need to call update() every frame for input processing
 
         // Hook into render loop to update XR input
         const xrUpdateObserver = this.scene.onBeforeRenderObservable.add(() => {
-            xrInputController.update();
+            xrCameraController.update();
         });
 
         // Store for cleanup
-        this.scene.metadata.xrInputController = xrInputController;
+        this.scene.metadata.xrCameraController = xrCameraController;
         this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
 
         console.log("🔍 [XR] XR input update loop registered");
@@ -1156,11 +1147,11 @@ export class Graph implements GraphContext {
 
         console.log("🔍 [XR] Exiting XR mode...");
 
-        // Clean up XR input controller
-        if (this.scene.metadata?.xrInputController) {
-            console.log("🔍 [XR] Disposing XRInputController");
-            this.scene.metadata.xrInputController.dispose();
-            this.scene.metadata.xrInputController = null;
+        // Clean up XR camera controller
+        if (this.scene.metadata?.xrCameraController) {
+            console.log("🔍 [XR] Disposing XRPivotCameraController");
+            this.scene.metadata.xrCameraController.dispose();
+            this.scene.metadata.xrCameraController = null;
         }
 
         // Remove render loop observer

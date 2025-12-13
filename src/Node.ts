@@ -76,6 +76,13 @@ export class Node {
             this.context.getScene(),
         );
 
+        // Parent to graph-root for XR gesture support
+        // This allows gestures to transform the entire graph by manipulating the root
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            this.mesh.parent = graphRoot;
+        }
+
         // Add metadata for XR controller raycasting
         // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
         this.mesh.metadata = {
@@ -152,6 +159,12 @@ export class Node {
             this.context.getScene(),
         );
 
+        // Parent to graph-root for XR gesture support
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            this.mesh.parent = graphRoot;
+        }
+
         // Add metadata for XR controller raycasting
         // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
         this.mesh.metadata = {
@@ -160,11 +173,11 @@ export class Node {
             nodeId: this.id,
         };
 
-        console.log('🔍 [Node updateStyle] Metadata set:', {
+        console.log("🔍 [Node updateStyle] Metadata set:", {
             nodeId: this.id,
             meshName: this.mesh.name,
             meshClass: this.mesh.getClassName(),
-            isInstancedMesh: this.mesh.getClassName() === 'InstancedMesh',
+            isInstancedMesh: this.mesh.getClassName() === "InstancedMesh",
             metadata: this.mesh.metadata,
             isPickable: this.mesh.isPickable,
         });

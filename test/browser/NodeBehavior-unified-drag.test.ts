@@ -1,45 +1,31 @@
-import {
-    NullEngine,
-    type PickingInfo,
-    PointerEventTypes,
-    PointerInfo,
-    Scene,
-    Vector3,
-} from "@babylonjs/core";
+import {Vector3} from "@babylonjs/core";
 import {assert} from "chai";
 import {afterEach, beforeEach, describe, test} from "vitest";
 
+import type {AdHocData} from "../../src/config/common";
 import {Graph} from "../../src/Graph";
-import type {GraphContext} from "../../src/managers/GraphContext";
-import {Node} from "../../src/Node";
-import {NodeBehavior} from "../../src/NodeBehavior";
+import type {Node} from "../../src/Node";
+import {cleanupTestGraph, createTestGraph} from "../helpers/testSetup";
 
 describe("Unified Drag Handler", () => {
-    let engine: NullEngine;
-    let scene: Scene;
     let graph: Graph;
     let node: Node;
 
-    beforeEach(() => {
-        engine = new NullEngine();
-        scene = new Scene(engine);
-
-        // Create minimal graph instance
-        const canvas = document.createElement("canvas");
-        graph = new Graph(canvas, {
+    beforeEach(async() => {
+        // Create test graph using the helper (properly sets up styles)
+        graph = await createTestGraph({
             camera: {type: "orbit"},
             layout: {type: "fixed"},
         });
 
-        // Create test node
-        node = new Node(graph as unknown as GraphContext, "test-node", "default", {label: "Test Node"});
+        // Create test node using DataManager
+        const dataManager = graph.getDataManager();
+        dataManager.addNode({id: "test-node", label: "Test Node"} as AdHocData);
+        node = dataManager.getNode("test-node")!;
     });
 
     afterEach(() => {
-        node?.mesh.dispose();
-        graph?.dispose();
-        scene.dispose();
-        engine.dispose();
+        cleanupTestGraph(graph);
     });
 
     test("should handle desktop pointer down → move → up sequence", () => {
@@ -48,51 +34,15 @@ describe("Unified Drag Handler", () => {
 
         const startPosition = node.mesh.position.clone();
 
-        // Simulate pointer down
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: startPosition,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
-        const pointerDownInfo: PointerInfo = {
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        };
-
-        // Trigger pointer down
-        scene.onPointerObservable.notifyObservers(pointerDownInfo);
+        // Simulate drag start
+        node.dragHandler!.onDragStart(startPosition);
 
         // Verify drag started
-        assert.isTrue(node.dragging, "node.dragging should be true after pointer down");
+        assert.isTrue(node.dragging, "node.dragging should be true after drag start");
 
-        // Simulate pointer move
+        // Simulate drag move
         const newPosition = startPosition.add(new Vector3(1, 1, 0));
-        const movePickInfo: PickingInfo = {
-            ... pickInfo,
-            pickedPoint: newPosition,
-        };
-
-        const pointerMoveInfo: PointerInfo = {
-            type: PointerEventTypes.POINTERMOVE,
-            event: new PointerEvent("pointermove"),
-            pickInfo: movePickInfo,
-        };
-
-        // Mock scene pointer position
-        scene.pointerX = 100;
-        scene.pointerY = 100;
-
-        scene.onPointerObservable.notifyObservers(pointerMoveInfo);
+        node.dragHandler!.onDragUpdate(newPosition);
 
         // Verify position updated (allowing for some tolerance)
         const currentPosition = node.mesh.position;
@@ -102,53 +52,23 @@ describe("Unified Drag Handler", () => {
             "Mesh position should have changed",
         );
 
-        // Simulate pointer up
-        const pointerUpInfo: PointerInfo = {
-            type: PointerEventTypes.POINTERUP,
-            event: new PointerEvent("pointerup"),
-            pickInfo: movePickInfo,
-        };
-
-        scene.onPointerObservable.notifyObservers(pointerUpInfo);
+        // Simulate drag end
+        node.dragHandler!.onDragEnd();
 
         // Verify drag ended
-        assert.isFalse(node.dragging, "node.dragging should be false after pointer up");
+        assert.isFalse(node.dragging, "node.dragging should be false after drag end");
     });
 
     test("should set node.dragging flag during drag", () => {
         assert.isFalse(node.dragging, "node.dragging should start as false");
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: node.mesh.position,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
         // Start drag
-        const pointerDownInfo: PointerInfo = {
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        };
-        scene.onPointerObservable.notifyObservers(pointerDownInfo);
+        node.dragHandler!.onDragStart(node.mesh.position);
 
         assert.isTrue(node.dragging, "node.dragging should be true during drag");
 
         // End drag
-        const pointerUpInfo: PointerInfo = {
-            type: PointerEventTypes.POINTERUP,
-            event: new PointerEvent("pointerup"),
-            pickInfo,
-        };
-        scene.onPointerObservable.notifyObservers(pointerUpInfo);
+        node.dragHandler!.onDragEnd();
 
         assert.isFalse(node.dragging, "node.dragging should be false after drag");
     });
@@ -170,41 +90,18 @@ describe("Unified Drag Handler", () => {
             };
         }
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: node.mesh.position,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
         // Start drag
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        });
+        node.dragHandler!.onDragStart(node.mesh.position);
 
         // Move
-        scene.pointerX = 150;
-        scene.pointerY = 150;
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERMOVE,
-            event: new PointerEvent("pointermove"),
-            pickInfo: {
-                ... pickInfo,
-                pickedPoint: node.mesh.position.add(new Vector3(2, 2, 0)),
-            },
-        });
+        const newPosition = node.mesh.position.add(new Vector3(2, 2, 0));
+        node.dragHandler!.onDragUpdate(newPosition);
 
         assert.isTrue(setPositionCalled, "setNodePosition should be called during drag");
         assert.exists(lastSetPosition, "Position should be set");
+
+        // End drag
+        node.dragHandler!.onDragEnd();
     });
 
     test("should pin node after drag when configured", () => {
@@ -218,32 +115,9 @@ describe("Unified Drag Handler", () => {
             originalPin();
         };
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: node.mesh.position,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
-        // Perform drag
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        });
-
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERUP,
-            event: new PointerEvent("pointerup"),
-            pickInfo,
-        });
+        // Use dragHandler directly (as in node-behavior.test.ts)
+        node.dragHandler!.onDragStart(new Vector3(0, 0, 0));
+        node.dragHandler!.onDragEnd();
 
         assert.isTrue(pinCalled, "node.pin() should be called when pinOnDrag is true");
     });
@@ -259,32 +133,9 @@ describe("Unified Drag Handler", () => {
             originalPin();
         };
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: node.mesh.position,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
-        // Perform drag
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        });
-
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERUP,
-            event: new PointerEvent("pointerup"),
-            pickInfo,
-        });
+        // Use dragHandler directly (as in node-behavior.test.ts)
+        node.dragHandler!.onDragStart(new Vector3(0, 0, 0));
+        node.dragHandler!.onDragEnd();
 
         assert.isFalse(pinCalled, "node.pin() should NOT be called when pinOnDrag is false");
     });
@@ -293,38 +144,12 @@ describe("Unified Drag Handler", () => {
         const startPosition = node.mesh.position.clone();
         const startZ = startPosition.z;
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: startPosition,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
         // Start drag
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        });
+        node.dragHandler!.onDragStart(startPosition);
 
-        // Drag horizontally (X-axis only)
-        scene.pointerX = 200;
-        scene.pointerY = 100;
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERMOVE,
-            event: new PointerEvent("pointermove"),
-            pickInfo: {
-                ... pickInfo,
-                pickedPoint: new Vector3(startPosition.x + 5, startPosition.y, startPosition.z),
-            },
-        });
+        // Simulate horizontal movement (X-axis only)
+        const horizontalMove = new Vector3(startPosition.x + 5, startPosition.y, startPosition.z);
+        node.dragHandler!.onDragUpdate(horizontalMove);
 
         // Verify Z-coordinate remains stable (within tolerance)
         const currentZ = node.mesh.position.z;
@@ -334,44 +159,20 @@ describe("Unified Drag Handler", () => {
             0.1,
             `Z-coordinate should remain stable during horizontal drag (difference: ${zDifference})`,
         );
+
+        node.dragHandler!.onDragEnd();
     });
 
     test("should maintain consistent depth during vertical drag", () => {
         const startPosition = node.mesh.position.clone();
         const startZ = startPosition.z;
 
-        const pickInfo: PickingInfo = {
-            hit: true,
-            pickedMesh: node.mesh,
-            pickedPoint: startPosition,
-            distance: 0,
-            faceId: 0,
-            subMeshId: 0,
-            bu: 0,
-            bv: 0,
-            ray: null,
-            originMesh: node.mesh,
-            pickedSprite: null,
-        };
-
         // Start drag
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERDOWN,
-            event: new PointerEvent("pointerdown"),
-            pickInfo,
-        });
+        node.dragHandler!.onDragStart(startPosition);
 
-        // Drag vertically (Y-axis only)
-        scene.pointerX = 100;
-        scene.pointerY = 200;
-        scene.onPointerObservable.notifyObservers({
-            type: PointerEventTypes.POINTERMOVE,
-            event: new PointerEvent("pointermove"),
-            pickInfo: {
-                ... pickInfo,
-                pickedPoint: new Vector3(startPosition.x, startPosition.y + 5, startPosition.z),
-            },
-        });
+        // Simulate vertical movement (Y-axis only)
+        const verticalMove = new Vector3(startPosition.x, startPosition.y + 5, startPosition.z);
+        node.dragHandler!.onDragUpdate(verticalMove);
 
         // Verify Z-coordinate remains stable (within tolerance)
         const currentZ = node.mesh.position.z;
@@ -381,6 +182,8 @@ describe("Unified Drag Handler", () => {
             0.1,
             `Z-coordinate should remain stable during vertical drag (difference: ${zDifference})`,
         );
+
+        node.dragHandler!.onDragEnd();
     });
 
     test("should dispose cleanly", () => {

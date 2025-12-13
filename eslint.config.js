@@ -22,6 +22,7 @@ export default tseslint.config(
             "test/fast-check-experiment/**",
             "tmp/**",
             ".worktrees/**",
+            "examples/**/*.js",
         ],
     },
     {

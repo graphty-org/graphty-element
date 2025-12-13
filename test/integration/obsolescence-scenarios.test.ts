@@ -122,7 +122,7 @@ describe("Obsolescence Scenarios", () => {
         );
 
         // Wait for layout to reach high progress - give it more time
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Queue a data operation that would normally obsolete the layout
         queueManager.queueOperation(

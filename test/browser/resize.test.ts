@@ -1,9 +1,9 @@
-import {expect, test} from "vitest";
-import {page} from "@vitest/browser/context";
-
 import "../../src/graphty-element";
 
-test("canvas resizes when container element dimensions change", async () => {
+import {page} from "@vitest/browser/context";
+import {expect, test} from "vitest";
+
+test("canvas resizes when container element dimensions change", async() => {
     // Create a container with initial dimensions
     const container = document.createElement("div");
     container.style.width = "800px";
@@ -15,8 +15,8 @@ test("canvas resizes when container element dimensions change", async () => {
     const graphtyElement = document.createElement("graphty-element") as HTMLElement & {
         graph: {
             engine: {resize: () => void};
-            addNodes: (nodes: Array<{id: string}>) => Promise<void>;
-            addEdges: (edges: Array<{src: string; dst: string}>) => Promise<void>;
+            addNodes: (nodes: {id: string}[]) => Promise<void>;
+            addEdges: (edges: {src: string, dst: string}[]) => Promise<void>;
         };
     };
     graphtyElement.style.width = "100%";
@@ -80,7 +80,7 @@ test("canvas resizes when container element dimensions change", async () => {
     document.body.removeChild(container);
 });
 
-test("canvas resizes in flexbox layout", async () => {
+test("canvas resizes in flexbox layout", async() => {
     // Create a flexbox container
     const container = document.createElement("div");
     container.style.display = "flex";
@@ -98,8 +98,8 @@ test("canvas resizes in flexbox layout", async () => {
     // Add graphty-element that should flex to fill remaining space
     const graphtyElement = document.createElement("graphty-element") as HTMLElement & {
         graph: {
-            addNodes: (nodes: Array<{id: string}>) => Promise<void>;
-            addEdges: (edges: Array<{src: string; dst: string}>) => Promise<void>;
+            addNodes: (nodes: {id: string}[]) => Promise<void>;
+            addEdges: (edges: {src: string, dst: string}[]) => Promise<void>;
         };
     };
     graphtyElement.style.flex = "1";

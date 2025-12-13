@@ -704,7 +704,7 @@ void main() {
 
         // Set uniforms
         const colorObj = Color3.FromHexString(options.color);
-        console.log('CustomLineRenderer.createFromGeometry: Setting uniforms:', {
+        console.log("CustomLineRenderer.createFromGeometry: Setting uniforms:", {
             color: options.color,
             width: options.width,
             opacity: options.opacity ?? 1.0,
@@ -717,7 +717,7 @@ void main() {
         shaderMaterial.setFloat("pattern", 0); // 0 = solid
         shaderMaterial.setFloat("dashLength", 3.0); // Default (unused for solid)
         shaderMaterial.setFloat("gapLength", 2.0); // Default (unused for solid)
-        console.log('CustomLineRenderer.createFromGeometry: All uniforms set');
+        console.log("CustomLineRenderer.createFromGeometry: All uniforms set");
 
         // Register material for shared resolution updates
         this.activeMaterials.add(shaderMaterial);

@@ -601,27 +601,39 @@ void main() {
         const insetFactor = 0.225; // How much to inset inner triangle (22.5% toward center) - matches open-diamond thickness
 
         // Outer triangle vertices
-        const v0 = { x: 0, z: 0 }; // Tip
-        const v1 = { x: -length, z: -width / 2 }; // Bottom-left
-        const v2 = { x: -length, z: width / 2 }; // Top-right
+        const v0 = {x: 0, z: 0}; // Tip
+        const v1 = {x: -length, z: -width / 2}; // Bottom-left
+        const v2 = {x: -length, z: width / 2}; // Top-right
 
         // Calculate centroid
         const centerX = (v0.x + v1.x + v2.x) / 3;
         const centerZ = (v0.z + v1.z + v2.z) / 3;
 
         // Inner triangle vertices (moved toward center by insetFactor)
-        const v3 = { x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor };
-        const v4 = { x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor };
-        const v5 = { x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor };
+        const v3 = {x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor};
+        const v4 = {x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor};
+        const v5 = {x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor};
 
         // Build positions array (outer vertices, then inner vertices)
         const positions = [
-            v0.x, 0, v0.z, // 0: Tip (outer)
-            v1.x, 0, v1.z, // 1: Bottom-left (outer)
-            v2.x, 0, v2.z, // 2: Top-right (outer)
-            v3.x, 0, v3.z, // 3: Tip (inner)
-            v4.x, 0, v4.z, // 4: Bottom-left (inner)
-            v5.x, 0, v5.z, // 5: Top-right (inner)
+            v0.x,
+            0,
+            v0.z, // 0: Tip (outer)
+            v1.x,
+            0,
+            v1.z, // 1: Bottom-left (outer)
+            v2.x,
+            0,
+            v2.z, // 2: Top-right (outer)
+            v3.x,
+            0,
+            v3.z, // 3: Tip (inner)
+            v4.x,
+            0,
+            v4.z, // 4: Bottom-left (inner)
+            v5.x,
+            0,
+            v5.z, // 5: Top-right (inner)
         ];
 
         // Create triangle strips connecting outer and inner vertices
@@ -741,31 +753,47 @@ void main() {
         const insetFactor = 0.225; // How much to inset inner diamond (22.5% toward center) - 50% thicker than original 0.15
 
         // Outer diamond vertices
-        const v0 = { x: 0, z: 0 }; // Front tip
-        const v1 = { x: -length / 2, z: width / 2 }; // Top
-        const v2 = { x: -length, z: 0 }; // Back tip
-        const v3 = { x: -length / 2, z: -width / 2 }; // Bottom
+        const v0 = {x: 0, z: 0}; // Front tip
+        const v1 = {x: -length / 2, z: width / 2}; // Top
+        const v2 = {x: -length, z: 0}; // Back tip
+        const v3 = {x: -length / 2, z: -width / 2}; // Bottom
 
         // Calculate centroid
         const centerX = (v0.x + v1.x + v2.x + v3.x) / 4;
         const centerZ = (v0.z + v1.z + v2.z + v3.z) / 4;
 
         // Inner diamond vertices (moved toward center by insetFactor)
-        const v4 = { x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor };
-        const v5 = { x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor };
-        const v6 = { x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor };
-        const v7 = { x: v3.x + (centerX - v3.x) * insetFactor, z: v3.z + (centerZ - v3.z) * insetFactor };
+        const v4 = {x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor};
+        const v5 = {x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor};
+        const v6 = {x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor};
+        const v7 = {x: v3.x + (centerX - v3.x) * insetFactor, z: v3.z + (centerZ - v3.z) * insetFactor};
 
         // Build positions array (outer vertices, then inner vertices)
         const positions = [
-            v0.x, 0, v0.z, // 0: Front tip (outer)
-            v1.x, 0, v1.z, // 1: Top (outer)
-            v2.x, 0, v2.z, // 2: Back tip (outer)
-            v3.x, 0, v3.z, // 3: Bottom (outer)
-            v4.x, 0, v4.z, // 4: Front tip (inner)
-            v5.x, 0, v5.z, // 5: Top (inner)
-            v6.x, 0, v6.z, // 6: Back tip (inner)
-            v7.x, 0, v7.z, // 7: Bottom (inner)
+            v0.x,
+            0,
+            v0.z, // 0: Front tip (outer)
+            v1.x,
+            0,
+            v1.z, // 1: Top (outer)
+            v2.x,
+            0,
+            v2.z, // 2: Back tip (outer)
+            v3.x,
+            0,
+            v3.z, // 3: Bottom (outer)
+            v4.x,
+            0,
+            v4.z, // 4: Front tip (inner)
+            v5.x,
+            0,
+            v5.z, // 5: Top (inner)
+            v6.x,
+            0,
+            v6.z, // 6: Back tip (inner)
+            v7.x,
+            0,
+            v7.z, // 7: Bottom (inner)
         ];
 
         // Create triangle strips connecting outer and inner vertices

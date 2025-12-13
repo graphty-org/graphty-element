@@ -40,6 +40,7 @@ describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors makes node pickable", () => {
         const mockScene = {
             onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            onPrePointerObservable: {add: vi.fn(), remove: vi.fn()},
             pointerX: 0,
             pointerY: 0,
             activeCamera: {position: {x: 0, y: 0, z: 10}},
@@ -58,6 +59,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
+                getConfig: vi.fn().mockReturnValue(null),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -76,6 +78,7 @@ describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors sets pinOnDrag from options", () => {
         const mockScene = {
             onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            onPrePointerObservable: {add: vi.fn(), remove: vi.fn()},
             pointerX: 0,
             pointerY: 0,
             activeCamera: {position: {x: 0, y: 0, z: 10}},
@@ -94,6 +97,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
+                getConfig: vi.fn().mockReturnValue(null),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -122,6 +126,7 @@ describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors creates action manager for click behavior", () => {
         const mockScene = {
             onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            onPrePointerObservable: {add: vi.fn(), remove: vi.fn()},
             pointerX: 0,
             pointerY: 0,
             activeCamera: {position: {x: 0, y: 0, z: 10}},
@@ -140,6 +145,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
+                getConfig: vi.fn().mockReturnValue(null),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -168,6 +174,7 @@ describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors does not add double-click when no fetch functions", () => {
         const mockScene = {
             onPointerObservable: {add: vi.fn(), remove: vi.fn()},
+            onPrePointerObservable: {add: vi.fn(), remove: vi.fn()},
             pointerX: 0,
             pointerY: 0,
             activeCamera: {position: {x: 0, y: 0, z: 10}},
@@ -186,6 +193,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
+                getConfig: vi.fn().mockReturnValue(null),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),

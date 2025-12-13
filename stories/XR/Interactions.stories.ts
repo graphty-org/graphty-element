@@ -1,13 +1,13 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../../src/graphty-element";
-import {eventWaitingDecorator, renderFn} from "../helpers";
+import {eventWaitingDecorator, remoteLoggingDecorator, renderFn} from "../helpers";
 
 const meta: Meta = {
     title: "XR/Interactions",
     component: "graphty-element",
     render: renderFn,
-    decorators: [eventWaitingDecorator],
+    decorators: [eventWaitingDecorator, remoteLoggingDecorator],
     parameters: {
         layout: "fullscreen",
         chromatic: {

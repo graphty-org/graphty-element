@@ -32,6 +32,7 @@ export class XRSessionManager {
     constructor(scene: Scene, config: XRSessionConfig) {
         this.scene = scene;
         this.config = config;
+        console.log("🎮 [XRSessionManager] Created with config:", config);
     }
 
     /**
@@ -40,7 +41,8 @@ export class XRSessionManager {
     public isXRSupported(): boolean {
         const hasNavigator = typeof navigator !== "undefined";
         const hasXR = hasNavigator && !!navigator.xr;
-        const isSecureContext = hasNavigator && window.isSecureContext;
+        const hasWindow = typeof window !== "undefined";
+        const isSecureContext = hasWindow && window.isSecureContext;
 
         console.log("[XR Detection]", {
             hasNavigator,
@@ -97,28 +99,71 @@ export class XRSessionManager {
         }
 
         try {
+            console.log("🎮 [XRSessionManager] Creating VR XR experience...");
+
             // Import WebXR module dynamically
-            const {WebXRDefaultExperience} = await import("@babylonjs/core");
+            const {WebXRDefaultExperience, WebXRFeatureName} = await import("@babylonjs/core");
 
             this.xrHelper = await WebXRDefaultExperience.CreateAsync(this.scene, {
                 floorMeshes: [],
                 optionalFeatures: true,
+                disableTeleportation: true, // Match demo
             });
 
+            console.log("🎮 [XRSessionManager] XR experience created, enabling hand tracking with hand meshes...");
+
+            // Enable hand tracking with FULL HAND MESHES (the purple rigged hands)
+            // Per Babylon.js docs:
+            // - jointMeshes: controls the joint sphere meshes (dots)
+            // - handMeshes: controls the rigged hand model
+            // Default hand models load from: https://assets.babylonjs.com/core/HandMeshes/
+            try {
+                const handTracking = this.xrHelper.baseExperience.featuresManager.enableFeature(
+                    WebXRFeatureName.HAND_TRACKING,
+                    "latest",
+                    {
+                        xrInput: this.xrHelper.input,
+                        // Hide joint meshes (the dots) - we want the rigged hand model instead
+                        jointMeshes: {
+                            invisible: true,
+                        },
+                        // Enable the default rigged hand meshes (purple hands)
+                        // Note: Property is "disableDefaultMeshes" not "disableDefaultHandMesh"
+                        handMeshes: {
+                            disableDefaultMeshes: false, // false = enable the default purple hands
+                        },
+                    },
+                );
+                console.log("🤲 [XRSessionManager] Hand tracking enabled with config:", {
+                    feature: handTracking,
+                    jointMeshesInvisible: true,
+                    handMeshesEnabled: true,
+                });
+            } catch (handError) {
+                console.error("🤲 [XRSessionManager] Failed to enable hand tracking:", handError);
+            }
+
             // Actually enter the VR session
+            console.log("🎮 [XRSessionManager] Entering VR session...");
             const enterResult = await this.xrHelper.baseExperience.enterXRAsync("immersive-vr", "local-floor");
-            console.log("[XR] Entered VR session:", enterResult);
+            console.log("🎮 [XRSessionManager] Entered VR session:", enterResult);
+
+            // Log available features
+            const enabledFeatures = this.xrHelper.baseExperience.featuresManager.getEnabledFeatures();
+            console.log("🎮 [XRSessionManager] Enabled XR features:", enabledFeatures);
 
             // If previous camera provided and not VR-specific, optionally transfer position
             if (previousCamera) {
                 const xrCamera = this.getXRCamera();
                 if (xrCamera) {
                     xrCamera.position.copyFrom(previousCamera.position);
+                    console.log("🎮 [XRSessionManager] Transferred camera position from previous camera");
                 }
             }
 
             this.activeMode = "immersive-vr";
         } catch (error) {
+            console.error("🎮 [XRSessionManager] Failed to enter VR:", error);
             this.xrHelper = null;
             this.activeMode = null;
             throw new Error(`Failed to enter VR mode: ${error}`);
@@ -138,31 +183,47 @@ export class XRSessionManager {
         }
 
         try {
-            // Import WebXR module dynamically
-            const {WebXRDefaultExperience} = await import("@babylonjs/core");
+            console.log("🎮 [XRSessionManager] Creating AR XR experience...");
 
+            // Import WebXR module dynamically
+            const {WebXRDefaultExperience, WebXRFeatureName} = await import("@babylonjs/core");
+
+            // For AR, we explicitly DON'T request hand-tracking as an optional feature
+            // This prevents dots/spheres from appearing in AR mode
+            // Controller triggers still work for gestures without the hand tracking feature
             this.xrHelper = await WebXRDefaultExperience.CreateAsync(this.scene, {
                 floorMeshes: [],
-                optionalFeatures: true,
+                // Don't request all optional features - this prevents hand-tracking from being enabled
+                optionalFeatures: false,
+                disableTeleportation: true,
                 uiOptions: {
                     sessionMode: "immersive-ar",
                 },
             });
 
+            console.log("🎮 [XRSessionManager] AR mode: Created without hand tracking (controller gestures still work)");
+
             // Actually enter the AR session
+            console.log("🎮 [XRSessionManager] Entering AR session...");
             const enterResult = await this.xrHelper.baseExperience.enterXRAsync("immersive-ar", "local-floor");
-            console.log("[XR] Entered AR session:", enterResult);
+            console.log("🎮 [XRSessionManager] Entered AR session:", enterResult);
+
+            // Log available features
+            const enabledFeatures = this.xrHelper.baseExperience.featuresManager.getEnabledFeatures();
+            console.log("🎮 [XRSessionManager] Enabled XR features:", enabledFeatures);
 
             // Always transfer camera position for AR mode
             if (previousCamera) {
                 const xrCamera = this.getXRCamera();
                 if (xrCamera) {
                     xrCamera.position.copyFrom(previousCamera.position);
+                    console.log("🎮 [XRSessionManager] Transferred camera position from previous camera");
                 }
             }
 
             this.activeMode = "immersive-ar";
         } catch (error) {
+            console.error("🎮 [XRSessionManager] Failed to enter AR:", error);
             this.xrHelper = null;
             this.activeMode = null;
             throw new Error(`Failed to enter AR mode: ${error}`);

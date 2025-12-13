@@ -218,10 +218,10 @@ void main() {
         options: ArrowHeadOptions,
         scene: Scene,
     ): AbstractMesh | null {
-        console.log('EdgeMesh.createArrowHead called:', {styleId, type: options.type, color: options.color});
+        console.log("EdgeMesh.createArrowHead called:", {styleId, type: options.type, color: options.color});
 
         if (!options.type || options.type === "none") {
-            console.log('EdgeMesh.createArrowHead returning null (no type or none)');
+            console.log("EdgeMesh.createArrowHead returning null (no type or none)");
             return null;
         }
 
@@ -230,7 +230,7 @@ void main() {
         const width = this.calculateArrowWidth() * size;
         const length = this.calculateArrowLength() * size;
 
-        console.log('EdgeMesh.createArrowHead computed dimensions:', {size, opacity, width, length});
+        console.log("EdgeMesh.createArrowHead computed dimensions:", {size, opacity, width, length});
 
         // Arrow type routing:
         // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
@@ -249,15 +249,15 @@ void main() {
 
         if (FILLED_ARROWS.includes(arrowType)) {
             // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
-            console.log('Creating filled arrow:', arrowType);
+            console.log("Creating filled arrow:", arrowType);
             mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
         } else if (OUTLINE_ARROWS.includes(arrowType)) {
             // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-            console.log('Creating outline arrow:', arrowType);
+            console.log("Creating outline arrow:", arrowType);
             mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
         } else if (BILLBOARD_ARROWS.includes(arrowType)) {
             // 3D billboard arrows: Use existing sphere-based implementation
-            console.log('Creating billboard arrow:', arrowType);
+            console.log("Creating billboard arrow:", arrowType);
             switch (options.type) {
                 case "open-dot":
                     mesh = this.createOpenDotArrow(length, width, options.color, scene);
@@ -272,13 +272,13 @@ void main() {
                     throw new Error(`Unsupported arrow type: ${options.type}`);
             }
         } else {
-            console.log('Unknown arrow type, throwing error:', options.type);
+            console.log("Unknown arrow type, throwing error:", options.type);
             throw new Error(`Unsupported arrow type: ${options.type}`);
         }
 
-        console.log('EdgeMesh.createArrowHead created mesh:', {name: mesh.name, vertices: mesh.getTotalVertices(), opacity});
+        console.log("EdgeMesh.createArrowHead created mesh:", {name: mesh.name, vertices: mesh.getTotalVertices(), opacity});
         mesh.visibility = opacity;
-        console.log('EdgeMesh.createArrowHead returning mesh');
+        console.log("EdgeMesh.createArrowHead returning mesh");
         return mesh;
     }
 

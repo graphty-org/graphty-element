@@ -64,6 +64,7 @@
     "lint:pkg": "knip",
     "lint:all": "npm run lint && npm run lint:pkg",
     "dev": "vite --force --mode development",
+    "dev:xr": "node examples/xr/xr-demo-server.js",
     "build": "tsc --project tsconfig.build.json && vite build",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",

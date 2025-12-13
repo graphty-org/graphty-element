@@ -372,6 +372,135 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
     return g;
 };
 
+/**
+ * Decorator that enables remote logging for XR debugging.
+ * Logs are sent to the XR demo server at https://dev.ato.ms:9077/log
+ * Start the server with: npm run dev:xr
+ *
+ * Usage:
+ * ```
+ * export default {
+ *     decorators: [eventWaitingDecorator, remoteLoggingDecorator],
+ * }
+ * ```
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const remoteLoggingDecorator = (story: any): any => {
+    // Only enable in browser environment
+    if (typeof window !== "undefined") {
+        enableRemoteLoggingInBrowser();
+    }
+    return story();
+};
+
+/**
+ * Enable remote logging in the browser.
+ * Intercepts console.log/warn/error/info and sends to remote server.
+ */
+function enableRemoteLoggingInBrowser(): void {
+    // Don't enable twice
+    if ((window as unknown as {__remoteLoggingEnabled?: boolean}).__remoteLoggingEnabled) {
+        return;
+    }
+    (window as unknown as {__remoteLoggingEnabled?: boolean}).__remoteLoggingEnabled = true;
+
+    const SERVER_URL = "https://dev.ato.ms:9077/log";
+    const SESSION_ID = `storybook-${Date.now().toString(36)}`;
+    const LOG_BUFFER: Array<{time: string; level: string; message: string}> = [];
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Throttling for repeated messages
+    const lastMessages = new Map<string, number>();
+    const THROTTLE_MS = 5000;
+    const THROTTLE_PATTERNS = [/Max number of touches/, /Max touches exceeded/];
+
+    function shouldThrottle(message: string): boolean {
+        for (const pattern of THROTTLE_PATTERNS) {
+            if (pattern.test(message)) {
+                const key = pattern.source;
+                const lastTime = lastMessages.get(key) ?? 0;
+                const now = Date.now();
+                if (now - lastTime < THROTTLE_MS) {
+                    return true;
+                }
+                lastMessages.set(key, now);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    function flushLogs(): void {
+        if (LOG_BUFFER.length === 0) return;
+        const logsToSend = LOG_BUFFER.splice(0, LOG_BUFFER.length);
+        fetch(SERVER_URL, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({sessionId: SESSION_ID, logs: logsToSend}),
+        }).catch(() => {
+            // Put logs back on failure
+            LOG_BUFFER.unshift(...logsToSend);
+        });
+    }
+
+    function formatArgs(args: unknown[]): string {
+        return args.map((arg) => {
+            if (typeof arg === "object" && arg !== null) {
+                try {
+                    return JSON.stringify(arg, null, 2);
+                } catch {
+                    return String(arg);
+                }
+            }
+            return String(arg);
+        }).join(" ");
+    }
+
+    function queueLog(level: string, args: unknown[]): void {
+        const message = formatArgs(args);
+        if (shouldThrottle(message)) {
+            return;
+        }
+        LOG_BUFFER.push({
+            time: new Date().toISOString(),
+            level,
+            message,
+        });
+        if (flushTimer) {
+            clearTimeout(flushTimer);
+        }
+        flushTimer = setTimeout(flushLogs, 100);
+    }
+
+    // Store original console methods
+    const originalConsole = {
+        log: console.log.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console),
+        info: console.info.bind(console),
+    };
+
+    // Override console methods
+    console.log = (...args: unknown[]) => {
+        originalConsole.log(...args);
+        queueLog("LOG", args);
+    };
+    console.warn = (...args: unknown[]) => {
+        originalConsole.warn(...args);
+        queueLog("WARN", args);
+    };
+    console.error = (...args: unknown[]) => {
+        originalConsole.error(...args);
+        queueLog("ERROR", args);
+    };
+    console.info = (...args: unknown[]) => {
+        originalConsole.info(...args);
+        queueLog("INFO", args);
+    };
+
+    originalConsole.log(`[RemoteLogging] Enabled with session: ${SESSION_ID}`);
+}
+
 export const nodeShapes = [
     "box",
     "sphere",

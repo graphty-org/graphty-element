@@ -60,7 +60,7 @@ export class NodeDragHandler {
 
     // Public API for both desktop and XR
     public onDragStart(worldPosition: Vector3): void {
-        console.log('🔍 [Drag] Drag Start:', {
+        console.log("🔍 [Drag] Drag Start:", {
             nodeId: this.node.id,
             isXRMode: this.isXRMode(),
         });
@@ -80,7 +80,7 @@ export class NodeDragHandler {
             // This prevents OrbitInputController from rotating camera while dragging nodes
             const cameraManager = this.scene.metadata?.cameraManager;
             if (cameraManager) {
-                console.log('📷 Disabling camera input during node drag');
+                console.log("📷 Disabling camera input during node drag");
                 cameraManager.temporarilyDisableInput();
             }
         }
@@ -133,7 +133,7 @@ export class NodeDragHandler {
             return;
         }
 
-        console.log('🏁 NodeDragHandler.onDragEnd called', {
+        console.log("🏁 NodeDragHandler.onDragEnd called", {
             nodeId: this.node.id,
             finalPosition: this.node.mesh.position.asArray(),
         });
@@ -150,7 +150,7 @@ export class NodeDragHandler {
         // Re-enable camera input handler after node drag
         const cameraManager = this.scene.metadata?.cameraManager;
         if (cameraManager) {
-            console.log('📷 Re-enabling camera input after node drag');
+            console.log("📷 Re-enabling camera input after node drag");
             cameraManager.temporarilyEnableInput();
         }
 
@@ -162,10 +162,50 @@ export class NodeDragHandler {
         this.dragState.dragPlaneNormal = null;
     }
 
+    /**
+     * Set node position directly (for XR mode).
+     * XRInputHandler calculates the position with pivot transform and amplification,
+     * then calls this method to update the node and layout engine.
+     *
+     * This bypasses the delta calculation in onDragUpdate() which doesn't account
+     * for pivot rotation changes during drag.
+     */
+    public setPositionDirect(newPosition: Vector3): void {
+        if (!this.dragState.dragging) {
+            return;
+        }
+
+        // Update mesh position
+        this.node.mesh.position.copyFrom(newPosition);
+
+        // Update layout engine
+        const context = this.getContext();
+        context.getLayoutManager().layoutEngine?.setNodePosition(this.node, {
+            x: newPosition.x,
+            y: newPosition.y,
+            z: newPosition.z,
+        });
+    }
+
+    /**
+     * Get the node being dragged.
+     * Used by XRInputHandler to access the node's mesh for position calculations.
+     */
+    public getNode(): GraphNode {
+        return this.node;
+    }
+
     // Internal methods
     private setupPointerEvents(): void {
         // Listen to pointer events for node dragging
         this.pointerObserver = this.scene.onPrePointerObservable.add((pointerInfo) => {
+            // Skip desktop pointer handling in XR mode - XRInputHandler handles it
+            // This prevents conflicts where XR generates pointer events that the
+            // desktop handler would misinterpret with wrong world position calculations
+            if (this.isXRMode()) {
+                return;
+            }
+
             switch (pointerInfo.type) {
                 case PointerEventTypes.POINTERDOWN: {
                     // Check if we clicked on this node
@@ -174,7 +214,7 @@ export class NodeDragHandler {
                         this.scene.pointerY,
                     );
 
-                    console.log('🖱️ POINTERDOWN', {
+                    console.log("🖱️ POINTERDOWN", {
                         nodeId: this.node.id,
                         pickedMeshName: pickInfo?.pickedMesh?.name,
                         nodeMeshName: this.node.mesh.name,
