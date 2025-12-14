@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/graphty-org/graphty-element/compare/v1.2.3...v1.2.4) (2025-12-13)
+
+
+### Bug Fixes
+
+* fix exports to support graphty development ([647e474](https://github.com/graphty-org/graphty-element/commit/647e47480309e09ff30299b8220501d1fb6a6048))
+
 ## [1.2.3](https://github.com/graphty-org/graphty-element/compare/v1.2.2...v1.2.3) (2025-12-12)
 
 
