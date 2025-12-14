@@ -156,8 +156,8 @@ describe("XRUIManager", () => {
 
         const vrButton = container.querySelector("[data-xr-mode='immersive-vr']");
         assert.exists(vrButton);
-        assert.isTrue(vrButton?.classList.contains("webxr-button"));
-        assert.isTrue(vrButton?.classList.contains("webxr-available"));
+        assert.isTrue(vrButton.classList.contains("webxr-button"));
+        assert.isTrue(vrButton.classList.contains("webxr-available"));
     });
 
     test("should apply correct CSS classes to AR button", () => {
@@ -170,8 +170,8 @@ describe("XRUIManager", () => {
 
         const arButton = container.querySelector("[data-xr-mode='immersive-ar']");
         assert.exists(arButton);
-        assert.isTrue(arButton?.classList.contains("webxr-button"));
-        assert.isTrue(arButton?.classList.contains("webxr-available"));
+        assert.isTrue(arButton.classList.contains("webxr-button"));
+        assert.isTrue(arButton.classList.contains("webxr-available"));
     });
 
     test("should apply correct CSS classes to unavailable message", () => {
@@ -184,8 +184,8 @@ describe("XRUIManager", () => {
 
         const message = container.querySelector(".webxr-not-available");
         assert.exists(message);
-        assert.isTrue(message?.classList.contains("webxr-button"));
-        assert.isTrue(message?.classList.contains("webxr-not-available"));
+        assert.isTrue(message.classList.contains("webxr-button"));
+        assert.isTrue(message.classList.contains("webxr-not-available"));
     });
 
     test("should apply correct CSS class for overlay position", () => {
@@ -198,8 +198,8 @@ describe("XRUIManager", () => {
 
         const overlay = container.querySelector(".xr-button-overlay");
         assert.exists(overlay);
-        assert.isTrue(overlay?.classList.contains("xr-button-overlay"));
-        assert.isTrue(overlay?.classList.contains("xr-position-top-right"));
+        assert.isTrue(overlay.classList.contains("xr-button-overlay"));
+        assert.isTrue(overlay.classList.contains("xr-position-top-right"));
     });
 
     test("should set correct part attributes on VR button", () => {
@@ -212,7 +212,7 @@ describe("XRUIManager", () => {
 
         const vrButton = container.querySelector("[data-xr-mode='immersive-vr']");
         assert.exists(vrButton);
-        const part = vrButton?.getAttribute("part");
+        const part = vrButton.getAttribute("part");
         assert.include(part, "xr-button");
         assert.include(part, "xr-vr-button");
     });
@@ -227,7 +227,7 @@ describe("XRUIManager", () => {
 
         const arButton = container.querySelector("[data-xr-mode='immersive-ar']");
         assert.exists(arButton);
-        const part = arButton?.getAttribute("part");
+        const part = arButton.getAttribute("part");
         assert.include(part, "xr-button");
         assert.include(part, "xr-ar-button");
     });
@@ -242,7 +242,7 @@ describe("XRUIManager", () => {
 
         const message = container.querySelector(".webxr-not-available");
         assert.exists(message);
-        const part = message?.getAttribute("part");
+        const part = message.getAttribute("part");
         assert.include(part, "xr-button");
         assert.include(part, "xr-unavailable-message");
     });
@@ -257,7 +257,7 @@ describe("XRUIManager", () => {
 
         const overlay = container.querySelector(".xr-button-overlay");
         assert.exists(overlay);
-        assert.equal(overlay?.getAttribute("part"), "xr-overlay");
+        assert.equal(overlay.getAttribute("part"), "xr-overlay");
     });
 
     test("should inject default CSS styles with custom properties", () => {
@@ -273,7 +273,7 @@ describe("XRUIManager", () => {
         assert.exists(styleElement);
 
         // Verify it contains CSS custom properties
-        const css = styleElement?.textContent || "";
+        const css = styleElement.textContent ?? "";
         assert.include(css, "--xr-button-font-family");
         assert.include(css, "--xr-button-color");
         assert.include(css, "--xr-available-bg");
@@ -310,10 +310,10 @@ describe("XRUIManager", () => {
             callbackMode = mode;
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const vrButton = container.querySelector(
+        const vrButton = container.querySelector<HTMLElement>(
             "[data-xr-mode='immersive-vr']",
-        )!;
+        );
+        assert.exists(vrButton, "VR button should exist");
         vrButton.click();
 
         assert.equal(callbackMode, "immersive-vr");

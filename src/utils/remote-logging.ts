@@ -82,7 +82,7 @@ function formatArgs(args: unknown[]): string {
             try {
                 return JSON.stringify(arg, null, 2);
             } catch {
-                return String(arg);
+                return "[Circular or non-serializable object]";
             }
         }
 

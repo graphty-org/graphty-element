@@ -81,7 +81,7 @@ export class XRPivotCameraController {
         console.log("📷 [XRPivotCameraController] XR camera parented to pivot:", {
             pivotName: this.pivotController.pivot.name,
             cameraName: camera.name,
-            cameraParent: camera.parent?.name,
+            cameraParent: this.pivotController.pivot.name,
         });
 
         // Parent hand tracking meshes to the pivot as well
@@ -163,7 +163,7 @@ export class XRPivotCameraController {
             const {pivot} = this.pivotController;
             console.log(`💓 [XRPivotCameraController] Heartbeat frame ${this.frameCount}:`, {
                 inputEnabled: this.inputHandler.isEnabled(),
-                cameraParent: camera?.parent?.name ?? "null",
+                cameraParent: camera.parent ? camera.parent.name : "null",
                 pivotPos: `(${pivot.position.x.toFixed(2)}, ${pivot.position.y.toFixed(2)}, ${pivot.position.z.toFixed(2)})`,
                 pivotScale: pivot.scaling.x.toFixed(3),
             });

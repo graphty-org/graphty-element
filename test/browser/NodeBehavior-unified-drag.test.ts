@@ -13,15 +13,14 @@ describe("Unified Drag Handler", () => {
 
     beforeEach(async() => {
         // Create test graph using the helper (properly sets up styles)
-        graph = await createTestGraph({
-            camera: {type: "orbit"},
-            layout: {type: "fixed"},
-        });
+        graph = await createTestGraph();
 
         // Create test node using DataManager
         const dataManager = graph.getDataManager();
-        dataManager.addNode({id: "test-node", label: "Test Node"} as AdHocData);
-        node = dataManager.getNode("test-node")!;
+        dataManager.addNode({id: "test-node", label: "Test Node"} as unknown as AdHocData);
+        const retrievedNode = dataManager.getNode("test-node");
+        assert.exists(retrievedNode, "Node should be created");
+        node = retrievedNode;
     });
 
     afterEach(() => {
@@ -61,14 +60,15 @@ describe("Unified Drag Handler", () => {
 
     test("should set node.dragging flag during drag", () => {
         assert.isFalse(node.dragging, "node.dragging should start as false");
+        assert.exists(node.dragHandler, "dragHandler should exist");
 
         // Start drag
-        node.dragHandler!.onDragStart(node.mesh.position);
+        node.dragHandler.onDragStart(node.mesh.position);
 
         assert.isTrue(node.dragging, "node.dragging should be true during drag");
 
         // End drag
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
 
         assert.isFalse(node.dragging, "node.dragging should be false after drag");
     });
@@ -76,35 +76,35 @@ describe("Unified Drag Handler", () => {
     test("should update layout engine during drag", () => {
         const {layoutEngine} = graph.getLayoutManager();
         assert.exists(layoutEngine, "Layout engine should exist");
+        assert.exists(node.dragHandler, "dragHandler should exist");
 
         let setPositionCalled = false;
         let lastSetPosition: {x: number, y: number, z: number} | null = null;
 
         // Mock setNodePosition
-        const originalSetNodePosition = layoutEngine?.setNodePosition.bind(layoutEngine);
-        if (layoutEngine) {
-            layoutEngine.setNodePosition = (n: Node, pos: {x: number, y: number, z: number}) => {
-                setPositionCalled = true;
-                lastSetPosition = pos;
-                originalSetNodePosition?.(n, pos);
-            };
-        }
+        const originalSetNodePosition = layoutEngine.setNodePosition.bind(layoutEngine);
+        layoutEngine.setNodePosition = (n: Node, pos: {x: number, y: number, z: number}) => {
+            setPositionCalled = true;
+            lastSetPosition = pos;
+            originalSetNodePosition(n, pos);
+        };
 
         // Start drag
-        node.dragHandler!.onDragStart(node.mesh.position);
+        node.dragHandler.onDragStart(node.mesh.position);
 
         // Move
         const newPosition = node.mesh.position.add(new Vector3(2, 2, 0));
-        node.dragHandler!.onDragUpdate(newPosition);
+        node.dragHandler.onDragUpdate(newPosition);
 
         assert.isTrue(setPositionCalled, "setNodePosition should be called during drag");
         assert.exists(lastSetPosition, "Position should be set");
 
         // End drag
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
     });
 
     test("should pin node after drag when configured", () => {
+        assert.exists(node.dragHandler, "dragHandler should exist");
         // Set pinOnDrag = true (should be default)
         node.pinOnDrag = true;
 
@@ -116,13 +116,14 @@ describe("Unified Drag Handler", () => {
         };
 
         // Use dragHandler directly (as in node-behavior.test.ts)
-        node.dragHandler!.onDragStart(new Vector3(0, 0, 0));
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragStart(new Vector3(0, 0, 0));
+        node.dragHandler.onDragEnd();
 
         assert.isTrue(pinCalled, "node.pin() should be called when pinOnDrag is true");
     });
 
     test("should NOT pin node when pinOnDrag is false", () => {
+        assert.exists(node.dragHandler, "dragHandler should exist");
         // Set pinOnDrag = false
         node.pinOnDrag = false;
 
@@ -134,22 +135,23 @@ describe("Unified Drag Handler", () => {
         };
 
         // Use dragHandler directly (as in node-behavior.test.ts)
-        node.dragHandler!.onDragStart(new Vector3(0, 0, 0));
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragStart(new Vector3(0, 0, 0));
+        node.dragHandler.onDragEnd();
 
         assert.isFalse(pinCalled, "node.pin() should NOT be called when pinOnDrag is false");
     });
 
     test("should maintain consistent depth during horizontal drag", () => {
+        assert.exists(node.dragHandler, "dragHandler should exist");
         const startPosition = node.mesh.position.clone();
         const startZ = startPosition.z;
 
         // Start drag
-        node.dragHandler!.onDragStart(startPosition);
+        node.dragHandler.onDragStart(startPosition);
 
         // Simulate horizontal movement (X-axis only)
         const horizontalMove = new Vector3(startPosition.x + 5, startPosition.y, startPosition.z);
-        node.dragHandler!.onDragUpdate(horizontalMove);
+        node.dragHandler.onDragUpdate(horizontalMove);
 
         // Verify Z-coordinate remains stable (within tolerance)
         const currentZ = node.mesh.position.z;
@@ -160,19 +162,20 @@ describe("Unified Drag Handler", () => {
             `Z-coordinate should remain stable during horizontal drag (difference: ${zDifference})`,
         );
 
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
     });
 
     test("should maintain consistent depth during vertical drag", () => {
+        assert.exists(node.dragHandler, "dragHandler should exist");
         const startPosition = node.mesh.position.clone();
         const startZ = startPosition.z;
 
         // Start drag
-        node.dragHandler!.onDragStart(startPosition);
+        node.dragHandler.onDragStart(startPosition);
 
         // Simulate vertical movement (Y-axis only)
         const verticalMove = new Vector3(startPosition.x, startPosition.y + 5, startPosition.z);
-        node.dragHandler!.onDragUpdate(verticalMove);
+        node.dragHandler.onDragUpdate(verticalMove);
 
         // Verify Z-coordinate remains stable (within tolerance)
         const currentZ = node.mesh.position.z;
@@ -183,18 +186,20 @@ describe("Unified Drag Handler", () => {
             `Z-coordinate should remain stable during vertical drag (difference: ${zDifference})`,
         );
 
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
     });
 
     test("should dispose cleanly", () => {
         assert.exists(node.dragHandler, "Drag handler should exist before disposal");
 
         // Dispose drag handler
-        node.dragHandler?.dispose();
+        node.dragHandler.dispose();
 
-        // Verify no errors occur when disposing
+        // Verify no errors occur when disposing a second time
         assert.doesNotThrow(() => {
-            node.dragHandler?.dispose();
+            if (node.dragHandler) {
+                node.dragHandler.dispose();
+            }
         }, "Disposing should not throw errors");
     });
 });

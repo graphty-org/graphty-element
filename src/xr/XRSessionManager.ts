@@ -63,7 +63,13 @@ export class XRSessionManager {
         }
 
         try {
-            return await navigator.xr!.isSessionSupported("immersive-vr");
+            // navigator.xr is guaranteed to exist after isXRSupported() check
+            const {xr} = navigator;
+            if (!xr) {
+                return false;
+            }
+
+            return await xr.isSessionSupported("immersive-vr");
         } catch (error) {
             console.warn("Failed to check VR support:", error);
             return false;
@@ -79,7 +85,13 @@ export class XRSessionManager {
         }
 
         try {
-            return await navigator.xr!.isSessionSupported("immersive-ar");
+            // navigator.xr is guaranteed to exist after isXRSupported() check
+            const {xr} = navigator;
+            if (!xr) {
+                return false;
+            }
+
+            return await xr.isSessionSupported("immersive-ar");
         } catch (error) {
             console.warn("Failed to check AR support:", error);
             return false;
@@ -186,7 +198,7 @@ export class XRSessionManager {
             console.log("🎮 [XRSessionManager] Creating AR XR experience...");
 
             // Import WebXR module dynamically
-            const {WebXRDefaultExperience, WebXRFeatureName} = await import("@babylonjs/core");
+            const {WebXRDefaultExperience} = await import("@babylonjs/core");
 
             // For AR, we explicitly DON'T request hand-tracking as an optional feature
             // This prevents dots/spheres from appearing in AR mode

@@ -25,12 +25,19 @@ describe("XRPivotCameraController", () => {
         input: {
             onControllerAddedObservable: MockInputObservable<unknown>;
             onControllerRemovedObservable: MockInputObservable<unknown>;
+            controllers: unknown[];
         };
         baseExperience: {
             onStateChangedObservable: MockStateObservable;
+            onInitialXRPoseSetObservable: {
+                add: ReturnType<typeof vi.fn>;
+            };
             camera: TransformNode;
             featuresManager: {
                 getEnabledFeature: ReturnType<typeof vi.fn>;
+            };
+            sessionManager: {
+                scene: Scene;
             };
         };
     };
@@ -57,6 +64,7 @@ describe("XRPivotCameraController", () => {
                     }),
                     handlers: [],
                 },
+                controllers: [],
             },
             baseExperience: {
                 onStateChangedObservable: {
@@ -65,9 +73,15 @@ describe("XRPivotCameraController", () => {
                     }),
                     handlers: [],
                 },
+                onInitialXRPoseSetObservable: {
+                    add: vi.fn(),
+                },
                 camera: mockCamera,
                 featuresManager: {
                     getEnabledFeature: vi.fn().mockReturnValue(null),
+                },
+                sessionManager: {
+                    scene,
                 },
             },
         };

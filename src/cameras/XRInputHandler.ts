@@ -99,7 +99,7 @@ export class XRInputHandler {
         this.pivotController = pivotController;
         this.xr = xr;
         this.scene = xr.baseExperience.sessionManager.scene;
-        console.log("🎮 [XRInputHandler] Created");
+        // Debug: XRInputHandler created
     }
 
     /**
@@ -112,7 +112,7 @@ export class XRInputHandler {
         }
 
         this.enabled = true;
-        console.log("🎮 [XRInputHandler] Enabled - Using PIVOT approach with polling");
+        // Debug: XRInputHandler enabled with PIVOT approach
 
         // Try to get hand tracking feature
         this.enableHandTracking();
@@ -241,14 +241,12 @@ export class XRInputHandler {
 
         // Check if this is a hand (detected as controller but no real controller capabilities)
         const {inputSource} = controller;
-        if (inputSource.profiles) {
-            const hasHandProfile = inputSource.profiles.some(
-                (p) => p.includes("hand") || p.includes("generic-trigger-touchpad"),
-            );
-            if (hasHandProfile) {
-                console.log(`🤲 Skipping hand controller ${uniqueId} (no thumbstick) - will use gesture handler instead`);
-                return;
-            }
+        const hasHandProfile = inputSource.profiles.some(
+            (p) => p.includes("hand") || p.includes("generic-trigger-touchpad"),
+        );
+        if (hasHandProfile) {
+            console.log(`🤲 Skipping hand controller ${uniqueId} (no thumbstick) - will use gesture handler instead`);
+            return;
         }
 
         console.log(`🎮 Setting up ${handedness} controller (${uniqueId}) for pivot input`);
@@ -355,7 +353,7 @@ export class XRInputHandler {
                 isCleanedUp = true;
                 console.log(`🎮 [${stickName}] Running cleanup for ${uniqueId}`);
 
-                if (axisObserver && thumbstick.onAxisValueChangedObservable) {
+                if (axisObserver) {
                     try {
                         thumbstick.onAxisValueChangedObservable.remove(axisObserver);
                         console.log(`🎮 [${stickName}] Removed axis observer`);
@@ -630,7 +628,7 @@ export class XRInputHandler {
                 try {
                     const gripPos = grip.position;
                     // Verify position is valid (not disposed)
-                    if (gripPos && isFinite(gripPos.x) && isFinite(gripPos.y) && isFinite(gripPos.z)) {
+                    if (isFinite(gripPos.x) && isFinite(gripPos.y) && isFinite(gripPos.z)) {
                         const trigger = mc.motionController.getComponent("xr-standard-trigger");
                         if (trigger) {
                             // Use trigger.pressed OR value > 0.5 for pinching
@@ -658,7 +656,7 @@ export class XRInputHandler {
                             }
                         }
                     }
-                } catch (e) {
+                } catch {
                     // Controller is likely disposed, fall through to hand tracking
                 }
             }
@@ -680,11 +678,7 @@ export class XRInputHandler {
                     const indexTip = hand.getJointMesh("index-finger-tip");
 
                     if (wrist && thumbTip && indexTip) {
-                        // Defensive: Check positions are valid
-                        if (!wrist.position || !thumbTip.position || !indexTip.position) {
-                            return null;
-                        }
-
+                        // Verify positions are valid (not NaN from disposed objects)
                         if (!isFinite(wrist.position.x) || !isFinite(thumbTip.position.x)) {
                             return null;
                         }
@@ -798,12 +792,12 @@ export class XRInputHandler {
         }
 
         // Not currently dragging - check if we should start
-        if (leftPinching && !rightPinching) {
+        if (leftPinching && !rightPinching && this.leftHand) {
             console.log("🎯 [XR Node] Left hand pinching alone - trying to start drag");
-            this.tryStartNodeDrag("left", this.leftHand!.position);
-        } else if (rightPinching && !leftPinching) {
+            this.tryStartNodeDrag("left", this.leftHand.position);
+        } else if (rightPinching && !leftPinching && this.rightHand) {
             console.log("🎯 [XR Node] Right hand pinching alone - trying to start drag");
-            this.tryStartNodeDrag("right", this.rightHand!.position);
+            this.tryStartNodeDrag("right", this.rightHand.position);
         }
     }
 
@@ -815,7 +809,7 @@ export class XRInputHandler {
         let controller: WebXRInputSource | null = null;
         for (const entry of this.gestureControllers.values()) {
             if (entry.handedness === handedness) {
-                controller = entry.controller;
+                ({controller} = entry);
                 break;
             }
         }
@@ -837,13 +831,8 @@ export class XRInputHandler {
         if (controllerWithRay.getWorldPointerRayToRef) {
             controllerWithRay.getWorldPointerRayToRef(ray);
         } else {
-            // Fallback: Use pointer or grip node
-            const pointerNode = controller.pointer || controller.grip;
-            if (!pointerNode) {
-                console.log(`🎯 [XR Node] No pointer/grip node for ${handedness} controller`);
-                return;
-            }
-
+            // Fallback: Use pointer node (always available) or grip node
+            const pointerNode = controller.grip ?? controller.pointer;
             ray.origin = pointerNode.position.clone();
             ray.direction = pointerNode.forward.clone();
         }
@@ -865,7 +854,7 @@ export class XRInputHandler {
         }
 
         console.log(`🎯 [XR Node] Ray hit mesh: ${pickInfo.pickedMesh.name}`, {
-            distance: pickInfo.distance?.toFixed(2),
+            distance: pickInfo.distance.toFixed(2),
             point: pickInfo.pickedPoint ?
                 `(${pickInfo.pickedPoint.x.toFixed(2)}, ${pickInfo.pickedPoint.y.toFixed(2)}, ${pickInfo.pickedPoint.z.toFixed(2)})` :
                 "null",
