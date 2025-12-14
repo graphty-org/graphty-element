@@ -2752,9 +2752,9 @@ export class Graph implements GraphContext {
         this.xrUIManager.onEnterXR = (mode) => {
             void (async() => {
                 try {
-                    console.log(`[XR] Attempting to enter ${mode} mode...`);
+                    // Debug: console.log(`[XR] Attempting to enter ${mode} mode...`);
                     await this.enterXR(mode);
-                    console.log(`[XR] Successfully entered ${mode} mode`);
+                    // Debug: console.log(`[XR] Successfully entered ${mode} mode`);
                 } catch (error) {
                     console.error("Failed to enter XR mode:", error);
 
@@ -2783,7 +2783,7 @@ export class Graph implements GraphContext {
             throw new Error("XR is not initialized");
         }
 
-        console.log("🔍 [XR] Entering XR mode:", mode);
+        // Debug: console.log("🔍 [XR] Entering XR mode:", mode);
 
         const previousCamera = this.camera.getActiveController()?.camera;
 
@@ -2793,7 +2793,7 @@ export class Graph implements GraphContext {
             await this.xrSessionManager.enterAR(previousCamera ?? undefined);
         }
 
-        console.log("🔍 [XR] XR session created, now setting up XR camera and input...");
+        // Debug: console.log("🔍 [XR] XR session created, now setting up XR camera and input...");
 
         // Phase 3: Set up XR camera controller and input handler
         const xrHelper = this.xrSessionManager.getXRHelper();
@@ -2805,13 +2805,13 @@ export class Graph implements GraphContext {
         this.scene.metadata = this.scene.metadata ?? {};
         this.scene.metadata.xrHelper = xrHelper;
 
-        console.log("🔍 [XR] XR helper stored in scene metadata");
+        // Debug: console.log("🔍 [XR] XR helper stored in scene metadata");
 
         // Create XR pivot camera controller (handles input via pivot-based system)
         const {XRPivotCameraController} = await import("./cameras/XRPivotCameraController");
         const xrCameraController = new XRPivotCameraController(this.scene, xrHelper);
 
-        console.log("🔍 [XR] XRPivotCameraController created");
+        // Debug: console.log("🔍 [XR] XRPivotCameraController created");
 
         // Note: XRPivotCameraController automatically enables input when XR state changes
         // We just need to call update() every frame for input processing
@@ -2825,7 +2825,7 @@ export class Graph implements GraphContext {
         this.scene.metadata.xrCameraController = xrCameraController;
         this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
 
-        console.log("🔍 [XR] XR input update loop registered");
+        // Debug: console.log("🔍 [XR] XR input update loop registered");
     }
 
     /**
@@ -2836,31 +2836,31 @@ export class Graph implements GraphContext {
             return;
         }
 
-        console.log("🔍 [XR] Exiting XR mode...");
+        // Debug: console.log("🔍 [XR] Exiting XR mode...");
 
         // Clean up XR camera controller
         if (this.scene.metadata?.xrCameraController) {
-            console.log("🔍 [XR] Disposing XRPivotCameraController");
+            // Debug: console.log("🔍 [XR] Disposing XRPivotCameraController");
             this.scene.metadata.xrCameraController.dispose();
             this.scene.metadata.xrCameraController = null;
         }
 
         // Remove render loop observer
         if (this.scene.metadata?.xrUpdateObserver) {
-            console.log("🔍 [XR] Removing XR update observer");
+            // Debug: console.log("🔍 [XR] Removing XR update observer");
             this.scene.onBeforeRenderObservable.remove(this.scene.metadata.xrUpdateObserver);
             this.scene.metadata.xrUpdateObserver = null;
         }
 
         // Clear XR helper from metadata
         if (this.scene.metadata?.xrHelper) {
-            console.log("🔍 [XR] Clearing XR helper from metadata");
+            // Debug: console.log("🔍 [XR] Clearing XR helper from metadata");
             this.scene.metadata.xrHelper = null;
         }
 
         await this.xrSessionManager.exitXR();
 
-        console.log("🔍 [XR] XR mode exited");
+        // Debug: console.log("🔍 [XR] XR mode exited");
     }
 
     dispose(): void {

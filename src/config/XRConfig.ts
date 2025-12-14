@@ -158,9 +158,13 @@ export interface XRConfig {
 
 /**
  * Default XR configuration
+ *
+ * Note: XR is disabled by default to avoid issues with navigator.xr.isSessionSupported()
+ * hanging in headless browser environments (CI, tests). Users who want XR should
+ * explicitly enable it by setting xr.enabled: true in their configuration.
  */
 export const defaultXRConfig: XRConfig = {
-    enabled: true,
+    enabled: false,
     ui: {
         enabled: true,
         position: "bottom-right",
