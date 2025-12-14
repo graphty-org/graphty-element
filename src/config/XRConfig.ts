@@ -28,6 +28,13 @@ export interface XRUIConfig {
    * @default 5000
    */
     unavailableMessageDuration: number;
+
+    /**
+   * Show "VR / AR NOT AVAILABLE" warning when XR is not available
+   * When false, no message is displayed if AR/VR aren't available
+   * @default false
+   */
+    showAvailabilityWarning: boolean;
 }
 
 /**
@@ -158,6 +165,7 @@ export const defaultXRConfig: XRConfig = {
         enabled: true,
         position: "bottom-right",
         unavailableMessageDuration: 5000,
+        showAvailabilityWarning: false,
     },
     vr: {
         enabled: true,

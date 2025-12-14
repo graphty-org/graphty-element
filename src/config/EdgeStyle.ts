@@ -19,28 +19,29 @@ const ArrowType = z.enum([
     "open-diamond",
     "crow",
     "box",
-    "open",
     "half-open",
     "vee",
 ]);
 
 const ArrowStyle = z.strictObject({
-    type: ArrowType.default("normal"),
-    size: z.number().positive().default(1),
-    color: ColorStyle.default("white"),
-    opacity: z.number().min(0).max(1).default(1),
+    type: ArrowType.default("normal").optional(),
+    size: z.number().positive().default(1).optional(),
+    color: ColorStyle.default("white").optional(),
+    opacity: z.number().min(0).max(1).default(1).optional(),
     text: RichTextStyle.optional(),
 });
 
 const LineType = z.enum([
-    // https://manual.cytoscape.org/en/stable/Styles.html#available-shapes-and-line-styles
-    "solid",
-    "dash",
-    "dash-dot",
-    "dots",
-    "equal-dash",
-    "sinewave",
-    "zigzag",
+    // Phase 4: Instanced Mesh Line Patterns
+    "solid", // CustomLineRenderer (continuous line)
+    "dot", // Circle instances
+    "star", // Star instances
+    "box", // Square box instances (1:1 aspect ratio)
+    "dash", // Elongated box instances (3:1 aspect ratio)
+    "diamond", // Diamond instances
+    "dash-dot", // Alternating boxes and circles
+    "sinewave", // Repeating wave period meshes
+    "zigzag", // Repeating zigzag period meshes
 ]);
 
 const LineStyle = z.strictObject({
@@ -59,7 +60,7 @@ export const EdgeStyle = z.strictObject({
     label: RichTextStyle.prefault({location: "top"}).optional(),
     tooltip: RichTextStyle.prefault({location: "bottom"}).optional(),
     // effects: glow // https://playground.babylonjs.com/#H1LRZ3#35
-    enabled: z.boolean().default(true),
+    enabled: z.boolean().default(true).optional(),
 });
 
 export type EdgeStyleConfig = z.infer<typeof EdgeStyle>;

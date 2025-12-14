@@ -115,15 +115,15 @@ describe("NodeBehavior XR Compatibility", () => {
         assert.exists(node.mesh.actionManager, "action manager exists");
 
         // Start drag from any input source
-        node.dragHandler!.onDragStart(new Vector3(0, 0, 0));
+        node.dragHandler.onDragStart(new Vector3(0, 0, 0));
         assert.isTrue(node.dragging, "dragging flag set");
 
         // Update position (works the same for desktop/XR)
-        node.dragHandler!.onDragUpdate(new Vector3(5, 5, 5));
+        node.dragHandler.onDragUpdate(new Vector3(5, 5, 5));
         assert.isTrue(node.dragging, "still dragging during update");
 
         // End drag
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
         assert.isFalse(node.dragging, "not dragging after end");
 
         // These behaviors should work with:

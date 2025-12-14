@@ -1,0 +1,9 @@
+source,target,weight
+Alice,Bob,1.5
+Bob,Charlie,2.0
+Charlie,David,1.0
+David,Eve,3.5
+Eve,Alice,0.8
+Alice,Charlie,2.5
+Bob,David,1.2
+Charlie,Eve,0.9

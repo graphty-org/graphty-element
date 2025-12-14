@@ -173,6 +173,25 @@ When you write unit tests with vitest, prefer `assert` over `expect`.
 ## Development Best Practices
 
 - Always create unit tests when you write new core functionality
+- **Algorithm Registration**: All algorithm classes must auto-register at the end of their module file to ensure they work correctly in both production and test environments:
+  ```typescript
+  export class MyAlgorithm extends Algorithm {
+      static namespace = "my-namespace";
+      static type = "my-type";
+      // ... implementation
+  }
+
+  // Auto-register this algorithm when the module is imported
+  Algorithm.register(MyAlgorithm);
+  ```
+  This pattern ensures algorithms are automatically available when imported, preventing test isolation issues.
+
+## Common Pitfalls
+
+**Manager Pattern**: This codebase uses Manager classes to handle operations with side effects (caching, events, validation). Always use manager methods instead of directly manipulating managed data structures:
+- ✅ `styleManager.addLayer(layer)` - correct: uses manager method
+- ❌ `graph.styles.layers.push(layer)` - wrong: bypasses cache invalidation and event emission
+- Applies to: StyleManager, DataManager, LayoutManager, AlgorithmManager, etc.
 
 ## Debugging with Screenshots
 
@@ -287,6 +306,96 @@ Common warnings during visual tests:
 
 - Do not increase playwright timeout times to try and address timeout issues. The timeout is probably due to another problem
 
+## Edge Styling System
+
+### Overview
+
+The edge styling system supports comprehensive customization of edge appearance in 2D and 3D modes:
+
+- **Line Types**: solid, dash, dot, star, diamond, dash-dot, sinewave, zigzag
+- **Arrow Types**: normal, inverted, dot, diamond, box, vee, tee, half-open, crow, open-normal, open-diamond, open-dot, sphere, sphere-dot
+- **Bezier Curves**: Smooth curved edges with automatic control point calculation
+- **Opacity**: Full transparency control (0.0 - 1.0)
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/Edge.ts` | Edge class - manages edge instances and updates |
+| `src/meshes/EdgeMesh.ts` | Edge mesh factory - creates line and arrow meshes |
+| `src/meshes/CustomLineRenderer.ts` | Shader-based line rendering |
+| `src/meshes/PatternedLineMesh.ts` | Patterned line rendering (dot, dash, etc.) |
+| `src/meshes/FilledArrowRenderer.ts` | Filled arrow head rendering |
+| `src/constants/meshConstants.ts` | Edge constants (widths, lengths, densities) |
+
+### Edge Configuration
+
+```typescript
+// Example edge style configuration
+const edgeStyle = {
+  line: {
+    type: "solid",     // Line pattern
+    width: 0.5,        // Line width
+    color: "#FFFFFF",  // Line color
+    opacity: 1.0,      // Transparency (0-1)
+    bezier: false,     // Enable curved edges
+  },
+  arrowHead: {
+    type: "normal",    // Arrow head style
+    size: 1.0,         // Size multiplier
+    color: "#FF0000",  // Arrow color
+    opacity: 1.0,      // Transparency (0-1)
+  },
+  arrowTail: {
+    type: "none",      // Arrow tail style (same options as head)
+  },
+};
+```
+
+### Performance Considerations
+
+- **Mesh Caching**: Solid lines in 3D mode use MeshCache for instancing
+- **Bezier Curves**: Each bezier edge has unique geometry (not cached)
+- **Patterned Lines**: Created per-edge (PatternedLineMesh)
+- **Arrow Heads**: Individual meshes for fast position updates
+
+### Testing Edge Styles
+
+```bash
+# Run edge-specific tests
+npx vitest run test/edge-cases/EdgeCases.test.ts
+npx vitest run test/meshes/BezierCurves.test.ts
+npx vitest run test/performance/phase7-benchmarks.test.ts
+
+# Run Storybook for visual inspection
+npm run storybook
+# Then navigate to: Styles > Edge
+```
+
+### Arrow Geometry System
+
+The `ArrowGeometry` interface defines positioning behavior:
+
+```typescript
+interface ArrowGeometry {
+  positioningMode: "center" | "tip";  // How arrow is positioned
+  needsRotation: boolean;              // Whether mesh needs rotation
+  positionOffset: number;              // Offset from surface point
+  scaleFactor?: number;                // Optional size multiplier
+}
+```
+
+Use `EdgeMesh.getArrowGeometry(arrowType)` to get metadata for any arrow type.
+
+### Bezier Curve Implementation
+
+Bezier curves use cubic Bezier interpolation with automatic control points:
+
+1. Control points are calculated perpendicular to the edge direction
+2. Point density scales with edge length (BEZIER_POINT_DENSITY constant)
+3. Self-loops (source === destination) render as circular arcs
+4. Short edges (< 0.01 units) are treated as self-loops
+
 ## Debugging Tools
 
 ### Capturing Layout Positions
@@ -314,5 +423,7 @@ To use the captured positions:
 2. Copy the output file to your desired location (e.g., `cp test/helpers/cat-social-network-2-fixed-positions-actual-engine.json test/helpers/my-fixed-positions.json`)
 3. Use the fixed layout type in your story/test with the generated data
 ```
-- use ./tmp for any temporary images, debugging files, debugging scripts, etc.
+- use ./tmp for any temporary images, screenshots, debugging files, debugging scripts, etc.
+- do not create __screenshots__ directories under ./test unless you intend for them to be committed
 - check and see if storybook is running on port 9025 before starting storybook on a new port
+- do not attempt to use nanobanana confirm whether elements of the scene are correct -- the 3D nature of our scenes makes it difficult to determine the positioning, overlapping, or other aspects of the scene. ask the user to provide the final visual verification of scenes.

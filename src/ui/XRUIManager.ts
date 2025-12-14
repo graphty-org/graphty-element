@@ -4,6 +4,7 @@ export interface XRUIConfig {
     enabled: boolean;
     position: "bottom-left" | "bottom-right" | "top-left" | "top-right";
     unavailableMessageDuration: number;
+    showAvailabilityWarning: boolean;
 }
 
 /**
@@ -40,7 +41,9 @@ export class XRUIManager {
         this.createOverlay();
 
         if (!vrAvailable && !arAvailable) {
-            this.showUnavailableMessage();
+            if (config.showAvailabilityWarning) {
+                this.showUnavailableMessage();
+            }
         } else {
             if (vrAvailable) {
                 this.createButton("VR", "immersive-vr");

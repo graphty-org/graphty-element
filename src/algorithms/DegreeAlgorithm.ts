@@ -1,45 +1,90 @@
+import type {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import {toAlgorithmGraph} from "./utils/graphConverter";
 
 export class DegreeAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "degree";
 
+    static suggestedStyles = (): SuggestedStylesConfig => ({
+        layers: [
+            {
+                node: {
+                    selector: "",
+                    style: {
+                        enabled: true,
+                    },
+                    calculatedStyle: {
+                        inputs: ["algorithmResults.graphty.degree.degreePct"],
+                        output: "style.texture.color",
+                        expr: "{ return StyleHelpers.color.sequential.viridis(arguments[0]) }",
+                    },
+                },
+                metadata: {
+                    name: "Degree - Viridis Gradient",
+                    description: "Purple (low) → Yellow (high) - colorblind-safe",
+                },
+            },
+        ],
+        description: "Visualizes node importance through color based on connection count",
+        category: "node-metric",
+    });
+
     // eslint-disable-next-line @typescript-eslint/require-await
     async run(): Promise<void> {
         const g = this.graph;
-        const inDegreeMap = new Map<number | string, number>();
-        const outDegreeMap = new Map<number | string, number>();
-        const degreeMap = new Map<number | string, number>();
+        const nodes = Array.from(g.getDataManager().nodes.keys());
 
-        function incrementMap(m: Map<number | string, number>, idx: number | string): void {
-            let num = m.get(idx); ;
-            num ??= 0;
-
-            num++;
-            m.set(idx, num);
+        if (nodes.length === 0) {
+            return;
         }
 
-        for (const e of g.getDataManager().edges.values()) {
-            incrementMap(inDegreeMap, e.srcId);
-            incrementMap(outDegreeMap, e.dstId);
-            incrementMap(degreeMap, e.srcId);
-            incrementMap(degreeMap, e.dstId);
+        // Convert to @graphty/algorithms format - use directed mode to get accurate in/out degrees
+        const graphData = toAlgorithmGraph(g, {directed: true, addReverseEdges: false});
+
+        // Calculate degrees using the @graphty/algorithms Graph methods
+        let maxInDegree = 0;
+        let maxOutDegree = 0;
+        let maxDegree = 0;
+
+        const degreeResults = new Map<number | string, {inDegree: number, outDegree: number, degree: number}>();
+
+        for (const nodeId of nodes) {
+            const inDegree = graphData.inDegree(nodeId);
+            const outDegree = graphData.outDegree(nodeId);
+            const degree = inDegree + outDegree;
+
+            degreeResults.set(nodeId, {inDegree, outDegree, degree});
+
+            maxInDegree = Math.max(maxInDegree, inDegree);
+            maxOutDegree = Math.max(maxOutDegree, outDegree);
+            maxDegree = Math.max(maxDegree, degree);
         }
 
-        const maxInDegree = Math.max(... inDegreeMap.values());
-        const maxOutDegree = Math.max(... outDegreeMap.values());
-        const maxDegree = Math.max(... degreeMap.values());
+        // Store graph-level results
+        this.addGraphResult("maxInDegree", maxInDegree);
+        this.addGraphResult("maxOutDegree", maxOutDegree);
+        this.addGraphResult("maxDegree", maxDegree);
 
-        for (const n of g.getDataManager().nodes.values()) {
-            const inDegree = inDegreeMap.get(n.id) ?? 0;
-            const outDegree = outDegreeMap.get(n.id) ?? 0;
-            const degree = degreeMap.get(n.id) ?? 0;
-            this.addNodeResult(n.id, "inDegree", inDegree);
-            this.addNodeResult(n.id, "outDegree", outDegree);
-            this.addNodeResult(n.id, "degree", degree);
-            this.addNodeResult(n.id, "inDegreePct", inDegree / maxInDegree);
-            this.addNodeResult(n.id, "outDegreePct", outDegree / maxOutDegree);
-            this.addNodeResult(n.id, "degreePct", degree / maxDegree);
+        // Store node-level results
+        for (const nodeId of nodes) {
+            const result = degreeResults.get(nodeId);
+            if (!result) {
+                continue;
+            }
+
+            const {inDegree, outDegree, degree} = result;
+
+            this.addNodeResult(nodeId, "inDegree", inDegree);
+            this.addNodeResult(nodeId, "outDegree", outDegree);
+            this.addNodeResult(nodeId, "degree", degree);
+            // Safe division: return 0 when max is 0 to avoid NaN
+            this.addNodeResult(nodeId, "inDegreePct", maxInDegree > 0 ? inDegree / maxInDegree : 0);
+            this.addNodeResult(nodeId, "outDegreePct", maxOutDegree > 0 ? outDegree / maxOutDegree : 0);
+            this.addNodeResult(nodeId, "degreePct", maxDegree > 0 ? degree / maxDegree : 0);
         }
     }
 }
+
+// Auto-register this algorithm when the module is imported
+Algorithm.register(DegreeAlgorithm);

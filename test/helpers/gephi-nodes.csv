@@ -1,0 +1,7 @@
+Id,Label,Type,Priority,Active
+server-1,Primary Server,server,10,true
+client-1,Web Client,client,5,true
+database-1,PostgreSQL DB,database,8,true
+cache-1,Redis Cache,cache,7,true
+api-1,REST API,api,6,true
+monitor-1,Monitoring Service,monitor,4,false

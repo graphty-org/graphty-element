@@ -11,6 +11,10 @@ export class NGraphEngine extends LayoutEngine {
     static maxDimensions = 3;
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
+
+    static getOptionsForDimension(dimension: 2 | 3): object {
+        return {dim: dimension};
+    }
     nodeMapping = new Map<Node, NGraphNode>();
     edgeMapping = new Map<Edge, NGraphLink>();
     _settled = true;

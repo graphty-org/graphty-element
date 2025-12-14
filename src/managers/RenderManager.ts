@@ -1,4 +1,5 @@
 import {
+    Color3,
     Color4,
     Engine,
     HemisphericLight,
@@ -57,7 +58,9 @@ export class RenderManager implements Manager {
         if (this.config.useWebGPU) {
             this.engine = new WebGPUEngine(this.canvas);
         } else {
-            this.engine = new Engine(this.canvas, true);
+            this.engine = new Engine(this.canvas, true, {
+                preserveDrawingBuffer: true, // Required for screenshots
+            });
         }
 
         // Create scene
@@ -86,8 +89,9 @@ export class RenderManager implements Manager {
         // Setup cameras
         this.setupCameras();
 
-        // Setup lighting
-        new HemisphericLight("light", new Vector3(1, 1, 0));
+        // Setup lighting with ground color for fill from below
+        const light = new HemisphericLight("light", new Vector3(1, 1, 0), this.scene);
+        light.groundColor = new Color3(0.35, 0.35, 0.35);
 
         // Set background color
         const backgroundColor = this.config.backgroundColor ?? "#F5F5F5"; // whitesmoke

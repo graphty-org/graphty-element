@@ -99,6 +99,7 @@ export class LayoutManager implements Manager {
             }
 
             const engine = LayoutEngine.get(type, layoutOpts);
+
             if (!engine) {
                 throw new TypeError(`No layout named: ${type}`);
             }

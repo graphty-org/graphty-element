@@ -23,6 +23,31 @@ export interface QueueableOptions {
 }
 
 /**
+ * Algorithm-specific options (source, target, startNode, etc.)
+ * These are passed through to the algorithm's configure method.
+ */
+export interface AlgorithmSpecificOptions {
+    source?: string | number;
+    target?: string | number;
+    startNode?: string | number;
+    sink?: string | number;
+    [key: string]: unknown;
+}
+
+export interface RunAlgorithmOptions extends QueueableOptions {
+    /**
+     * Automatically apply suggested styles after running the algorithm
+     */
+    applySuggestedStyles?: boolean;
+
+    /**
+     * Algorithm-specific options (source, target, etc.)
+     * These are passed to the algorithm's configure method.
+     */
+    algorithmOptions?: AlgorithmSpecificOptions;
+}
+
+/**
  * Helper to wrap a method with queue support while maintaining backwards compatibility
  */
 export function wrapWithQueue<T extends (... args: unknown[]) => unknown>(

@@ -49,7 +49,7 @@ export class NodeDragHandler {
 
         // Read config from graph context
         const context = this.getContext();
-        const xrConfig = context.getConfig()?.xr;
+        const xrConfig = context.getConfig().xr;
 
         this.zAxisAmplification = xrConfig?.input.zAxisAmplification ?? 10.0;
         this.enableZAmplificationInDesktop = xrConfig?.input.enableZAmplificationInDesktop ?? false;
@@ -216,13 +216,13 @@ export class NodeDragHandler {
 
                     console.log("🖱️ POINTERDOWN", {
                         nodeId: this.node.id,
-                        pickedMeshName: pickInfo?.pickedMesh?.name,
+                        pickedMeshName: pickInfo.pickedMesh?.name,
                         nodeMeshName: this.node.mesh.name,
-                        meshesMatch: pickInfo?.pickedMesh === this.node.mesh,
-                        hit: pickInfo?.hit,
+                        meshesMatch: pickInfo.pickedMesh === this.node.mesh,
+                        hit: pickInfo.hit,
                     });
 
-                    if (pickInfo?.pickedMesh === this.node.mesh) {
+                    if (pickInfo.pickedMesh === this.node.mesh) {
                         // Get world position from pointer
                         const ray = this.scene.createPickingRay(
                             this.scene.pointerX,
@@ -277,7 +277,7 @@ export class NodeDragHandler {
         // Use stored plane normal from drag start if available
         // Otherwise fall back to current camera forward (for initial calculation)
         const cameraForward = camera.getForwardRay().direction;
-        const planeNormal = this.dragState.dragPlaneNormal || cameraForward;
+        const planeNormal = this.dragState.dragPlaneNormal ?? cameraForward;
 
         // Calculate distance from camera to node along plane normal
         const cameraToNode = nodePosition.subtract(camera.position);

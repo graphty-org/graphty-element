@@ -54,10 +54,10 @@ export class Node {
         this.id = nodeId;
         this.opts = opts;
         this.changeManager = new ChangeManager();
-        this.changeManager.loadCalculatedValues(this.context.getStyleManager().getStyles().getCalculatedStylesForNode(data));
         this.data = this.changeManager.watch("data", data);
         this.algorithmResults = this.changeManager.watch("algorithmResults", {} as unknown as AdHocData);
         this.styleUpdates = this.changeManager.addData("style", {} as unknown as AdHocData, NodeStyle);
+        this.changeManager.loadCalculatedValues(this.context.getStyleManager().getStyles().getCalculatedStylesForNode(data));
 
         // copy nodeMeshOpts
         this.styleId = styleId;
@@ -109,7 +109,10 @@ export class Node {
         const newStyleKeys = Object.keys(this.styleUpdates);
         if (newStyleKeys.length > 0) {
             let style = Styles.getStyleForNodeStyleId(this.styleId);
-            style = _.defaultsDeep(this.styleUpdates, style);
+            // Convert styleUpdates Proxy to plain object for proper merging
+            // (styleUpdates is wrapped by on-change library's Proxy)
+            const plainStyleUpdates = _.cloneDeep(this.styleUpdates);
+            style = _.defaultsDeep(plainStyleUpdates, style);
             const styleId = Styles.getNodeIdForStyle(style);
             this.updateStyle(styleId);
             for (const key of newStyleKeys) {

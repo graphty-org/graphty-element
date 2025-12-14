@@ -76,7 +76,7 @@ export class XRPivotCameraController {
      */
     private enableXRMode(): void {
         // Parent XR camera to pivot
-        const camera = this.xr.baseExperience.camera;
+        const {camera} = this.xr.baseExperience;
         camera.parent = this.pivotController.pivot;
         console.log("📷 [XRPivotCameraController] XR camera parented to pivot:", {
             pivotName: this.pivotController.pivot.name,
@@ -159,8 +159,8 @@ export class XRPivotCameraController {
 
         // Heartbeat logging every 5 seconds (assuming ~60fps)
         if (this.frameCount % 300 === 0) {
-            const camera = this.xr.baseExperience.camera;
-            const pivot = this.pivotController.pivot;
+            const {camera} = this.xr.baseExperience;
+            const {pivot} = this.pivotController;
             console.log(`💓 [XRPivotCameraController] Heartbeat frame ${this.frameCount}:`, {
                 inputEnabled: this.inputHandler.isEnabled(),
                 cameraParent: camera?.parent?.name ?? "null",

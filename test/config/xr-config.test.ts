@@ -24,6 +24,7 @@ describe("XR Configuration Schema", () => {
                     enabled: true,
                     position: "bottom-right" as const,
                     unavailableMessageDuration: 5000,
+                    showAvailabilityWarning: false,
                 },
                 vr: {
                     enabled: true,
@@ -63,6 +64,7 @@ describe("XR Configuration Schema", () => {
             assert.equal(parsed.ui.enabled, true);
             assert.equal(parsed.ui.position, "bottom-right");
             assert.equal(parsed.ui.unavailableMessageDuration, 5000);
+            assert.equal(parsed.ui.showAvailabilityWarning, false);
             assert.equal(parsed.vr.enabled, true);
             assert.equal(parsed.vr.referenceSpaceType, "local-floor");
             assert.equal(parsed.ar.enabled, true);
@@ -201,6 +203,7 @@ describe("XR Configuration Schema", () => {
             assert.equal(parsed.ui.enabled, true);
             assert.equal(parsed.ui.position, "bottom-right");
             assert.equal(parsed.ui.unavailableMessageDuration, 5000);
+            assert.equal(parsed.ui.showAvailabilityWarning, false);
         });
 
         test("should apply defaults for nested input config", () => {

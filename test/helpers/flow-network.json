@@ -1,0 +1,20 @@
+{
+    "nodes": [
+        {"id": "S", "data": {"name": "Source"}},
+        {"id": "A", "data": {"name": "Node A"}},
+        {"id": "B", "data": {"name": "Node B"}},
+        {"id": "C", "data": {"name": "Node C"}},
+        {"id": "D", "data": {"name": "Node D"}},
+        {"id": "T", "data": {"name": "Sink"}}
+    ],
+    "edges": [
+        {"src": "S", "dst": "A", "data": {"value": 10, "capacity": 10}},
+        {"src": "S", "dst": "B", "data": {"value": 10, "capacity": 10}},
+        {"src": "A", "dst": "C", "data": {"value": 4, "capacity": 4}},
+        {"src": "A", "dst": "D", "data": {"value": 8, "capacity": 8}},
+        {"src": "B", "dst": "C", "data": {"value": 9, "capacity": 9}},
+        {"src": "B", "dst": "D", "data": {"value": 6, "capacity": 6}},
+        {"src": "C", "dst": "T", "data": {"value": 10, "capacity": 10}},
+        {"src": "D", "dst": "T", "data": {"value": 10, "capacity": 10}}
+    ]
+}

@@ -35,14 +35,14 @@ describe("Unified Drag Handler", () => {
         const startPosition = node.mesh.position.clone();
 
         // Simulate drag start
-        node.dragHandler!.onDragStart(startPosition);
+        node.dragHandler.onDragStart(startPosition);
 
         // Verify drag started
         assert.isTrue(node.dragging, "node.dragging should be true after drag start");
 
         // Simulate drag move
         const newPosition = startPosition.add(new Vector3(1, 1, 0));
-        node.dragHandler!.onDragUpdate(newPosition);
+        node.dragHandler.onDragUpdate(newPosition);
 
         // Verify position updated (allowing for some tolerance)
         const currentPosition = node.mesh.position;
@@ -53,7 +53,7 @@ describe("Unified Drag Handler", () => {
         );
 
         // Simulate drag end
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
 
         // Verify drag ended
         assert.isFalse(node.dragging, "node.dragging should be false after drag end");

@@ -307,13 +307,6 @@
       "interaction_type": "play"
     },
     {
-      "src": "Old_Tom",
-      "dst": "Tiny_Terror",
-      "value": 2,
-      "relationship": "tolerates",
-      "interaction_type": "social"
-    },
-    {
       "src": "Bella_Ballerina",
       "dst": "Professor_Pawsington",
       "value": 7,

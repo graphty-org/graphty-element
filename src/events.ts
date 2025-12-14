@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | GraphGenericEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -52,12 +52,69 @@ export interface GraphLayoutInitializedEvent {
     shouldZoomToFit: boolean;
 }
 
+export interface CameraStateChangedEvent {
+    type: "camera-state-changed";
+    state: {
+        position?: {x: number, y: number, z: number};
+        target?: {x: number, y: number, z: number};
+        zoom?: number;
+        pan?: {x: number, y: number};
+        [key: string]: unknown;
+    };
+}
+
 // Generic events for internal manager communication
 export interface GraphGenericEvent {
     type: "render-initialized" | "manager-initialized" | "lifecycle-initialized" | "lifecycle-disposed" | "skybox-loaded"
         | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
-        | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted";
+        | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted"
+        | "animation-progress" | "animation-cancelled"
+        | "screenshot-enhancing" | "screenshot-ready";
     [key: string]: unknown;
+}
+
+// Data loading events
+export interface DataLoadingProgressEvent {
+    type: "data-loading-progress";
+    format: string;
+    bytesProcessed: number;
+    totalBytes?: number;
+    percentage?: number;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    chunksProcessed: number;
+}
+
+export interface DataLoadingErrorEvent {
+    type: "data-loading-error";
+    error: Error;
+    context: "detection" | "validation" | "parsing";
+    format?: string;
+    line?: number;
+    nodeId?: unknown;
+    edgeId?: string;
+    canContinue: boolean;
+}
+
+export interface DataLoadingErrorSummaryEvent {
+    type: "data-loading-error-summary";
+    format: string;
+    totalErrors: number;
+    primaryCategory?: string;
+    message: string;
+    suggestion?: string;
+    detailedReport: string;
+}
+
+export interface DataLoadingCompleteEvent {
+    type: "data-loading-complete";
+    format: string;
+    nodesLoaded: number;
+    edgesLoaded: number;
+    duration: number; // milliseconds
+    errors: number;
+    warnings: number;
+    success: boolean;
 }
 
 // node events

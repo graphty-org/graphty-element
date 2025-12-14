@@ -51,6 +51,7 @@ function shouldThrottle(message: string): boolean {
             if (now - lastTime < THROTTLE_MS) {
                 return true;
             }
+
             state.lastMessages.set(key, now);
             return false;
         }
@@ -59,7 +60,10 @@ function shouldThrottle(message: string): boolean {
 }
 
 function flushLogs(): void {
-    if (state.logBuffer.length === 0) return;
+    if (state.logBuffer.length === 0) {
+        return;
+    }
+
     const logsToSend = state.logBuffer.splice(0, state.logBuffer.length);
 
     fetch(state.serverUrl, {
@@ -68,7 +72,7 @@ function flushLogs(): void {
         body: JSON.stringify({sessionId: state.sessionId, logs: logsToSend}),
     }).catch(() => {
         // Put logs back on failure
-        state.logBuffer.unshift(...logsToSend);
+        state.logBuffer.unshift(... logsToSend);
     });
 }
 
@@ -81,12 +85,15 @@ function formatArgs(args: unknown[]): string {
                 return String(arg);
             }
         }
+
         return String(arg);
     }).join(" ");
 }
 
 function queueLog(level: string, args: unknown[]): void {
-    if (!state.enabled) return;
+    if (!state.enabled) {
+        return;
+    }
 
     const message = formatArgs(args);
 
@@ -103,6 +110,7 @@ function queueLog(level: string, args: unknown[]): void {
     if (state.flushTimer) {
         clearTimeout(state.flushTimer);
     }
+
     state.flushTimer = setTimeout(flushLogs, 100);
 }
 
@@ -133,20 +141,20 @@ export function enableRemoteLogging(serverUrl: string, sessionPrefix = "graphty"
     };
 
     // Override console methods
-    console.log = (...args: unknown[]) => {
-        state.originalConsole?.log(...args);
+    console.log = (... args: unknown[]) => {
+        state.originalConsole?.log(... args);
         queueLog("LOG", args);
     };
-    console.warn = (...args: unknown[]) => {
-        state.originalConsole?.warn(...args);
+    console.warn = (... args: unknown[]) => {
+        state.originalConsole?.warn(... args);
         queueLog("WARN", args);
     };
-    console.error = (...args: unknown[]) => {
-        state.originalConsole?.error(...args);
+    console.error = (... args: unknown[]) => {
+        state.originalConsole?.error(... args);
         queueLog("ERROR", args);
     };
-    console.info = (...args: unknown[]) => {
-        state.originalConsole?.info(...args);
+    console.info = (... args: unknown[]) => {
+        state.originalConsole?.info(... args);
         queueLog("INFO", args);
     };
 

@@ -1,0 +1,122 @@
+{
+  "nodes": [
+    {
+      "id": "alice",
+      "label": "Alice",
+      "partition": "candidate",
+      "skills": ["backend", "frontend", "leadership"],
+      "experience": 8
+    },
+    {
+      "id": "bob",
+      "label": "Bob",
+      "partition": "candidate",
+      "skills": ["ux", "ui", "prototyping"],
+      "experience": 5
+    },
+    {
+      "id": "carol",
+      "label": "Carol",
+      "partition": "candidate",
+      "skills": ["backend", "databases", "devops"],
+      "experience": 6
+    },
+    {
+      "id": "dave",
+      "label": "Dave",
+      "partition": "candidate",
+      "skills": ["data", "ml", "statistics"],
+      "experience": 4
+    },
+    {
+      "id": "eve",
+      "label": "Eve",
+      "partition": "candidate",
+      "skills": ["management", "leadership", "strategy"],
+      "experience": 10
+    },
+    {
+      "id": "frank",
+      "label": "Frank",
+      "partition": "candidate",
+      "skills": ["frontend", "mobile", "react"],
+      "experience": 3
+    },
+    {
+      "id": "grace",
+      "label": "Grace",
+      "partition": "candidate",
+      "skills": ["backend", "systems", "security"],
+      "experience": 7
+    },
+    {
+      "id": "job_senior_dev",
+      "label": "Senior Dev",
+      "partition": "job",
+      "requires": ["backend", "leadership"],
+      "level": "senior"
+    },
+    {
+      "id": "job_ux_designer",
+      "label": "UX Designer",
+      "partition": "job",
+      "requires": ["ux", "prototyping"],
+      "level": "mid"
+    },
+    {
+      "id": "job_backend",
+      "label": "Backend Eng",
+      "partition": "job",
+      "requires": ["backend", "databases"],
+      "level": "mid"
+    },
+    {
+      "id": "job_data_scientist",
+      "label": "Data Scientist",
+      "partition": "job",
+      "requires": ["data", "ml"],
+      "level": "mid"
+    },
+    {
+      "id": "job_tech_lead",
+      "label": "Tech Lead",
+      "partition": "job",
+      "requires": ["management", "leadership"],
+      "level": "senior"
+    },
+    {
+      "id": "job_frontend",
+      "label": "Frontend Eng",
+      "partition": "job",
+      "requires": ["frontend", "react"],
+      "level": "junior"
+    },
+    {
+      "id": "job_security",
+      "label": "Security Eng",
+      "partition": "job",
+      "requires": ["security", "systems"],
+      "level": "senior"
+    }
+  ],
+  "edges": [
+    {"srcId": "alice", "dstId": "job_senior_dev", "value": 1},
+    {"srcId": "alice", "dstId": "job_backend", "value": 1},
+    {"srcId": "alice", "dstId": "job_frontend", "value": 1},
+
+    {"srcId": "bob", "dstId": "job_ux_designer", "value": 1},
+
+    {"srcId": "carol", "dstId": "job_backend", "value": 1},
+    {"srcId": "carol", "dstId": "job_senior_dev", "value": 1},
+
+    {"srcId": "dave", "dstId": "job_data_scientist", "value": 1},
+
+    {"srcId": "eve", "dstId": "job_tech_lead", "value": 1},
+
+    {"srcId": "frank", "dstId": "job_frontend", "value": 1},
+
+    {"srcId": "grace", "dstId": "job_backend", "value": 1},
+    {"srcId": "grace", "dstId": "job_security", "value": 1},
+    {"srcId": "grace", "dstId": "job_senior_dev", "value": 1}
+  ]
+}

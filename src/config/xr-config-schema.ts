@@ -48,6 +48,13 @@ export const xrConfigSchema = z
          * @default 5000
          */
                 unavailableMessageDuration: z.number().positive().default(5000),
+
+                /**
+         * Show "VR / AR NOT AVAILABLE" warning when XR is not available
+         * When false, no message is displayed if AR/VR aren't available
+         * @default false
+         */
+                showAvailabilityWarning: z.boolean().default(false),
             })
             .default({}),
 

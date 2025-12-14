@@ -1,6 +1,5 @@
 import "../../src/graphty-element";
 
-import {page} from "@vitest/browser/context";
 import {expect, test} from "vitest";
 
 test("canvas resizes when container element dimensions change", async() => {

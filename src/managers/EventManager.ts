@@ -1,6 +1,10 @@
 import {Observable} from "@babylonjs/core";
 
 import type {
+    DataLoadingCompleteEvent,
+    DataLoadingErrorEvent,
+    DataLoadingErrorSummaryEvent,
+    DataLoadingProgressEvent,
     EdgeEvent,
     EventCallbackType,
     EventType,
@@ -144,6 +148,92 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    // Data Loading Events
+
+    emitDataLoadingProgress(
+        format: string,
+        bytesProcessed: number,
+        totalBytes: number | undefined,
+        nodesLoaded: number,
+        edgesLoaded: number,
+        chunksProcessed: number,
+    ): void {
+        const event: DataLoadingProgressEvent = {
+            type: "data-loading-progress",
+            format,
+            bytesProcessed,
+            totalBytes,
+            percentage: totalBytes ? (bytesProcessed / totalBytes) * 100 : undefined,
+            nodesLoaded,
+            edgesLoaded,
+            chunksProcessed,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
+    emitDataLoadingError(
+        error: Error,
+        context: DataLoadingErrorEvent["context"],
+        format: string | undefined,
+        details: {
+            line?: number;
+            nodeId?: unknown;
+            edgeId?: string;
+            canContinue: boolean;
+        },
+    ): void {
+        const event: DataLoadingErrorEvent = {
+            type: "data-loading-error",
+            error,
+            context,
+            format,
+            ... details,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
+    emitDataLoadingErrorSummary(
+        format: string,
+        totalErrors: number,
+        message: string,
+        detailedReport: string,
+        primaryCategory?: string,
+        suggestion?: string,
+    ): void {
+        const event: DataLoadingErrorSummaryEvent = {
+            type: "data-loading-error-summary",
+            format,
+            totalErrors,
+            primaryCategory,
+            message,
+            suggestion,
+            detailedReport,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
+    emitDataLoadingComplete(
+        format: string,
+        nodesLoaded: number,
+        edgesLoaded: number,
+        duration: number,
+        errors: number,
+        warnings: number,
+        success: boolean,
+    ): void {
+        const event: DataLoadingCompleteEvent = {
+            type: "data-loading-complete",
+            format,
+            nodesLoaded,
+            edgesLoaded,
+            duration,
+            errors,
+            warnings,
+            success,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
     // Node Events
 
     emitNodeEvent(type: NodeEvent["type"], eventData: Omit<NodeEvent, "type">): void {
@@ -180,7 +270,16 @@ export class EventManager implements Manager {
             case "operation-start":
             case "operation-complete":
             case "operation-progress":
-            case "operation-obsoleted": {
+            case "operation-obsoleted":
+            case "animation-progress":
+            case "animation-cancelled":
+            case "screenshot-enhancing":
+            case "screenshot-ready":
+            case "camera-state-changed":
+            case "data-loading-progress":
+            case "data-loading-error":
+            case "data-loading-error-summary":
+            case "data-loading-complete": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {
                         callback(event);
@@ -245,6 +344,13 @@ export class EventManager implements Manager {
         entry.observable.remove(entry.observer);
         this.observers.delete(id);
         return true;
+    }
+
+    /**
+     * Get the total number of registered listeners
+     */
+    listenerCount(): number {
+        return this.observers.size;
     }
 
     /**

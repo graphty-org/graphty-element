@@ -4,7 +4,7 @@ import {Graphty} from "../src/graphty-element";
 import {eventWaitingDecorator, renderFn, templateCreator} from "./helpers";
 
 const meta: Meta = {
-    title: "Styles/Edge/Bidirectional",
+    title: "Styles/Edge",
     component: "graphty-element",
     render: renderFn,
     decorators: [eventWaitingDecorator],
@@ -28,24 +28,7 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
-export const BasicBidirectional: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            edgeStyle: {
-                arrowHead: {type: "normal", color: "#FF0000"},
-                arrowTail: {type: "normal", color: "#0000FF"},
-                line: {color: "darkgrey"},
-            },
-        }),
-    },
-    parameters: {
-        controls: {
-            include: ["arrowHead.size", "arrowHead.color", "arrowTail.size", "arrowTail.color"],
-        },
-    },
-};
-
-export const MixedTypes: Story = {
+export const Bidirectional: Story = {
     args: {
         styleTemplate: templateCreator({
             edgeStyle: {
@@ -58,23 +41,6 @@ export const MixedTypes: Story = {
     parameters: {
         controls: {
             include: ["arrowHead.size", "arrowHead.color", "arrowTail.size", "arrowTail.color"],
-        },
-    },
-};
-
-export const IndependentSizing: Story = {
-    args: {
-        styleTemplate: templateCreator({
-            edgeStyle: {
-                arrowHead: {type: "normal", size: 3.0, color: "#FF0000"},
-                arrowTail: {type: "dot", size: 0.5, color: "#0000FF"},
-                line: {color: "darkgrey"},
-            },
-        }),
-    },
-    parameters: {
-        controls: {
-            include: ["arrowHead.size", "arrowTail.size"],
         },
     },
 };

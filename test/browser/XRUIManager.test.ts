@@ -18,11 +18,12 @@ describe("XRUIManager", () => {
         container.remove();
     });
 
-    test("should render unavailable message when XR not supported", () => {
+    test("should render unavailable message when XR not supported and showAvailabilityWarning is true", () => {
         uiManager = new XRUIManager(container, false, false, {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: true,
         });
 
         const message = container.querySelector(".webxr-not-available");
@@ -33,11 +34,24 @@ describe("XRUIManager", () => {
         }
     });
 
+    test("should not render unavailable message when showAvailabilityWarning is false", () => {
+        uiManager = new XRUIManager(container, false, false, {
+            enabled: true,
+            position: "bottom-left",
+            unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
+        });
+
+        const message = container.querySelector(".webxr-not-available");
+        assert.notExists(message);
+    });
+
     test("should render VR and AR buttons when available", () => {
         uiManager = new XRUIManager(container, true, true, {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const vrButton = container.querySelector(
@@ -55,6 +69,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const vrButton = container.querySelector(
@@ -72,6 +87,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const vrButton = container.querySelector(
@@ -89,6 +105,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -106,6 +123,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "top-right",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -121,6 +139,7 @@ describe("XRUIManager", () => {
             enabled: false,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -132,6 +151,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const vrButton = container.querySelector("[data-xr-mode='immersive-vr']");
@@ -145,6 +165,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const arButton = container.querySelector("[data-xr-mode='immersive-ar']");
@@ -158,6 +179,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: true,
         });
 
         const message = container.querySelector(".webxr-not-available");
@@ -171,6 +193,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "top-right",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -184,6 +207,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const vrButton = container.querySelector("[data-xr-mode='immersive-vr']");
@@ -198,6 +222,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const arButton = container.querySelector("[data-xr-mode='immersive-ar']");
@@ -212,6 +237,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: true,
         });
 
         const message = container.querySelector(".webxr-not-available");
@@ -226,6 +252,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -238,6 +265,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         // Check that a style element exists in the container
@@ -257,6 +285,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         const overlay = container.querySelector(".xr-button-overlay");
@@ -274,6 +303,7 @@ describe("XRUIManager", () => {
             enabled: true,
             position: "bottom-left",
             unavailableMessageDuration: 5000,
+            showAvailabilityWarning: false,
         });
 
         uiManager.onEnterXR = (mode) => {

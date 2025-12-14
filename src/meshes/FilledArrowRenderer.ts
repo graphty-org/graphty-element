@@ -8,10 +8,13 @@ import {
     VertexData,
 } from "@babylonjs/core";
 
+import {MaterialHelper} from "./MaterialHelper";
+
 export interface FilledArrowOptions {
     size: number; // Screen-space size in pixels
     color: string; // Hex color
     opacity?: number; // 0-1
+    clipEndX?: number; // X-axis clipping: undefined = no clipping, number = clip at X position
 }
 
 /**
@@ -74,7 +77,13 @@ uniform vec3 cameraPosition;
 uniform vec3 lineDirection;    // Line direction (uniform for individual meshes)
 uniform float size;
 
+// Varyings
+varying vec3 vLocalPosition;  // Pass local position to fragment shader for clipping
+
 void main() {
+    // Pass local position to fragment shader (for shader-based clipping)
+    vLocalPosition = position;
+
     // Use world matrix directly (individual meshes)
     mat4 finalWorld = world;
 
@@ -99,15 +108,26 @@ void main() {
 }
 `;
 
-        // Fragment Shader: Simple solid color
+        // Fragment Shader: Simple solid color with optional clipping
         Effect.ShadersStore.filledArrowFragmentShader = `
 precision highp float;
 
 // Uniforms
 uniform vec3 color;
 uniform float opacity;
+uniform float clipEndX;        // X-axis clipping: -1.0 = disabled, >= 0.0 = clip at this X
+
+// Varyings
+varying vec3 vLocalPosition;  // Local position from vertex shader
 
 void main() {
+    // Shader-based clipping: Discard fragments beyond clipEndX
+    // clipEndX < 0.0 means clipping is disabled
+    // Only clip if clipEndX is meaningfully less than segment length (0.75)
+    if (clipEndX >= 0.0 && clipEndX < 0.74 && vLocalPosition.x > clipEndX) {
+        discard;
+    }
+
     gl_FragColor = vec4(color, opacity);
 }
 `;
@@ -367,7 +387,7 @@ void main() {
         const base = -length;
 
         // Middle point: starts at center of baseline, pushed 60% toward tip (2/3 - 10%)
-        const middleX = base + 0.6 * length; // -1.0 + 0.6 = -0.4
+        const middleX = base + (0.6 * length); // -1.0 + 0.6 = -0.4
 
         // XZ plane (normal in Y), pointing along X axis
         // 4 vertices to form V-shape (2 triangles)
@@ -476,7 +496,7 @@ void main() {
         const base = -length;
 
         // Middle point: pushed 60% toward tip (same as vee)
-        const middleX = base + 0.6 * length; // -0.4
+        const middleX = base + (0.6 * length); // -0.4
 
         // XZ plane (normal in Y), pointing along X axis
         // Only one side of the V (3 vertices forming 1 triangle)
@@ -528,7 +548,7 @@ void main() {
         const base = 0; // Base now at front
 
         // Middle point: pushed 60% from base toward tip
-        const middleX = base + 0.6 * (tip - base); // 0 + 0.6 * (-1.0) = -0.6
+        const middleX = base + (0.6 * (tip - base)); // 0 + 0.6 * (-1.0) = -0.6
 
         // Width of center prong at base
         const centerProngWidth = 0.2;
@@ -610,9 +630,9 @@ void main() {
         const centerZ = (v0.z + v1.z + v2.z) / 3;
 
         // Inner triangle vertices (moved toward center by insetFactor)
-        const v3 = {x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor};
-        const v4 = {x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor};
-        const v5 = {x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor};
+        const v3 = {x: v0.x + ((centerX - v0.x) * insetFactor), z: v0.z + ((centerZ - v0.z) * insetFactor)};
+        const v4 = {x: v1.x + ((centerX - v1.x) * insetFactor), z: v1.z + ((centerZ - v1.z) * insetFactor)};
+        const v5 = {x: v2.x + ((centerX - v2.x) * insetFactor), z: v2.z + ((centerZ - v2.z) * insetFactor)};
 
         // Build positions array (outer vertices, then inner vertices)
         const positions = [
@@ -763,10 +783,10 @@ void main() {
         const centerZ = (v0.z + v1.z + v2.z + v3.z) / 4;
 
         // Inner diamond vertices (moved toward center by insetFactor)
-        const v4 = {x: v0.x + (centerX - v0.x) * insetFactor, z: v0.z + (centerZ - v0.z) * insetFactor};
-        const v5 = {x: v1.x + (centerX - v1.x) * insetFactor, z: v1.z + (centerZ - v1.z) * insetFactor};
-        const v6 = {x: v2.x + (centerX - v2.x) * insetFactor, z: v2.z + (centerZ - v2.z) * insetFactor};
-        const v7 = {x: v3.x + (centerX - v3.x) * insetFactor, z: v3.z + (centerZ - v3.z) * insetFactor};
+        const v4 = {x: v0.x + ((centerX - v0.x) * insetFactor), z: v0.z + ((centerZ - v0.z) * insetFactor)};
+        const v5 = {x: v1.x + ((centerX - v1.x) * insetFactor), z: v1.z + ((centerZ - v1.z) * insetFactor)};
+        const v6 = {x: v2.x + ((centerX - v2.x) * insetFactor), z: v2.z + ((centerZ - v2.z) * insetFactor)};
+        const v7 = {x: v3.x + ((centerX - v3.x) * insetFactor), z: v3.z + ((centerZ - v3.z) * insetFactor)};
 
         // Build positions array (outer vertices, then inner vertices)
         const positions = [
@@ -868,6 +888,7 @@ void main() {
                     "color",
                     "opacity",
                     "lineDirection", // Now a uniform instead of per-instance attribute
+                    "clipEndX", // X-axis clipping for pattern segments
                 ],
             },
         );
@@ -880,6 +901,9 @@ void main() {
 
         // Initialize lineDirection to a default value (will be updated per-edge)
         shaderMaterial.setVector3("lineDirection", new Vector3(1, 0, 0));
+
+        // Set clipping uniform (default -1.0 = disabled)
+        shaderMaterial.setFloat("clipEndX", options.clipEndX ?? -1.0);
 
         // Register material for shared camera position updates
         this.activeMaterials.add(shaderMaterial);
@@ -913,5 +937,111 @@ void main() {
             const material = mesh.material as ShaderMaterial;
             material.setVector3("lineDirection", direction);
         }
+    }
+
+    /**
+     * Create a 2D arrow mesh with flat StandardMaterial
+     *
+     * This method reuses the same geometry creation logic as 3D arrows
+     * but applies a 2D StandardMaterial instead of billboarded ShaderMaterial.
+     *
+     * @param type - Arrow type (normal, diamond, box, dot, vee, tee, etc.)
+     * @param length - Arrow length in world units
+     * @param width - Arrow width in world units
+     * @param color - Hex color string
+     * @param opacity - Opacity value 0-1
+     * @param scene - Babylon.js scene
+     * @returns Mesh with StandardMaterial and XY plane rotation
+     */
+    static create2DArrow(
+        type: string,
+        length: number,
+        width: number,
+        color: string,
+        opacity: number,
+        scene: Scene,
+    ): Mesh {
+        // Get the appropriate geometry for the arrow type
+        const geometry = this.getGeometryForType(type, scene);
+
+        // Create mesh and apply geometry
+        const mesh = new Mesh(`arrow-2d-${type}`, scene);
+        geometry.applyToMesh(mesh);
+
+        // Scale the mesh to desired size
+        // Use uniform scaling to match 3D shader behavior (worldOffset * size)
+        // The arrow geometry already has correct proportions, we just scale it uniformly
+        mesh.scaling.setAll(length);
+
+        // Apply 2D material (StandardMaterial + XY rotation)
+        MaterialHelper.apply2DMaterial(mesh, color, opacity, scene);
+
+        return mesh;
+    }
+
+    /**
+     * Get geometry for a specific arrow type
+     *
+     * This extracts geometry creation from the existing create* methods
+     * to enable reuse between 2D and 3D arrow creation.
+     *
+     * @param type - Arrow type
+     * @param scene - Babylon.js scene
+     * @returns VertexData for the arrow geometry
+     */
+    private static getGeometryForType(type: string, scene: Scene): VertexData {
+        let mesh: Mesh;
+
+        switch (type) {
+            case "normal":
+                mesh = this.createTriangle(false, scene);
+                break;
+            case "inverted":
+                mesh = this.createTriangle(true, scene);
+                break;
+            case "diamond":
+                mesh = this.createDiamond(scene);
+                break;
+            case "box":
+                mesh = this.createBox(scene);
+                break;
+            case "dot":
+            case "sphere-dot": // 2D mode: sphere-dot uses circle geometry with StandardMaterial
+                mesh = this.createCircle(scene);
+                break;
+            case "vee":
+                mesh = this.createVee(scene);
+                break;
+            case "tee":
+                mesh = this.createTee(scene);
+                break;
+            case "crow":
+                mesh = this.createCrow(scene);
+                break;
+            case "half-open":
+                mesh = this.createHalfOpen(scene);
+                break;
+            case "open-normal":
+                mesh = this.createOpenNormal(scene);
+                break;
+            case "open-circle":
+            case "open-dot": // Alias for open-circle (used in 2D mode for consistency)
+                mesh = this.createOpenCircle(scene);
+                break;
+            case "open-diamond":
+                mesh = this.createOpenDiamond(scene);
+                break;
+            default:
+                // Default to normal triangle
+                mesh = this.createTriangle(false, scene);
+        }
+
+        // Extract vertex data from the temporary mesh
+        const geometry = VertexData.ExtractFromMesh(mesh);
+
+        // Dispose the temporary mesh
+        mesh.dispose();
+
+        return geometry;
     }
 }

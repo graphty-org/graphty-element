@@ -88,6 +88,13 @@ describe("Obsolescence Scenarios", () => {
     it("should not cancel near-complete operations (>90% progress)", async() => {
         const results: string[] = [];
 
+        // Use a Promise to synchronize when layout reaches 90%+ progress
+        // This eliminates timing-based race conditions
+        let resolveProgressReached: () => void;
+        const progressReached = new Promise<void>((resolve) => {
+            resolveProgressReached = resolve;
+        });
+
         // First queue a layout-set so layout-update has its dependency satisfied
         queueManager.queueOperation(
             "layout-set",
@@ -97,20 +104,25 @@ describe("Obsolescence Scenarios", () => {
             {description: "Set layout"},
         );
 
-        // Wait for layout-set to start
+        // Wait for layout-set to complete
         await new Promise((resolve) => setTimeout(resolve, 10));
 
-        // Start a layout operation that will be near completion
-        const layoutOp = queueManager.queueOperation(
+        const layoutOpId = queueManager.queueOperation(
             "layout-update",
             async(context) => {
-                // Quickly get to 95% progress
+                // Progress through to 95%
                 for (let i = 0; i <= 95; i += 5) {
                     if (context.signal.aborted) {
                         throw new Error("AbortError");
                     }
 
                     context.progress.setProgress(i);
+
+                    // Signal when we've reached 90%+ progress
+                    if (i >= 90) {
+                        resolveProgressReached();
+                    }
+
                     await new Promise((resolve) => setTimeout(resolve, 2));
                 }
 
@@ -121,8 +133,11 @@ describe("Obsolescence Scenarios", () => {
             {description: "Nearly complete layout"},
         );
 
-        // Wait for layout to reach high progress - give it more time
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Wait for layout to ACTUALLY reach 90%+ progress (deterministic, not timing-based)
+        await progressReached;
+
+        // Small additional delay to ensure progress is registered in the queue manager
+        await new Promise((resolve) => setTimeout(resolve, 5));
 
         // Queue a data operation that would normally obsolete the layout
         queueManager.queueOperation(
@@ -145,7 +160,7 @@ describe("Obsolescence Scenarios", () => {
 
         // Layout should not be in obsoleted list
         assert.isFalse(
-            obsoletedOperations.includes(layoutOp),
+            obsoletedOperations.includes(layoutOpId),
             "Near-complete layout should not be obsoleted",
         );
     });
