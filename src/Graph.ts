@@ -12,6 +12,7 @@ import {
     EasingFunction,
     Engine,
     PhotoDome,
+    Quaternion,
     Scene,
     Vector3,
     WebGPUEngine,
@@ -472,9 +473,8 @@ export class Graph implements GraphContext {
                         this.wasSettled = true;
                         // End layout session tracking
                         this.statsManager.endLayoutSession();
-                        const snapshot = this.statsManager.getSnapshot();
-                        // eslint-disable-next-line no-console
-                        console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
+                        // Debug: const snapshot = this.statsManager.getSnapshot();
+                        // Debug: console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
                         this.statsManager.reportDetailed();
                         // Reset measurements after reporting so next settlement shows fresh data
                         this.statsManager.resetMeasurements();
@@ -483,8 +483,7 @@ export class Graph implements GraphContext {
                         this.wasSettled = false;
                         // Restart layout session tracking
                         this.statsManager.startLayoutSession();
-                        // eslint-disable-next-line no-console
-                        console.log("🔄 Layout became unsettled, will report on next settlement");
+                        // Debug: console.log("🔄 Layout became unsettled, will report on next settlement");
                     }
                 }
             });
@@ -1665,7 +1664,7 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - get world position and pivot position
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {position: Vector3, rotationQuaternion: Quaternion | null, computeWorldMatrix: (force: boolean) => void};
                 cameraDistance: number;
                 camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
             };
@@ -1691,11 +1690,14 @@ export class Graph implements GraphContext {
                 z: orbitController.pivot.position.z,
             };
 
-            // Store pivot rotation and distance for restoration
+            // Store pivot rotation as Euler angles for restoration
+            // PivotController uses rotationQuaternion, so convert to Euler
+            const pivotQuat = orbitController.pivot.rotationQuaternion ?? Quaternion.Identity();
+            const eulerAngles = pivotQuat.toEulerAngles();
             state.pivotRotation = {
-                x: orbitController.pivot.rotation.x,
-                y: orbitController.pivot.rotation.y,
-                z: orbitController.pivot.rotation.z,
+                x: eulerAngles.x,
+                y: eulerAngles.y,
+                z: eulerAngles.z,
             };
             state.cameraDistance = orbitController.cameraDistance;
         } else if (controller && "velocity" in controller) {
@@ -1826,8 +1828,9 @@ export class Graph implements GraphContext {
 
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - work with pivot system
+            // PivotController uses rotationQuaternion, not rotation (Euler)
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {position: Vector3, rotationQuaternion: Quaternion | null, computeWorldMatrix: (force: boolean) => void};
                 cameraDistance: number;
                 updateCameraPosition: () => void;
             };
@@ -1842,8 +1845,9 @@ export class Graph implements GraphContext {
             }
 
             // Set pivot rotation if provided (for exact state restoration)
+            // PivotController uses rotationQuaternion, so convert Euler to Quaternion
             if (state.pivotRotation) {
-                orbitController.pivot.rotation.set(
+                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(
                     state.pivotRotation.x,
                     state.pivotRotation.y,
                     state.pivotRotation.z,
@@ -1863,7 +1867,7 @@ export class Graph implements GraphContext {
                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                 const pitch = Math.asin(direction.y / distance);
 
-                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(pitch, yaw, 0);
             }
 
             // Set camera distance if provided
@@ -2037,7 +2041,7 @@ export class Graph implements GraphContext {
         const orbitController = controller as unknown as {
             pivot: {
                 position: Vector3;
-                rotation: Vector3;
+                rotationQuaternion: Quaternion | null;
                 animations?: Animation[];
                 computeWorldMatrix: (force: boolean) => void;
             };
@@ -2080,27 +2084,31 @@ export class Graph implements GraphContext {
         }
 
         // Animation 2: Pivot Rotation (view direction)
+        // PivotController uses rotationQuaternion, so animate that instead of rotation
         if (targetState.pivotRotation) {
             const rotAnim = new Animation(
                 "pivot_rotation",
-                "rotation",
+                "rotationQuaternion",
                 fps,
-                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONTYPE_QUATERNION,
                 Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            const startQuat = orbitController.pivot.rotationQuaternion?.clone() ?? Quaternion.Identity();
+            const endQuat = Quaternion.FromEulerAngles(
+                targetState.pivotRotation.x,
+                targetState.pivotRotation.y,
+                targetState.pivotRotation.z,
             );
 
             rotAnim.setKeys([
                 {
                     frame: 0,
-                    value: orbitController.pivot.rotation.clone(),
+                    value: startQuat,
                 },
                 {
                     frame: frameCount,
-                    value: new Vector3(
-                        targetState.pivotRotation.x,
-                        targetState.pivotRotation.y,
-                        targetState.pivotRotation.z,
-                    ),
+                    value: endQuat,
                 },
             ]);
 
@@ -2119,20 +2127,23 @@ export class Graph implements GraphContext {
 
             const rotAnim = new Animation(
                 "pivot_rotation",
-                "rotation",
+                "rotationQuaternion",
                 fps,
-                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONTYPE_QUATERNION,
                 Animation.ANIMATIONLOOPMODE_CONSTANT,
             );
+
+            const startQuat = orbitController.pivot.rotationQuaternion?.clone() ?? Quaternion.Identity();
+            const endQuat = Quaternion.FromEulerAngles(pitch, yaw, 0);
 
             rotAnim.setKeys([
                 {
                     frame: 0,
-                    value: orbitController.pivot.rotation.clone(),
+                    value: startQuat,
                 },
                 {
                     frame: frameCount,
-                    value: new Vector3(pitch, yaw, 0),
+                    value: endQuat,
                 },
             ]);
 
@@ -2202,7 +2213,7 @@ export class Graph implements GraphContext {
                             }
 
                             if (targetState.pivotRotation) {
-                                orbitController.pivot.rotation.set(
+                                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(
                                     targetState.pivotRotation.x,
                                     targetState.pivotRotation.y,
                                     targetState.pivotRotation.z,
@@ -2216,7 +2227,7 @@ export class Graph implements GraphContext {
                                 const distance = direction.length();
                                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                                 const pitch = Math.asin(direction.y / distance);
-                                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(pitch, yaw, 0);
                             }
 
                             orbitController.pivot.computeWorldMatrix(true);

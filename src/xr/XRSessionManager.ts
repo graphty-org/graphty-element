@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- XR debugging requires console logging for development */
 import type {Camera, Scene, WebXRDefaultExperience} from "@babylonjs/core";
 
 export type XRReferenceSpaceType =

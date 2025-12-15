@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- XR debugging requires console logging for development */
 import {Quaternion, Ray, type Scene, Vector3, type WebXRDefaultExperience, type WebXRInputSource} from "@babylonjs/core";
 
 import type {NodeDragHandler} from "../NodeBehavior";

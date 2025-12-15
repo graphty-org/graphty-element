@@ -176,14 +176,14 @@ export class Node {
             nodeId: this.id,
         };
 
-        console.log("🔍 [Node updateStyle] Metadata set:", {
-            nodeId: this.id,
-            meshName: this.mesh.name,
-            meshClass: this.mesh.getClassName(),
-            isInstancedMesh: this.mesh.getClassName() === "InstancedMesh",
-            metadata: this.mesh.metadata,
-            isPickable: this.mesh.isPickable,
-        });
+        // Debug: console.log("🔍 [Node updateStyle] Metadata set:", {
+        //     nodeId: this.id,
+        //     meshName: this.mesh.name,
+        //     meshClass: this.mesh.getClassName(),
+        //     isInstancedMesh: this.mesh.getClassName() === "InstancedMesh",
+        //     metadata: this.mesh.metadata,
+        //     isPickable: this.mesh.isPickable,
+        // });
 
         // recreate label if needed
         if (o.label?.enabled) {

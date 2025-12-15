@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- Remote logging utility requires console access */
 /**
  * Remote logging utility for XR debugging.
  * Sends console logs to a remote server for viewing on desktop.

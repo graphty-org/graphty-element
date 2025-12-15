@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- XR debugging requires console logging for development */
 import {type Scene, type TransformNode, type WebXRDefaultExperience, WebXRState} from "@babylonjs/core";
 
 import {PivotController} from "./PivotController";

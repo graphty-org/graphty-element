@@ -25,7 +25,7 @@ export class PivotController {
         this.pivot = new TransformNode("xrPivot", scene);
         this.pivot.position = Vector3.Zero();
         this.pivot.rotationQuaternion = Quaternion.Identity();
-        console.log("🔧 [PivotController] Created pivot node");
+        // Debug: console.log("🔧 [PivotController] Created pivot node");
     }
 
     /**
@@ -58,14 +58,14 @@ export class PivotController {
         }
 
         // Debug logging (throttled)
-        if (this.frameCount % 30 === 0) {
-            console.log("🔧 [Pivot] Rotate:", {
-                yawDelta: `${((yawDelta * 180) / Math.PI).toFixed(2)}°`,
-                pitchDelta: `${((pitchDelta * 180) / Math.PI).toFixed(2)}°`,
-                accYaw: `${((this.accumulatedYaw * 180) / Math.PI).toFixed(1)}°`,
-                accPitch: `${((this.accumulatedPitch * 180) / Math.PI).toFixed(1)}°`,
-            });
-        }
+        // if (this.frameCount % 30 === 0) {
+        //     console.log("🔧 [Pivot] Rotate:", {
+        //         yawDelta: `${((yawDelta * 180) / Math.PI).toFixed(2)}°`,
+        //         pitchDelta: `${((pitchDelta * 180) / Math.PI).toFixed(2)}°`,
+        //         accYaw: `${((this.accumulatedYaw * 180) / Math.PI).toFixed(1)}°`,
+        //         accPitch: `${((this.accumulatedPitch * 180) / Math.PI).toFixed(1)}°`,
+        //     });
+        // }
     }
 
     /**
@@ -86,12 +86,12 @@ export class PivotController {
         this.pivot.rotationQuaternion = rotationQuat.multiply(currentRotation);
 
         // Debug logging (throttled)
-        if (this.frameCount % 30 === 0) {
-            console.log("🔧 [Pivot] RotateAroundAxis:", {
-                axis: `(${normalizedAxis.x.toFixed(2)}, ${normalizedAxis.y.toFixed(2)}, ${normalizedAxis.z.toFixed(2)})`,
-                angle: `${((angle * 180) / Math.PI).toFixed(2)}°`,
-            });
-        }
+        // if (this.frameCount % 30 === 0) {
+        //     console.log("🔧 [Pivot] RotateAroundAxis:", {
+        //         axis: `(${normalizedAxis.x.toFixed(2)}, ${normalizedAxis.y.toFixed(2)}, ${normalizedAxis.z.toFixed(2)})`,
+        //         angle: `${((angle * 180) / Math.PI).toFixed(2)}°`,
+        //     });
+        // }
     }
 
     /**
@@ -125,12 +125,12 @@ export class PivotController {
         }
 
         // Debug logging (throttled)
-        if (this.frameCount % 30 === 0 && Math.abs(clamped - 1) > 0.001) {
-            console.log("🔧 [Pivot] Zoom:", {
-                factor: clamped.toFixed(4),
-                scale: this.pivot.scaling.x.toFixed(3),
-            });
-        }
+        // if (this.frameCount % 30 === 0 && Math.abs(clamped - 1) > 0.001) {
+        //     console.log("🔧 [Pivot] Zoom:", {
+        //         factor: clamped.toFixed(4),
+        //         scale: this.pivot.scaling.x.toFixed(3),
+        //     });
+        // }
     }
 
     /**
@@ -146,13 +146,13 @@ export class PivotController {
         this.pivot.position.addInPlace(delta);
 
         // Debug logging (throttled)
-        if (this.frameCount % 30 === 0) {
-            const pos = this.pivot.position;
-            console.log("🔧 [Pivot] Pan:", {
-                delta: `(${delta.x.toFixed(3)}, ${delta.y.toFixed(3)}, ${delta.z.toFixed(3)})`,
-                pos: `(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`,
-            });
-        }
+        // if (this.frameCount % 30 === 0) {
+        //     const pos = this.pivot.position;
+        //     console.log("🔧 [Pivot] Pan:", {
+        //         delta: `(${delta.x.toFixed(3)}, ${delta.y.toFixed(3)}, ${delta.z.toFixed(3)})`,
+        //         pos: `(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`,
+        //     });
+        // }
     }
 
     /**
@@ -191,6 +191,6 @@ export class PivotController {
         this.pivot.scaling.setAll(1.0);
         this.accumulatedYaw = 0;
         this.accumulatedPitch = 0;
-        console.log("🔧 [Pivot] Reset to initial state");
+        // Debug: console.log("🔧 [Pivot] Reset to initial state");
     }
 }

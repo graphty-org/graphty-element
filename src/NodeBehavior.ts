@@ -60,10 +60,10 @@ export class NodeDragHandler {
 
     // Public API for both desktop and XR
     public onDragStart(worldPosition: Vector3): void {
-        console.log("🔍 [Drag] Drag Start:", {
-            nodeId: this.node.id,
-            isXRMode: this.isXRMode(),
-        });
+        // Debug: console.log("🔍 [Drag] Drag Start:", {
+        //     nodeId: this.node.id,
+        //     isXRMode: this.isXRMode(),
+        // });
 
         this.dragState.dragging = true;
         this.dragState.dragStartMeshPosition = this.node.mesh.position.clone();
@@ -80,7 +80,7 @@ export class NodeDragHandler {
             // This prevents OrbitInputController from rotating camera while dragging nodes
             const cameraManager = this.scene.metadata?.cameraManager;
             if (cameraManager) {
-                console.log("📷 Disabling camera input during node drag");
+                // Debug: console.log("📷 Disabling camera input during node drag");
                 cameraManager.temporarilyDisableInput();
             }
         }
@@ -133,10 +133,10 @@ export class NodeDragHandler {
             return;
         }
 
-        console.log("🏁 NodeDragHandler.onDragEnd called", {
-            nodeId: this.node.id,
-            finalPosition: this.node.mesh.position.asArray(),
-        });
+        // Debug: console.log("🏁 NodeDragHandler.onDragEnd called", {
+        //     nodeId: this.node.id,
+        //     finalPosition: this.node.mesh.position.asArray(),
+        // });
 
         // Make sure graph is running
         const context = this.getContext();
@@ -150,7 +150,7 @@ export class NodeDragHandler {
         // Re-enable camera input handler after node drag
         const cameraManager = this.scene.metadata?.cameraManager;
         if (cameraManager) {
-            console.log("📷 Re-enabling camera input after node drag");
+            // Debug: console.log("📷 Re-enabling camera input after node drag");
             cameraManager.temporarilyEnableInput();
         }
 
@@ -214,13 +214,13 @@ export class NodeDragHandler {
                         this.scene.pointerY,
                     );
 
-                    console.log("🖱️ POINTERDOWN", {
-                        nodeId: this.node.id,
-                        pickedMeshName: pickInfo.pickedMesh?.name,
-                        nodeMeshName: this.node.mesh.name,
-                        meshesMatch: pickInfo.pickedMesh === this.node.mesh,
-                        hit: pickInfo.hit,
-                    });
+                    // Debug: console.log("🖱️ POINTERDOWN", {
+                    //     nodeId: this.node.id,
+                    //     pickedMeshName: pickInfo.pickedMesh?.name,
+                    //     nodeMeshName: this.node.mesh.name,
+                    //     meshesMatch: pickInfo.pickedMesh === this.node.mesh,
+                    //     hit: pickInfo.hit,
+                    // });
 
                     if (pickInfo.pickedMesh === this.node.mesh) {
                         // Get world position from pointer
