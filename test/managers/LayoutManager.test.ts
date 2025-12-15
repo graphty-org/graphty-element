@@ -407,7 +407,8 @@ describe("LayoutManager", () => {
 
     describe("2D layout dimension support", () => {
         it("should use 2D mode for NGraphEngine when twoD is set in styles", async() => {
-            // Configure 2D mode in styles
+            // Configure 2D mode in styles (testing deprecated API for backward compatibility)
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             graph.styles.config.graph.twoD = true;
 
             // Add some nodes
@@ -445,7 +446,8 @@ describe("LayoutManager", () => {
         });
 
         it("should use 3D mode for NGraphEngine when twoD is not set", async() => {
-            // Ensure 3D mode (default)
+            // Ensure 3D mode (testing deprecated API for backward compatibility)
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             graph.styles.config.graph.twoD = false;
 
             // Add some nodes
