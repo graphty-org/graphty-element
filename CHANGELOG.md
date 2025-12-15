@@ -1,3 +1,16 @@
+# [1.3.0](https://github.com/graphty-org/graphty-element/compare/v1.2.4...v1.3.0) (2025-12-15)
+
+
+### Bug Fixes
+
+* auto detect data format using url contents ([7ede111](https://github.com/graphty-org/graphty-element/commit/7ede111078184f7aa01265db9d771e0856276ef0))
+* merge master, fix VR in stories to prevent chromatic errors ([8ef5062](https://github.com/graphty-org/graphty-element/commit/8ef5062545c1468eede826afe2af1bb973d1944c))
+
+
+### Features
+
+* working and integrated 3D and XR cameras and controls ([6a111fd](https://github.com/graphty-org/graphty-element/commit/6a111fd32625aae1b5b7e78630cdfca0f8271f01))
+
 ## [1.2.4](https://github.com/graphty-org/graphty-element/compare/v1.2.3...v1.2.4) (2025-12-13)
 
 
