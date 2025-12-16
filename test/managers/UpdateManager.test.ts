@@ -11,11 +11,12 @@ describe("UpdateManager", () => {
     beforeEach(async() => {
         graph = await createTestGraph();
 
-        // Add test data
+        // Add test data with explicit positions for fixed layout
+        // Positions need to create a bounding box larger than minBoundingBoxSize (0.1)
         await graph.addNodes([
-            {id: "1"},
-            {id: "2"},
-            {id: "3"},
+            {id: "1", position: {x: -5, y: 0, z: 0}},
+            {id: "2", position: {x: 5, y: 0, z: 0}},
+            {id: "3", position: {x: 0, y: 5, z: 0}},
         ]);
         await graph.addEdges([
             {src: "1", dst: "2"},
@@ -130,10 +131,16 @@ describe("UpdateManager", () => {
         });
 
         it("should complete zoom to fit after sufficient frames", () => {
+            // Nodes already have positions from beforeEach that create a large bounding box
+            // For fixed layouts, we need to mark the layout as not running to trigger immediate zoom
+            // (The zoom logic requires either !running or accumulated layout steps)
+            const layoutManager = graph.getLayoutManager();
+            layoutManager.running = false;
+
             updateManager.enableZoomToFit();
 
             // Render enough frames for zoom to complete
-            updateManager.renderFixedFrames(20);
+            updateManager.renderFixedFrames(5);
 
             // Should have zoomed by now
             assert.isTrue(updateManager.zoomToFitCompleted);
@@ -149,6 +156,52 @@ describe("UpdateManager", () => {
 
             // Configuration is private, but we can verify it doesn't throw
             assert.isNotNull(updateManager);
+        });
+    });
+
+    describe("layout step regression test", () => {
+        it("should call layoutManager.step() when layout is running", () => {
+            // This is a regression test for a bug where updateLayout() was accidentally
+            // removed from the update() method, causing the force-directed layout
+            // algorithm to never run (step count stayed at 0, nodes overlapped).
+
+            const layoutManager = graph.getLayoutManager();
+
+            // Spy on layoutManager.step
+            const stepSpy = vi.spyOn(layoutManager, "step");
+
+            // Ensure layout is running (simulates active force-directed layout)
+            layoutManager.running = true;
+
+            // Call update - this MUST call layoutManager.step()
+            updateManager.update();
+
+            // Verify layoutManager.step() was called
+            assert.isTrue(
+                stepSpy.mock.calls.length > 0,
+                "layoutManager.step() must be called when layout is running - " +
+                "without this, force-directed layouts never animate and nodes overlap",
+            );
+        });
+
+        it("should NOT call layoutManager.step() when layout is not running", () => {
+            const layoutManager = graph.getLayoutManager();
+
+            // Spy on layoutManager.step
+            const stepSpy = vi.spyOn(layoutManager, "step");
+
+            // Ensure layout is NOT running
+            layoutManager.running = false;
+
+            // Call update
+            updateManager.update();
+
+            // Verify layoutManager.step() was NOT called
+            assert.equal(
+                stepSpy.mock.calls.length,
+                0,
+                "layoutManager.step() should not be called when layout is not running",
+            );
         });
     });
 });

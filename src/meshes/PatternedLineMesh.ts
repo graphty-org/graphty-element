@@ -37,6 +37,7 @@ export class PatternedLineMesh {
     private width: number;
     private color: string;
     private opacity: number;
+    private is2DMode: boolean;
     private static readonly SEGMENT_LENGTH = 0.75; // Fixed segment length for all edges (for instancing)
 
     // PHASE 5: Edge compatibility properties (mimic AbstractMesh interface)
@@ -44,6 +45,15 @@ export class PatternedLineMesh {
     isPickable = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: any = {};
+    // Properties to maintain compatibility with AbstractMesh interface in tests
+    position = new Vector3(0, 0, 0);
+    scaling = new Vector3(1, 1, 1);
+    visibility = 1;
+    name = "PatternedLineMesh";
+    isDisposed = false;
+    sourceMesh: Mesh | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    material: any = null;
 
     constructor(
         pattern: PatternType,
@@ -53,12 +63,14 @@ export class PatternedLineMesh {
         color: string,
         opacity: number,
         scene: Scene,
+        is2DMode = false,
     ) {
         this.pattern = pattern;
         this.scene = scene;
         this.width = width;
         this.color = color;
         this.opacity = opacity;
+        this.is2DMode = is2DMode;
 
         this.createInitialMeshes(start, end);
     }
@@ -81,9 +93,11 @@ export class PatternedLineMesh {
         for (let i = 0; i < this.meshes.length; i++) {
             this.meshes[i].position = positions[i];
 
-            // CRITICAL: Update lineDirection uniform for billboarding shader
+            // CRITICAL: Update lineDirection uniform for billboarding shader (only in 3D mode)
             // This makes pattern meshes face the camera like arrowheads do
-            FilledArrowRenderer.setLineDirection(this.meshes[i], this.lineDirection);
+            if (!this.is2DMode) {
+                FilledArrowRenderer.setLineDirection(this.meshes[i], this.lineDirection);
+            }
         }
 
         // For connected patterns, clip last segment to fit exactly
@@ -97,10 +111,15 @@ export class PatternedLineMesh {
 
     /**
      * Clip the last segment to fit exactly to line end
-     * Uses shader-based clipping instead of mesh scaling
+     * Uses shader-based clipping instead of mesh scaling (only in 3D mode)
      * All segments use identical 0.75 geometry (for instancing)
      */
     private clipLastSegment(lineLength: number): void {
+        // Clipping only applies to 3D mode (uses shader uniforms)
+        if (this.is2DMode) {
+            return;
+        }
+
         const lastIndex = this.meshes.length - 1;
         const lastMesh = this.meshes[lastIndex];
 
@@ -129,6 +148,7 @@ export class PatternedLineMesh {
             mesh.dispose();
         }
         this.meshes = [];
+        this.isDisposed = true;
     }
 
     /**
@@ -154,8 +174,10 @@ export class PatternedLineMesh {
         for (let i = 0; i < this.meshes.length; i++) {
             this.meshes[i].position = positions[i];
 
-            // Set lineDirection uniform for billboarding
-            FilledArrowRenderer.setLineDirection(this.meshes[i], this.lineDirection);
+            // Set lineDirection uniform for billboarding (only in 3D mode)
+            if (!this.is2DMode) {
+                FilledArrowRenderer.setLineDirection(this.meshes[i], this.lineDirection);
+            }
         }
     }
 
@@ -245,6 +267,7 @@ export class PatternedLineMesh {
         if (meshCount === 2) {
             const firstPos = lineStart + meshRadius;
             const lastPos = lineEnd - meshRadius;
+
             return [
                 start.add(direction.scale(firstPos)), // First mesh center
                 start.add(direction.scale(lastPos)), // Last mesh center
@@ -261,9 +284,9 @@ export class PatternedLineMesh {
         const dynamicLength = lastMeshLeftEdge - firstMeshRightEdge;
 
         // Calculate actual spacing
-        // IMPORTANT: Spacing should be based on visual HEIGHT (this.width), not parallel length (meshWidth)
-        // This ensures gaps scale with the perpendicular dimension, not the aspect ratio
-        const minSpacing = this.width * 0.5;
+        // IMPORTANT: Spacing should be based on parallel dash length (meshWidth), not perpendicular width
+        // This ensures gaps scale proportionally to the dash length for visually balanced spacing
+        const minSpacing = meshWidth * 0.5;
         const remainder = dynamicLength - (numInterior * meshWidth) - (numGaps * minSpacing);
         const actualSpacing = minSpacing + (remainder / numGaps);
 
@@ -391,8 +414,8 @@ export class PatternedLineMesh {
         }
 
         // Spacing constraints
-        // IMPORTANT: Spacing should be based on visual HEIGHT (this.width), not parallel length (meshWidth)
-        const minSpacing = this.width * 0.5;
+        // IMPORTANT: Spacing should be based on parallel dash length (meshWidth), not perpendicular width
+        const minSpacing = meshWidth * 0.5;
 
         // Calculate number of interior meshes
         // Formula: K interior meshes create K+1 gaps
@@ -434,10 +457,12 @@ export class PatternedLineMesh {
             this.opacity,
             this.scene,
             shapeType,
+            undefined, // segmentLength
+            this.is2DMode,
         );
 
-        // Initialize as non-clipped (will be updated in clipLastSegment if needed)
-        if (patternDef.connected) {
+        // Initialize as non-clipped (will be updated in clipLastSegment if needed, only in 3D mode)
+        if (patternDef.connected && !this.is2DMode) {
             const material = mesh.material as ShaderMaterial;
             material.setFloat("clipEndX", -1.0); // -1.0 = no clipping
         }

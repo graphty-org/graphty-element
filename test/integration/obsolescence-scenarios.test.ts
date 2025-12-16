@@ -88,6 +88,13 @@ describe("Obsolescence Scenarios", () => {
     it("should not cancel near-complete operations (>90% progress)", async() => {
         const results: string[] = [];
 
+        // Use a Promise to synchronize when layout reaches 90%+ progress
+        // This eliminates timing-based race conditions
+        let resolveProgressReached: () => void;
+        const progressReached = new Promise<void>((resolve) => {
+            resolveProgressReached = resolve;
+        });
+
         // First queue a layout-set so layout-update has its dependency satisfied
         queueManager.queueOperation(
             "layout-set",
@@ -97,12 +104,8 @@ describe("Obsolescence Scenarios", () => {
             {description: "Set layout"},
         );
 
-        // Start a layout operation that will reach high progress
-        // Use a signal to coordinate when we reach high progress
-        let signalHighProgress: () => void;
-        const highProgressReached = new Promise<void>((resolve) => {
-            signalHighProgress = resolve;
-        });
+        // Wait for layout-set to complete
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         const layoutOpId = queueManager.queueOperation(
             "layout-update",
@@ -115,9 +118,9 @@ describe("Obsolescence Scenarios", () => {
 
                     context.progress.setProgress(i);
 
-                    // Signal when we reach 95% progress (which is > 90 threshold)
-                    if (i === 95) {
-                        signalHighProgress();
+                    // Signal when we've reached 90%+ progress
+                    if (i >= 90) {
+                        resolveProgressReached();
                     }
 
                     await new Promise((resolve) => setTimeout(resolve, 2));
@@ -130,9 +133,11 @@ describe("Obsolescence Scenarios", () => {
             {description: "Nearly complete layout"},
         );
 
-        // Wait until the layout has ACTUALLY reached >90% progress
-        // This eliminates the race condition from using arbitrary timeouts
-        await highProgressReached;
+        // Wait for layout to ACTUALLY reach 90%+ progress (deterministic, not timing-based)
+        await progressReached;
+
+        // Small additional delay to ensure progress is registered in the queue manager
+        await new Promise((resolve) => setTimeout(resolve, 5));
 
         // Queue a data operation that would normally obsolete the layout
         queueManager.queueOperation(

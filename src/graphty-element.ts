@@ -7,6 +7,7 @@ import {customElement, property} from "lit/decorators.js";
 import {set as setDeep} from "lodash";
 
 import type {StyleSchema} from "./config";
+import type {PartialXRConfig} from "./config/xr-config-schema";
 import {Graph} from "./Graph";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 
@@ -24,7 +25,8 @@ export class Graphty extends LitElement {
 
         this.#element = document.createElement("div");
         // Ensure the container div fills the graphty-element
-        this.#element.setAttribute("style", "width: 100%; height: 100%; display: block;");
+        // position: relative is needed for absolute positioning of XR UI overlay
+        this.#element.setAttribute("style", "width: 100%; height: 100%; display: block; position: relative;");
         this.#graph = new Graph(this.#element);
     }
 
@@ -68,17 +70,11 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(): Promise<void> {
-        // Forward internal graph events as DOM events
-        this.#graph.addListener("graph-settled", (event) => {
-            this.dispatchEvent(new CustomEvent("graph-settled", {
-                detail: event,
-                bubbles: true,
-                composed: true,
-            }));
-        });
-
-        this.#graph.addListener("skybox-loaded", (event) => {
-            this.dispatchEvent(new CustomEvent("skybox-loaded", {
+        // Forward ALL internal graph events as DOM CustomEvents
+        // This allows external code (e.g., React) to listen for any graph event
+        // using standard DOM addEventListener (e.g., "style-changed", "graph-settled", etc.)
+        this.#graph.eventManager.onGraphEvent.add((event) => {
+            this.dispatchEvent(new CustomEvent(event.type, {
                 detail: event,
                 bubbles: true,
                 composed: true,
@@ -128,6 +124,7 @@ export class Graphty extends LitElement {
     #layout2d?: boolean;
     #styleTemplate?: StyleSchema;
     #runAlgorithmsOnLoad?: boolean;
+    #xr?: PartialXRConfig;
 
     /**
      * An array of objects describing the node data.
@@ -430,6 +427,42 @@ export class Graphty extends LitElement {
         }
 
         this.requestUpdate("enableDetailedProfiling", oldValue);
+    }
+
+    /**
+     * XR (VR/AR) configuration.
+     * Controls XR UI buttons, VR/AR mode settings, and input handling.
+     *
+     * @example
+     * ```typescript
+     * element.xr = {
+     *   enabled: true,
+     *   ui: {
+     *     enabled: true,
+     *     position: 'bottom-right',
+     *     showAvailabilityWarning: true  // Show warning if XR unavailable
+     *   },
+     *   input: {
+     *     handTracking: true,
+     *     controllers: true
+     *   }
+     * };
+     * ```
+     */
+    @property({attribute: false})
+    get xr(): PartialXRConfig | undefined {
+        return this.#xr;
+    }
+    set xr(value: PartialXRConfig | undefined) {
+        const oldValue = this.#xr;
+        this.#xr = value;
+
+        // Forward to Graph method
+        if (value !== undefined) {
+            this.#graph.setXRConfig(value);
+        }
+
+        this.requestUpdate("xr", oldValue);
     }
 
     /**

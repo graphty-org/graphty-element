@@ -1,6 +1,7 @@
 import {
     AbstractMesh,
     Mesh,
+    Quaternion,
     Ray,
     Vector3,
 } from "@babylonjs/core";
@@ -17,6 +18,7 @@ import {EdgeMesh} from "./meshes/EdgeMesh";
 import {FilledArrowRenderer} from "./meshes/FilledArrowRenderer";
 import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {type AttachPosition, RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
+import {Simple2DLineRenderer} from "./meshes/Simple2DLineRenderer";
 import {Node, NodeIdType} from "./Node";
 import {EdgeStyleId, Styles} from "./Styles";
 
@@ -54,6 +56,12 @@ export class Edge {
     // XXX: performance impact when not needed?
     ray: Ray;
     label: RichTextLabel | null = null;
+    arrowHeadText: RichTextLabel | null = null;
+    arrowTailText: RichTextLabel | null = null;
+    private _arrowHeadTextOffset = 0.3;
+    private _arrowTailTextOffset = 0.3;
+    private _labelOffset = 0;
+    private _labelAttachPosition: AttachPosition = "center";
     changeManager: ChangeManager;
     private _loggedLineDirection = false; // Debug flag for logging lineDirection
 
@@ -117,7 +125,6 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(this.styleId);
 
         // create arrow mesh if needed
-        // console.log("Edge constructor: creating arrowMesh, arrowHead type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(this.styleId),
@@ -130,10 +137,8 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        // console.log("Edge constructor: arrowMesh assigned:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // create arrow tail mesh if needed
-        // console.log("Edge constructor: creating arrowTailMesh, arrowTail type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(this.styleId)}-tail`,
@@ -163,12 +168,50 @@ export class Edge {
         );
 
         this.mesh.isPickable = false;
-        this.mesh.metadata = {};
+        this.mesh.metadata = this.mesh.metadata ?? {};
         this.mesh.metadata.parentEdge = this;
+
+        // Parent edge meshes to graph-root for XR gesture support (zoom, rotate, pan)
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            if (this.mesh instanceof PatternedLineMesh) {
+                // PatternedLineMesh is a wrapper with an array of meshes
+                for (const mesh of this.mesh.meshes) {
+                    mesh.parent = graphRoot;
+                }
+            } else {
+                this.mesh.parent = graphRoot;
+            }
+
+            if (this.arrowMesh) {
+                this.arrowMesh.parent = graphRoot;
+            }
+
+            if (this.arrowTailMesh) {
+                this.arrowTailMesh.parent = graphRoot;
+            }
+        }
 
         // create label if configured
         if (style.label?.enabled) {
-            this.label = this.createLabel(style);
+            const {label, offset, attachPosition} = this.createLabel(style);
+            this.label = label;
+            this._labelOffset = offset;
+            this._labelAttachPosition = attachPosition;
+        }
+
+        // create arrow head text if configured
+        if (style.arrowHead?.text) {
+            const {label, offset} = this.createArrowText(style.arrowHead.text, "arrowHead");
+            this.arrowHeadText = label;
+            this._arrowHeadTextOffset = offset;
+        }
+
+        // create arrow tail text if configured
+        if (style.arrowTail?.text) {
+            const {label, offset} = this.createArrowText(style.arrowTail.text, "arrowTail");
+            this.arrowTailText = label;
+            this._arrowTailTextOffset = offset;
         }
     }
 
@@ -228,17 +271,39 @@ export class Edge {
         // console.log("Edge.update: Performing update (nodes moved)");
 
         const {srcPoint, dstPoint} = this.transformArrowCap();
+        const finalSrcPoint = srcPoint ?? new Vector3(lnk.src.x, lnk.src.y, lnk.src.z);
+        const finalDstPoint = dstPoint ?? new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z);
 
-        if (srcPoint && dstPoint) {
-            this.transformEdgeMesh(
-                srcPoint,
-                dstPoint,
+        // PHASE 5: Bezier curves need geometry recreation (can't transform)
+        const style = Styles.getStyleForEdgeStyleId(this.styleId);
+        if (style.line?.bezier) {
+            // Dispose old mesh
+            if (this.mesh instanceof PatternedLineMesh) {
+                this.mesh.dispose();
+            } else if (!this.mesh.isDisposed()) {
+                this.mesh.dispose();
+            }
+
+            // Create new bezier mesh with current positions
+            this.mesh = EdgeMesh.create(
+                this.context.getMeshCache(),
+                {
+                    styleId: String(this.styleId),
+                    width: style.line.width ?? EDGE_CONSTANTS.DEFAULT_LINE_WIDTH,
+                    color: style.line.color ?? "#FFFFFF",
+                },
+                style,
+                this.context.getScene(),
+                finalSrcPoint,
+                finalDstPoint,
             );
+
+            this.mesh.isPickable = false;
+            this.mesh.metadata = this.mesh.metadata ?? {};
+            this.mesh.metadata.parentEdge = this;
         } else {
-            this.transformEdgeMesh(
-                new Vector3(lnk.src.x, lnk.src.y, lnk.src.z),
-                new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z),
-            );
+            // Non-bezier edges: Transform existing mesh
+            this.transformEdgeMesh(finalSrcPoint, finalDstPoint);
         }
 
         // Update label position if exists
@@ -248,7 +313,17 @@ export class Edge {
                 (lnk.src.y + lnk.dst.y) / 2,
                 ((lnk.src.z ?? 0) + (lnk.dst.z ?? 0)) / 2,
             );
-            this.label.attachTo(midPoint, "center", 0);
+            this.label.attachTo(midPoint, this._labelAttachPosition, this._labelOffset);
+        }
+
+        // Update arrow head text position if exists
+        if (this.arrowHeadText && this.arrowMesh) {
+            this.arrowHeadText.attachTo(this.arrowMesh.position, "top", this._arrowHeadTextOffset);
+        }
+
+        // Update arrow tail text position if exists
+        if (this.arrowTailText && this.arrowTailMesh) {
+            this.arrowTailText.attachTo(this.arrowTailMesh.position, "top", this._arrowTailTextOffset);
         }
 
         // Cache positions for next frame
@@ -288,12 +363,10 @@ export class Edge {
         const style = Styles.getStyleForEdgeStyleId(styleId);
 
         // recreate arrow mesh if needed
-        // console.log("Edge.updateStyle: disposing old arrowMesh:", this.arrowMesh?.name);
         if (this.arrowMesh && !this.arrowMesh.isDisposed()) {
             this.arrowMesh.dispose();
         }
 
-        // console.log("Edge.updateStyle: creating new arrowMesh, type:", style.arrowHead?.type);
         this.arrowMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             String(styleId),
@@ -306,15 +379,12 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        // console.log("Edge.updateStyle: arrowMesh created:", this.arrowMesh?.name, this.arrowMesh !== null);
 
         // recreate arrow tail mesh if needed
-        // console.log("Edge.updateStyle: disposing old arrowTailMesh:", this.arrowTailMesh?.name);
         if (this.arrowTailMesh && !this.arrowTailMesh.isDisposed()) {
             this.arrowTailMesh.dispose();
         }
 
-        // console.log("Edge.updateStyle: creating new arrowTailMesh, type:", style.arrowTail?.type);
         this.arrowTailMesh = EdgeMesh.createArrowHead(
             this.context.getMeshCache(),
             `${String(styleId)}-tail`,
@@ -327,9 +397,20 @@ export class Edge {
             },
             this.context.getScene(),
         );
-        // console.log("Edge.updateStyle: arrowTailMesh created:", this.arrowTailMesh?.name, this.arrowTailMesh !== null);
 
         // recreate edge line mesh
+        // PHASE 5: For bezier curves, need to pass current positions
+        let srcPoint: Vector3 | undefined;
+        let dstPoint: Vector3 | undefined;
+        if (style.line?.bezier) {
+            const lnk = this.context.getLayoutManager().layoutEngine?.getEdgePosition(this);
+            if (lnk) {
+                const {srcPoint: arrowSrc, dstPoint: arrowDst} = this.transformArrowCap();
+                srcPoint = arrowSrc ?? new Vector3(lnk.src.x, lnk.src.y, lnk.src.z);
+                dstPoint = arrowDst ?? new Vector3(lnk.dst.x, lnk.dst.y, lnk.dst.z);
+            }
+        }
+
         this.mesh = EdgeMesh.create(
             this.context.getMeshCache(),
             {
@@ -340,11 +421,34 @@ export class Edge {
 
             style,
             this.context.getScene(),
+            srcPoint,
+            dstPoint,
         );
 
         this.mesh.isPickable = false;
-        this.mesh.metadata = {};
+        this.mesh.metadata = this.mesh.metadata ?? {};
         this.mesh.metadata.parentEdge = this;
+
+        // Parent edge meshes to graph-root for XR gesture support (zoom, rotate, pan)
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            if (this.mesh instanceof PatternedLineMesh) {
+                // PatternedLineMesh is a wrapper with an array of meshes
+                for (const mesh of this.mesh.meshes) {
+                    mesh.parent = graphRoot;
+                }
+            } else {
+                this.mesh.parent = graphRoot;
+            }
+
+            if (this.arrowMesh) {
+                this.arrowMesh.parent = graphRoot;
+            }
+
+            if (this.arrowTailMesh) {
+                this.arrowTailMesh.parent = graphRoot;
+            }
+        }
 
         // Update label if needed
         if (style.label?.enabled) {
@@ -352,10 +456,41 @@ export class Edge {
                 this.label.dispose();
             }
 
-            this.label = this.createLabel(style);
+            const {label, offset, attachPosition} = this.createLabel(style);
+            this.label = label;
+            this._labelOffset = offset;
+            this._labelAttachPosition = attachPosition;
         } else if (this.label) {
             this.label.dispose();
             this.label = null;
+        }
+
+        // Update arrow head text if needed
+        if (style.arrowHead?.text) {
+            if (this.arrowHeadText) {
+                this.arrowHeadText.dispose();
+            }
+
+            const {label, offset} = this.createArrowText(style.arrowHead.text, "arrowHead");
+            this.arrowHeadText = label;
+            this._arrowHeadTextOffset = offset;
+        } else if (this.arrowHeadText) {
+            this.arrowHeadText.dispose();
+            this.arrowHeadText = null;
+        }
+
+        // Update arrow tail text if needed
+        if (style.arrowTail?.text) {
+            if (this.arrowTailText) {
+                this.arrowTailText.dispose();
+            }
+
+            const {label, offset} = this.createArrowText(style.arrowTail.text, "arrowTail");
+            this.arrowTailText = label;
+            this._arrowTailTextOffset = offset;
+        } else if (this.arrowTailText) {
+            this.arrowTailText.dispose();
+            this.arrowTailText = null;
         }
     }
 
@@ -399,6 +534,13 @@ export class Edge {
         if (this.mesh instanceof PatternedLineMesh) {
             // Pattern lines: Update mesh positions in world space
             this.mesh.update(srcPoint, dstPoint);
+        } else if (this.mesh.metadata?.is2DLine) {
+            // PHASE 2: 2D solid lines use Simple2DLineRenderer position updates
+            Simple2DLineRenderer.updatePositions(this.mesh as Mesh, srcPoint, dstPoint);
+        } else if (this.mesh.metadata?.isBezierCurve) {
+            // PHASE 5: Bezier curves have baked-in geometry, no transformation needed
+            // The curve geometry is already in world coordinates from createBezierLine()
+            // Transforming would move/rotate/scale the curve incorrectly
         } else {
             // Solid lines: Transform via position/rotation/scaling
             EdgeMesh.transformMesh(this.mesh, srcPoint, dstPoint);
@@ -449,6 +591,13 @@ export class Edge {
                 const arrowType = style.arrowHead?.type;
                 const geometry = EdgeMesh.getArrowGeometry(arrowType ?? "normal");
 
+                // PHASE 4: Override scaleFactor for 2D arrows
+                // In 2D mode, sphere-dot and open-dot use full-size circles (not tiny 0.25x spheres)
+                // so their scaleFactor should be 1.0, not 0.25
+                if (this.arrowMesh.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                    geometry.scaleFactor = 1.0;
+                }
+
                 this.arrowMesh.setEnabled(true);
 
                 // Calculate arrow position using common function
@@ -471,15 +620,22 @@ export class Edge {
                 // Update arrow position directly (no thin instances)
                 this.arrowMesh.position = arrowPosition;
 
-                // Update lineDirection for filled arrows (shader needs it for billboarding)
-                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
-                    // Filled arrows use shader-based billboarding via lineDirection uniform
-                    FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
-                } else if (geometry.needsRotation) {
-                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
-                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
-                    const lookAtPoint = arrowPosition.add(direction);
-                    this.arrowMesh.lookAt(lookAtPoint);
+                // PHASE 4: Handle 2D vs 3D arrow rotation
+                if (this.arrowMesh.metadata?.is2D) {
+                    // 2D: Simple Z-rotation to align with edge in XY plane
+                    const angle = Math.atan2(direction.y, direction.x);
+                    this.arrowMesh.rotation.z = angle;
+                } else {
+                    // 3D: Use billboarding or lookAt
+                    if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(arrowType)) {
+                        // Filled arrows use shader-based billboarding via lineDirection uniform
+                        FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+                    } else if (geometry.needsRotation) {
+                        // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                        // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                        const lookAtPoint = arrowPosition.add(direction);
+                        this.arrowMesh.lookAt(lookAtPoint);
+                    }
                 }
 
                 return {
@@ -497,6 +653,14 @@ export class Edge {
             const arrowSize = arrowStyle.arrowHead?.size ?? 1.0;
             const arrowLength = EdgeMesh.calculateArrowLength() * arrowSize;
             const geometry = EdgeMesh.getArrowGeometry(arrowType ?? "normal");
+
+            // PHASE 4: Override scaleFactor for 2D arrows
+            // In 2D mode, sphere-dot and open-dot use full-size circles (not tiny 0.25x spheres)
+            // so their scaleFactor should be 1.0, not 0.25
+            if (this.arrowMesh.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                geometry.scaleFactor = 1.0;
+            }
+
             const direction = dstPoint.subtract(srcPoint).normalize();
 
             // Calculate arrow position using common function
@@ -511,15 +675,37 @@ export class Edge {
             // Update arrow position directly (no thin instances)
             this.arrowMesh.position = arrowPosition;
 
-            // Update lineDirection for filled arrows (shader needs it for billboarding)
-            if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(arrowType)) {
-                // Filled arrows use shader-based billboarding via lineDirection uniform
-                FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
-            } else if (geometry.needsRotation) {
-                // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
-                // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
-                const lookAtPoint = arrowPosition.add(direction);
-                this.arrowMesh.lookAt(lookAtPoint);
+            // PHASE 4: Handle 2D vs 3D arrow rotation
+            if (this.arrowMesh.metadata?.is2D) {
+                // 2D: Use quaternion to properly compose rotations
+                // The arrow geometry is in XZ plane with tip at origin pointing along +X
+                // We need to: 1) rotate to XY plane (90° around X), 2) rotate to point at edge direction
+                //
+                // With Euler angles (YXZ order), setting rotation.x then rotation.z doesn't work because
+                // after the X rotation, the local Z axis points toward world -Y, so Z rotation
+                // spins the arrow in XZ plane instead of XY plane.
+                //
+                // Solution: Use quaternion composition with correct order
+                const angle = Math.atan2(direction.y, direction.x);
+
+                // Step 1: Rotation around X by 90° (brings arrow from XZ plane to XY plane)
+                const qX = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2);
+                // Step 2: Rotation around Z by angle (aligns arrow with edge direction in XY plane)
+                const qZ = Quaternion.RotationAxis(Vector3.Forward(), angle);
+
+                // Compose rotations: for "apply qX first, then qZ", use qZ * qX
+                this.arrowMesh.rotationQuaternion = qZ.multiply(qX);
+            } else {
+                // 3D: Use billboarding or lookAt
+                if (arrowType && ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(arrowType)) {
+                    // Filled arrows use shader-based billboarding via lineDirection uniform
+                    FilledArrowRenderer.setLineDirection(this.arrowMesh as Mesh, direction);
+                } else if (geometry.needsRotation) {
+                    // CustomLineRenderer arrows need lookAt (like edge lines) instead of manual rotation
+                    // Arrow geometry is along Z-axis, lookAt rotates it to point toward the edge direction
+                    const lookAtPoint = arrowPosition.add(direction);
+                    this.arrowMesh.lookAt(lookAtPoint);
+                }
             }
 
             // Handle arrow tail if configured
@@ -539,6 +725,11 @@ export class Edge {
                     const tailLength = EdgeMesh.calculateArrowLength() * tailSize;
                     const tailGeometry = EdgeMesh.getArrowGeometry(tailType);
 
+                    // PHASE 4: Override scaleFactor for 2D tail arrows
+                    if (this.arrowTailMesh.metadata?.is2D && tailGeometry.scaleFactor !== undefined) {
+                        tailGeometry.scaleFactor = 1.0;
+                    }
+
                     // Calculate tail position using common function
                     // For tail, we negate the direction since it points away from source
                     const tailPosition = EdgeMesh.calculateArrowPosition(
@@ -554,24 +745,33 @@ export class Edge {
                     // Update arrow tail position directly (no thin instances)
                     this.arrowTailMesh.position = tailPosition;
 
-                    // Update lineDirection for filled arrow tails (shader needs it for billboarding)
-                    if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"].includes(tailType)) {
-                        // Filled arrows use shader-based billboarding via lineDirection uniform
-                        FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
-                    } else if (tailGeometry.needsRotation) {
-                        // Other arrow types need explicit rotation
-                        // Triangle in XY plane with tip at origin, pointing in +X direction
-                        // Z rotation: horizontal angle in XY plane
-                        const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
+                    // PHASE 4: Handle 2D vs 3D arrow tail rotation
+                    if (this.arrowTailMesh.metadata?.is2D) {
+                        // 2D: Use quaternion to properly compose rotations (same as arrow head)
+                        const angle = Math.atan2(reversedDirection.y, reversedDirection.x);
+                        const qX = Quaternion.RotationAxis(Vector3.Right(), Math.PI / 2);
+                        const qZ = Quaternion.RotationAxis(Vector3.Forward(), angle);
+                        this.arrowTailMesh.rotationQuaternion = qZ.multiply(qX);
+                    } else {
+                        // 3D: Use billboarding or explicit rotation
+                        if (["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond"].includes(tailType)) {
+                            // Filled arrows use shader-based billboarding via lineDirection uniform
+                            FilledArrowRenderer.setLineDirection(this.arrowTailMesh as Mesh, reversedDirection);
+                        } else if (tailGeometry.needsRotation) {
+                            // Other arrow types need explicit rotation
+                            // Triangle in XY plane with tip at origin, pointing in +X direction
+                            // Z rotation: horizontal angle in XY plane
+                            const angleZ = Math.atan2(reversedDirection.y, reversedDirection.x);
 
-                        // Y rotation: tilt forward/back to match edge depth
-                        const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
-                        const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
+                            // Y rotation: tilt forward/back to match edge depth
+                            const horizontalDist = Math.sqrt((reversedDirection.x * reversedDirection.x) + (reversedDirection.y * reversedDirection.y));
+                            const angleY = -Math.atan2(reversedDirection.z, horizontalDist);
 
-                        // Apply rotations
-                        this.arrowTailMesh.rotation.x = 0;
-                        this.arrowTailMesh.rotation.y = angleY;
-                        this.arrowTailMesh.rotation.z = angleZ;
+                            // Apply rotations
+                            this.arrowTailMesh.rotation.x = 0;
+                            this.arrowTailMesh.rotation.y = angleY;
+                            this.arrowTailMesh.rotation.z = angleZ;
+                        }
                     }
 
                     // Adjust line start point to create gap for tail arrow
@@ -624,6 +824,11 @@ export class Edge {
                 const arrowType = style.arrowHead?.type ?? "normal";
                 const geometry = EdgeMesh.getArrowGeometry(arrowType);
 
+                // PHASE 4: Override scaleFactor for 2D arrows in line endpoint calculation
+                if (this.arrowMesh?.metadata?.is2D && geometry.scaleFactor !== undefined) {
+                    geometry.scaleFactor = 1.0;
+                }
+
                 // Use common function to calculate line endpoint
                 // Direction points FROM source TO destination (forward direction)
                 const direction = dstPoint.subtract(srcPoint).normalize();
@@ -646,10 +851,13 @@ export class Edge {
         };
     }
 
-    private createLabel(styleConfig: EdgeStyleConfig): RichTextLabel {
+    private createLabel(styleConfig: EdgeStyleConfig): {label: RichTextLabel, offset: number, attachPosition: AttachPosition} {
         const labelText = this.extractLabelText(styleConfig.label);
         const labelOptions = this.createLabelOptions(labelText, styleConfig);
-        return new RichTextLabel(this.context.getScene(), labelOptions);
+        const offset = styleConfig.label?.attachOffset ?? 0;
+        const labelLocation = styleConfig.label?.location ?? "center";
+        const attachPosition = (labelLocation === "automatic" ? "center" : labelLocation) as AttachPosition;
+        return {label: new RichTextLabel(this.context.getScene(), labelOptions), offset, attachPosition};
     }
 
     private extractLabelText(labelConfig?: Record<string, unknown>): string {
@@ -751,6 +959,46 @@ export class Edge {
         const {location, textPath, enabled, ... finalLabelOptions} = labelOptions as RichTextLabelOptions & {location?: string, textPath?: string, enabled?: boolean};
 
         return finalLabelOptions;
+    }
+
+    private createArrowText(textConfig: Record<string, unknown>, source: "arrowHead" | "arrowTail"): {label: RichTextLabel, offset: number} {
+        // Extract text from config - either direct text or textPath
+        let labelText: string = source === "arrowHead" ? "→" : "←";
+
+        if (textConfig.text !== undefined && textConfig.text !== null) {
+            if (typeof textConfig.text === "string" || typeof textConfig.text === "number" || typeof textConfig.text === "boolean") {
+                labelText = String(textConfig.text);
+            }
+        } else if (textConfig.textPath && typeof textConfig.textPath === "string") {
+            try {
+                const result = jmespath.search(this.data, textConfig.textPath);
+                if (result !== null && result !== undefined) {
+                    labelText = String(result);
+                }
+            } catch {
+                // Ignore jmespath errors
+            }
+        }
+
+        // Extract offset from config
+        const offset = typeof textConfig.attachOffset === "number" ? textConfig.attachOffset : 0.3;
+
+        // Build label options from text config
+        const labelOptions: RichTextLabelOptions = {
+            text: labelText,
+            fontSize: typeof textConfig.fontSize === "number" ? textConfig.fontSize : 12,
+            textColor: typeof textConfig.textColor === "string" ? textConfig.textColor : "#FFFFFF",
+            backgroundColor: typeof textConfig.backgroundColor === "string" ? textConfig.backgroundColor : "#333333",
+            attachPosition: "top" as AttachPosition,
+            attachOffset: offset,
+        };
+
+        // Pass through additional styling options if provided
+        if (typeof textConfig.cornerRadius === "number") {
+            labelOptions.cornerRadius = textConfig.cornerRadius;
+        }
+
+        return {label: new RichTextLabel(this.context.getScene(), labelOptions), offset};
     }
 }
 

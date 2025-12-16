@@ -29,7 +29,7 @@ export interface GraphErrorEvent {
     type: "error";
     graph: Graph | null;
     error: Error;
-    context: "init" | "data-loading" | "layout" | "algorithm" | "other";
+    context: "init" | "data-loading" | "layout" | "algorithm" | "xr" | "other";
     details?: Record<string, unknown>;
 }
 

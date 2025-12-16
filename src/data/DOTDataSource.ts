@@ -41,14 +41,38 @@ export class DOTDataSource extends DataSource {
     }
 
     private parseDOT(content: string): {nodes: AdHocData[], edges: AdHocData[]} {
-    // Remove comments
+        // Handle empty content gracefully
+        if (content.trim() === "") {
+            return {nodes: [], edges: []};
+        }
+
+        // Remove comments
         let cleaned = content.replace(/\/\/.*$/gm, ""); // Single-line comments
         cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, ""); // Multi-line comments
 
-        // Tokenize
-        const tokens = this.tokenize(cleaned);
+        // Tokenize with error handling
+        let tokens: string[];
+        try {
+            tokens = this.tokenize(cleaned);
+        } catch (error) {
+            const canContinue = this.errorAggregator.addError({
+                message: `Failed to tokenize DOT content: ${error instanceof Error ? error.message : String(error)}`,
+                category: "parse-error",
+            });
 
-        // Parse structure
+            if (!canContinue) {
+                throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
+            }
+
+            return {nodes: [], edges: []};
+        }
+
+        // Handle empty token list
+        if (tokens.length === 0) {
+            return {nodes: [], edges: []};
+        }
+
+        // Parse structure with error recovery
         const {nodes: parsedNodes, edges: parsedEdges} = this.parseTokens(tokens);
 
         // Convert to AdHocData
@@ -106,6 +130,23 @@ export class DOTDataSource extends DataSource {
             // Handle quoted strings
             if (char === "\"" && (i === 0 || content[i - 1] !== "\\")) {
                 if (inString) {
+                    // End of quoted string - check if followed by port syntax (:port or :port:compass)
+                    // If so, include the port as part of this token
+                    if (i + 1 < content.length && content[i + 1] === ":") {
+                        // Continue collecting the port suffix
+                        let portEnd = i + 2;
+                        while (portEnd < content.length &&
+                               !/[\s{}[\];,=]/.test(content[portEnd]) &&
+                               content[portEnd] !== "\"" &&
+                               !(content[portEnd] === "-" && portEnd + 1 < content.length &&
+                                 (content[portEnd + 1] === ">" || content[portEnd + 1] === "-"))) {
+                            portEnd++;
+                        }
+
+                        current += `:${content.substring(i + 2, portEnd)}`;
+                        i = portEnd - 1; // -1 because loop will increment
+                    }
+
                     tokens.push(current);
                     current = "";
                     inString = false;
@@ -217,8 +258,330 @@ export class DOTDataSource extends DataSource {
         let braceDepth = 1;
         while (i < tokens.length && braceDepth > 0) {
             const token = tokens[i];
+            const statementStartIndex = i;
 
-            // Track brace depth
+            try {
+                // Handle closing brace
+                if (token === "}") {
+                    braceDepth--;
+                    i++;
+                    continue;
+                }
+
+                // Check if this is an anonymous subgraph starting an edge statement like {A B} -> C
+                // MUST check this BEFORE the generic brace handling
+                if (token === "{") {
+                    // Look ahead to see if there's an edge operator after the closing brace
+                    const closingIndex = this.findMatchingBrace(tokens, i);
+                    if (closingIndex !== -1 &&
+                        closingIndex + 1 < tokens.length &&
+                        (tokens[closingIndex + 1] === "->" || tokens[closingIndex + 1] === "--")) {
+                        // This is an edge statement starting with an anonymous subgraph
+                        const firstNodes = this.collectSubgraphNodes(tokens, i);
+                        const chainNodes = this.collectEdgeChainNodesFromGroups(
+                            [firstNodes.nodes],
+                            tokens,
+                            firstNodes.endIndex,
+                        );
+
+                        // Create edges between consecutive nodes in the chain
+                        for (let j = 0; j < chainNodes.nodes.length - 1; j++) {
+                            const srcNodes = chainNodes.nodes[j];
+                            const dstNodes = chainNodes.nodes[j + 1];
+
+                            // Cartesian product: each src connects to each dst
+                            for (const src of srcNodes) {
+                                for (const dst of dstNodes) {
+                                    // Ensure nodes exist
+                                    if (!nodes.has(src)) {
+                                        nodes.set(src, {id: src, attributes: {}});
+                                    }
+
+                                    if (!nodes.has(dst)) {
+                                        nodes.set(dst, {id: dst, attributes: {}});
+                                    }
+
+                                    edges.push({src, dst, attributes: chainNodes.attributes});
+                                }
+                            }
+                        }
+
+                        i = chainNodes.endIndex;
+
+                        // Skip semicolon if present
+                        if (tokens[i] === ";") {
+                            i++;
+                        }
+
+                        continue;
+                    }
+
+                    // Not an edge statement, just a regular subgraph - continue normal processing
+                    braceDepth++;
+                    i++;
+                    continue;
+                }
+
+                // Skip subgraph keyword (but continue parsing contents normally)
+                if (/^subgraph$/i.exec(token)) {
+                    i++;
+                    // Skip optional subgraph name
+                    if (tokens[i] && tokens[i] !== "{" && tokens[i] !== ";") {
+                        i++;
+                    }
+
+                    continue;
+                }
+
+                // Skip graph/subgraph-level attribute assignments (e.g., label = "value", rankdir = "LR")
+                if (i + 2 < tokens.length && tokens[i + 1] === "=") {
+                    i += 3; // Skip: identifier, "=", value
+
+                    // Skip optional semicolon
+                    if (tokens[i] === ";") {
+                        i++;
+                    }
+
+                    continue;
+                }
+
+                // Handle 'node', 'edge', 'graph' keywords followed by '[' (default attribute statements)
+                // These are NOT node declarations - they set default attributes for subsequent elements
+                if (/^(node|edge|graph)$/i.test(token) && tokens[i + 1] === "[") {
+                    i++; // Skip the keyword
+                    i++; // Skip '['
+                    // Skip the attributes - we don't apply defaults (just structure parsing)
+                    const attrs = this.parseAttributes(tokens, i);
+                    i = attrs.index;
+
+                    // Skip optional semicolon
+                    if (tokens[i] === ";") {
+                        i++;
+                    }
+
+                    continue;
+                }
+
+                // Check if this is an edge statement (handles chains like a -> b -> c -> d)
+                if (i + 2 < tokens.length && (tokens[i + 1] === "->" || tokens[i + 1] === "--")) {
+                    // Collect all nodes in the edge chain, handling anonymous subgraphs
+                    const chainNodes = this.collectEdgeChainNodes(token, tokens, i + 1);
+
+                    // Create edges between consecutive nodes in the chain
+                    for (let j = 0; j < chainNodes.nodes.length - 1; j++) {
+                        const srcNodes = chainNodes.nodes[j];
+                        const dstNodes = chainNodes.nodes[j + 1];
+
+                        // Cartesian product: each src connects to each dst
+                        for (const src of srcNodes) {
+                            for (const dst of dstNodes) {
+                                // Ensure nodes exist
+                                if (!nodes.has(src)) {
+                                    nodes.set(src, {id: src, attributes: {}});
+                                }
+
+                                if (!nodes.has(dst)) {
+                                    nodes.set(dst, {id: dst, attributes: {}});
+                                }
+
+                                edges.push({src, dst, attributes: chainNodes.attributes});
+                            }
+                        }
+                    }
+
+                    i = chainNodes.endIndex;
+
+                    // Skip semicolon if present
+                    if (tokens[i] === ";") {
+                        i++;
+                    }
+                } else if (token !== ";") {
+                    // Check if this is a node
+                    const nodeId = this.unquoteId(token);
+                    i++;
+
+                    // Parse node attributes
+                    let attributes: Record<string, string | number> = {};
+                    if (tokens[i] === "[") {
+                        i++;
+                        const attrs = this.parseAttributes(tokens, i);
+                        ({attributes, index: i} = attrs);
+                    }
+
+                    // Add or update node
+                    if (nodes.has(nodeId)) {
+                        const existingNode = nodes.get(nodeId);
+                        if (existingNode) {
+                            Object.assign(existingNode.attributes, attributes);
+                        }
+                    } else {
+                        nodes.set(nodeId, {id: nodeId, attributes});
+                    }
+
+                    // Skip semicolon if present
+                    if (tokens[i] === ";") {
+                        i++;
+                    }
+                } else {
+                    // Semicolon
+                    i++;
+                }
+            } catch (error) {
+                // Error recovery: log error and try to skip to next statement
+                const canContinue = this.errorAggregator.addError({
+                    message: `Failed to parse DOT statement at token ${statementStartIndex} ("${token}"): ${error instanceof Error ? error.message : String(error)}`,
+                    category: "parse-error",
+                });
+
+                if (!canContinue) {
+                    throw new Error(`Too many errors (${this.errorAggregator.getErrorCount()}), aborting parse`);
+                }
+
+                // Skip to the next semicolon or closing brace to recover
+                i = this.skipToNextStatement(tokens, i);
+            }
+        }
+
+        return {
+            nodes: Array.from(nodes.values()),
+            edges,
+        };
+    }
+
+    /**
+     * Skips tokens until the next statement boundary (semicolon or closing brace).
+     * Used for error recovery to continue parsing after a malformed statement.
+     */
+    private skipToNextStatement(tokens: string[], startIndex: number): number {
+        let i = startIndex;
+        let braceDepth = 0;
+
+        while (i < tokens.length) {
+            const token = tokens[i];
+
+            if (token === "{") {
+                braceDepth++;
+            } else if (token === "}") {
+                if (braceDepth > 0) {
+                    braceDepth--;
+                } else {
+                    // Found a closing brace at the current level - don't consume it
+                    return i;
+                }
+            } else if (token === ";" && braceDepth === 0) {
+                // Found semicolon at current level - skip it and return
+                return i + 1;
+            }
+
+            i++;
+        }
+
+        return i;
+    }
+
+    /**
+     * Finds the index of the matching closing brace for an opening brace at startIndex.
+     * Returns -1 if no matching brace is found.
+     */
+    private findMatchingBrace(tokens: string[], startIndex: number): number {
+        if (tokens[startIndex] !== "{") {
+            return -1;
+        }
+
+        let depth = 0;
+        for (let i = startIndex; i < tokens.length; i++) {
+            if (tokens[i] === "{") {
+                depth++;
+            } else if (tokens[i] === "}") {
+                depth--;
+                if (depth === 0) {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Collects all nodes in an edge chain, handling anonymous subgraphs.
+     * For example:
+     * - "a -> b -> c" returns [[a], [b], [c]]
+     * - "{A B} -> {C D}" returns [[A, B], [C, D]]
+     * - "a -> {B C} -> d" returns [[a], [B, C], [d]]
+     */
+    private collectEdgeChainNodes(
+        firstToken: string,
+        tokens: string[],
+        operatorIndex: number,
+    ): {nodes: string[][], attributes: Record<string, string | number>, endIndex: number} {
+        // Start with the first token as a single-node group
+        const firstGroup = [this.unquoteId(firstToken)];
+        return this.collectEdgeChainNodesFromGroups([firstGroup], tokens, operatorIndex);
+    }
+
+    /**
+     * Continues collecting edge chain nodes from an initial set of groups.
+     * Used when the first part of the chain is an anonymous subgraph.
+     */
+    private collectEdgeChainNodesFromGroups(
+        initialGroups: string[][],
+        tokens: string[],
+        operatorIndex: number,
+    ): {nodes: string[][], attributes: Record<string, string | number>, endIndex: number} {
+        const nodeGroups: string[][] = [... initialGroups];
+        let i = operatorIndex;
+
+        // Parse the edge chain: -> node1 -> node2 -> ...
+        while (i < tokens.length && (tokens[i] === "->" || tokens[i] === "--")) {
+            i++; // Skip the edge operator
+
+            // Check if next element is an anonymous subgraph
+            if (tokens[i] === "{") {
+                // Collect nodes from anonymous subgraph
+                const subgraphNodes = this.collectSubgraphNodes(tokens, i);
+                nodeGroups.push(subgraphNodes.nodes);
+                i = subgraphNodes.endIndex;
+            } else {
+                // Single node
+                nodeGroups.push([this.unquoteId(tokens[i])]);
+                i++;
+            }
+        }
+
+        // Parse edge attributes if present
+        const attributes: Record<string, string | number> = {};
+        if (tokens[i] === "[") {
+            i++; // Skip '['
+            const attrs = this.parseAttributes(tokens, i);
+            Object.assign(attributes, attrs.attributes);
+            i = attrs.index;
+        }
+
+        return {nodes: nodeGroups, attributes, endIndex: i};
+    }
+
+    /**
+     * Collects node IDs from an anonymous subgraph like { A B C }
+     * Used for edge shorthand like {A B} -> {C D}
+     */
+    private collectSubgraphNodes(
+        tokens: string[],
+        startIndex: number,
+    ): {nodes: string[], endIndex: number} {
+        const nodes: string[] = [];
+        let i = startIndex;
+
+        if (tokens[i] !== "{") {
+            return {nodes, endIndex: i};
+        }
+
+        i++; // Skip '{'
+        let braceDepth = 1;
+
+        while (i < tokens.length && braceDepth > 0) {
+            const token = tokens[i];
+
             if (token === "{") {
                 braceDepth++;
                 i++;
@@ -231,98 +594,45 @@ export class DOTDataSource extends DataSource {
                 continue;
             }
 
-            // Skip subgraph keyword (but continue parsing contents normally)
-            if (/^subgraph$/i.exec(token)) {
+            // Skip structural tokens and keywords
+            if (token === ";" || token === "," ||
+                /^(subgraph|node|edge|graph)$/i.test(token)) {
                 i++;
-                // Skip optional subgraph name
-                if (tokens[i] && tokens[i] !== "{" && tokens[i] !== ";") {
-                    i++;
-                }
-
                 continue;
             }
 
-            // Skip graph/subgraph-level attribute assignments (e.g., label = "value", rankdir = "LR")
-            if (i + 2 < tokens.length && tokens[i + 1] === "=") {
-                i += 3; // Skip: identifier, "=", value
-
-                // Skip optional semicolon
-                if (tokens[i] === ";") {
-                    i++;
-                }
-
+            // Skip attribute lists
+            if (token === "[") {
+                i++;
+                const attrs = this.parseAttributes(tokens, i);
+                i = attrs.index;
                 continue;
             }
 
-            // Check if this is an edge
-            if (i + 2 < tokens.length && (tokens[i + 1] === "->" || tokens[i + 1] === "--")) {
-                const src = this.unquoteId(token);
-                // const operator = tokens[i + 1]; // Unused - could track directionality
-                const dst = this.unquoteId(tokens[i + 2]);
-
-                // Ensure nodes exist
-                if (!nodes.has(src)) {
-                    nodes.set(src, {id: src, attributes: {}});
-                }
-
-                if (!nodes.has(dst)) {
-                    nodes.set(dst, {id: dst, attributes: {}});
-                }
-
-                // Parse edge attributes
-                const attributes: Record<string, string | number> = {};
-                i += 3;
-
-                if (tokens[i] === "[") {
-                    i++;
-                    const attrs = this.parseAttributes(tokens, i);
-                    Object.assign(attributes, attrs.attributes);
-                    i = attrs.index;
-                }
-
-                edges.push({src, dst, attributes});
-
-                // Skip semicolon if present
-                if (tokens[i] === ";") {
-                    i++;
-                }
-            } else if (token !== ";") {
-                // Check if this is a node
-                const nodeId = this.unquoteId(token);
+            // Skip edge operators and their targets within subgraph
+            if (tokens[i + 1] === "->" || tokens[i + 1] === "--") {
+                // This is an edge within the subgraph, skip it for now
+                // We're only collecting top-level node IDs for the edge shorthand
                 i++;
-
-                // Parse node attributes
-                let attributes: Record<string, string | number> = {};
-                if (tokens[i] === "[") {
-                    i++;
-                    const attrs = this.parseAttributes(tokens, i);
-                    ({attributes, index: i} = attrs);
-                }
-
-                // Add or update node
-                if (nodes.has(nodeId)) {
-                    const existingNode = nodes.get(nodeId);
-                    if (existingNode) {
-                        Object.assign(existingNode.attributes, attributes);
-                    }
-                } else {
-                    nodes.set(nodeId, {id: nodeId, attributes});
-                }
-
-                // Skip semicolon if present
-                if (tokens[i] === ";") {
-                    i++;
-                }
-            } else {
-                // Semicolon
-                i++;
+                continue;
             }
+
+            // Skip assignment statements (like label = "foo")
+            if (tokens[i + 1] === "=") {
+                i += 3; // Skip identifier, =, value
+                continue;
+            }
+
+            // This should be a node ID
+            const nodeId = this.unquoteId(token);
+            if (nodeId && !nodes.includes(nodeId)) {
+                nodes.push(nodeId);
+            }
+
+            i++;
         }
 
-        return {
-            nodes: Array.from(nodes.values()),
-            edges,
-        };
+        return {nodes, endIndex: i};
     }
 
     private parseAttributes(
@@ -370,12 +680,20 @@ export class DOTDataSource extends DataSource {
     }
 
     private unquoteId(id: string): string {
-    // Remove quotes if present
-        if (id.startsWith("\"") && id.endsWith("\"")) {
-            return id.slice(1, -1);
+        // Remove quotes if present
+        let result = id;
+        if (result.startsWith("\"") && result.endsWith("\"")) {
+            result = result.slice(1, -1);
         }
 
-        return id;
+        // Strip port syntax: node:port or node:port:compass
+        // Port syntax is only meaningful in edge statements, we just need the node ID
+        const colonIndex = result.indexOf(":");
+        if (colonIndex > 0) {
+            result = result.substring(0, colonIndex);
+        }
+
+        return result;
     }
 
     private parseValue(value: string): string | number {

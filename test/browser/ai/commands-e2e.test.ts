@@ -509,7 +509,7 @@ describe("AI Commands End-to-End", () => {
 
             provider.setResponse("find servers", {
                 text: "",
-                toolCalls: [{id: "1", name: "findNodes", arguments: {selector: "data.type == 'server'"}}],
+                toolCalls: [{id: "1", name: "findNodes", arguments: {selector: "type == 'server'"}}],
             });
 
             const result = await graph.aiCommand("find servers");

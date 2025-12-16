@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XR Pivot Camera Demo - TransformNode Approach</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        #debugPanel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.85);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 380px;
+            z-index: 100;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #debugPanel h3 {
+            margin: 0 0 8px 0;
+            color: #0ff;
+            font-size: 14px;
+        }
+        #debugPanel .section {
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        #debugPanel .label {
+            color: #ff0;
+        }
+        #debugPanel .value {
+            color: #0f0;
+        }
+        #debugPanel .error {
+            color: #f00;
+        }
+        #debugPanel .success {
+            color: #0f0;
+        }
+        #debugPanel .highlight {
+            color: #f0f;
+            font-weight: bold;
+        }
+        #enterXR {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        #enterXR:hover {
+            background: #45a049;
+        }
+        #enterXR:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="debugPanel">
+        <h3>XR Pivot Camera - TransformNode</h3>
+        <div class="section">
+            <span class="label">Status:</span> <span id="xrStatus">Checking...</span>
+        </div>
+        <div class="section">
+            <span class="label">Approach:</span> <span class="highlight">PIVOT (TransformNode)</span><br>
+            <small>XR camera parented to pivot node. All transforms applied to pivot.</small>
+        </div>
+        <div class="section">
+            <span class="label">Pivot Transform:</span><br>
+            Position: <span id="pivotPos">...</span><br>
+            Scale: <span id="pivotScale">...</span><br>
+            Rotation: <span id="pivotRot">...</span>
+        </div>
+        <div class="section">
+            <span class="label">Left Stick (Rotate):</span><br>
+            X: <span id="leftX">0.000</span> (yaw)<br>
+            Y: <span id="leftY">0.000</span> (pitch)
+        </div>
+        <div class="section">
+            <span class="label">Right Stick (Zoom/Pan):</span><br>
+            X: <span id="rightX">0.000</span> (pan L/R)<br>
+            Y: <span id="rightY">0.000</span> (zoom in/out)
+        </div>
+        <div class="section">
+            <span class="label">Camera Position:</span><br>
+            <span id="cameraPos">...</span>
+        </div>
+        <div class="section">
+            <span class="label">Accumulated Rotation:</span><br>
+            <span id="accumulatedRot">Yaw: 0° Pitch: 0°</span>
+        </div>
+        <div class="section">
+            <span class="label">Movement Applied:</span><br>
+            <span id="movementApplied">None yet</span>
+        </div>
+        <div class="section">
+            <span class="label">Gesture State:</span><br>
+            <span id="gestureState">No gesture</span>
+        </div>
+        <div class="section">
+            <span class="label">Hand Tracking:</span><br>
+            <span id="handTrackingState">Not enabled</span>
+        </div>
+        <div class="section">
+            <span class="label">Controls:</span><br>
+            <strong>Thumbsticks:</strong><br>
+            Left X: Turn left/right (yaw)<br>
+            Left Y: Tilt up/down (pitch)<br>
+            Right X: Pan left/right<br>
+            Right Y: Zoom in/out<br>
+            <strong>Gestures (both triggers/pinch):</strong><br>
+            Pull apart: Zoom out<br>
+            Push together: Zoom in<br>
+            Twist: Rotate view<br>
+            <strong>Object Drag (single trigger/pinch):</strong><br>
+            Point at object + trigger/pinch: Grab<br>
+            Move hand: Drag object<br>
+            Release trigger/pinch: Drop
+        </div>
+        <div class="section">
+            <span class="label">Drag State:</span><br>
+            <span id="dragState">No object selected</span>
+        </div>
+    </div>
+
+    <button id="enterXR" disabled>Enter AR</button>
+
+    <!-- Remote Logging System -->
+    <script>
+        (function() {
+            const SERVER_URL = window.location.origin + '/log';
+            const LOG_BUFFER = [];
+            let FLUSH_TIMER = null;
+            const SESSION_ID = 'pivot-' + Date.now().toString(36);
+
+            // Throttling for repeated messages (prevents "Max touches" flood)
+            const lastMessages = new Map();
+            const THROTTLE_MS = 5000; // Same message can only be logged once per 5 seconds
+            const THROTTLE_PATTERNS = [
+                /Max number of touches/,
+                /Max touches exceeded/,
+            ];
+
+            function shouldThrottle(message) {
+                for (const pattern of THROTTLE_PATTERNS) {
+                    if (pattern.test(message)) {
+                        const key = pattern.source;
+                        const lastTime = lastMessages.get(key) || 0;
+                        const now = Date.now();
+                        if (now - lastTime < THROTTLE_MS) {
+                            return true; // Throttle this message
+                        }
+                        lastMessages.set(key, now);
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            function flushLogs() {
+                if (LOG_BUFFER.length === 0) return;
+                const logsToSend = LOG_BUFFER.splice(0, LOG_BUFFER.length);
+                fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: SESSION_ID, logs: logsToSend })
+                }).catch(() => {
+                    LOG_BUFFER.unshift(...logsToSend);
+                });
+            }
+
+            function queueLog(level, args) {
+                const message = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try { return JSON.stringify(arg, null, 2); }
+                        catch (e) { return String(arg); }
+                    }
+                    return String(arg);
+                }).join(' ');
+
+                // Skip throttled messages
+                if (shouldThrottle(message)) {
+                    return;
+                }
+
+                LOG_BUFFER.push({
+                    time: new Date().toISOString(),
+                    level: level,
+                    message: message
+                });
+                if (FLUSH_TIMER) clearTimeout(FLUSH_TIMER);
+                FLUSH_TIMER = setTimeout(flushLogs, 100);
+            }
+
+            const originalConsole = {
+                log: console.log.bind(console),
+                warn: console.warn.bind(console),
+                error: console.error.bind(console),
+                info: console.info.bind(console)
+            };
+
+            console.log = (...args) => { originalConsole.log(...args); queueLog('LOG', args); };
+            console.warn = (...args) => { originalConsole.warn(...args); queueLog('WARN', args); };
+            console.error = (...args) => { originalConsole.error(...args); queueLog('ERROR', args); };
+            console.info = (...args) => { originalConsole.info(...args); queueLog('INFO', args); };
+
+            window.onerror = (message, source, lineno, colno, error) => {
+                // "Script error." with no details = cross-origin security restriction
+                // Log what we have and provide diagnostic info
+                const isScriptError = message === 'Script error.' || message === 'Script error';
+                if (isScriptError) {
+                    queueLog('ERROR', [
+                        `Uncaught: ${message} at ${source}:${lineno}:${colno}`,
+                        'NOTE: "Script error" = browser hiding details due to CORS/security.',
+                        'This error likely occurred in: WebXR layer, Babylon.js internals, or browser XR code.',
+                        `Error object: ${error ? 'present' : 'null'}`,
+                        error?.stack || '',
+                        error?.message || '',
+                        `Last operation context: ${window.__lastXROperation || 'unknown'}`
+                    ]);
+                } else {
+                    queueLog('ERROR', [`Uncaught: ${message} at ${source}:${lineno}:${colno}`, error?.stack || '']);
+                }
+                flushLogs();
+            };
+
+            // Track last operation for debugging Script error
+            window.__lastXROperation = 'initialization';
+
+            // Use 'error' event type with capture for better stack traces
+            window.addEventListener('error', (event) => {
+                if (event.error) {
+                    queueLog('ERROR', [
+                        `Error event captured: ${event.error.message}`,
+                        event.error.stack || '',
+                        `filename: ${event.filename}`,
+                        `lineno: ${event.lineno}`,
+                        `colno: ${event.colno}`
+                    ]);
+                    flushLogs();
+                }
+            }, true); // Capture phase
+
+            // Additional error handlers for better debugging
+            window.addEventListener('unhandledrejection', (event) => {
+                queueLog('ERROR', [`Unhandled Promise rejection: ${event.reason}`, event.reason?.stack || '']);
+                flushLogs();
+            });
+
+            // Catch errors in setTimeout/setInterval callbacks
+            const originalSetTimeout = window.setTimeout;
+            window.setTimeout = function(fn, delay, ...args) {
+                if (typeof fn === 'function') {
+                    return originalSetTimeout.call(window, function() {
+                        try {
+                            fn.apply(this, args);
+                        } catch (e) {
+                            console.error('❌ Error in setTimeout:', e.message, e.stack);
+                        }
+                    }, delay);
+                }
+                return originalSetTimeout.call(window, fn, delay, ...args);
+            };
+
+            const originalSetInterval = window.setInterval;
+            window.setInterval = function(fn, delay, ...args) {
+                if (typeof fn === 'function') {
+                    return originalSetInterval.call(window, function() {
+                        try {
+                            fn.apply(this, args);
+                        } catch (e) {
+                            console.error('❌ Error in setInterval:', e.message, e.stack);
+                        }
+                    }, delay);
+                }
+                return originalSetInterval.call(window, fn, delay, ...args);
+            };
+
+            window.onunhandledrejection = (event) => {
+                queueLog('ERROR', ['Unhandled rejection:', event.reason]);
+                flushLogs();
+            };
+
+            console.log('🚀 XR Pivot Camera Demo - TransformNode Approach. Session:', SESSION_ID);
+        })();
+    </script>
+
+    <!-- Load BabylonJS -->
+    <!-- crossorigin="anonymous" enables full error details from CDN scripts -->
+    <script src="https://cdn.babylonjs.com/babylon.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        console.log('📦 BabylonJS version:', BABYLON.Engine.Version);
+
+        // ============================================================================
+        // DEBUG FLAGS - Enable/disable features for testing
+        // ============================================================================
+        const DEBUG_FLAGS = {
+            // Set to false to DISABLE observer cleanup - helps isolate if cleanup causes the crash
+            ENABLE_OBSERVER_CLEANUP: true,  // Re-enabled - disabling didn't fix crash
+            // Set to false to DISABLE XR camera parenting - helps isolate if parenting causes the crash
+            ENABLE_XR_CAMERA_PARENTING: true,  // Re-enabled - disabling changed crash pattern but didn't fix
+            // Set to false to DISABLE the SAFETY block proactive cleanup
+            ENABLE_SAFETY_CLEANUP: true,  // Re-enabled - H3 disproved, not the cause
+            // Set to false to COMPLETELY DISABLE hand tracking feature
+            ENABLE_HAND_TRACKING: true,  // RE-ENABLED - Testing delay approach instead of disable
+            // Delay in ms to wait after input source change before processing new controllers
+            // This gives Babylon.js time to clean up internal state
+            INPUT_SWITCH_DELAY_MS: 100,
+            // Log all operations
+            VERBOSE_LOGGING: true
+        };
+        console.log('🔧 DEBUG_FLAGS:', DEBUG_FLAGS);
+
+        // Helper function to count scene nodes for Hypothesis 2 testing
+        function getSceneNodeCounts(scene) {
+            return {
+                transformNodes: scene.transformNodes?.length || 0,
+                meshes: scene.meshes?.length || 0,
+                materials: scene.materials?.length || 0,
+                textures: scene.textures?.length || 0
+            };
+        }
+
+        // Helper function to detect circular parent references (H4 investigation)
+        function detectCircularParents(scene, label = '') {
+            const issues = [];
+            const allNodes = [...(scene.transformNodes || []), ...(scene.meshes || [])];
+
+            for (const node of allNodes) {
+                const visited = new Set();
+                let current = node;
+                const chain = [];
+
+                while (current) {
+                    if (visited.has(current.uniqueId)) {
+                        // Found a cycle!
+                        issues.push({
+                            startNode: node.name,
+                            cycleAt: current.name,
+                            chain: chain.map(n => n.name)
+                        });
+                        break;
+                    }
+                    visited.add(current.uniqueId);
+                    chain.push(current);
+                    current = current.parent;
+
+                    // Safety limit to prevent our detection from also hanging
+                    if (chain.length > 100) {
+                        issues.push({
+                            startNode: node.name,
+                            error: 'Chain too deep (>100)',
+                            chain: chain.slice(0, 10).map(n => n.name)
+                        });
+                        break;
+                    }
+                }
+            }
+
+            if (issues.length > 0) {
+                console.error(`🔴 CIRCULAR PARENT DETECTED ${label}:`, JSON.stringify(issues, null, 2));
+            } else {
+                console.log(`✅ No circular parents ${label} (checked ${allNodes.length} nodes)`);
+            }
+            return issues;
+        }
+
+        // ============================================================================
+        // PIVOT CONTROLLER - Shared camera pivot using TransformNode
+        // This is the core of the unified camera architecture.
+        // All camera types (Orbit, 2D, XR) can parent to this pivot.
+        // Transformations are applied to the pivot, not the camera directly.
+        // ============================================================================
+        class PivotController {
+            constructor(scene, name = 'cameraPivot') {
+                this.scene = scene;
+
+                // Create the pivot TransformNode
+                this.pivot = new BABYLON.TransformNode(name, scene);
+                this.pivot.position = new BABYLON.Vector3(0, 0, 0);
+                this.pivot.rotationQuaternion = BABYLON.Quaternion.Identity();
+
+                // Track accumulated rotations for view-relative calculations
+                this.accumulatedYaw = 0;
+                this.accumulatedPitch = 0;
+
+                // Scale limits
+                this.MIN_SCALE = 0.1;
+                this.MAX_SCALE = 10.0;
+
+                // Debug
+                this.frameCount = 0;
+
+                console.log('🔧 PivotController created:', name);
+            }
+
+            /**
+             * Rotate the view around the focal point
+             * Uses LOCAL space for BOTH axes - same as OrbitCameraController
+             * NO clamping - allows free rotation in all directions like a trackball
+             *
+             * @param yawDelta - Rotation around local Y-axis in radians
+             * @param pitchDelta - Rotation around local X-axis in radians
+             */
+            rotate(yawDelta, pitchDelta) {
+                if (!isFinite(yawDelta) || !isFinite(pitchDelta)) return;
+
+                const hasYaw = Math.abs(yawDelta) > 0.0001;
+                const hasPitch = Math.abs(pitchDelta) > 0.0001;
+
+                if (!hasYaw && !hasPitch) return;
+
+                // Track accumulated rotations for display purposes only
+                this.accumulatedYaw += yawDelta;
+                this.accumulatedPitch += pitchDelta;
+
+                // KEY: Use LOCAL space for BOTH rotations (matches OrbitCameraController)
+                // This allows free rotation in all directions without gimbal lock
+                // Quaternions handle everything naturally
+
+                // Yaw: rotate around LOCAL Y-axis
+                if (hasYaw) {
+                    this.pivot.rotate(BABYLON.Axis.Y, yawDelta, BABYLON.Space.LOCAL);
+                }
+
+                // Pitch: rotate around LOCAL X-axis
+                if (hasPitch) {
+                    this.pivot.rotate(BABYLON.Axis.X, pitchDelta, BABYLON.Space.LOCAL);
+                }
+
+                // Debug logging (throttled)
+                this.frameCount++;
+                if (this.frameCount % 30 === 0 && (hasYaw || hasPitch)) {
+                    console.log('🔧 [Pivot] Rotate:', {
+                        yawDelta: (yawDelta * 180 / Math.PI).toFixed(2) + '°',
+                        pitchDelta: (pitchDelta * 180 / Math.PI).toFixed(2) + '°',
+                        accYaw: (this.accumulatedYaw * 180 / Math.PI).toFixed(1) + '°',
+                        accPitch: (this.accumulatedPitch * 180 / Math.PI).toFixed(1) + '°'
+                    });
+                }
+            }
+
+            /**
+             * Rotate around an arbitrary axis - used for gesture-based rotation
+             * This enables full 3D rotation from hand gestures (not just yaw)
+             *
+             * @param axis - The rotation axis (will be normalized)
+             * @param angle - Rotation angle in radians
+             */
+            rotateAroundAxis(axis, angle) {
+                if (!axis || !isFinite(angle) || Math.abs(angle) < 0.0001) return;
+                if (!isFinite(axis.x) || !isFinite(axis.y) || !isFinite(axis.z)) return;
+
+                // Normalize the axis
+                const normalizedAxis = axis.normalize();
+
+                // Apply rotation in LOCAL space for consistent behavior
+                this.pivot.rotate(normalizedAxis, angle, BABYLON.Space.LOCAL);
+
+                // Debug logging (throttled)
+                if (this.frameCount % 30 === 0) {
+                    console.log('🔧 [Pivot] RotateAroundAxis:', {
+                        axis: `(${normalizedAxis.x.toFixed(2)}, ${normalizedAxis.y.toFixed(2)}, ${normalizedAxis.z.toFixed(2)})`,
+                        angle: (angle * 180 / Math.PI).toFixed(2) + '°'
+                    });
+                }
+            }
+
+            /**
+             * Zoom the view by scaling the pivot
+             * This works for all camera types including XR where camera distance is fixed
+             *
+             * @param factor - Zoom factor (>1 = zoom out/shrink, <1 = zoom in/grow)
+             */
+            zoom(factor) {
+                if (!isFinite(factor) || factor <= 0) return;
+
+                // Clamp factor to reasonable per-frame range
+                const clampedFactor = Math.max(0.95, Math.min(1.05, factor));
+
+                // Apply scale
+                this.pivot.scaling.scaleInPlace(clampedFactor);
+
+                // Clamp total scale
+                const currentScale = this.pivot.scaling.x;
+                if (currentScale < this.MIN_SCALE) {
+                    this.pivot.scaling.setAll(this.MIN_SCALE);
+                } else if (currentScale > this.MAX_SCALE) {
+                    this.pivot.scaling.setAll(this.MAX_SCALE);
+                }
+
+                // Debug logging (throttled)
+                if (this.frameCount % 30 === 0 && Math.abs(clampedFactor - 1) > 0.001) {
+                    console.log('🔧 [Pivot] Zoom:', {
+                        factor: clampedFactor.toFixed(4),
+                        scale: this.pivot.scaling.x.toFixed(3)
+                    });
+                }
+            }
+
+            /**
+             * Pan the focal point in world space
+             *
+             * @param delta - Translation vector in world coordinates
+             */
+            pan(delta) {
+                if (!delta || !isFinite(delta.x) || !isFinite(delta.y) || !isFinite(delta.z)) return;
+
+                const magnitude = delta.length();
+                if (magnitude < 0.0001) return;
+
+                this.pivot.position.addInPlace(delta);
+
+                // Debug logging (throttled)
+                if (this.frameCount % 30 === 0) {
+                    console.log('🔧 [Pivot] Pan:', {
+                        delta: `(${delta.x.toFixed(3)}, ${delta.y.toFixed(3)}, ${delta.z.toFixed(3)})`,
+                        pos: `(${this.pivot.position.x.toFixed(2)}, ${this.pivot.position.y.toFixed(2)}, ${this.pivot.position.z.toFixed(2)})`
+                    });
+                }
+            }
+
+            /**
+             * Pan relative to the current view direction
+             *
+             * @param right - Movement along view's right vector
+             * @param forward - Movement along view's forward vector
+             */
+            panViewRelative(right, forward) {
+                if (!isFinite(right) || !isFinite(forward)) return;
+                if (Math.abs(right) < 0.0001 && Math.abs(forward) < 0.0001) return;
+
+                // Calculate view-relative directions using accumulated yaw
+                const cosYaw = Math.cos(this.accumulatedYaw);
+                const sinYaw = Math.sin(this.accumulatedYaw);
+
+                // Right vector: (cos(yaw), 0, sin(yaw))
+                // Forward vector: (-sin(yaw), 0, cos(yaw))
+                const worldX = right * cosYaw - forward * sinYaw;
+                const worldZ = right * sinYaw + forward * cosYaw;
+
+                this.pan(new BABYLON.Vector3(worldX, 0, worldZ));
+            }
+
+            /**
+             * Reset pivot to initial state
+             */
+            reset() {
+                this.pivot.position = new BABYLON.Vector3(0, 0, 0);
+                this.pivot.rotationQuaternion = BABYLON.Quaternion.Identity();
+                this.pivot.scaling = new BABYLON.Vector3(1, 1, 1);
+                this.accumulatedYaw = 0;
+                this.accumulatedPitch = 0;
+                console.log('🔧 [Pivot] Reset to initial state');
+            }
+
+            /**
+             * Get pivot world matrix for debugging
+             */
+            getWorldMatrix() {
+                return this.pivot.getWorldMatrix();
+            }
+
+            /**
+             * Update debug display
+             */
+            updateDisplay() {
+                const pos = this.pivot.position;
+                const scale = this.pivot.scaling;
+
+                document.getElementById('pivotPos').textContent =
+                    `(${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)})`;
+                document.getElementById('pivotScale').textContent =
+                    `${scale.x.toFixed(3)}`;
+                document.getElementById('accumulatedRot').textContent =
+                    `Yaw: ${(this.accumulatedYaw * 180 / Math.PI).toFixed(1)}° Pitch: ${(this.accumulatedPitch * 180 / Math.PI).toFixed(1)}°`;
+
+                // Calculate Euler angles from quaternion for display
+                if (this.pivot.rotationQuaternion) {
+                    const euler = this.pivot.rotationQuaternion.toEulerAngles();
+                    document.getElementById('pivotRot').textContent =
+                        `Y:${(euler.y * 180 / Math.PI).toFixed(1)}° P:${(euler.x * 180 / Math.PI).toFixed(1)}° R:${(euler.z * 180 / Math.PI).toFixed(1)}°`;
+                }
+            }
+        }
+
+        // ============================================================================
+        // THUMBSTICK INPUT HANDLER
+        // Processes thumbstick input and calls PivotController methods
+        // ============================================================================
+        class ThumbstickInputHandler {
+            constructor(scene, xrHelper, pivotController) {
+                this.scene = scene;
+                this.xrHelper = xrHelper;
+                this.pivot = pivotController;
+                this.enabled = false;
+
+                // Thumbstick state
+                this.leftStick = { x: 0, y: 0 };
+                this.rightStick = { x: 0, y: 0 };
+
+                // Movement settings
+                this.DEADZONE = 0.15;
+                this.YAW_SPEED = 0.04;
+                this.PITCH_SPEED = 0.03;
+                this.PAN_SPEED = 0.08;
+                this.ZOOM_SPEED = 0.02;
+
+                // Track controller setup state by uniqueId (not handedness)
+                // This allows proper re-setup when switching between hands and controllers
+                this.setupControllers = new Map();
+
+                // Track cleanup functions for each controller (observers, intervals, etc.)
+                this.controllerCleanup = new Map(); // Map<uniqueId, () => void>
+
+                // Input switch delay tracking (same as GestureInputHandler)
+                this.lastControllerRemovedTime = 0;
+
+                // Debug
+                this.frameCount = 0;
+            }
+
+            enable() {
+                if (this.enabled) return;
+                this.enabled = true;
+
+                console.log('🎮 ThumbstickInputHandler.enable() - Using PIVOT approach with delay mechanism');
+
+                // Setup controller observers with error boundaries and delay mechanism
+                this.xrHelper.input.onControllerAddedObservable.add((controller) => {
+                    try {
+                        window.__lastXROperation = `thumbstick:controllerAdded:${controller.uniqueId}`;
+
+                        // Check if we need to delay setup due to recent controller removal
+                        const now = performance.now();
+                        const timeSinceRemoval = now - this.lastControllerRemovedTime;
+                        const delayMs = DEBUG_FLAGS.INPUT_SWITCH_DELAY_MS;
+
+                        if (timeSinceRemoval < delayMs && this.lastControllerRemovedTime > 0) {
+                            // We're in the cooldown period - delay the setup
+                            const remainingDelay = delayMs - timeSinceRemoval;
+                            console.log(`⏳ [DELAY] Thumbstick controller ${controller.uniqueId} added ${timeSinceRemoval.toFixed(0)}ms after removal, delaying setup by ${remainingDelay.toFixed(0)}ms`);
+
+                            setTimeout(() => {
+                                console.log(`⏳ [DELAY] Executing delayed thumbstick setup for ${controller.uniqueId}`);
+                                try {
+                                    this.setupController(controller);
+                                } catch (e) {
+                                    console.error('❌ Error in delayed thumbstick controller setup:', e.message, e.stack);
+                                }
+                            }, remainingDelay);
+                        } else {
+                            // No recent removal - setup immediately
+                            this.setupController(controller);
+                        }
+                    } catch (e) {
+                        console.error('❌ Error in controller added handler (thumbstick):', e.message, e.stack);
+                    }
+                });
+
+                // Handle controller removal - clean up observers and clear the setup flag
+                this.xrHelper.input.onControllerRemovedObservable.add((controller) => {
+                    // STEP-BY-STEP DEBUGGING
+                    console.log('🔬 [THUMBSTICK] controllerRemoved callback START');
+                    window.__lastXROperation = 'thumbstick:controllerRemoved:step0:entered';
+
+                    try {
+                        console.log('🔬 [THUMBSTICK] step1: accessing controller.uniqueId');
+                        const uniqueId = controller.uniqueId;
+                        console.log(`🔬 [THUMBSTICK] step2: got uniqueId = ${uniqueId}`);
+                        window.__lastXROperation = `thumbstick:controllerRemoved:${uniqueId}:step2`;
+
+                        const hasSetup = this.setupControllers.has(uniqueId);
+                        console.log(`🔬 [THUMBSTICK] step3: hasSetup = ${hasSetup}`);
+
+                        if (hasSetup) {
+                            console.log(`🎮 Controller removed: ${uniqueId}. Remaining controllers: ${this.setupControllers.size - 1}`);
+
+                            // Call cleanup function to remove observers
+                            const cleanup = this.controllerCleanup.get(uniqueId);
+                            console.log(`🔬 [THUMBSTICK] step4: has cleanup = ${!!cleanup}`);
+                            window.__lastXROperation = `thumbstick:controllerRemoved:${uniqueId}:step4:beforeCleanup`;
+
+                            if (cleanup) {
+                                console.log(`🎮 Cleaning up observers for ${uniqueId}`);
+                                cleanup();
+                                console.log(`🔬 [THUMBSTICK] step5: cleanup called`);
+                                window.__lastXROperation = `thumbstick:controllerRemoved:${uniqueId}:step5:afterCleanup`;
+                                this.controllerCleanup.delete(uniqueId);
+                            }
+
+                            this.setupControllers.delete(uniqueId);
+                            console.log(`🔬 [THUMBSTICK] step6: deleted from setupControllers`);
+
+                            // Clear stick values for the removed controller's handedness
+                            const handedness = controller.inputSource?.handedness;
+                            console.log(`🔬 [THUMBSTICK] step7: handedness = ${handedness}`);
+                            if (handedness === 'left') {
+                                this.leftStick = { x: 0, y: 0 };
+                            } else if (handedness === 'right') {
+                                this.rightStick = { x: 0, y: 0 };
+                            }
+                        } else {
+                            console.log(`🔬 [THUMBSTICK] step3b: controller not in setupControllers, skipping`);
+                        }
+
+                        window.__lastXROperation = `thumbstick:controllerRemoved:${uniqueId}:step8:complete`;
+                        console.log(`🔬 [THUMBSTICK] controllerRemoved callback COMPLETE for ${uniqueId}`);
+
+                        // Record the removal time for the delay mechanism
+                        this.lastControllerRemovedTime = performance.now();
+                        console.log(`⏳ [DELAY] Thumbstick recorded controller removal at ${this.lastControllerRemovedTime.toFixed(0)}ms`);
+
+                        // Schedule post-callback check
+                        setTimeout(() => {
+                            console.log(`🔬 [THUMBSTICK] setTimeout(0) fired after controllerRemoved for ${uniqueId}`);
+                        }, 0);
+
+                    } catch (e) {
+                        console.error('❌ Error in controller removed handler (thumbstick):', e.message, e.stack);
+                        window.__lastXROperation = `thumbstick:controllerRemoved:error:${e.message}`;
+                    }
+                });
+
+                // Process existing controllers
+                this.xrHelper.input.controllers.forEach((controller) => {
+                    this.setupController(controller);
+                });
+            }
+
+            setupController(controller) {
+                const handedness = controller.inputSource.handedness;
+                const uniqueId = controller.uniqueId;
+
+                // Skip if already setup THIS specific controller
+                if (this.setupControllers.has(uniqueId)) {
+                    console.log(`🎮 Controller ${uniqueId} already setup, skipping`);
+                    return;
+                }
+
+                // Check if this is a hand (detected as controller but no real controller capabilities)
+                // Hands only have 'xr-standard-trigger' and no thumbstick - skip them
+                const inputSource = controller.inputSource;
+                if (inputSource && inputSource.profiles) {
+                    const hasHandProfile = inputSource.profiles.some(p =>
+                        p.includes('hand') || p.includes('generic-trigger-touchpad')
+                    );
+                    if (hasHandProfile) {
+                        console.log(`🤲 Skipping hand controller ${uniqueId} (no thumbstick) - will use gesture handler instead`);
+                        return;
+                    }
+                }
+
+                console.log(`🎮 Setting up ${handedness} controller (${uniqueId}) for pivot input`);
+
+                const setupThumbstick = (motionController, source) => {
+                    // Already setup this controller?
+                    if (this.setupControllers.has(uniqueId)) return;
+
+                    const componentIds = motionController.getComponentIds();
+                    console.log(`🕹️ Motion controller init for ${handedness} (${uniqueId}) via ${source}:`, componentIds);
+
+                    const thumbstick = motionController.getComponent('xr-standard-thumbstick');
+                    if (!thumbstick) {
+                        console.warn(`⚠️ No thumbstick on ${handedness} controller (${uniqueId})`);
+                        return;
+                    }
+
+                    console.log(`✅ Thumbstick found on ${handedness} controller (${uniqueId})`);
+                    this.setupControllers.set(uniqueId, true);
+
+                    // IMPORTANT: Capture handedness in a local const to avoid closure issues
+                    const isLeftHand = handedness === 'left';
+                    const stickName = isLeftHand ? 'left' : 'right';
+
+                    // Debug: Log initial thumbstick values
+                    console.log(`🎮 [${stickName}] Initial thumbstick axes:`, thumbstick.axes);
+
+                    // Track observers for cleanup
+                    let axisObserver = null;
+                    let pollObserverRef = null;
+                    let isCleanedUp = false;
+
+                    // Axis change observer
+                    const axisCallback = (axes) => {
+                        if (isCleanedUp) return; // Skip if already cleaned up
+                        try {
+                            const x = axes?.x ?? 0;
+                            const y = axes?.y ?? 0;
+
+                            // Debug: Log axis changes when significant
+                            if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1) {
+                                console.log(`🕹️ [${stickName}] Axis change: x=${x.toFixed(3)}, y=${y.toFixed(3)}`);
+                            }
+
+                            if (isLeftHand) {
+                                this.leftStick.x = x;
+                                this.leftStick.y = y;
+                            } else {
+                                this.rightStick.x = x;
+                                this.rightStick.y = y;
+                            }
+                            this.updateUI();
+                        } catch (e) {
+                            console.warn(`⚠️ Axis callback error for ${stickName}:`, e.message);
+                        }
+                    };
+                    axisObserver = thumbstick.onAxisValueChangedObservable.add(axisCallback);
+
+                    // Also poll each frame as backup
+                    // Capture uniqueId for closure to check if controller still valid
+                    const pollUniqueId = uniqueId;
+                    const pollThumbstick = () => {
+                        if (isCleanedUp) return; // Skip if already cleaned up
+                        try {
+                            // Stop polling if disabled or controller was removed
+                            if (!this.enabled) return;
+                            if (!this.setupControllers.has(pollUniqueId)) {
+                                // Controller was removed, unregister this observer
+                                if (pollObserverRef) {
+                                    console.log(`🎮 [${stickName}] Removing thumbstick poll observer for disposed controller ${pollUniqueId}`);
+                                    this.scene.onBeforeRenderObservable.remove(pollObserverRef);
+                                    pollObserverRef = null;
+                                }
+                                return;
+                            }
+
+                            // Defensive: Check thumbstick object is still valid
+                            if (!thumbstick || thumbstick._disposed) {
+                                if (pollObserverRef) {
+                                    console.log(`🎮 [${stickName}] Removing poll observer - thumbstick disposed`);
+                                    this.scene.onBeforeRenderObservable.remove(pollObserverRef);
+                                    pollObserverRef = null;
+                                }
+                                return;
+                            }
+
+                            const currentX = thumbstick.axes?.x ?? 0;
+                            const currentY = thumbstick.axes?.y ?? 0;
+                            if (isLeftHand) {
+                                this.leftStick.x = currentX;
+                                this.leftStick.y = currentY;
+                            } else {
+                                this.rightStick.x = currentX;
+                                this.rightStick.y = currentY;
+                            }
+                        } catch (e) {
+                            // Thumbstick may be disposed, remove the observer
+                            console.warn(`⚠️ Thumbstick poll error for ${stickName}:`, e.message);
+                            if (pollObserverRef) {
+                                this.scene.onBeforeRenderObservable.remove(pollObserverRef);
+                                pollObserverRef = null;
+                            }
+                        }
+                    };
+
+                    pollObserverRef = this.scene.onBeforeRenderObservable.add(pollThumbstick);
+                    console.log(`🎮 [${stickName}] Added frame-by-frame thumbstick polling`);
+
+                    // Create cleanup function and store it
+                    const cleanupFn = () => {
+                        isCleanedUp = true;
+                        console.log(`🎮 [${stickName}] Running cleanup for ${uniqueId}`);
+
+                        // Check if cleanup is enabled (for debugging)
+                        if (!DEBUG_FLAGS.ENABLE_OBSERVER_CLEANUP) {
+                            console.log(`🎮 [${stickName}] SKIPPING observer cleanup (DEBUG_FLAGS.ENABLE_OBSERVER_CLEANUP=false)`);
+                            return;
+                        }
+
+                        // Remove axis observer
+                        if (axisObserver && thumbstick && thumbstick.onAxisValueChangedObservable) {
+                            try {
+                                thumbstick.onAxisValueChangedObservable.remove(axisObserver);
+                                console.log(`🎮 [${stickName}] Removed axis observer`);
+                            } catch (e) {
+                                console.warn(`⚠️ Error removing axis observer:`, e.message);
+                            }
+                        }
+                        axisObserver = null;
+
+                        // Remove poll observer
+                        if (pollObserverRef) {
+                            try {
+                                this.scene.onBeforeRenderObservable.remove(pollObserverRef);
+                                console.log(`🎮 [${stickName}] Removed poll observer`);
+                            } catch (e) {
+                                console.warn(`⚠️ Error removing poll observer:`, e.message);
+                            }
+                        }
+                        pollObserverRef = null;
+                    };
+                    this.controllerCleanup.set(uniqueId, cleanupFn);
+                };
+
+                if (controller.motionController) {
+                    console.log(`🎮 Motion controller already available for ${handedness}`);
+                    setupThumbstick(controller.motionController, 'immediate');
+                } else {
+                    controller.onMotionControllerInitObservable.add((mc) => {
+                        setupThumbstick(mc, 'observable');
+                    });
+
+                    // Polling fallback (reduced from 100 to 20 attempts = 2 seconds max)
+                    let attempts = 0;
+                    const poll = setInterval(() => {
+                        attempts++;
+                        if (this.setupControllers.has(uniqueId) || attempts > 20) {
+                            clearInterval(poll);
+                            if (attempts >= 20 && !this.setupControllers.has(uniqueId)) {
+                                // Don't log error - this is expected for hands
+                                console.log(`⏱️ Motion controller polling timed out for ${handedness} (${uniqueId}) - may be a hand`);
+                            }
+                            return;
+                        }
+                        if (controller.motionController) {
+                            console.log(`🎮 Found motion controller via polling for ${handedness} (${uniqueId}, attempt ${attempts})`);
+                            setupThumbstick(controller.motionController, 'polling');
+                            clearInterval(poll);
+                        }
+                    }, 100);
+                }
+            }
+
+            updateUI() {
+                const safeFixed = (val) => (val ?? 0).toFixed(3);
+                document.getElementById('leftX').textContent = safeFixed(this.leftStick.x);
+                document.getElementById('leftY').textContent = safeFixed(this.leftStick.y);
+                document.getElementById('rightX').textContent = safeFixed(this.rightStick.x);
+                document.getElementById('rightY').textContent = safeFixed(this.rightStick.y);
+            }
+
+            applyDeadzone(value) {
+                if (Math.abs(value) < this.DEADZONE) return 0;
+                const sign = Math.sign(value);
+                const magnitude = (Math.abs(value) - this.DEADZONE) / (1 - this.DEADZONE);
+                return sign * Math.pow(magnitude, 2);
+            }
+
+            update() {
+                if (!this.enabled) return;
+
+                this.frameCount++;
+
+                // Ensure stick objects exist (defensive)
+                if (!this.leftStick) this.leftStick = { x: 0, y: 0 };
+                if (!this.rightStick) this.rightStick = { x: 0, y: 0 };
+
+                // Get raw stick values
+                const rawLeftX = this.leftStick.x ?? 0;
+                const rawLeftY = this.leftStick.y ?? 0;
+                const rawRightX = this.rightStick.x ?? 0;
+                const rawRightY = this.rightStick.y ?? 0;
+
+                // Log raw values periodically to debug
+                if (this.frameCount % 60 === 0) {
+                    const hasRawInput = Math.abs(rawLeftX) > 0.01 || Math.abs(rawLeftY) > 0.01 ||
+                                       Math.abs(rawRightX) > 0.01 || Math.abs(rawRightY) > 0.01;
+                    if (hasRawInput) {
+                        console.log(`🎮 [Frame ${this.frameCount}] Raw stick values:`, {
+                            leftX: rawLeftX.toFixed(3),
+                            leftY: rawLeftY.toFixed(3),
+                            rightX: rawRightX.toFixed(3),
+                            rightY: rawRightY.toFixed(3)
+                        });
+                    }
+                }
+
+                // Get adjusted stick values (with deadzone)
+                const leftX = this.applyDeadzone(rawLeftX);
+                const leftY = this.applyDeadzone(rawLeftY);
+                const rightX = this.applyDeadzone(rawRightX);
+                const rightY = this.applyDeadzone(rawRightY);
+
+                const hasInput = leftX !== 0 || leftY !== 0 || rightX !== 0 || rightY !== 0;
+                if (!hasInput) return;
+
+                // LEFT STICK: Rotation
+                // X = yaw (push right = rotate right = positive yaw)
+                // Y = pitch (push forward = look down = positive pitch)
+                const yawDelta = -leftX * this.YAW_SPEED;
+                const pitchDelta = -leftY * this.PITCH_SPEED;
+
+                if (Math.abs(yawDelta) > 0.0001 || Math.abs(pitchDelta) > 0.0001) {
+                    // Debug log rotation being applied
+                    if (this.frameCount % 30 === 0) {
+                        console.log(`🔄 Applying rotation: yaw=${(yawDelta * 180 / Math.PI).toFixed(2)}° pitch=${(pitchDelta * 180 / Math.PI).toFixed(2)}°`);
+                    }
+                    this.pivot.rotate(yawDelta, pitchDelta);
+                }
+
+                // RIGHT STICK: Zoom and Pan
+                // Y axis (forward/back) = zoom
+                // X axis (left/right) = pan
+                if (Math.abs(rightY) > 0.0001) {
+                    // Zoom: forward = zoom in = scale up
+                    const zoomFactor = 1.0 + (rightY * this.ZOOM_SPEED);
+                    this.pivot.zoom(zoomFactor);
+                }
+
+                if (Math.abs(rightX) > 0.0001) {
+                    // Pan view-relative (push right = view moves right, see more of right side)
+                    const panAmount = rightX * this.PAN_SPEED;
+
+                    // Debug: Log pan operation
+                    if (this.frameCount % 30 === 0) {
+                        console.log(`🔄 Applying pan: rightX=${rightX.toFixed(3)} panAmount=${panAmount.toFixed(4)}`);
+                    }
+
+                    this.pivot.panViewRelative(panAmount, 0);
+                }
+
+                // Update movement display
+                document.getElementById('movementApplied').textContent =
+                    `yaw:${(yawDelta * 180 / Math.PI).toFixed(1)}° pitch:${(pitchDelta * 180 / Math.PI).toFixed(1)}° ` +
+                    `zoom:${rightY.toFixed(2)} pan:${rightX.toFixed(2)}`;
+            }
+
+            updateCameraDisplay(camera) {
+                if (!camera || !camera.position) return;
+                const pos = camera.position;
+                document.getElementById('cameraPos').textContent =
+                    `X:${pos.x.toFixed(2)} Y:${pos.y.toFixed(2)} Z:${pos.z.toFixed(2)}`;
+            }
+        }
+
+        // ============================================================================
+        // GESTURE INPUT HANDLER
+        // Ported from graphty-element XRGestureDetector.ts for fine-tuned detection
+        // Key improvements:
+        // - Updates previous hand state BEFORE calculating deltas (frame-by-frame)
+        // - No deadzones - applies gestures immediately for responsiveness
+        // - Proper hysteresis for pinch detection to prevent flickering
+        // ============================================================================
+        class GestureInputHandler {
+            constructor(scene, xrHelper, pivotController) {
+                this.scene = scene;
+                this.xrHelper = xrHelper;
+                this.pivot = pivotController;
+                this.enabled = false;
+
+                // Hand state tracking - stored from PREVIOUS frame
+                // This is key: we store previous state BEFORE updating to current
+                this.previousLeftHand = null;
+                this.previousRightHand = null;
+                this.previousDistance = null;
+                this.previousDirection = null;
+
+                // Controller references
+                this.controllers = new Map();
+
+                // Hand tracking
+                this.handTrackingFeature = null;
+
+                // Pinch thresholds with hysteresis (from graphty-element)
+                this.PINCH_THRESHOLD = 0.04; // 4cm to START pinching
+                this.PINCH_RELEASE_THRESHOLD = 0.06; // 6cm to STOP pinching
+                this.wasPinching = { left: false, right: false };
+
+                // Gesture sensitivity (from graphty-element XRGestureDetector)
+                this.ZOOM_SENSITIVITY = 2.0;
+
+                // Input switch delay tracking
+                // When a controller is removed, we record the time
+                // New controllers added within the delay window are deferred
+                this.lastControllerRemovedTime = 0;
+                this.pendingControllerSetups = [];
+
+                // Debug
+                this.frameCount = 0;
+            }
+
+            enable() {
+                if (this.enabled) return;
+                this.enabled = true;
+
+                console.log('🤲 GestureInputHandler.enable() - Using PIVOT approach (ported from XRGestureDetector)');
+
+                // Setup controllers with error boundaries and delay mechanism
+                this.xrHelper.input.onControllerAddedObservable.add((c) => {
+                    try {
+                        // Log node counts BEFORE setup (Hypothesis 2 data gathering)
+                        console.log('📊 [NODE COUNT] Before controllerAdded:', JSON.stringify(getSceneNodeCounts(this.scene)));
+
+                        window.__lastXROperation = `gesture:controllerAdded:${c.uniqueId}`;
+
+                        // Check if we need to delay setup due to recent controller removal
+                        const now = performance.now();
+                        const timeSinceRemoval = now - this.lastControllerRemovedTime;
+                        const delayMs = DEBUG_FLAGS.INPUT_SWITCH_DELAY_MS;
+
+                        if (timeSinceRemoval < delayMs && this.lastControllerRemovedTime > 0) {
+                            // We're in the cooldown period - delay the setup
+                            const remainingDelay = delayMs - timeSinceRemoval;
+                            console.log(`⏳ [DELAY] Controller ${c.uniqueId} added ${timeSinceRemoval.toFixed(0)}ms after removal, delaying setup by ${remainingDelay.toFixed(0)}ms`);
+
+                            setTimeout(() => {
+                                console.log(`⏳ [DELAY] Executing delayed setup for ${c.uniqueId}`);
+                                try {
+                                    this.setupController(c);
+                                    console.log('📊 [NODE COUNT] After delayed controllerAdded:', JSON.stringify(getSceneNodeCounts(this.scene)));
+                                } catch (e) {
+                                    console.error('❌ Error in delayed controller setup (gesture):', e.message, e.stack);
+                                }
+                            }, remainingDelay);
+                        } else {
+                            // No recent removal or delay disabled - setup immediately
+                            this.setupController(c);
+                            console.log('📊 [NODE COUNT] After controllerAdded:', JSON.stringify(getSceneNodeCounts(this.scene)));
+                        }
+                    } catch (e) {
+                        console.error('❌ Error in controller added handler (gesture):', e.message, e.stack);
+                    }
+                });
+                this.xrHelper.input.controllers.forEach((c) => {
+                    try {
+                        this.setupController(c);
+                    } catch (e) {
+                        console.error('❌ Error in initial controller setup (gesture):', e.message, e.stack);
+                    }
+                });
+
+                // Handle controller removal - clear stale references and cleanup observers
+                this.xrHelper.input.onControllerRemovedObservable.add((controller) => {
+                    // Log node counts BEFORE removal (Hypothesis 2 data gathering)
+                    console.log('📊 [NODE COUNT] Before controllerRemoved:', JSON.stringify(getSceneNodeCounts(this.scene)));
+
+                    // STEP-BY-STEP DEBUGGING - log at every single line
+                    console.log('🔬 [GESTURE] controllerRemoved callback START');
+                    window.__lastXROperation = 'gesture:controllerRemoved:step0:entered';
+
+                    try {
+                        console.log('🔬 [GESTURE] step1: accessing controller.uniqueId');
+                        window.__lastXROperation = 'gesture:controllerRemoved:step1:beforeUniqueId';
+
+                        // Defensive: Check if controller exists and has uniqueId
+                        if (!controller) {
+                            console.error('🔬 [GESTURE] ERROR: controller is null/undefined!');
+                            window.__lastXROperation = 'gesture:controllerRemoved:error:nullController';
+                            return;
+                        }
+
+                        let uniqueId;
+                        try {
+                            uniqueId = controller.uniqueId;
+                            console.log(`🔬 [GESTURE] step2: got uniqueId = ${uniqueId}`);
+                        } catch (uidError) {
+                            console.error('🔬 [GESTURE] ERROR accessing uniqueId:', uidError.message);
+                            window.__lastXROperation = 'gesture:controllerRemoved:error:uniqueIdAccess';
+                            return;
+                        }
+
+                        window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step3:gotUniqueId`;
+                        console.log(`🔬 [GESTURE] step3: checking cleanup map for ${uniqueId}`);
+
+                        // Call cleanup function to remove observers BEFORE deleting from map
+                        const hasCleanup = this.controllerCleanup && this.controllerCleanup.has(uniqueId);
+                        console.log(`🔬 [GESTURE] step4: hasCleanup = ${hasCleanup}`);
+                        window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step4:checkedCleanup:${hasCleanup}`;
+
+                        if (hasCleanup) {
+                            console.log(`🤲 Cleaning up observers for ${uniqueId} (gesture handler)`);
+                            window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step5:beforeCleanupCall`;
+                            this.controllerCleanup.get(uniqueId)();
+                            window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step6:afterCleanupCall`;
+                            console.log(`🔬 [GESTURE] step6: cleanup called for ${uniqueId}`);
+                            this.controllerCleanup.delete(uniqueId);
+                            console.log(`🔬 [GESTURE] step7: cleanup deleted from map`);
+                        } else {
+                            console.log(`🔬 [GESTURE] step5b: no cleanup needed (already cleaned or hand)`);
+                        }
+
+                        window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step8:checkingControllers`;
+                        const hasController = this.controllers.has(uniqueId);
+                        console.log(`🔬 [GESTURE] step8: hasController = ${hasController}`);
+
+                        if (hasController) {
+                            console.log(`🤲 Controller removed: ${uniqueId}. Remaining: ${this.controllers.size - 1}`);
+                            this.controllers.delete(uniqueId);
+                            console.log(`🔬 [GESTURE] step9: controller deleted from map`);
+                        } else {
+                            console.log(`🔬 [GESTURE] step9b: controller not in map (already removed)`);
+                        }
+
+                        window.__lastXROperation = `gesture:controllerRemoved:${uniqueId}:step10:complete`;
+                        console.log(`🔬 [GESTURE] controllerRemoved callback COMPLETE for ${uniqueId}`);
+
+                        // Record the removal time for the delay mechanism
+                        this.lastControllerRemovedTime = performance.now();
+                        console.log(`⏳ [DELAY] Recorded controller removal at ${this.lastControllerRemovedTime.toFixed(0)}ms - next controller add will be delayed by ${DEBUG_FLAGS.INPUT_SWITCH_DELAY_MS}ms`);
+
+                        // Log node counts AFTER removal (Hypothesis 2 data gathering)
+                        console.log('📊 [NODE COUNT] After controllerRemoved:', JSON.stringify(getSceneNodeCounts(this.scene)));
+
+                        // Check for circular parents AFTER removal (H4 investigation)
+                        detectCircularParents(this.scene, `after removing ${uniqueId}`);
+
+                        // Schedule a check to confirm we exit the observable cleanly
+                        setTimeout(() => {
+                            console.log(`🔬 [GESTURE] setTimeout(0) fired after controllerRemoved for ${uniqueId}`);
+                            // Also check for circular parents after microtask queue clears
+                            detectCircularParents(this.scene, `in setTimeout after ${uniqueId}`);
+                        }, 0);
+
+                    } catch (e) {
+                        console.error('❌ Error in controller removed handler (gesture):', e.message, e.stack);
+                        window.__lastXROperation = `gesture:controllerRemoved:error:${e.message}`;
+                    }
+                });
+
+                // Try hand tracking
+                this.enableHandTracking();
+            }
+
+            setupController(controller) {
+                const handedness = controller.inputSource.handedness;
+                if (handedness !== 'left' && handedness !== 'right') return;
+
+                const uniqueId = controller.uniqueId;
+
+                // Check if already setup THIS specific controller (by uniqueId, not handedness)
+                if (this.controllers.has(uniqueId)) {
+                    console.log(`🤲 Controller ${uniqueId} already setup, skipping`);
+                    return;
+                }
+
+                // Detect if this is a hand input (not a physical controller)
+                // Hands have specific profiles and don't have traditional motion controllers
+                const inputSource = controller.inputSource;
+                const isHandInput = inputSource && inputSource.profiles &&
+                    inputSource.profiles.some(p =>
+                        p.includes('hand') || p.includes('generic-trigger-touchpad')
+                    );
+
+                // GUARD 1: If hand tracking is disabled, ignore ALL hand inputs
+                // This completely avoids the Babylon.js circular parent bug
+                if (isHandInput && !DEBUG_FLAGS.ENABLE_HAND_TRACKING) {
+                    console.log(`🤲 [GUARD] Ignoring hand ${uniqueId} - hand tracking disabled via DEBUG_FLAGS`);
+                    return;
+                }
+
+                // GUARD 2 REMOVED: We now use the delay mechanism instead of blocking hands
+                // The delay gives Babylon.js time to clean up internal state when switching input sources
+                // (Old code blocked hands when physical controllers existed)
+
+                // SAFETY: Remove any existing controller for this handedness
+                // This prevents stale references when switching input sources
+                // CRITICAL: Must also call cleanup to remove observers!
+                // Can be disabled via DEBUG_FLAGS to test Hypothesis 3 (race condition)
+                if (DEBUG_FLAGS.ENABLE_SAFETY_CLEANUP) {
+                    for (const [existingId, entry] of this.controllers) {
+                        if (entry.handedness === handedness && existingId !== uniqueId) {
+                            console.log(`🤲 Clearing old ${handedness} controller ${existingId} before adding ${uniqueId}`);
+
+                            // MUST call cleanup BEFORE deleting from map to prevent race condition
+                            if (this.controllerCleanup && this.controllerCleanup.has(existingId)) {
+                                console.log(`🤲 Running proactive cleanup for ${existingId}`);
+                                try {
+                                    this.controllerCleanup.get(existingId)();
+                                } catch (e) {
+                                    console.warn(`⚠️ Error in proactive cleanup for ${existingId}:`, e.message);
+                                }
+                                this.controllerCleanup.delete(existingId);
+                            }
+
+                            this.controllers.delete(existingId);
+                        }
+                    }
+                } else {
+                    console.log(`🤲 SKIPPING SAFETY cleanup (DEBUG_FLAGS.ENABLE_SAFETY_CLEANUP=false)`);
+                }
+
+                // Reset gesture state when input source changes to prevent stale data
+                if (handedness === 'left') {
+                    this.previousLeftHand = null;
+                } else {
+                    this.previousRightHand = null;
+                }
+                this.previousDistance = null;
+                this.previousDirection = null;
+
+                const inputType = isHandInput ? 'hand' : 'controller';
+                console.log(`🤲 Setting up ${handedness} ${inputType} (${uniqueId}) for gesture input. Total: ${this.controllers.size + 1}`);
+                this.controllers.set(uniqueId, { controller, handedness, isHandInput });
+
+                // For HAND inputs: Don't add motion controller observers
+                // Hand tracking is handled differently via handTrackingFeature
+                // Adding observers to hand "controllers" causes async errors
+                if (isHandInput) {
+                    console.log(`🤲 [${handedness}] Hand input detected - skipping motionController observer (using hand tracking instead)`);
+                    // No cleanup needed for hands - they use hand tracking feature
+                    this.controllerCleanup = this.controllerCleanup || new Map();
+                    this.controllerCleanup.set(uniqueId, () => {
+                        console.log(`🤲 [${handedness}] Hand ${uniqueId} cleanup (no observers to remove)`);
+                    });
+                    return;
+                }
+
+                // For PHYSICAL CONTROLLERS: Log capabilities when motion controller is ready
+                // Track if this controller has been cleaned up
+                let isControllerCleanedUp = false;
+
+                const logCapabilities = () => {
+                    // Skip if controller was cleaned up
+                    if (isControllerCleanedUp) {
+                        console.log(`🤲 [${handedness}] Skipping capabilities log - controller ${uniqueId} was cleaned up`);
+                        return;
+                    }
+
+                    window.__lastXROperation = `gesture:logCapabilities:${uniqueId}`;
+                    try {
+                        const hasGrip = !!controller.grip;
+                        const hasMotionController = !!controller.motionController;
+                        let hasTrigger = false;
+                        if (controller.motionController) {
+                            const trigger = controller.motionController.getComponent('xr-standard-trigger');
+                            hasTrigger = !!trigger;
+                        }
+                        console.log(`🤲 [${handedness}] Controller capabilities:`, {
+                            hasGrip,
+                            hasMotionController,
+                            hasTrigger
+                        });
+                    } catch (e) {
+                        console.error(`❌ Error in logCapabilities for ${uniqueId}:`, e.message, e.stack);
+                    }
+                };
+
+                // Track the observer so we can remove it on cleanup
+                let motionControllerObserver = null;
+
+                if (controller.motionController) {
+                    logCapabilities();
+                } else {
+                    motionControllerObserver = controller.onMotionControllerInitObservable.add(() => {
+                        window.__lastXROperation = `gesture:motionControllerInit:${uniqueId}`;
+                        logCapabilities();
+                    });
+                }
+
+                // Store cleanup function for this controller
+                this.controllerCleanup = this.controllerCleanup || new Map();
+                this.controllerCleanup.set(uniqueId, () => {
+                    isControllerCleanedUp = true;
+
+                    // Check if cleanup is enabled (for debugging)
+                    if (!DEBUG_FLAGS.ENABLE_OBSERVER_CLEANUP) {
+                        console.log(`🤲 SKIPPING motionControllerInit observer removal for ${uniqueId} (DEBUG_FLAGS.ENABLE_OBSERVER_CLEANUP=false)`);
+                        return;
+                    }
+
+                    if (motionControllerObserver && controller.onMotionControllerInitObservable) {
+                        try {
+                            controller.onMotionControllerInitObservable.remove(motionControllerObserver);
+                            console.log(`🤲 Removed motionControllerInit observer for ${uniqueId}`);
+                        } catch (e) {
+                            console.warn(`⚠️ Error removing motionControllerInit observer:`, e.message);
+                        }
+                    }
+                });
+            }
+
+            enableHandTracking() {
+                // Check if hand tracking is disabled via DEBUG_FLAGS
+                // This is needed to avoid Babylon.js circular parent bug when using pivot approach
+                if (!DEBUG_FLAGS.ENABLE_HAND_TRACKING) {
+                    console.log('🤲 Hand tracking DISABLED via DEBUG_FLAGS (prevents circular parent bug)');
+                    document.getElementById('handTrackingState').textContent = 'Disabled (DEBUG)';
+                    return;
+                }
+
+                try {
+                    const feature = this.xrHelper.baseExperience.featuresManager.enableFeature(
+                        BABYLON.WebXRFeatureName.HAND_TRACKING,
+                        'latest',
+                        { xrInput: this.xrHelper.input, jointMeshes: { enablePhysics: false } }
+                    );
+                    this.handTrackingFeature = feature;
+                    console.log('🤲 Hand tracking enabled');
+                    document.getElementById('handTrackingState').textContent = 'Enabled';
+                } catch (error) {
+                    console.log('🤲 Hand tracking not available:', error.message);
+                    document.getElementById('handTrackingState').textContent = 'Not available';
+                }
+            }
+
+            /**
+             * Get hand state from controller trigger OR hand tracking
+             * Priority: Controller trigger first, then hand tracking
+             */
+            getHandState(handedness) {
+                // PATH 1: Try controller trigger first
+                // Find controller by handedness (Map is keyed by uniqueId, not handedness)
+                let controller = null;
+                for (const [uniqueId, entry] of this.controllers) {
+                    if (entry.handedness === handedness) {
+                        controller = entry.controller;
+                        break;
+                    }
+                }
+
+                // Defensive: Check controller is still valid (not disposed)
+                // Also check grip position is valid (not disposed or NaN)
+                if (controller?.grip && controller?.motionController) {
+                    try {
+                        const gripPos = controller.grip.position;
+                        // Verify position is valid (not disposed)
+                        if (!gripPos || !isFinite(gripPos.x) || !isFinite(gripPos.y) || !isFinite(gripPos.z)) {
+                            // Controller grip is invalid, skip to hand tracking
+                        } else {
+                            const trigger = controller.motionController.getComponent('xr-standard-trigger');
+                            if (trigger) {
+                                // Use trigger.pressed OR value > 0.5 for pinching
+                                const isPinching = trigger.pressed || trigger.value > 0.5;
+                                if (isPinching) {
+                                    return {
+                                        position: gripPos.clone(),
+                                        rotation: controller.grip.rotationQuaternion?.clone() || BABYLON.Quaternion.Identity(),
+                                        pinching: true,
+                                        pinchStrength: trigger.value ?? 0
+                                    };
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Controller is likely disposed, fall through to hand tracking
+                    }
+                }
+
+                // PATH 2: Try hand tracking
+                if (this.handTrackingFeature) {
+                    try {
+                        const hand = this.handTrackingFeature.getHandByHandedness(handedness);
+                        if (hand) {
+                            const wrist = hand.getJointMesh(BABYLON.WebXRHandJoint.WRIST);
+                            const thumbTip = hand.getJointMesh(BABYLON.WebXRHandJoint.THUMB_TIP);
+                            const indexTip = hand.getJointMesh(BABYLON.WebXRHandJoint.INDEX_FINGER_TIP);
+
+                            if (wrist && thumbTip && indexTip) {
+                                // Defensive: Check positions are valid
+                                if (!wrist.position || !thumbTip.position || !indexTip.position) {
+                                    return null;
+                                }
+                                if (!isFinite(wrist.position.x) || !isFinite(thumbTip.position.x)) {
+                                    return null;
+                                }
+
+                                const pinchDist = BABYLON.Vector3.Distance(thumbTip.position, indexTip.position);
+
+                                // Hysteresis: different thresholds for start vs stop
+                                const wasP = this.wasPinching[handedness];
+                                const isP = wasP
+                                    ? pinchDist < this.PINCH_RELEASE_THRESHOLD  // Already pinching - use looser threshold
+                                    : pinchDist < this.PINCH_THRESHOLD;         // Not pinching - use tighter threshold
+                                this.wasPinching[handedness] = isP;
+
+                                if (isP) {
+                                    return {
+                                        position: wrist.position.clone(),
+                                        rotation: wrist.rotationQuaternion?.clone() || BABYLON.Quaternion.Identity(),
+                                        pinching: true,
+                                        pinchStrength: Math.max(0, 1 - (pinchDist / this.PINCH_THRESHOLD))
+                                    };
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Log hand tracking errors (throttled)
+                        if (this.frameCount % 60 === 1) {
+                            console.warn(`⚠️ Hand tracking access error (${handedness}):`, e.message);
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            /**
+             * Update hand states - called every frame
+             * IMPORTANT: Stores previous distance/direction BEFORE updating to current
+             * This allows getCurrentGesture() to calculate frame-by-frame deltas
+             */
+            updateHands(leftHand, rightHand) {
+                // If hands not available, reset tracking
+                if (!leftHand || !rightHand) {
+                    this.previousLeftHand = null;
+                    this.previousRightHand = null;
+                    this.previousDistance = null;
+                    this.previousDirection = null;
+                    return;
+                }
+
+                // If we have previous hands, store their distance/direction BEFORE updating
+                // This is the key to frame-by-frame delta calculation!
+                if (this.previousLeftHand && this.previousRightHand) {
+                    this.previousDistance = BABYLON.Vector3.Distance(
+                        this.previousLeftHand.position,
+                        this.previousRightHand.position
+                    );
+                    const direction = this.previousRightHand.position.subtract(this.previousLeftHand.position);
+                    this.previousDirection = direction.normalize();
+                }
+
+                // Update stored hand states with CURRENT values
+                // Clone positions to avoid reference issues
+                this.previousLeftHand = {
+                    position: leftHand.position.clone(),
+                    rotation: leftHand.rotation.clone(),
+                    pinching: leftHand.pinching,
+                    pinchStrength: leftHand.pinchStrength
+                };
+                this.previousRightHand = {
+                    position: rightHand.position.clone(),
+                    rotation: rightHand.rotation.clone(),
+                    pinching: rightHand.pinching,
+                    pinchStrength: rightHand.pinchStrength
+                };
+            }
+
+            /**
+             * Get current gesture - calculates zoom and rotation deltas
+             * Returns immediately with values - no delays or deadzones
+             */
+            getCurrentGesture() {
+                const left = this.previousLeftHand;
+                const right = this.previousRightHand;
+
+                // Require both hands pinching
+                if (!left || !right || !left.pinching || !right.pinching) {
+                    return { type: 'none' };
+                }
+
+                // Calculate current distance and direction
+                const currentDistance = BABYLON.Vector3.Distance(left.position, right.position);
+                const direction = right.position.subtract(left.position);
+                const currentDirection = direction.normalize();
+
+                // Need previous values to calculate deltas
+                if (this.previousDistance === null || this.previousDirection === null) {
+                    return { type: 'none' };
+                }
+
+                // Calculate distance delta for zoom
+                const distanceDelta = currentDistance - this.previousDistance;
+
+                // Calculate rotation using cross product (axis) and dot product (angle)
+                const rotationAxis = BABYLON.Vector3.Cross(this.previousDirection, currentDirection);
+                const axisLength = rotationAxis.length();
+
+                // Calculate rotation angle from dot product
+                const dot = BABYLON.Vector3.Dot(this.previousDirection, currentDirection);
+                const clampedDot = Math.max(-1, Math.min(1, dot));
+                let rotationAngle = Math.acos(clampedDot);
+
+                // If cross product is near zero, vectors are parallel (no rotation)
+                if (axisLength < 0.0001) {
+                    rotationAngle = 0;
+                } else {
+                    rotationAxis.scaleInPlace(1 / axisLength);
+                }
+
+                // Calculate zoom factor
+                // Positive delta (hands apart) = zoom out (> 1.0)
+                // Negative delta (hands together) = zoom in (< 1.0)
+                const zoomDelta = 1.0 + (distanceDelta * this.ZOOM_SENSITIVITY);
+                // Clamp to prevent extreme zooming
+                const clampedZoom = Math.max(0.9, Math.min(1.1, zoomDelta));
+
+                return {
+                    type: 'transform',
+                    zoomDelta: clampedZoom,
+                    rotationAxis: axisLength < 0.0001 ? BABYLON.Vector3.Up() : rotationAxis,
+                    rotationAngle: rotationAngle
+                };
+            }
+
+            update() {
+                if (!this.enabled) return;
+
+                this.frameCount++;
+
+                try {
+                    this._updateInternal();
+                } catch (error) {
+                    // Log error but don't crash the render loop
+                    if (this.frameCount % 60 === 0) {
+                        console.error('🤲 Gesture update error:', error.message);
+                    }
+                }
+            }
+
+            /**
+             * Check if there are physical controllers (not hands) currently active.
+             * This is used to suppress gesture processing when controllers are present
+             * to prevent the Babylon.js circular parent bug.
+             */
+            hasPhysicalControllers() {
+                if (!this.xrHelper?.input?.controllers) return false;
+
+                let physicalCount = 0;
+                let handCount = 0;
+
+                for (const controller of this.xrHelper.input.controllers) {
+                    const inputSource = controller.inputSource;
+                    if (!inputSource) continue;
+
+                    // Physical controllers have targetRayMode 'tracked-pointer'
+                    // and don't have hand-related profiles
+                    if (inputSource.targetRayMode === 'tracked-pointer') {
+                        const profiles = inputSource.profiles || [];
+                        const isHand = profiles.some(p =>
+                            p.includes('hand') || p.includes('generic-trigger-touchpad')
+                        );
+                        if (!isHand) {
+                            physicalCount++;
+                        } else {
+                            handCount++;
+                        }
+                    }
+                }
+
+                // Log state changes (only when called from guards, not every frame)
+                const hasPhysical = physicalCount > 0;
+                if (this._lastPhysicalState !== hasPhysical) {
+                    console.log(`🎮 [GUARD] Controller state: ${physicalCount} physical, ${handCount} hands, total: ${this.xrHelper.input.controllers.length}`);
+                    this._lastPhysicalState = hasPhysical;
+                }
+
+                return hasPhysical;
+            }
+
+            _updateInternal() {
+                // GUARD REMOVED: We now use the delay mechanism in controllerAdded instead
+                // of blocking gesture processing when controllers are active.
+                // The delay gives Babylon.js time to clean up internal state.
+                // This allows both controller gestures AND hand gestures to work.
+
+                // Get current hand states
+                const left = this.getHandState('left');
+                const right = this.getHandState('right');
+
+                // Update UI for pinch state (with defensive checks for pinchStrength)
+                const lp = left?.pinching ?? false;
+                const rp = right?.pinching ?? false;
+                const leftStrength = (left?.pinchStrength ?? 0).toFixed(2);
+                const rightStrength = (right?.pinchStrength ?? 0).toFixed(2);
+
+                if (lp && rp) {
+                    document.getElementById('gestureState').textContent =
+                        `BOTH PINCHING - L:${leftStrength} R:${rightStrength}`;
+                } else if (lp) {
+                    document.getElementById('gestureState').textContent = `Left pinching: ${leftStrength}`;
+                } else if (rp) {
+                    document.getElementById('gestureState').textContent = `Right pinching: ${rightStrength}`;
+                } else {
+                    document.getElementById('gestureState').textContent = 'No gesture';
+                }
+
+                // Update hand tracking state (this calculates previousDistance/Direction)
+                this.updateHands(left, right);
+
+                // Get current gesture
+                const gesture = this.getCurrentGesture();
+
+                if (gesture.type === 'transform') {
+                    // Apply BOTH zoom and rotation simultaneously for natural movement
+
+                    // Defensive: Check pivot is still valid
+                    if (!this.pivot || !this.pivot.pivot) {
+                        console.warn('⚠️ Pivot is invalid, skipping gesture application');
+                        return;
+                    }
+
+                    try {
+                        // Apply zoom - hands apart = scale down (zoom out)
+                        if (gesture.zoomDelta !== undefined && isFinite(gesture.zoomDelta)) {
+                            // Invert: hands apart (zoomDelta > 1) should scale down
+                            this.pivot.zoom(2.0 - gesture.zoomDelta);
+                        }
+
+                        // Apply rotation - use FULL 3D rotation axis for natural hand-based rotation
+                        // This allows any gesture direction: twist (Y), tilt (X), spin (Z), or any combination
+                        // NEGATE for world-mode: when you twist hands clockwise, scene rotates clockwise
+                        // (pivot rotates counter-clockwise so scene appears to rotate clockwise)
+                        if (gesture.rotationAxis && gesture.rotationAngle !== undefined &&
+                            isFinite(gesture.rotationAngle) && gesture.rotationAngle > 0.0001) {
+                            this.pivot.rotateAroundAxis(gesture.rotationAxis, -gesture.rotationAngle);
+                        }
+                    } catch (pivotError) {
+                        console.error('❌ Pivot operation error:', pivotError.message, pivotError.stack);
+                    }
+
+                    document.getElementById('gestureState').textContent =
+                        `ACTIVE: zoom=${gesture.zoomDelta?.toFixed(3)} rot=${((gesture.rotationAngle || 0) * 180 / Math.PI).toFixed(1)}° ` +
+                        `axis=(${gesture.rotationAxis?.x.toFixed(1)},${gesture.rotationAxis?.y.toFixed(1)},${gesture.rotationAxis?.z.toFixed(1)})`;
+
+                    // Debug log (throttled)
+                    if (this.frameCount % 30 === 0) {
+                        console.log('🤲 Gesture applied:', {
+                            zoom: gesture.zoomDelta?.toFixed(4),
+                            rotAngle: ((gesture.rotationAngle || 0) * 180 / Math.PI).toFixed(2) + '°',
+                            rotAxis: `(${gesture.rotationAxis?.x.toFixed(2)}, ${gesture.rotationAxis?.y.toFixed(2)}, ${gesture.rotationAxis?.z.toFixed(2)})`
+                        });
+                    }
+                }
+            }
+        }
+
+        // ============================================================================
+        // DRAG AND DROP HANDLER
+        // Handles single-hand object selection and dragging
+        // Does NOT interfere with two-hand gesture controls
+        // ============================================================================
+        class DragDropHandler {
+            constructor(scene, xrHelper, gestureHandler, pivotController) {
+                this.scene = scene;
+                this.xrHelper = xrHelper;
+                this.gestureHandler = gestureHandler; // Reference to check if two-hand gesture is active
+                this.pivotController = pivotController; // Reference to transform grip movements
+                this.enabled = false;
+
+                // Drag state
+                this.draggedMesh = null;
+                this.draggingHand = null; // 'left' or 'right'
+                this.grabOffset = null; // Offset from grip to mesh center at grab time (in scene space)
+                this.lastGripPosition = null; // Previous frame's grip position for delta calculation
+
+                // Movement settings
+                this.MOVEMENT_AMPLIFICATION = 3.0; // Amplify hand movements by this factor
+
+                // Controller/hand state tracking
+                this.controllers = new Map(); // uniqueId -> { controller, handedness }
+
+                // Draggable meshes (marked with metadata.isDraggable = true)
+                this.draggableMeshes = new Set();
+
+                // Pinch thresholds (same as gesture handler for consistency)
+                this.PINCH_THRESHOLD = 0.04;
+                this.PINCH_RELEASE_THRESHOLD = 0.06;
+                this.wasPinching = { left: false, right: false };
+
+                // For raycasting to select objects
+                this.tempRay = new BABYLON.Ray(BABYLON.Vector3.Zero(), BABYLON.Vector3.Forward());
+
+                // Debug
+                this.frameCount = 0;
+            }
+
+            /**
+             * Mark a mesh as draggable
+             */
+            registerDraggable(mesh) {
+                if (!mesh.metadata) mesh.metadata = {};
+                mesh.metadata.isDraggable = true;
+                this.draggableMeshes.add(mesh);
+                console.log(`📦 Registered draggable mesh: ${mesh.name}`);
+            }
+
+            enable() {
+                if (this.enabled) return;
+                this.enabled = true;
+
+                console.log('📦 DragDropHandler.enable() - Single-hand object drag/drop');
+
+                // Setup controller tracking
+                this.xrHelper.input.onControllerAddedObservable.add((controller) => {
+                    try {
+                        const uniqueId = controller.uniqueId;
+                        const handedness = controller.inputSource?.handedness;
+                        if (handedness === 'left' || handedness === 'right') {
+                            console.log(`📦 DragDrop: Added ${handedness} controller (${uniqueId})`);
+                            this.controllers.set(uniqueId, { controller, handedness });
+                        }
+                    } catch (e) {
+                        console.error('❌ DragDrop controller add error:', e.message);
+                    }
+                });
+
+                this.xrHelper.input.onControllerRemovedObservable.add((controller) => {
+                    try {
+                        const uniqueId = controller.uniqueId;
+                        const entry = this.controllers.get(uniqueId);
+
+                        // If we were dragging with this controller, drop the object
+                        if (entry && this.draggingHand === entry.handedness) {
+                            console.log(`📦 DragDrop: Controller ${uniqueId} removed while dragging, dropping object`);
+                            this.dropObject();
+                        }
+
+                        this.controllers.delete(uniqueId);
+                        console.log(`📦 DragDrop: Removed controller ${uniqueId}`);
+                    } catch (e) {
+                        console.error('❌ DragDrop controller remove error:', e.message);
+                    }
+                });
+
+                // Register existing controllers
+                this.xrHelper.input.controllers.forEach((controller) => {
+                    const uniqueId = controller.uniqueId;
+                    const handedness = controller.inputSource?.handedness;
+                    if (handedness === 'left' || handedness === 'right') {
+                        this.controllers.set(uniqueId, { controller, handedness });
+                    }
+                });
+            }
+
+            /**
+             * Check if a hand is currently pinching/triggering
+             * Uses controller trigger if available, otherwise hand tracking
+             */
+            isHandActive(handedness) {
+                // Find controller for this hand
+                let controller = null;
+                for (const [, entry] of this.controllers) {
+                    if (entry.handedness === handedness) {
+                        controller = entry.controller;
+                        break;
+                    }
+                }
+
+                // Try controller trigger first
+                if (controller?.motionController) {
+                    const trigger = controller.motionController.getComponent('xr-standard-trigger');
+                    if (trigger) {
+                        return trigger.pressed || trigger.value > 0.5;
+                    }
+                }
+
+                // Try hand tracking
+                if (this.gestureHandler?.handTrackingFeature) {
+                    try {
+                        const hand = this.gestureHandler.handTrackingFeature.getHandByHandedness(handedness);
+                        if (hand) {
+                            const thumbTip = hand.getJointMesh(BABYLON.WebXRHandJoint.THUMB_TIP);
+                            const indexTip = hand.getJointMesh(BABYLON.WebXRHandJoint.INDEX_FINGER_TIP);
+
+                            if (thumbTip && indexTip) {
+                                const pinchDist = BABYLON.Vector3.Distance(thumbTip.position, indexTip.position);
+
+                                // Hysteresis
+                                const wasP = this.wasPinching[handedness];
+                                const isP = wasP
+                                    ? pinchDist < this.PINCH_RELEASE_THRESHOLD
+                                    : pinchDist < this.PINCH_THRESHOLD;
+                                this.wasPinching[handedness] = isP;
+
+                                return isP;
+                            }
+                        }
+                    } catch (e) {
+                        // Hand tracking error - ignore
+                    }
+                }
+
+                return false;
+            }
+
+            /**
+             * Get the grip/pointer position and ray for a hand
+             */
+            getHandTransform(handedness) {
+                // Find controller for this hand
+                let controller = null;
+                for (const [, entry] of this.controllers) {
+                    if (entry.handedness === handedness) {
+                        controller = entry.controller;
+                        break;
+                    }
+                }
+
+                if (controller) {
+                    // Get pointer ray for raycasting
+                    const ray = new BABYLON.Ray(BABYLON.Vector3.Zero(), BABYLON.Vector3.Forward());
+                    controller.getWorldPointerRayToRef(ray);
+
+                    // Get grip position for positioning dragged objects
+                    let gripPosition;
+                    let gripRotation;
+
+                    if (controller.grip) {
+                        gripPosition = controller.grip.position.clone();
+                        gripRotation = controller.grip.rotationQuaternion?.clone() || BABYLON.Quaternion.Identity();
+                    } else if (controller.pointer) {
+                        gripPosition = controller.pointer.position.clone();
+                        gripRotation = controller.pointer.rotationQuaternion?.clone() || BABYLON.Quaternion.Identity();
+                    } else {
+                        return null;
+                    }
+
+                    return { ray, gripPosition, gripRotation };
+                }
+
+                // Try hand tracking - use wrist as grip position
+                if (this.gestureHandler?.handTrackingFeature) {
+                    try {
+                        const hand = this.gestureHandler.handTrackingFeature.getHandByHandedness(handedness);
+                        if (hand) {
+                            const wrist = hand.getJointMesh(BABYLON.WebXRHandJoint.WRIST);
+                            const indexKnuckle = hand.getJointMesh(BABYLON.WebXRHandJoint.INDEX_FINGER_METACARPAL);
+                            const indexTip = hand.getJointMesh(BABYLON.WebXRHandJoint.INDEX_FINGER_TIP);
+
+                            if (wrist && indexTip) {
+                                // Create a ray from index knuckle to index tip for pointing
+                                const rayOrigin = indexKnuckle ? indexKnuckle.position.clone() : wrist.position.clone();
+                                const rayDirection = indexTip.position.subtract(rayOrigin).normalize();
+                                const ray = new BABYLON.Ray(rayOrigin, rayDirection, 10);
+
+                                return {
+                                    ray,
+                                    gripPosition: wrist.position.clone(),
+                                    gripRotation: wrist.rotationQuaternion?.clone() || BABYLON.Quaternion.Identity()
+                                };
+                            }
+                        }
+                    } catch (e) {
+                        // Hand tracking error
+                    }
+                }
+
+                return null;
+            }
+
+            /**
+             * Try to select an object with a ray
+             */
+            trySelectObject(ray) {
+                // Raycast against all draggable meshes
+                const meshes = Array.from(this.draggableMeshes);
+
+                let closestHit = null;
+                let closestDistance = Infinity;
+
+                for (const mesh of meshes) {
+                    if (!mesh.isEnabled() || !mesh.isVisible) continue;
+
+                    const pickInfo = ray.intersectsMesh(mesh, false);
+                    if (pickInfo.hit && pickInfo.distance < closestDistance) {
+                        closestHit = { mesh, pickInfo };
+                        closestDistance = pickInfo.distance;
+                    }
+                }
+
+                return closestHit;
+            }
+
+            /**
+             * Transform a movement delta from XR space to scene space
+             * This accounts for the pivot's rotation so movements feel natural
+             */
+            transformToSceneSpace(delta) {
+                if (!this.pivotController?.pivot?.rotationQuaternion) {
+                    return delta; // No pivot rotation, return as-is
+                }
+
+                // When the pivot rotates, the camera view rotates with it
+                // The user's "forward" direction in their view corresponds to a rotated direction in world space
+                // So we rotate the XR movement by the pivot's rotation to match the user's perspective
+                const pivotRotation = this.pivotController.pivot.rotationQuaternion;
+
+                // Transform the delta by the pivot rotation
+                const transformedDelta = delta.clone();
+                transformedDelta.rotateByQuaternionToRef(pivotRotation, transformedDelta);
+
+                return transformedDelta;
+            }
+
+            /**
+             * Start dragging an object
+             */
+            grabObject(mesh, gripPosition) {
+                this.draggedMesh = mesh;
+
+                // Store initial grip position for delta-based movement
+                this.lastGripPosition = gripPosition.clone();
+
+                // Calculate offset from grip to mesh center (not used for movement, just for reference)
+                this.grabOffset = mesh.position.subtract(gripPosition);
+
+                console.log(`📦 Grabbed: ${mesh.name} at (${mesh.position.x.toFixed(2)}, ${mesh.position.y.toFixed(2)}, ${mesh.position.z.toFixed(2)})`);
+
+                // Optional: Add visual feedback (e.g., change color)
+                if (mesh.material) {
+                    mesh._originalEmissive = mesh.material.emissiveColor?.clone();
+                    mesh.material.emissiveColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                }
+            }
+
+            /**
+             * Drop the currently dragged object
+             */
+            dropObject() {
+                if (!this.draggedMesh) return;
+
+                console.log(`📦 Dropped: ${this.draggedMesh.name} at (${this.draggedMesh.position.x.toFixed(2)}, ${this.draggedMesh.position.y.toFixed(2)}, ${this.draggedMesh.position.z.toFixed(2)})`);
+
+                // Restore original visual
+                if (this.draggedMesh.material && this.draggedMesh._originalEmissive) {
+                    this.draggedMesh.material.emissiveColor = this.draggedMesh._originalEmissive;
+                    delete this.draggedMesh._originalEmissive;
+                }
+
+                this.draggedMesh = null;
+                this.draggingHand = null;
+                this.grabOffset = null;
+                this.lastGripPosition = null;
+            }
+
+            /**
+             * Update drag position using delta-based movement
+             * This approach:
+             * 1. Calculates movement delta in XR space
+             * 2. Transforms it to scene space (accounting for pivot rotation)
+             * 3. Amplifies the movement for better usability
+             * 4. Applies it to the mesh position
+             */
+            updateDrag(gripPosition) {
+                if (!this.draggedMesh || !this.lastGripPosition) return;
+
+                // Calculate movement delta in XR space
+                const xrDelta = gripPosition.subtract(this.lastGripPosition);
+
+                // Skip if no significant movement
+                const deltaLength = xrDelta.length();
+                if (deltaLength < 0.0001) return;
+
+                // Transform delta to scene space (accounts for pivot rotation)
+                const sceneDelta = this.transformToSceneSpace(xrDelta);
+
+                // Apply amplification for more responsive movement
+                sceneDelta.scaleInPlace(this.MOVEMENT_AMPLIFICATION);
+
+                // Apply to mesh position
+                this.draggedMesh.position.addInPlace(sceneDelta);
+
+                // Update last grip position for next frame
+                this.lastGripPosition = gripPosition.clone();
+
+                // Debug logging (throttled)
+                if (this.frameCount % 30 === 0 && deltaLength > 0.001) {
+                    console.log(`📦 Drag delta: XR(${xrDelta.x.toFixed(3)}, ${xrDelta.y.toFixed(3)}, ${xrDelta.z.toFixed(3)}) -> Scene(${sceneDelta.x.toFixed(3)}, ${sceneDelta.y.toFixed(3)}, ${sceneDelta.z.toFixed(3)})`);
+                }
+            }
+
+            update() {
+                if (!this.enabled) return;
+
+                this.frameCount++;
+
+                try {
+                    this._updateInternal();
+                } catch (error) {
+                    if (this.frameCount % 60 === 0) {
+                        console.error('📦 DragDrop update error:', error.message);
+                    }
+                }
+            }
+
+            _updateInternal() {
+                const leftActive = this.isHandActive('left');
+                const rightActive = this.isHandActive('right');
+
+                // KEY: If BOTH hands are active, this is a two-hand gesture - don't do drag/drop
+                // Let the gesture handler handle zoom/rotate
+                if (leftActive && rightActive) {
+                    // If we were dragging, drop the object
+                    if (this.draggedMesh) {
+                        console.log('📦 Both hands active - dropping for gesture control');
+                        this.dropObject();
+                    }
+                    this.updateUI('Both hands: Gesture mode');
+                    return;
+                }
+
+                // If nothing is active
+                if (!leftActive && !rightActive) {
+                    // If we were dragging, drop the object
+                    if (this.draggedMesh) {
+                        this.dropObject();
+                    }
+                    this.updateUI('No object selected');
+                    return;
+                }
+
+                // Single hand is active
+                const activeHand = leftActive ? 'left' : 'right';
+                const transform = this.getHandTransform(activeHand);
+
+                if (!transform) {
+                    this.updateUI(`${activeHand} active, no transform`);
+                    return;
+                }
+
+                // If we're already dragging with this hand, update position
+                if (this.draggedMesh && this.draggingHand === activeHand) {
+                    this.updateDrag(transform.gripPosition);
+                    this.updateUI(`Dragging: ${this.draggedMesh.name}`);
+                    return;
+                }
+
+                // If we're dragging with a DIFFERENT hand, drop first
+                if (this.draggedMesh && this.draggingHand !== activeHand) {
+                    console.log(`📦 Hand switch during drag, dropping`);
+                    this.dropObject();
+                }
+
+                // Not dragging - try to select an object
+                const hit = this.trySelectObject(transform.ray);
+
+                if (hit) {
+                    // Start dragging
+                    this.draggingHand = activeHand;
+                    this.grabObject(hit.mesh, transform.gripPosition);
+                    this.updateUI(`Grabbed: ${hit.mesh.name}`);
+                } else {
+                    this.updateUI(`${activeHand} active, pointing at nothing`);
+                }
+            }
+
+            updateUI(message) {
+                const el = document.getElementById('dragState');
+                if (el) {
+                    el.textContent = message;
+                }
+            }
+        }
+
+        // ============================================================================
+        // SCENE SETUP
+        // ============================================================================
+
+        const statusEl = document.getElementById('xrStatus');
+        const enterXRBtn = document.getElementById('enterXR');
+
+        const canvas = document.getElementById('renderCanvas');
+        const engine = new BABYLON.Engine(canvas, true);
+
+        const createScene = async () => {
+            console.log('🎬 Creating scene with PIVOT camera approach...');
+
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.15, 1);
+
+            // Camera for non-XR viewing
+            const camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(0, 1.6, -3), scene);
+            camera.setTarget(new BABYLON.Vector3(0, 1, 0));
+            camera.attachControl(canvas, true);
+
+            // Lighting
+            const hemiLight = new BABYLON.HemisphericLight('hemiLight', new BABYLON.Vector3(0, 1, 0), scene);
+            hemiLight.intensity = 0.8;
+
+            const dirLight = new BABYLON.DirectionalLight('dirLight', new BABYLON.Vector3(-1, -2, -1), scene);
+            dirLight.intensity = 0.6;
+
+            // Ground
+            const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 20, height: 20 }, scene);
+            const groundMat = new BABYLON.StandardMaterial('groundMat', scene);
+            groundMat.diffuseColor = new BABYLON.Color3(0.2, 0.25, 0.2);
+            groundMat.specularColor = new BABYLON.Color3(0, 0, 0);
+            ground.material = groundMat;
+
+            // Grid lines
+            for (let i = -10; i <= 10; i += 2) {
+                const lineX = BABYLON.MeshBuilder.CreateLines('gridX' + i, {
+                    points: [new BABYLON.Vector3(-10, 0.01, i), new BABYLON.Vector3(10, 0.01, i)]
+                }, scene);
+                lineX.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+
+                const lineZ = BABYLON.MeshBuilder.CreateLines('gridZ' + i, {
+                    points: [new BABYLON.Vector3(i, 0.01, -10), new BABYLON.Vector3(i, 0.01, 10)]
+                }, scene);
+                lineZ.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+            }
+
+            // Reference objects
+            const createObject = (name, type, position, color, emissive) => {
+                let mesh;
+                switch (type) {
+                    case 'box':
+                        mesh = BABYLON.MeshBuilder.CreateBox(name, { size: 1 }, scene);
+                        break;
+                    case 'sphere':
+                        mesh = BABYLON.MeshBuilder.CreateSphere(name, { diameter: 1 }, scene);
+                        break;
+                    case 'cylinder':
+                        mesh = BABYLON.MeshBuilder.CreateCylinder(name, { diameter: 0.8, height: 2 }, scene);
+                        break;
+                    case 'torus':
+                        mesh = BABYLON.MeshBuilder.CreateTorus(name, { diameter: 1, thickness: 0.3 }, scene);
+                        break;
+                }
+                mesh.position = position;
+                const mat = new BABYLON.StandardMaterial(name + 'Mat', scene);
+                mat.diffuseColor = color;
+                mat.emissiveColor = emissive;
+                mesh.material = mat;
+                return mesh;
+            };
+
+            // Create reference objects - store references for drag/drop registration
+            const draggableObjects = [];
+            draggableObjects.push(createObject('redBox', 'box', new BABYLON.Vector3(2, 0.5, 2),
+                new BABYLON.Color3(1, 0.2, 0.2), new BABYLON.Color3(0.3, 0, 0)));
+            draggableObjects.push(createObject('blueSphere', 'sphere', new BABYLON.Vector3(-2, 0.5, 2),
+                new BABYLON.Color3(0.2, 0.4, 1), new BABYLON.Color3(0, 0, 0.3)));
+            draggableObjects.push(createObject('greenCylinder', 'cylinder', new BABYLON.Vector3(0, 1, 4),
+                new BABYLON.Color3(0.2, 0.9, 0.3), new BABYLON.Color3(0, 0.2, 0)));
+            draggableObjects.push(createObject('yellowTorus', 'torus', new BABYLON.Vector3(0, 0.5, 0),
+                new BABYLON.Color3(1, 0.9, 0.2), new BABYLON.Color3(0.3, 0.25, 0)));
+            draggableObjects.push(createObject('purpleBox', 'box', new BABYLON.Vector3(-3, 0.5, -2),
+                new BABYLON.Color3(0.7, 0.2, 0.9), new BABYLON.Color3(0.2, 0, 0.3)));
+            draggableObjects.push(createObject('orangeSphere', 'sphere', new BABYLON.Vector3(3, 0.5, -2),
+                new BABYLON.Color3(1, 0.5, 0), new BABYLON.Color3(0.3, 0.1, 0)));
+
+            // Axis helper
+            const axisSize = 3;
+            const axisX = BABYLON.MeshBuilder.CreateLines("axisX", {
+                points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(axisSize, 0, 0)]
+            }, scene);
+            axisX.color = new BABYLON.Color3(1, 0, 0);
+
+            const axisY = BABYLON.MeshBuilder.CreateLines("axisY", {
+                points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, axisSize, 0)]
+            }, scene);
+            axisY.color = new BABYLON.Color3(0, 1, 0);
+
+            const axisZ = BABYLON.MeshBuilder.CreateLines("axisZ", {
+                points: [BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, axisSize)]
+            }, scene);
+            axisZ.color = new BABYLON.Color3(0, 0, 1);
+
+            // Height reference markers
+            createObject('highMarker', 'sphere', new BABYLON.Vector3(0, 3, 5),
+                new BABYLON.Color3(1, 1, 1), new BABYLON.Color3(0.5, 0.5, 0.5));
+            createObject('lowMarker', 'sphere', new BABYLON.Vector3(0, -1, 5),
+                new BABYLON.Color3(0.5, 0.5, 0.5), new BABYLON.Color3(0.2, 0.2, 0.2));
+
+            console.log('🎬 Scene objects created');
+
+            // Check WebXR support
+            let arSupported = false;
+            let vrSupported = false;
+
+            try {
+                arSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync('immersive-ar');
+            } catch (e) { console.error('AR check:', e); }
+
+            try {
+                vrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync('immersive-vr');
+            } catch (e) { console.error('VR check:', e); }
+
+            if (arSupported || vrSupported) {
+                statusEl.textContent = `WebXR: AR=${arSupported} VR=${vrSupported}`;
+                statusEl.className = 'success';
+                enterXRBtn.disabled = false;
+                enterXRBtn.textContent = arSupported ? 'Enter AR' : 'Enter VR';
+            } else {
+                statusEl.textContent = 'WebXR NOT supported';
+                statusEl.className = 'error';
+            }
+
+            // Controller references
+            let pivotController = null;
+            let thumbstickHandler = null;
+            let gestureHandler = null;
+            let dragDropHandler = null;
+            let xrHelper = null;
+
+            // Enter XR button
+            enterXRBtn.addEventListener('click', async () => {
+                console.log('🎮 Enter XR clicked - PIVOT approach');
+                statusEl.textContent = 'Entering XR...';
+
+                try {
+                    xrHelper = await scene.createDefaultXRExperienceAsync({
+                        disableTeleportation: true,
+                        optionalFeatures: true,
+                    });
+
+                    console.log('✅ XR Helper created');
+
+                    // ============================================================
+                    // KEY DIFFERENCE: Create PivotController and parent XR camera
+                    // ============================================================
+                    pivotController = new PivotController(scene, 'xrCameraPivot');
+
+                    // This is the KEY line - parent XR camera to pivot!
+                    // In BabylonJS v8, the rig cameras will automatically inherit this parent
+                    xrHelper.baseExperience.onInitialXRPoseSetObservable.add((xrCamera) => {
+                        console.log('📷 Parenting XR camera to pivot...');
+
+                        // IMPORTANT: Parent the XR camera to our pivot
+                        // Can be disabled via DEBUG_FLAGS to test if parenting causes circular ref crash
+                        if (DEBUG_FLAGS.ENABLE_XR_CAMERA_PARENTING) {
+                            xrCamera.parent = pivotController.pivot;
+                            console.log('📷 XR camera parented to pivot:', {
+                                pivotName: pivotController.pivot.name,
+                                cameraParent: xrCamera.parent?.name
+                            });
+                        } else {
+                            console.log('📷 SKIPPING XR camera parenting (DEBUG_FLAGS.ENABLE_XR_CAMERA_PARENTING=false)');
+                            console.log('📷 Pivot controls will NOT move the camera in this mode');
+                        }
+
+                        // For AR, also copy initial position
+                        const sessionMode = xrHelper.baseExperience.sessionManager.sessionMode;
+                        if (sessionMode === "immersive-ar") {
+                            console.log('📷 AR mode: calling setTransformationFromNonVRCamera');
+                            xrCamera.setTransformationFromNonVRCamera(camera);
+                        }
+                    });
+
+                    // Create input handlers that use the pivot
+                    thumbstickHandler = new ThumbstickInputHandler(scene, xrHelper, pivotController);
+                    thumbstickHandler.enable();
+
+                    gestureHandler = new GestureInputHandler(scene, xrHelper, pivotController);
+                    gestureHandler.enable();
+
+                    // Create drag/drop handler (needs reference to gesture handler for hand tracking and pivot for coordinate transform)
+                    dragDropHandler = new DragDropHandler(scene, xrHelper, gestureHandler, pivotController);
+                    dragDropHandler.enable();
+
+                    // Register all draggable objects
+                    for (const mesh of draggableObjects) {
+                        dragDropHandler.registerDraggable(mesh);
+                    }
+                    console.log(`📦 Registered ${draggableObjects.length} draggable objects`);
+
+                    // XR state observer
+                    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+                        const stateName = BABYLON.WebXRState[state];
+                        console.log('🔄 XR State:', stateName);
+
+                        switch (state) {
+                            case BABYLON.WebXRState.ENTERING_XR:
+                                statusEl.textContent = 'Entering XR...';
+                                // IMPORTANT: Detach camera controls to prevent "Max touches exceeded" flood
+                                // Hand tracking creates many touch points that overwhelm the camera's pointer inputs
+                                camera.detachControl();
+                                console.log('🎮 Camera controls detached for XR mode');
+                                break;
+                            case BABYLON.WebXRState.IN_XR:
+                                statusEl.textContent = 'IN XR ✓ (PIVOT mode)';
+                                statusEl.className = 'success';
+                                break;
+                            case BABYLON.WebXRState.EXITING_XR:
+                                statusEl.textContent = 'Exiting XR...';
+                                break;
+                            case BABYLON.WebXRState.NOT_IN_XR:
+                                statusEl.textContent = 'Not in XR';
+                                statusEl.className = '';
+                                // Re-attach camera controls when exiting XR
+                                camera.attachControl(canvas, true);
+                                console.log('🎮 Camera controls re-attached');
+                                break;
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('❌ XR setup error:', error);
+                    statusEl.textContent = `Error: ${error.message}`;
+                    statusEl.className = 'error';
+                }
+            });
+
+            // Render loop
+            let frameCount = 0;
+            let lastHeartbeat = 0;
+            let lastHealthCheck = 0;
+            let lastFrameTime = Date.now();
+            let frameStartTime = 0;
+
+            // INDEPENDENT WATCHDOG - runs via setInterval, not render loop
+            // This will detect if the render loop freezes
+            let watchdogLastFrame = 0;
+            let watchdogFreezeDetected = false;
+            const watchdogInterval = setInterval(() => {
+                if (frameCount === watchdogLastFrame && frameCount > 0 && !watchdogFreezeDetected) {
+                    watchdogFreezeDetected = true;
+                    const freezeDuration = Date.now() - lastFrameTime;
+                    console.error(`🚨 WATCHDOG: Render loop FROZEN! Last frame: ${frameCount}, frozen for ${freezeDuration}ms`);
+                    console.error(`🚨 WATCHDOG: Last operation: ${window.__lastXROperation}`);
+                    console.error(`🚨 WATCHDOG: Frame started ${Date.now() - frameStartTime}ms ago`);
+
+                    // Log current state
+                    const state = {
+                        thumbstickControllers: thumbstickHandler?.setupControllers?.size ?? 0,
+                        gestureControllers: gestureHandler?.controllers?.size ?? 0,
+                        dragDrop: dragDropHandler ? {
+                            dragging: !!dragDropHandler.draggedMesh,
+                            meshName: dragDropHandler.draggedMesh?.name ?? null,
+                            hand: dragDropHandler.draggingHand,
+                        } : null,
+                        xrState: xrHelper?.baseExperience?.state ?? 'unknown',
+                        inputControllers: xrHelper?.input?.controllers?.length ?? 0,
+                    };
+                    console.error(`🚨 WATCHDOG: State at freeze:`, JSON.stringify(state));
+                } else if (frameCount !== watchdogLastFrame) {
+                    watchdogFreezeDetected = false; // Reset if render loop resumed
+                }
+                watchdogLastFrame = frameCount;
+            }, 1000); // Check every second
+
+            scene.onBeforeRenderObservable.add(() => {
+                try {
+                    frameStartTime = Date.now();
+                    frameCount++;
+                    const now = Date.now();
+
+                    // Track frame timing - warn if frame takes too long
+                    const frameDelta = now - lastFrameTime;
+                    if (frameDelta > 500 && frameCount > 10) {
+                        console.warn(`⏱️ Long frame gap: ${frameDelta}ms since last frame (frame ${frameCount})`);
+                    }
+                    lastFrameTime = now;
+
+                    // Heartbeat every 5 seconds to confirm render loop is running
+                    if (now - lastHeartbeat > 5000) {
+                        console.log(`💓 Render loop heartbeat: frame ${frameCount}`);
+                        lastHeartbeat = now;
+                    }
+
+                    // Health check every 10 seconds - log full handler state
+                    if (now - lastHealthCheck > 10000) {
+                        const healthInfo = {
+                            frame: frameCount,
+                            thumbstick: thumbstickHandler ? {
+                                enabled: thumbstickHandler.enabled,
+                                setupControllers: thumbstickHandler.setupControllers?.size ?? 0,
+                            } : null,
+                            gesture: gestureHandler ? {
+                                enabled: gestureHandler.enabled,
+                                controllers: gestureHandler.controllers?.size ?? 0,
+                                hasHandTracking: !!gestureHandler.handTrackingFeature,
+                            } : null,
+                            dragDrop: dragDropHandler ? {
+                                enabled: dragDropHandler.enabled,
+                                dragging: !!dragDropHandler.draggedMesh,
+                                meshName: dragDropHandler.draggedMesh?.name ?? null,
+                                draggables: dragDropHandler.draggableMeshes?.size ?? 0,
+                            } : null,
+                            xrState: xrHelper?.baseExperience?.state ?? 'unknown',
+                            inputControllers: xrHelper?.input?.controllers?.length ?? 0,
+                        };
+                        console.log(`🏥 Health check:`, JSON.stringify(healthInfo));
+                        lastHealthCheck = now;
+                    }
+
+                    if (thumbstickHandler) {
+                        window.__lastXROperation = 'renderLoop:thumbstickHandler.update:start';
+                        thumbstickHandler.update();
+                        window.__lastXROperation = 'renderLoop:thumbstickHandler.update:done';
+                        if (frameCount % 10 === 0) {
+                            window.__lastXROperation = 'renderLoop:thumbstickHandler.updateCameraDisplay';
+                            thumbstickHandler.updateCameraDisplay(scene.activeCamera);
+                        }
+                    }
+
+                    if (gestureHandler) {
+                        window.__lastXROperation = 'renderLoop:gestureHandler.update:start';
+                        gestureHandler.update();
+                        window.__lastXROperation = 'renderLoop:gestureHandler.update:done';
+                    }
+
+                    if (dragDropHandler) {
+                        window.__lastXROperation = 'renderLoop:dragDropHandler.update:start';
+                        dragDropHandler.update();
+                        window.__lastXROperation = 'renderLoop:dragDropHandler.update:done';
+                    }
+
+                    if (pivotController && frameCount % 5 === 0) {
+                        window.__lastXROperation = 'renderLoop:pivotController.updateDisplay';
+                        pivotController.updateDisplay();
+                    }
+                    window.__lastXROperation = 'renderLoop:complete';
+                } catch (renderError) {
+                    // Log render loop errors that might be causing the lockup
+                    console.error('❌ Render loop error:', renderError.message, renderError.stack);
+                }
+            });
+
+            console.log('🎬 Scene setup complete - PIVOT approach ready');
+            return scene;
+        };
+
+        // Initialize
+        createScene().then((scene) => {
+            console.log('✅ Starting render loop');
+
+            engine.runRenderLoop(() => {
+                scene.render();
+            });
+
+            window.addEventListener('resize', () => {
+                engine.resize();
+            });
+        }).catch((error) => {
+            console.error('❌ Scene creation failed:', error);
+        });
+    </script>
+</body>
+</html>

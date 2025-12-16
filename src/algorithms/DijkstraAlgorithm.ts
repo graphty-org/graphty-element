@@ -19,12 +19,7 @@ export class DijkstraAlgorithm extends Algorithm {
             {
                 edge: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                        line: {
-                            width: 3,
-                        },
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
                         inputs: ["algorithmResults.graphty.dijkstra.isInPath"],
                         output: "style.line.color",
@@ -39,12 +34,7 @@ export class DijkstraAlgorithm extends Algorithm {
             {
                 node: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                        shape: {
-                            size: 2,
-                        },
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
                         inputs: ["algorithmResults.graphty.dijkstra.isInPath"],
                         output: "style.texture.color",

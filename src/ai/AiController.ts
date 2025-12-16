@@ -84,6 +84,7 @@ export class AiController {
      */
     async execute(input: string): Promise<ExecutionResult> {
         // Log user input
+        // eslint-disable-next-line no-console
         console.log("[AI] User input:", input);
 
         if (this.disposed) {
@@ -120,7 +121,9 @@ export class AiController {
             const tools = this.commandRegistry.toToolDefinitions();
 
             // Log AI request
+            // eslint-disable-next-line no-console
             console.log("[AI] Request - Messages:", JSON.stringify(messages, null, 2));
+            // eslint-disable-next-line no-console
             console.log("[AI] Request - Tools:", tools.map((t) => t.name).join(", "));
 
             // Transition to streaming state
@@ -134,10 +137,12 @@ export class AiController {
             );
 
             // Log AI response
+            // eslint-disable-next-line no-console
             console.log("[AI] Response - Text:", response.text || "(no text)");
             const toolCallsLog = response.toolCalls.length > 0 ?
                 response.toolCalls.map((tc) => `${tc.name}(${JSON.stringify(tc.arguments)})`).join(", ") :
                 "(none)";
+            // eslint-disable-next-line no-console
             console.log("[AI] Response - Tool calls:", toolCallsLog);
 
             // Append any text response and emit stream chunk event
@@ -373,12 +378,15 @@ When the user asks you to perform an action, use the appropriate tool. If no too
      */
     private async executeToolCall(toolCall: ToolCall): Promise<CommandResult> {
         // Log command execution start
+        // eslint-disable-next-line no-console
         console.log("[AI] Executing command:", toolCall.name);
+        // eslint-disable-next-line no-console
         console.log("[AI] Raw arguments from LLM:", JSON.stringify(toolCall.arguments, null, 2));
 
         const command = this.commandRegistry.get(toolCall.name);
 
         if (!command) {
+            // eslint-disable-next-line no-console
             console.log("[AI] Command result: FAILED - Unknown command");
             return {
                 success: false,
@@ -392,12 +400,15 @@ When the user asks you to perform an action, use the appropriate tool. If no too
         let validatedArguments: Record<string, unknown>;
         try {
             validatedArguments = command.parameters.parse(toolCall.arguments);
+            // eslint-disable-next-line no-console
             console.log("[AI] Validated arguments:", JSON.stringify(validatedArguments, null, 2));
         } catch (validationError) {
             const errorMessage = validationError instanceof Error ?
                 validationError.message :
                 String(validationError);
+            // eslint-disable-next-line no-console
             console.log("[AI] Command result: FAILED - Invalid arguments");
+            // eslint-disable-next-line no-console
             console.log("[AI] Validation error:", errorMessage);
             return {
                 success: false,
@@ -412,6 +423,7 @@ When the user asks you to perform an action, use the appropriate tool. If no too
             emitEvent: (type: string, data: unknown) => {
                 // Bridge from string-based events to AiEvent
                 // Commands can emit events using simple type/data format
+                // eslint-disable-next-line no-console
                 console.log(`[AI] Command emitted event: ${type}`, data);
             },
             updateStatus: (updates) => {
@@ -425,9 +437,12 @@ When the user asks you to perform an action, use the appropriate tool. If no too
         const result = await command.execute(this.graph, validatedArguments, context);
 
         // Log command result
+        // eslint-disable-next-line no-console
         console.log("[AI] Command result:", result.success ? "SUCCESS" : "FAILED");
+        // eslint-disable-next-line no-console
         console.log("[AI] Command message:", result.message);
         if (result.data) {
+            // eslint-disable-next-line no-console
             console.log("[AI] Command data:", JSON.stringify(result.data, null, 2));
         }
 

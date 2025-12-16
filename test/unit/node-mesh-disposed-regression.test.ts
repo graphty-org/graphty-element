@@ -16,6 +16,7 @@
 
 import {assert, describe, it, vi} from "vitest";
 
+import type {AdHocData} from "../../src/config";
 import type {Node} from "../../src/Node";
 
 describe("Node.update() mesh disposal regression", () => {
@@ -30,19 +31,29 @@ describe("Node.update() mesh disposal regression", () => {
     } {
         let updateStyleCalls: number[] = [];
         let meshIsDisposed = false;
-        let nodeStyleId = 1 as unknown as number;
+        const nodeStyleId = 1 as unknown as number;
 
         const mockMesh = {
             isDisposed: () => meshIsDisposed,
             position: {x: 0, y: 0, z: 0},
         };
 
+        interface LayoutEngineResult {
+            layoutEngine: {
+                getNodePosition: (node: Node) => {
+                    x: number;
+                    y: number;
+                    z?: number;
+                } | undefined;
+            } | undefined;
+        }
+
         const mockContext = {
             getStatsManager: () => ({
                 startMeasurement: vi.fn(),
                 endMeasurement: vi.fn(),
             }),
-            getLayoutManager: () => ({
+            getLayoutManager: (): LayoutEngineResult => ({
                 layoutEngine: {
                     getNodePosition: () => ({x: 1, y: 2, z: 3}),
                 },
@@ -52,7 +63,7 @@ describe("Node.update() mesh disposal regression", () => {
         const mockNode = {
             mesh: mockMesh,
             styleId: nodeStyleId,
-            styleUpdates: {},
+            styleUpdates: {} as unknown as AdHocData,
             dragging: false,
             context: mockContext,
 
@@ -69,13 +80,13 @@ describe("Node.update() mesh disposal regression", () => {
 
                 // Check if mesh was disposed (e.g., from 2D/3D mode switch) and recreate it
                 if (this.mesh.isDisposed()) {
-                    this.updateStyle(this.styleId as number);
+                    this.updateStyle(this.styleId);
                 }
 
                 const newStyleKeys = Object.keys(this.styleUpdates);
                 if (newStyleKeys.length > 0) {
                     // Simplified - just call updateStyle with current styleId
-                    this.updateStyle(this.styleId as number);
+                    this.updateStyle(this.styleId);
                     for (const key of newStyleKeys) {
                         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                         delete (this.styleUpdates as Record<string, unknown>)[key];
@@ -109,7 +120,7 @@ describe("Node.update() mesh disposal regression", () => {
         };
 
         return {
-            node: mockNode as Partial<Node>,
+            node: mockNode as unknown as Partial<Node>,
             updateStyleCalls,
             updateStyleSpy: () => {
                 updateStyleCalls = [];
@@ -153,7 +164,7 @@ describe("Node.update() mesh disposal regression", () => {
             const {node, updateStyleCalls} = createMockNode();
 
             // Add a style update
-            (node.styleUpdates as Record<string, unknown>)["color"] = "red";
+            (node.styleUpdates as Record<string, unknown>).color = "red";
 
             node.update?.();
 
@@ -165,7 +176,7 @@ describe("Node.update() mesh disposal regression", () => {
 
             // Dispose mesh AND add style update
             (node as {_disposeMeshForTesting: () => void})._disposeMeshForTesting();
-            (node.styleUpdates as Record<string, unknown>)["color"] = "red";
+            (node.styleUpdates as Record<string, unknown>).color = "red";
 
             node.update?.();
 
@@ -215,8 +226,8 @@ describe("Node.update() mesh disposal regression", () => {
             const {node} = createMockNode();
 
             // Add style updates
-            (node.styleUpdates as Record<string, unknown>)["color"] = "red";
-            (node.styleUpdates as Record<string, unknown>)["size"] = 5;
+            (node.styleUpdates as Record<string, unknown>).color = "red";
+            (node.styleUpdates as Record<string, unknown>).size = 5;
 
             node.update?.();
 

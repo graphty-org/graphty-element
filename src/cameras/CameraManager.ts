@@ -12,7 +12,7 @@ export interface InputHandler {
     update(): void;
 }
 
-export type CameraKey = "orbit" | "2d";
+export type CameraKey = "orbit" | "2d" | "xr";
 
 export class CameraManager {
     private scene: Scene;
@@ -64,6 +64,24 @@ export class CameraManager {
 
     public getActiveController(): CameraController | null {
         return this.activeCameraController;
+    }
+
+    /**
+     * Temporarily disable the active input handler (e.g., during node dragging)
+     */
+    public temporarilyDisableInput(): void {
+        if (this.activeInputHandler) {
+            this.activeInputHandler.disable();
+        }
+    }
+
+    /**
+     * Re-enable the active input handler after temporary disable
+     */
+    public temporarilyEnableInput(): void {
+        if (this.activeInputHandler) {
+            this.activeInputHandler.enable();
+        }
     }
 
     public dispose(): void {

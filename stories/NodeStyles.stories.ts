@@ -1,7 +1,7 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../src/graphty-element";
-import {eventWaitingDecorator, nodeShapes, renderFn, templateCreator} from "./helpers";
+import {eventWaitingDecorator, nodeShapes, renderFn, templateCreator, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Styles/Node",
@@ -34,7 +34,13 @@ const meta: Meta = {
         },
     },
     args: {
-        styleTemplate: templateCreator({}),
+        styleTemplate: templateCreator({
+            behavior: {
+                layout: {
+                    preSteps: 8000, // Extra preSteps for ngraph physics layout
+                },
+            },
+        }),
         dataSource: "json",
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/cat-social-network-2.json",
@@ -47,76 +53,92 @@ const meta: Meta = {
 };
 export default meta;
 
+// Common play function for all stories
+const waitForSettle = async({canvasElement}: {canvasElement: HTMLElement}): Promise<void> => {
+    await waitForGraphSettled(canvasElement);
+};
+
 type Story = StoryObj<Graphty>;
 
-export const Default: Story = {};
+export const Default: Story = {
+    play: waitForSettle,
+};
 
 export const Color: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {texture: {color: "red"}}}),
+        styleTemplate: templateCreator({nodeStyle: {texture: {color: "red"}}, behavior: {layout: {preSteps: 8000}}}),
     },
     parameters: {
         controls: {
             include: ["texture.color"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Shape: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {shape: {type: "box"}}}),
+        styleTemplate: templateCreator({nodeStyle: {shape: {type: "box"}}, behavior: {layout: {preSteps: 8000}}}),
     },
     parameters: {
         controls: {
             include: ["shape.type"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Size: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {shape: {size: 3}}}),
+        styleTemplate: templateCreator({nodeStyle: {shape: {size: 3}}, behavior: {layout: {preSteps: 8000}}}),
     },
     parameters: {
         controls: {
             include: ["shape.size"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Wireframe: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {effect: {wireframe: true}}}),
+        styleTemplate: templateCreator({nodeStyle: {effect: {wireframe: true}}, behavior: {layout: {preSteps: 8000}}}),
     },
     parameters: {
         controls: {
             include: ["effect.wireframe"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Label: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {label: {enabled: true}}}),
+        styleTemplate: templateCreator({nodeStyle: {label: {enabled: true}}, behavior: {layout: {preSteps: 8000}}}),
     },
     parameters: {
         controls: {
             include: ["label.enabled"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Opacity: Story = {
     args: {
-        styleTemplate: templateCreator({nodeStyle: {texture: {color: {
-            colorType: "solid",
-            value: "#0000FF",
-            opacity: 0.5,
-        }}}}),
+        styleTemplate: templateCreator({
+            nodeStyle: {texture: {color: {
+                colorType: "solid",
+                value: "#0000FF",
+                opacity: 0.5,
+            }}},
+            behavior: {layout: {preSteps: 8000}},
+        }),
     },
     parameters: {
         controls: {
             include: ["texture.color.value", "texture.color.opacity"],
         },
     },
+    play: waitForSettle,
 };

@@ -208,24 +208,26 @@ describe("BellmanFordAlgorithm", () => {
             }
         });
 
-        it("edge layer highlights path edges", () => {
+        it("edge layer highlights path edges using calculatedStyle", () => {
             const styles = BellmanFordAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const edgeLayer = styles.layers.find((l) => l.edge?.selector.includes("isInPath"));
+            const edgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs[0]?.includes("isInPath"));
             assert.ok(edgeLayer);
             assert.ok(edgeLayer.edge);
-            assert.ok(edgeLayer.edge.style.line?.color);
+            assert.ok(edgeLayer.edge.calculatedStyle);
+            assert.ok(edgeLayer.edge.calculatedStyle.output.includes("color"));
         });
 
-        it("node layer highlights path nodes", () => {
+        it("node layer highlights path nodes using calculatedStyle", () => {
             const styles = BellmanFordAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            const nodeLayer = styles.layers.find((l) => l.node?.selector.includes("isInPath"));
+            const nodeLayer = styles.layers.find((l) => l.node?.calculatedStyle?.inputs[0]?.includes("isInPath"));
             assert.ok(nodeLayer);
             assert.ok(nodeLayer.node);
-            assert.ok(nodeLayer.node.style.texture?.color);
+            assert.ok(nodeLayer.node.calculatedStyle);
+            assert.ok(nodeLayer.node.calculatedStyle.output.includes("color"));
         });
 
         it("description mentions path visualization", () => {

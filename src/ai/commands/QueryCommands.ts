@@ -154,11 +154,18 @@ export const findNodes: GraphCommand = {
                 // Support basic patterns like "type == 'server'" (searches within node.data)
                 matchingNodes = nodes.filter((node) => {
                     try {
-                        // Parse simple equality expressions like "type == 'server'"
+                        // Parse simple equality expressions like "type == 'server'" or "active == 'true'"
                         const equalMatch = /^(\w+)\s*==\s*['"](.+)['"]$/.exec(selector);
                         if (equalMatch) {
                             const [, key, value] = equalMatch;
-                            return node.data[key] === value;
+                            const nodeValue = node.data[key];
+
+                            // Handle boolean comparison: 'true'/'false' strings match boolean values
+                            if (typeof nodeValue === "boolean") {
+                                return nodeValue === (value === "true");
+                            }
+
+                            return nodeValue === value;
                         }
 
                         // Parse simple comparison expressions like "degree > 5"

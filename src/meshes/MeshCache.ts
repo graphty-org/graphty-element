@@ -25,6 +25,11 @@ export class MeshCache {
         // Hide the original mesh - instances will still be visible
         mesh.isVisible = false;
         mesh.position.set(0, -10000, 0);
+
+        // CRITICAL: InstancedMesh inherits isPickable from source mesh
+        // Must set pickable on source for instances to be pickable
+        mesh.isPickable = true;
+
         mesh.freezeWorldMatrix();
         this.meshCacheMap.set(name, mesh);
         return mesh.createInstance(`${name}`);

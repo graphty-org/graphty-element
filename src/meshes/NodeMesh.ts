@@ -131,6 +131,8 @@ export class NodeMesh {
                 mat.emissiveColor = color3;
             } else {
                 mat.diffuseColor = color3;
+                // Add emissive for minimum brightness on shadowed surfaces
+                mat.emissiveColor = color3.scale(0.2);
             }
         }
 

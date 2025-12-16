@@ -12,6 +12,7 @@ import {
     EasingFunction,
     Engine,
     PhotoDome,
+    Quaternion,
     Scene,
     Vector3,
     WebGPUEngine,
@@ -32,23 +33,28 @@ import {type CameraController, type CameraKey, CameraManager} from "./cameras/Ca
 import {
     AdHocData,
     ApplySuggestedStylesOptions,
+    defaultXRConfig,
     FetchEdgesFn,
     FetchNodesFn,
     StyleSchema,
     SuggestedStylesConfig,
+    type XRConfig,
 } from "./config";
+import {type PartialXRConfig, xrConfigSchema} from "./config/xr-config-schema";
 import {
     EventCallbackType,
     EventType,
 } from "./events";
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
-import {Node} from "./Node";
+import {Node, type NodeIdType} from "./Node";
 import {ScreenshotCapture} from "./screenshot/ScreenshotCapture.js";
 import {ScreenshotError, ScreenshotErrorCode} from "./screenshot/ScreenshotError.js";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 import {Styles} from "./Styles";
+import {XRUIManager} from "./ui/XRUIManager";
 import type {QueueableOptions, RunAlgorithmOptions} from "./utils/queue-migration";
+import {XRSessionManager} from "./xr/XRSessionManager";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
@@ -95,11 +101,18 @@ export class Graph implements GraphContext {
     private inputManager: InputManager;
     operationQueue: OperationQueueManager;
 
+    // XR managers
+    private xrSessionManager: XRSessionManager | null = null;
+    private xrUIManager: XRUIManager | null = null;
+
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
     // Active video capture for cancellation support
     private activeCapture: import("./video/MediaRecorderCapture.js").MediaRecorderCapture | null = null;
+
+    // Storage for Z positions when switching from 3D to 2D mode
+    private savedZPositions = new Map<NodeIdType, number>();
 
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
@@ -213,6 +226,7 @@ export class Graph implements GraphContext {
         const contextConfig: GraphContextConfig = {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: defaultXRConfig,
         };
         this.graphContext = new DefaultGraphContext(
             this.styleManager,
@@ -417,7 +431,8 @@ export class Graph implements GraphContext {
                 this.update();
             });
 
-            // this.xrHelper = await createXrButton(this.scene, this.camera);
+            // Initialize XR (VR/AR) if enabled
+            await this.initializeXR();
 
             // Watch for browser/canvas resize events
             window.addEventListener("resize", this.resizeHandler);
@@ -463,38 +478,40 @@ export class Graph implements GraphContext {
             });
 
             this.statsManager.measure("Graph.settlementCheck", () => {
-                // Check if layout has settled
-                if (this.layoutManager.isSettled && this.layoutManager.running) {
-                    this.eventManager.emitGraphSettled(this);
-                    this.layoutManager.running = false;
+                // Only process settlement events if there are nodes - an empty graph
+                // has nothing to settle, so we shouldn't emit events or log
+                if (this.dataManager.nodes.size > 0) {
+                    // Check if layout has settled
+                    if (this.layoutManager.isSettled && this.layoutManager.running) {
+                        this.eventManager.emitGraphSettled(this);
+                        this.layoutManager.running = false;
 
-                    // Start label animations after layout has settled
-                    for (const node of this.dataManager.nodes.values()) {
-                        node.label?.startAnimation();
+                        // Start label animations after layout has settled
+                        for (const node of this.dataManager.nodes.values()) {
+                            node.label?.startAnimation();
+                        }
+
+                        // Force a final zoom to fit after layout has truly settled
+                        this.updateManager.enableZoomToFit();
                     }
 
-                    // Force a final zoom to fit after layout has truly settled
-                    this.updateManager.enableZoomToFit();
-                }
-
-                // Report performance when transitioning from unsettled to settled
-                if (this.layoutManager.isSettled && !this.wasSettled) {
-                    this.wasSettled = true;
-                    // End layout session tracking
-                    this.statsManager.endLayoutSession();
-                    const snapshot = this.statsManager.getSnapshot();
-                    // eslint-disable-next-line no-console
-                    console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
-                    this.statsManager.reportDetailed();
-                    // Reset measurements after reporting so next settlement shows fresh data
-                    this.statsManager.resetMeasurements();
-                } else if (!this.layoutManager.isSettled && this.wasSettled) {
-                    // Reset when layout becomes unsettled (so we can report next settlement)
-                    this.wasSettled = false;
-                    // Restart layout session tracking
-                    this.statsManager.startLayoutSession();
-                    // eslint-disable-next-line no-console
-                    console.log("🔄 Layout became unsettled, will report on next settlement");
+                    // Report performance when transitioning from unsettled to settled
+                    if (this.layoutManager.isSettled && !this.wasSettled) {
+                        this.wasSettled = true;
+                        // End layout session tracking
+                        this.statsManager.endLayoutSession();
+                        // Debug: const snapshot = this.statsManager.getSnapshot();
+                        // Debug: console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
+                        this.statsManager.reportDetailed();
+                        // Reset measurements after reporting so next settlement shows fresh data
+                        this.statsManager.resetMeasurements();
+                    } else if (!this.layoutManager.isSettled && this.wasSettled) {
+                        // Reset when layout becomes unsettled (so we can report next settlement)
+                        this.wasSettled = false;
+                        // Restart layout session tracking
+                        this.statsManager.startLayoutSession();
+                        // Debug: console.log("🔄 Layout became unsettled, will report on next settlement");
+                    }
                 }
             });
         });
@@ -542,9 +559,28 @@ export class Graph implements GraphContext {
         const currentTwoD = this.styles.config.graph.twoD;
 
         // Clear mesh cache if switching between 2D and 3D modes
-        if (previousTwoD !== currentTwoD) {
+        const modeSwitching = previousTwoD !== currentTwoD;
+        if (modeSwitching) {
             this.dataManager.meshCache.clear();
+
+            // Update scene metadata for 2D mode detection
+            this.scene.metadata = this.scene.metadata ?? {};
+            this.scene.metadata.twoD = currentTwoD;
+
+            // Save Z positions BEFORE any updates that might change them
+            // (updateStyles calls node.update() which applies layout positions)
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: save current Z positions
+                for (const node of this.getNodes()) {
+                    this.savedZPositions.set(node.id, node.mesh.position.z);
+                }
+            }
         }
+
+        // Always activate appropriate camera when styles are loaded
+        // This ensures camera is set up correctly even on initial load
+        const cameraType = currentTwoD ? "2d" : "orbit";
+        this.camera.activateCamera(cameraType);
 
         // Update DataManager with new styles - this will apply styles to existing nodes/edges
         // IMPORTANT: DataManager needs to be updated after this.styles is set because
@@ -553,6 +589,29 @@ export class Graph implements GraphContext {
 
         // Update LayoutManager with new styles reference
         this.layoutManager.updateStyles(this.styles);
+
+        // Handle Z-coordinate flattening/restoration AFTER style updates
+        // (style updates call node.update() which applies layout positions including Z)
+        if (modeSwitching) {
+            const nodes = this.getNodes();
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: flatten Z positions to 0
+                for (const node of nodes) {
+                    node.mesh.position.z = 0;
+                }
+            } else if (!currentTwoD && previousTwoD) {
+                // Switching from 2D to 3D: restore saved Z positions (or leave at 0)
+                for (const node of nodes) {
+                    const savedZ = this.savedZPositions.get(node.id);
+                    if (savedZ !== undefined) {
+                        node.mesh.position.z = savedZ;
+                    }
+                    // If no saved Z, leave at current position (0)
+                }
+                // Clear saved positions after restoration
+                this.savedZPositions.clear();
+            }
+        }
 
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
@@ -592,10 +651,6 @@ export class Graph implements GraphContext {
         // mb.motionStrength = 1;
         // default rendering pipeline?
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
-
-        // setup camera
-        const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
-        this.camera.activateCamera(cameraType);
 
         // Request zoom to fit when switching between 2D/3D modes
         if (previousTwoD !== currentTwoD) {
@@ -665,6 +720,98 @@ export class Graph implements GraphContext {
             size: file.size,
             ... options,
         });
+    }
+
+    /**
+     * Load graph data from a URL with auto-format detection
+     *
+     * @remarks
+     * This method attempts to detect the format from the URL extension first.
+     * If the extension is not recognized (e.g., `.txt`), it fetches the content
+     * and uses content-based detection. The content is then passed directly to
+     * the data source to avoid a double-fetch.
+     *
+     * @param url - URL to fetch graph data from
+     * @param options - Loading options
+     *
+     * @example
+     * ```typescript
+     * // Auto-detect format from extension
+     * await graph.loadFromUrl("https://example.com/data.graphml");
+     *
+     * // Auto-detect from content when extension doesn't match
+     * await graph.loadFromUrl("https://example.com/data.txt");
+     *
+     * // Explicitly specify format
+     * await graph.loadFromUrl("https://example.com/data.txt", { format: "graphml" });
+     * ```
+     */
+    async loadFromUrl(
+        url: string,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        const {detectFormat} = await import("./data/format-detection.js");
+
+        let format = options?.format;
+        let fetchedContent: string | undefined;
+
+        if (!format) {
+            // First try extension-based detection (no fetch needed)
+            const detectedFromExtension = detectFormat(url, "");
+
+            if (detectedFromExtension) {
+                format = detectedFromExtension;
+            } else {
+                // Extension didn't match - fetch content for detection
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch URL '${url}': ${response.status} ${response.statusText}`,
+                    );
+                }
+
+                fetchedContent = await response.text();
+
+                const sample = fetchedContent.slice(0, 2048);
+                const detectedFromContent = detectFormat(url, sample);
+
+                if (!detectedFromContent) {
+                    throw new Error(
+                        `Could not detect file format from '${url}'. ` +
+                        "Supported formats: JSON, GraphML, GEXF, CSV, GML, DOT, Pajek. " +
+                        "Try specifying format explicitly: loadFromUrl(url, { format: \"graphml\" })",
+                    );
+                }
+
+                format = detectedFromContent;
+            }
+        }
+
+        // Merge graph config with explicit options (explicit options take precedence)
+        const mergedOptions = {
+            nodeIdPath: options?.nodeIdPath ?? this.styles.config.data.knownFields.nodeIdPath,
+            edgeSrcIdPath: options?.edgeSrcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath,
+            edgeDstIdPath: options?.edgeDstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath,
+        };
+
+        // If we already fetched content for detection, pass it as data to avoid double-fetch
+        // Otherwise pass URL and let DataSource handle the fetch
+        if (fetchedContent !== undefined) {
+            await this.addDataFromSource(format, {
+                data: fetchedContent,
+                ... mergedOptions,
+            });
+        } else {
+            await this.addDataFromSource(format, {
+                url,
+                ... mergedOptions,
+            });
+        }
     }
 
     async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
@@ -763,7 +910,7 @@ export class Graph implements GraphContext {
 
     async runAlgorithm(namespace: string, type: string, options?: RunAlgorithmOptions): Promise<void> {
         if (options?.skipQueue) {
-            await this.algorithmManager.runAlgorithm(namespace, type);
+            await this.algorithmManager.runAlgorithm(namespace, type, options.algorithmOptions);
 
             if (options.applySuggestedStyles) {
                 this.applySuggestedStyles(`${namespace}:${type}`);
@@ -779,7 +926,7 @@ export class Graph implements GraphContext {
                     throw new Error("Operation cancelled");
                 }
 
-                await this.algorithmManager.runAlgorithm(namespace, type);
+                await this.algorithmManager.runAlgorithm(namespace, type, options?.algorithmOptions);
                 if (options?.applySuggestedStyles) {
                     this.applySuggestedStyles(`${namespace}:${type}`);
                 }
@@ -1113,6 +1260,7 @@ export class Graph implements GraphContext {
         return {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: this.graphContext.getConfig().xr,
         };
     }
 
@@ -1122,6 +1270,25 @@ export class Graph implements GraphContext {
 
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
+    }
+
+    getXRConfig(): XRConfig | undefined {
+        return this.graphContext.getConfig().xr;
+    }
+
+    /**
+     * Set XR configuration.
+     * Merges with defaults and updates the graph context.
+     * @param config - Partial XR configuration to apply
+     */
+    setXRConfig(config: PartialXRConfig): void {
+        // Parse through zod schema to apply defaults
+        const fullConfig = xrConfigSchema.parse(config);
+        this.graphContext.updateConfig({xr: fullConfig});
+    }
+
+    getXRSessionManager(): XRSessionManager | undefined {
+        return this.xrSessionManager ?? undefined;
     }
 
     // Input manager access
@@ -1524,7 +1691,7 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - get world position and pivot position
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {position: Vector3, rotationQuaternion: Quaternion | null, computeWorldMatrix: (force: boolean) => void};
                 cameraDistance: number;
                 camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
             };
@@ -1550,11 +1717,14 @@ export class Graph implements GraphContext {
                 z: orbitController.pivot.position.z,
             };
 
-            // Store pivot rotation and distance for restoration
+            // Store pivot rotation as Euler angles for restoration
+            // PivotController uses rotationQuaternion, so convert to Euler
+            const pivotQuat = orbitController.pivot.rotationQuaternion ?? Quaternion.Identity();
+            const eulerAngles = pivotQuat.toEulerAngles();
             state.pivotRotation = {
-                x: orbitController.pivot.rotation.x,
-                y: orbitController.pivot.rotation.y,
-                z: orbitController.pivot.rotation.z,
+                x: eulerAngles.x,
+                y: eulerAngles.y,
+                z: eulerAngles.z,
             };
             state.cameraDistance = orbitController.cameraDistance;
         } else if (controller && "velocity" in controller) {
@@ -1685,8 +1855,9 @@ export class Graph implements GraphContext {
 
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - work with pivot system
+            // PivotController uses rotationQuaternion, not rotation (Euler)
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {position: Vector3, rotationQuaternion: Quaternion | null, computeWorldMatrix: (force: boolean) => void};
                 cameraDistance: number;
                 updateCameraPosition: () => void;
             };
@@ -1701,8 +1872,9 @@ export class Graph implements GraphContext {
             }
 
             // Set pivot rotation if provided (for exact state restoration)
+            // PivotController uses rotationQuaternion, so convert Euler to Quaternion
             if (state.pivotRotation) {
-                orbitController.pivot.rotation.set(
+                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(
                     state.pivotRotation.x,
                     state.pivotRotation.y,
                     state.pivotRotation.z,
@@ -1722,7 +1894,7 @@ export class Graph implements GraphContext {
                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                 const pitch = Math.asin(direction.y / distance);
 
-                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(pitch, yaw, 0);
             }
 
             // Set camera distance if provided
@@ -1896,7 +2068,7 @@ export class Graph implements GraphContext {
         const orbitController = controller as unknown as {
             pivot: {
                 position: Vector3;
-                rotation: Vector3;
+                rotationQuaternion: Quaternion | null;
                 animations?: Animation[];
                 computeWorldMatrix: (force: boolean) => void;
             };
@@ -1939,27 +2111,31 @@ export class Graph implements GraphContext {
         }
 
         // Animation 2: Pivot Rotation (view direction)
+        // PivotController uses rotationQuaternion, so animate that instead of rotation
         if (targetState.pivotRotation) {
             const rotAnim = new Animation(
                 "pivot_rotation",
-                "rotation",
+                "rotationQuaternion",
                 fps,
-                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONTYPE_QUATERNION,
                 Animation.ANIMATIONLOOPMODE_CONSTANT,
+            );
+
+            const startQuat = orbitController.pivot.rotationQuaternion?.clone() ?? Quaternion.Identity();
+            const endQuat = Quaternion.FromEulerAngles(
+                targetState.pivotRotation.x,
+                targetState.pivotRotation.y,
+                targetState.pivotRotation.z,
             );
 
             rotAnim.setKeys([
                 {
                     frame: 0,
-                    value: orbitController.pivot.rotation.clone(),
+                    value: startQuat,
                 },
                 {
                     frame: frameCount,
-                    value: new Vector3(
-                        targetState.pivotRotation.x,
-                        targetState.pivotRotation.y,
-                        targetState.pivotRotation.z,
-                    ),
+                    value: endQuat,
                 },
             ]);
 
@@ -1978,20 +2154,23 @@ export class Graph implements GraphContext {
 
             const rotAnim = new Animation(
                 "pivot_rotation",
-                "rotation",
+                "rotationQuaternion",
                 fps,
-                Animation.ANIMATIONTYPE_VECTOR3,
+                Animation.ANIMATIONTYPE_QUATERNION,
                 Animation.ANIMATIONLOOPMODE_CONSTANT,
             );
+
+            const startQuat = orbitController.pivot.rotationQuaternion?.clone() ?? Quaternion.Identity();
+            const endQuat = Quaternion.FromEulerAngles(pitch, yaw, 0);
 
             rotAnim.setKeys([
                 {
                     frame: 0,
-                    value: orbitController.pivot.rotation.clone(),
+                    value: startQuat,
                 },
                 {
                     frame: frameCount,
-                    value: new Vector3(pitch, yaw, 0),
+                    value: endQuat,
                 },
             ]);
 
@@ -2061,7 +2240,7 @@ export class Graph implements GraphContext {
                             }
 
                             if (targetState.pivotRotation) {
-                                orbitController.pivot.rotation.set(
+                                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(
                                     targetState.pivotRotation.x,
                                     targetState.pivotRotation.y,
                                     targetState.pivotRotation.z,
@@ -2075,7 +2254,7 @@ export class Graph implements GraphContext {
                                 const distance = direction.length();
                                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                                 const pitch = Math.asin(direction.y / distance);
-                                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                                orbitController.pivot.rotationQuaternion = Quaternion.FromEulerAngles(pitch, yaw, 0);
                             }
 
                             orbitController.pivot.computeWorldMatrix(true);
@@ -2884,6 +3063,153 @@ export class Graph implements GraphContext {
         return this.voiceAdapter?.isActive ?? false;
     }
 
+    // ===========================================
+    // XR (VR/AR) Methods
+    // ===========================================
+
+    /**
+     * Initialize XR (VR/AR) system
+     * Creates session manager and UI buttons based on configuration
+     */
+    private async initializeXR(): Promise<void> {
+        const xrConfig = this.graphContext.getConfig().xr;
+        if (!xrConfig?.enabled) {
+            return;
+        }
+
+        // Create XR session manager
+        this.xrSessionManager = new XRSessionManager(this.scene, {
+            vr: xrConfig.vr,
+            ar: xrConfig.ar,
+        });
+
+        // Determine which modes are available by actually checking device support
+        const vrAvailable = xrConfig.vr.enabled && await this.xrSessionManager.isVRSupported();
+        const arAvailable = xrConfig.ar.enabled && await this.xrSessionManager.isARSupported();
+
+        // Create XR UI manager
+        this.xrUIManager = new XRUIManager(
+            this.element as HTMLElement,
+            vrAvailable,
+            arAvailable,
+            xrConfig.ui,
+        );
+
+        // Wire up button click handlers
+        this.xrUIManager.onEnterXR = (mode) => {
+            void (async() => {
+                try {
+                    // Debug: console.log(`[XR] Attempting to enter ${mode} mode...`);
+                    await this.enterXR(mode);
+                    // Debug: console.log(`[XR] Successfully entered ${mode} mode`);
+                } catch (error) {
+                    console.error("Failed to enter XR mode:", error);
+
+                    // Show user-friendly alert on error
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    alert(`XR Session Failed:\n${errorMsg}\n\nCheck console for details.`);
+
+                    // Emit error event
+                    this.eventManager.emitGraphError(
+                        this,
+                        error instanceof Error ? error : new Error(String(error)),
+                        "xr",
+                        {mode},
+                    );
+                }
+            })();
+        };
+    }
+
+    /**
+     * Enter XR mode (VR or AR)
+     * @param mode - The XR mode to enter ('immersive-vr' or 'immersive-ar')
+     */
+    public async enterXR(mode: "immersive-vr" | "immersive-ar"): Promise<void> {
+        if (!this.xrSessionManager) {
+            throw new Error("XR is not initialized");
+        }
+
+        // Debug: console.log("🔍 [XR] Entering XR mode:", mode);
+
+        const previousCamera = this.camera.getActiveController()?.camera;
+
+        if (mode === "immersive-vr") {
+            await this.xrSessionManager.enterVR(previousCamera ?? undefined);
+        } else {
+            await this.xrSessionManager.enterAR(previousCamera ?? undefined);
+        }
+
+        // Debug: console.log("🔍 [XR] XR session created, now setting up XR camera and input...");
+
+        // Phase 3: Set up XR camera controller and input handler
+        const xrHelper = this.xrSessionManager.getXRHelper();
+        if (!xrHelper) {
+            throw new Error("XR helper not available after session creation");
+        }
+
+        // Store XR helper in scene metadata for isXRMode() detection
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.xrHelper = xrHelper;
+
+        // Debug: console.log("🔍 [XR] XR helper stored in scene metadata");
+
+        // Create XR pivot camera controller (handles input via pivot-based system)
+        const {XRPivotCameraController} = await import("./cameras/XRPivotCameraController");
+        const xrCameraController = new XRPivotCameraController(this.scene, xrHelper);
+
+        // Debug: console.log("🔍 [XR] XRPivotCameraController created");
+
+        // Note: XRPivotCameraController automatically enables input when XR state changes
+        // We just need to call update() every frame for input processing
+
+        // Hook into render loop to update XR input
+        const xrUpdateObserver = this.scene.onBeforeRenderObservable.add(() => {
+            xrCameraController.update();
+        });
+
+        // Store for cleanup
+        this.scene.metadata.xrCameraController = xrCameraController;
+        this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
+
+        // Debug: console.log("🔍 [XR] XR input update loop registered");
+    }
+
+    /**
+     * Exit XR mode and return to previous camera
+     */
+    public async exitXR(): Promise<void> {
+        if (!this.xrSessionManager) {
+            return;
+        }
+
+        // Debug: console.log("🔍 [XR] Exiting XR mode...");
+
+        // Clean up XR camera controller
+        if (this.scene.metadata?.xrCameraController) {
+            // Debug: console.log("🔍 [XR] Disposing XRPivotCameraController");
+            this.scene.metadata.xrCameraController.dispose();
+            this.scene.metadata.xrCameraController = null;
+        }
+
+        // Remove render loop observer
+        if (this.scene.metadata?.xrUpdateObserver) {
+            // Debug: console.log("🔍 [XR] Removing XR update observer");
+            this.scene.onBeforeRenderObservable.remove(this.scene.metadata.xrUpdateObserver);
+            this.scene.metadata.xrUpdateObserver = null;
+        }
+
+        // Clear XR helper from metadata
+        if (this.scene.metadata?.xrHelper) {
+            // Debug: console.log("🔍 [XR] Clearing XR helper from metadata");
+            this.scene.metadata.xrHelper = null;
+        }
+
+        await this.xrSessionManager.exitXR();
+
+        // Debug: console.log("🔍 [XR] XR mode exited");
+    }
+
     dispose(): void {
         // Clean up voice adapter if created
         this.voiceAdapter?.dispose();
@@ -2891,6 +3217,10 @@ export class Graph implements GraphContext {
 
         // Clean up AI manager if enabled
         this.disableAiControl();
+
+        // Clean up XR resources
+        this.xrUIManager?.dispose();
+        this.xrSessionManager?.dispose();
         this.shutdown();
     }
 }

@@ -27,6 +27,7 @@ import {
 } from "@babylonjs/core";
 
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
+import {MaterialHelper} from "./MaterialHelper";
 import {PatternedLineMesh} from "./PatternedLineMesh";
 
 /**
@@ -184,6 +185,7 @@ export class PatternedLineRenderer {
     /**
      * Create a PatternedLineMesh instance
      * Note: start/end are already adjusted by Edge.transformArrowCap() for node surfaces and arrows
+     * @param is2DMode Optional flag to apply 2D materials instead of 3D shader (default false)
      */
     static create(
         pattern: PatternType,
@@ -193,6 +195,7 @@ export class PatternedLineRenderer {
         color: string,
         opacity: number,
         scene: Scene,
+        is2DMode?: boolean,
     ): PatternedLineMesh {
         // Register camera callback for batched shader updates
         this.registerCameraCallback(scene);
@@ -201,10 +204,10 @@ export class PatternedLineRenderer {
         // This is more efficient than creating one large mesh
         const patternDef = PATTERN_DEFINITIONS[pattern];
         if (patternDef.connected) {
-            return this.createContinuousMesh(pattern, start, end, width, color, opacity, scene);
+            return this.createContinuousMesh(pattern, start, end, width, color, opacity, scene, is2DMode);
         }
 
-        return new PatternedLineMesh(pattern, start, end, width, color, opacity, scene);
+        return new PatternedLineMesh(pattern, start, end, width, color, opacity, scene, is2DMode);
     }
 
     /**
@@ -220,16 +223,18 @@ export class PatternedLineRenderer {
         color: string,
         opacity: number,
         scene: Scene,
+        is2DMode?: boolean,
     ): PatternedLineMesh {
         // Use PatternedLineMesh approach (multiple small meshes) with zero spacing
         // This is more efficient than creating one large mesh with many vertices
-        return new PatternedLineMesh(pattern, start, end, width, color, opacity, scene);
+        return new PatternedLineMesh(pattern, start, end, width, color, opacity, scene, is2DMode);
     }
 
     /**
      * Create a single pattern mesh with appropriate geometry and shader
-     * Phase 3: Now accepts shapeType parameter for alternating patterns
+     * Phase 3: Now accepts shapeType parameter for alternating patterns and is2DMode flag
      * @param segmentLength Optional segment length for connected patterns (for exact fit per edge)
+     * @param is2DMode Optional flag to apply 2D materials instead of 3D shader (default false)
      */
     static createPatternMesh(
         pattern: PatternType,
@@ -239,6 +244,7 @@ export class PatternedLineRenderer {
         scene: Scene,
         shapeType?: "circle" | "star" | "box" | "diamond" | "sinewave-segment" | "zigzag-segment",
         segmentLength?: number,
+        is2DMode?: boolean,
     ): Mesh {
         const patternDef = PATTERN_DEFINITIONS[pattern];
 
@@ -250,11 +256,28 @@ export class PatternedLineRenderer {
             const mesh = new Mesh(meshName, scene);
             geometry.applyToMesh(mesh);
 
-            // Use shader size=1.0 since geometry is already at correct scale
-            FilledArrowRenderer.applyShader(mesh, {size: 1.0, color, opacity}, scene);
+            // Apply material based on mode
+            if (is2DMode) {
+                MaterialHelper.apply2DMaterial(mesh, color, opacity, scene);
 
-            const material = mesh.material as ShaderMaterial;
-            this.activeMaterials.add(material);
+                // Compute normals from geometry for proper lighting and backface culling
+                // This is more efficient than computing at creation time since we only
+                // compute once for 2D mode rather than for all modes
+                const positions = mesh.getVerticesData("position");
+                const indices = mesh.getIndices();
+                if (positions && indices && !mesh.getVerticesData("normal")) {
+                    const normals: number[] = [];
+                    VertexData.ComputeNormals(positions, indices, normals);
+                    mesh.setVerticesData("normal", normals);
+                }
+            } else {
+                // Use shader size=1.0 since geometry is already at correct scale
+                FilledArrowRenderer.applyShader(mesh, {size: 1.0, color, opacity}, scene);
+
+                const material = mesh.material as ShaderMaterial;
+                this.activeMaterials.add(material);
+            }
+
             return mesh;
         }
 
@@ -270,17 +293,39 @@ export class PatternedLineRenderer {
         const mesh = new Mesh(meshName, scene);
         geometry.applyToMesh(mesh);
 
-        // Apply FilledArrowRenderer shader
-        // Calculate shader size to achieve desired visual width (perpendicular to line)
-        // For geometries with perpendicular diameter D, shader size = desiredWidth / D
-        const geometryDiameter = this.getGeometryDiameter(pattern, shapeType);
-        const size = width / geometryDiameter;
+        // Apply material based on mode
+        if (is2DMode) {
+            // 2D mode: Use StandardMaterial with flat shading
+            MaterialHelper.apply2DMaterial(mesh, color, opacity, scene);
 
-        FilledArrowRenderer.applyShader(mesh, {size, color, opacity}, scene);
+            // Scale mesh to desired size (same calculation as shader does in 3D)
+            const geometryDiameter = this.getGeometryDiameter(pattern, shapeType);
+            const scale = width / geometryDiameter;
+            mesh.scaling.set(scale, scale, scale);
 
-        // Track material for batched updates
-        const material = mesh.material as ShaderMaterial;
-        this.activeMaterials.add(material);
+            // Compute normals from geometry for proper lighting and backface culling
+            // This is more efficient than computing at creation time since we only
+            // compute once for 2D mode rather than for all modes
+            const positions = mesh.getVerticesData("position");
+            const indices = mesh.getIndices();
+            if (positions && indices && !mesh.getVerticesData("normal")) {
+                const normals: number[] = [];
+                VertexData.ComputeNormals(positions, indices, normals);
+                mesh.setVerticesData("normal", normals);
+            }
+        } else {
+            // 3D mode: Apply FilledArrowRenderer shader
+            // Calculate shader size to achieve desired visual width (perpendicular to line)
+            // For geometries with perpendicular diameter D, shader size = desiredWidth / D
+            const geometryDiameter = this.getGeometryDiameter(pattern, shapeType);
+            const size = width / geometryDiameter;
+
+            FilledArrowRenderer.applyShader(mesh, {size, color, opacity}, scene);
+
+            // Track material for batched updates
+            const material = mesh.material as ShaderMaterial;
+            this.activeMaterials.add(material);
+        }
 
         return mesh;
     }
@@ -483,20 +528,21 @@ export class PatternedLineRenderer {
         const length = 1.0;
         const width = 0.8;
 
-        // XZ plane (Y=0)
+        // XZ plane (Y=0), centered at origin like other shapes
+        // Diamond extends from -length/2 to +length/2 along X axis
         const positions = [
+            length / 2,
+            0,
+            0, // Front tip (right)
             0,
             0,
-            0, // Front tip
+            width / 2, // Top (center-top)
             -length / 2,
             0,
-            width / 2, // Top
-            -length,
+            0, // Back tip (left)
             0,
-            0, // Back tip
-            -length / 2,
             0,
-            -width / 2, // Bottom
+            -width / 2, // Bottom (center-bottom)
         ];
 
         const indices = [
@@ -552,18 +598,18 @@ export class PatternedLineRenderer {
 
             // Calculate the tangent (derivative) to apply thickness perpendicular to curve
             // dz/dx = amplitude * cos(2π * x / wavelength) * (2π / wavelength)
-            const dzDx = amplitude * Math.cos(2 * Math.PI * x / wavelength) * (2 * Math.PI / wavelength);
+            const derivative = amplitude * Math.cos((2 * Math.PI * x) / wavelength) * ((2 * Math.PI) / wavelength);
 
             // Tangent vector in XZ plane: (1, dz/dx)
             // Normal (perpendicular) vector: (-dz/dx, 1)
             // Normalize to get unit normal
-            const normalLength = Math.sqrt((dzDx * dzDx) + 1);
-            const nx = -dzDx / normalLength;
+            const normalLength = Math.sqrt((derivative * derivative) + 1);
+            const nx = -derivative / normalLength;
             const nz = 1 / normalLength;
 
             // Apply thickness along the normal direction (perpendicular to curve)
-            positions.push((x + (nx * thickness)), 0, (z + (nz * thickness))); // Bottom
-            positions.push((x - (nx * thickness)), 0, (z - (nz * thickness))); // Top
+            positions.push(x + (nx * thickness), 0, z + (nz * thickness)); // Bottom
+            positions.push(x - (nx * thickness), 0, z - (nz * thickness)); // Top
         }
 
         // Create triangle indices for quad strip

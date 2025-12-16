@@ -13,3 +13,5 @@ export {StyleHelpers} from "./StyleHelpers";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";
 export type {ApplySuggestedStylesOptions, SuggestedStyleLayer, SuggestedStyleLayerMetadata, SuggestedStylesConfig, SuggestedStylesProvider} from "./SuggestedStyles";
+export type {XRConfig, XRInputConfig, XRModeConfig, XRTeleportationConfig, XRUIConfig} from "./XRConfig";
+export {defaultXRConfig} from "./XRConfig";
