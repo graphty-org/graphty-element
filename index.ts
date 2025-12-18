@@ -175,3 +175,38 @@ export type {
 
 // Camera presets
 export {BUILTIN_PRESETS} from "./src/camera/presets";
+
+// =============================================================================
+// Logging
+// =============================================================================
+export {
+    // Storage
+    clearLoggingConfig,
+    // Configuration
+    configureLogging,
+    // Sinks
+    type ConsoleSinkOptions,
+    createConsoleSink,
+    createRemoteSink,
+    getLoggingConfig,
+    // Core logger
+    GraphtyLogger,
+    type GraphtyLoggerConfig,
+    isModuleEnabled,
+    loadLoggingConfig,
+    // Types
+    LOG_LEVEL_NAMES,
+    LOG_LEVEL_TO_NAME,
+    type Logger,
+    type LoggerConfig,
+    LogLevel,
+    type LogRecord,
+    // URL parameters
+    type ParsedLoggingParams,
+    parseLoggingURLParams,
+    parseLogLevel,
+    type RemoteSinkOptions,
+    resetLoggingConfig,
+    saveLoggingConfig,
+    type Sink,
+} from "./src/logging/index";

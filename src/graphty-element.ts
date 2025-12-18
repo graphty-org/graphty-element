@@ -9,6 +9,7 @@ import {set as setDeep} from "lodash";
 import type {StyleSchema} from "./config";
 import type {PartialXRConfig} from "./config/xr-config-schema";
 import {Graph} from "./Graph";
+import {GraphtyLogger, LogLevel, parseLoggingURLParams} from "./logging";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 
 /**
@@ -51,6 +52,17 @@ export class Graphty extends LitElement {
         // Check for profiling parameter
         if (urlParams.get("profiling") === "true") {
             this.enableDetailedProfiling = true;
+        }
+
+        // Parse logging params
+        const loggingParams = parseLoggingURLParams();
+        if (loggingParams?.enabled) {
+            void GraphtyLogger.configure({
+                enabled: true,
+                modules: loggingParams.modules,
+                level: loggingParams.level ?? LogLevel.INFO,
+                format: {timestamp: true, module: true, colors: true},
+            });
         }
     }
 

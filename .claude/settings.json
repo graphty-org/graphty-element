@@ -1,8 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Fetch(*)",
-      "WebSearch(*)"
+      "Fetch(*)"
     ]
   }
 }

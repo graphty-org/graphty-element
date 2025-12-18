@@ -1,3 +1,4 @@
+import {GraphtyLogger, type Logger} from "../logging/GraphtyLogger.js";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
 
@@ -15,6 +16,7 @@ function hasStartRenderLoop(manager: Manager): manager is RenderManagerWithStart
 export class LifecycleManager implements Manager {
     private initialized = false;
     private initializing = false;
+    private logger: Logger = GraphtyLogger.getLogger(["graphty", "lifecycle"]);
 
     constructor(
         private managers: Map<string, Manager>,
@@ -30,6 +32,11 @@ export class LifecycleManager implements Manager {
         this.initializing = true;
         const startTime = performance.now();
 
+        this.logger.info("Initializing managers", {
+            managerCount: this.managers.size,
+            initOrder: this.initOrder,
+        });
+
         try {
             // Initialize managers in specified order
             for (const managerName of this.initOrder) {
@@ -39,13 +46,27 @@ export class LifecycleManager implements Manager {
                 }
 
                 try {
+                    const managerStartTime = performance.now();
+                    this.logger.debug(`Initializing manager: ${managerName}`);
                     await manager.init();
+                    const managerDuration = performance.now() - managerStartTime;
+
+                    this.logger.debug(`Manager initialized: ${managerName}`, {
+                        duration: managerDuration.toFixed(2),
+                    });
 
                     this.eventManager.emitGraphEvent("manager-initialized", {
                         managerName,
                         elapsedTime: performance.now() - startTime,
                     });
                 } catch (error) {
+                    // Log the failure
+                    this.logger.error(
+                        `Manager initialization failed: ${managerName}`,
+                        error instanceof Error ? error : new Error(String(error)),
+                        {managerName},
+                    );
+
                     // Clean up any managers that were already initialized
                     this.cleanup(managerName);
 
@@ -60,9 +81,15 @@ export class LifecycleManager implements Manager {
             this.initialized = true;
             this.initializing = false;
 
+            const totalTime = performance.now() - startTime;
+            this.logger.info("All managers initialized", {
+                totalTime: totalTime.toFixed(2),
+                managerCount: this.managers.size,
+            });
+
             // Emit overall initialization complete event
             this.eventManager.emitGraphEvent("lifecycle-initialized", {
-                totalTime: performance.now() - startTime,
+                totalTime,
                 managerCount: this.managers.size,
             });
         } catch (error) {
@@ -117,6 +144,10 @@ export class LifecycleManager implements Manager {
             return;
         }
 
+        this.logger.info("Disposing managers", {
+            managerCount: this.managers.size,
+        });
+
         // Dispose managers in reverse order
         const reverseOrder = [... this.initOrder].reverse();
 
@@ -124,10 +155,15 @@ export class LifecycleManager implements Manager {
             const manager = this.managers.get(managerName);
             if (manager) {
                 try {
+                    this.logger.debug(`Disposing manager: ${managerName}`);
                     manager.dispose();
                 } catch (error) {
                     // Log error but continue disposing other managers
-                    console.error(`Error disposing manager '${managerName}':`, error);
+                    this.logger.error(
+                        `Error disposing manager: ${managerName}`,
+                        error instanceof Error ? error : new Error(String(error)),
+                        {managerName},
+                    );
 
                     this.eventManager.emitGraphError(
                         null,
@@ -140,6 +176,10 @@ export class LifecycleManager implements Manager {
         }
 
         this.initialized = false;
+
+        this.logger.info("All managers disposed", {
+            managerCount: this.managers.size,
+        });
 
         // Emit lifecycle disposed event
         this.eventManager.emitGraphEvent("lifecycle-disposed", {
@@ -165,7 +205,11 @@ export class LifecycleManager implements Manager {
                 try {
                     manager.dispose();
                 } catch (error) {
-                    console.error(`Error during cleanup of manager '${managerName}':`, error);
+                    this.logger.error(
+                        `Error during cleanup of manager: ${managerName}`,
+                        error instanceof Error ? error : new Error(String(error)),
+                        {managerName},
+                    );
                 }
             }
         }

@@ -1,5 +1,6 @@
 import type {Edge} from "../Edge";
 import {LayoutEngine} from "../layout/LayoutEngine";
+import {GraphtyLogger, type Logger} from "../logging/GraphtyLogger.js";
 import type {Node} from "../Node";
 import type {Styles} from "../Styles";
 import type {DataManager} from "./DataManager";
@@ -28,13 +29,13 @@ function hasGetEdgePath(engine: LayoutEngine): engine is LayoutEngineWithEdgePat
 export class LayoutManager implements Manager {
     layoutEngine?: LayoutEngine;
     private _running = false;
+    private logger: Logger = GraphtyLogger.getLogger(["graphty", "layout"]);
 
     get running(): boolean {
         return this._running;
     }
 
     set running(value: boolean) {
-        // console.log(`[LayoutManager] running set to ${value}, layoutEngine exists: ${!!this.layoutEngine}`);
         this._running = value;
     }
 
@@ -81,6 +82,8 @@ export class LayoutManager implements Manager {
      * Used by operations that are already queued to prevent nested queueing
      */
     private async _setLayoutInternal(type: string, opts: object = {}): Promise<void> {
+        this.logger.info("Setting layout", {type, options: opts});
+
         try {
             // Auto-sync layout dimension with graph's 2D/3D mode if not explicitly set
             const layoutOpts = {... opts};
@@ -136,6 +139,12 @@ export class LayoutManager implements Manager {
 
                 this.running = true;
 
+                this.logger.debug("Layout initialized", {
+                    type,
+                    nodeCount: nodeArray.length,
+                    edgeCount: edgeArray.length,
+                });
+
                 // Request zoom to fit when layout changes
                 this.eventManager.emitLayoutInitialized(type, true);
 
@@ -150,6 +159,13 @@ export class LayoutManager implements Manager {
                     options: layoutOpts,
                 });
             } catch (error) {
+                // Log the failure
+                this.logger.error(
+                    "Layout initialization failed",
+                    error instanceof Error ? error : new Error(String(error)),
+                    {layoutType: type},
+                );
+
                 // Restore previous layout engine if initialization failed
                 this.layoutEngine = previousEngine;
                 this.dataManager.setLayoutEngine(previousEngine);

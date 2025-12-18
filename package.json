@@ -20,8 +20,12 @@
     "./src/data/index.ts",
     "./src/algorithms/index.ts"
   ],
+  "bin": {
+    "graphty-log-server": "./bin/graphty-log-server.js"
+  },
   "files": [
     "dist/",
+    "bin/",
     "README.md",
     "LICENSE"
   ],
@@ -124,6 +128,8 @@
   "dependencies": {
     "@graphty/algorithms": "^1.2.0",
     "@graphty/layout": "^1.2.8",
+    "@logtape/logtape": "^1.2.2",
+    "selfsigned": "^2.4.1",
     "@types/papaparse": "^5.5.0",
     "colorjs.io": "^0.5.2",
     "d3-force-3d": "^3.0.6",

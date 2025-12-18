@@ -4,6 +4,7 @@ import type {AdHocData} from "../config";
 import {DataSource} from "../data/DataSource";
 import {Edge, EdgeMap} from "../Edge";
 import type {LayoutEngine} from "../layout/LayoutEngine";
+import {GraphtyLogger, type Logger} from "../logging/GraphtyLogger.js";
 import {MeshCache} from "../meshes/MeshCache";
 import {Node, NodeIdType} from "../Node";
 import type {Styles} from "../Styles";
@@ -33,6 +34,7 @@ export class DataManager implements Manager {
     edges = new Map<string | number, Edge>();
     nodeCache = new Map<NodeIdType, Node>();
     edgeCache = new EdgeMap();
+    private logger: Logger = GraphtyLogger.getLogger(["graphty", "data"]);
 
     // Graph-level algorithm results storage
     graphResults?: AdHocData;
@@ -154,6 +156,8 @@ export class DataManager implements Manager {
     }
 
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
+        this.logger.debug("Adding nodes", {count: nodes.length});
+
         // create path to node ids
         const query = idPath ?? this.styles.config.data.knownFields.nodeIdPath;
 
@@ -296,6 +300,8 @@ export class DataManager implements Manager {
     }
 
     addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
+        this.logger.debug("Adding edges", {count: edges.length});
+
         // get paths
         const srcQuery = srcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath;
         const dstQuery = dstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath;
@@ -380,6 +386,8 @@ export class DataManager implements Manager {
     // Data source operations
 
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
+        this.logger.info("Loading data source", {type, options: opts});
+
         const startTime = Date.now();
         let nodesLoaded = 0;
         let edgesLoaded = 0;
@@ -433,9 +441,18 @@ export class DataManager implements Manager {
                 }
 
                 // Emit completion event
+                const duration = Date.now() - startTime;
+                const errorCount = source.getErrorAggregator().getErrorCount();
+
+                this.logger.info("Data source loading complete", {
+                    nodesLoaded,
+                    edgesLoaded,
+                    duration,
+                    chunks: chunksProcessed,
+                    errors: errorCount,
+                });
+
                 if (this.graphContext) {
-                    const duration = Date.now() - startTime;
-                    const errorCount = source.getErrorAggregator().getErrorCount();
                     this.eventManager.emitDataLoadingComplete(
                         type,
                         nodesLoaded,
@@ -452,6 +469,18 @@ export class DataManager implements Manager {
                     this.eventManager.emitGraphDataLoaded(this.graphContext, chunksProcessed, type);
                 }
             } catch (error) {
+                // Log the error
+                this.logger.error(
+                    "Data source loading failed",
+                    error instanceof Error ? error : new Error(String(error)),
+                    {
+                        type,
+                        chunksProcessed,
+                        nodesLoaded,
+                        edgesLoaded,
+                    },
+                );
+
                 // Emit error event
                 if (this.graphContext) {
                     this.eventManager.emitDataLoadingError(

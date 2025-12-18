@@ -2,6 +2,7 @@ import PQueue from "p-queue";
 import toposort from "toposort";
 
 import {OBSOLESCENCE_RULES} from "../constants/obsolescence-rules";
+import {GraphtyLogger, type Logger} from "../logging/GraphtyLogger.js";
 import type {OperationMetadata, OperationProgress} from "../types/operations";
 import type {EventManager} from "./EventManager";
 import type {Manager} from "./interfaces";
@@ -51,6 +52,7 @@ export class OperationQueueManager implements Manager {
     private operationCounter = 0;
     private batchingEnabled = true;
     private currentBatch = new Set<string>();
+    private logger: Logger = GraphtyLogger.getLogger(["graphty", "operation"]);
 
     // Progress tracking
     private operationProgress = new Map<string, OperationProgress>();
@@ -225,6 +227,12 @@ export class OperationQueueManager implements Manager {
         this.pendingOperations.set(id, operation);
         this.activeControllers.set(id, controller);
 
+        this.logger.debug("Operation queued", {
+            id,
+            category,
+            description: options?.description,
+        });
+
         // Handle batch mode differently
         if (this.batchMode) {
             // In batch mode: queue but don't execute yet
@@ -351,6 +359,13 @@ export class OperationQueueManager implements Manager {
         const operations = batchIds
             .map((id) => this.pendingOperations.get(id))
             .filter((op): op is Operation => op !== undefined);
+
+        if (operations.length > 0) {
+            this.logger.debug("Executing operation batch", {
+                operationCount: operations.length,
+                categories: [... new Set(operations.map((op) => op.category))],
+            });
+        }
 
         // Remove from pending and add to queued
         batchIds.forEach((id) => {
@@ -481,6 +496,12 @@ export class OperationQueueManager implements Manager {
         this.queuedOperations.delete(operation.id);
         this.runningOperations.set(operation.id, operation);
 
+        this.logger.debug("Operation started", {
+            id: operation.id,
+            category: operation.category,
+            description: operation.metadata?.description,
+        });
+
         this.eventManager.emitGraphEvent("operation-start", {
             id: operation.id,
             category: operation.category,
@@ -499,6 +520,13 @@ export class OperationQueueManager implements Manager {
             this.completedCategories.add(operation.category);
 
             const duration = performance.now() - startTime;
+
+            this.logger.debug("Operation completed", {
+                id: operation.id,
+                category: operation.category,
+                duration: duration.toFixed(2),
+            });
+
             this.eventManager.emitGraphEvent("operation-complete", {
                 id: operation.id,
                 category: operation.category,
@@ -588,6 +616,16 @@ export class OperationQueueManager implements Manager {
      * Handle operation errors
      */
     private handleOperationError(operation: Operation, error: unknown): void {
+        this.logger.error(
+            "Operation failed",
+            error instanceof Error ? error : new Error(String(error)),
+            {
+                id: operation.id,
+                category: operation.category,
+                description: operation.metadata?.description,
+            },
+        );
+
         this.eventManager.emitGraphError(
             null,
             error instanceof Error ? error : new Error(String(error)),

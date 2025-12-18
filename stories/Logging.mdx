@@ -1,0 +1,337 @@
+import { Meta, Source } from '@storybook/blocks';
+
+<Meta title="Logging/Documentation" />
+
+# Logging System
+
+graphty-element includes a comprehensive logging system for debugging and monitoring. The logging system is:
+
+- **Disabled by default** - No console output when not configured
+- **URL parameter controlled** - Enable/disable via URL query strings
+- **Hierarchical** - Filter by module categories
+- **Configurable** - Multiple log levels and output sinks
+- **Zero overhead** - No performance impact when disabled
+
+## Quick Start
+
+### Enable via URL Parameters
+
+The easiest way to enable logging is via URL parameters:
+
+<Source
+  language="text"
+  code={`
+# Enable all logging at INFO level
+?graphty-element-logging=true
+
+# Enable specific modules only
+?graphty-element-logging=layout,xr,camera
+
+# Set log level
+?graphty-element-logging=true&graphty-element-log-level=debug
+
+# Per-module log levels
+?graphty-element-logging=layout:debug,xr:trace
+
+# Enable remote logging to a server
+?graphty-element-logging=true&graphty-element-remote-log=https://localhost:9080
+  `}
+/>
+
+### Enable Programmatically
+
+<Source
+  language="typescript"
+  code={`
+import { GraphtyLogger, LogLevel } from "@graphty/graphty-element";
+
+// Configure logging
+await GraphtyLogger.configure({
+  enabled: true,
+  level: LogLevel.DEBUG,
+  modules: "*", // or ["layout", "xr"] for specific modules
+  format: { timestamp: true, module: true },
+});
+
+// Get a logger for a category
+const logger = GraphtyLogger.getLogger(["graphty", "layout"]);
+logger.info("Layout started", { nodeCount: 100 });
+logger.debug("Processing nodes...");
+logger.error("Something went wrong", new Error("Test error"));
+  `}
+/>
+
+## Log Levels
+
+From least to most verbose:
+
+| Level | Value | Description |
+|-------|-------|-------------|
+| `SILENT` | 0 | No logging |
+| `ERROR` | 1 | Errors only |
+| `WARN` | 2 | Warnings and above |
+| `INFO` | 3 | Info and above (default) |
+| `DEBUG` | 4 | Debug and above |
+| `TRACE` | 5 | All messages |
+
+## Module Categories
+
+Logs are organized hierarchically by module. Common categories include:
+
+- `graphty.layout` - Layout engine messages
+- `graphty.xr` - XR/VR session messages
+- `graphty.camera` - Camera control messages
+- `graphty.data` - Data loading messages
+- `graphty.lifecycle` - Component lifecycle messages
+- `graphty.render` - Rendering messages
+
+## URL Parameter Reference
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `graphty-element-logging` | Enable logging. `true` for all, or comma-separated modules | `?graphty-element-logging=layout,xr` |
+| `graphty-element-log-level` | Global log level | `?graphty-element-log-level=debug` |
+| `graphty-element-remote-log` | URL of remote log server | `?graphty-element-remote-log=https://localhost:9080` |
+
+## Programmatic API
+
+### Configuration
+
+<Source
+  language="typescript"
+  code={`
+import {
+  GraphtyLogger,
+  LogLevel,
+  configureLogging,
+  getLoggingConfig
+} from "@graphty/graphty-element";
+
+// Configure via GraphtyLogger
+await GraphtyLogger.configure({
+  enabled: true,
+  level: LogLevel.DEBUG,
+  modules: "*",
+  format: {
+    timestamp: true,
+    module: true,
+    colors: true
+  },
+});
+
+// Or via configureLogging function
+configureLogging({
+  enabled: true,
+  level: LogLevel.INFO,
+  modules: ["layout", "xr"],
+  format: { timestamp: true, module: true },
+});
+
+// Get current configuration
+const config = getLoggingConfig();
+console.log("Logging enabled:", config.enabled);
+console.log("Log level:", config.level);
+  `}
+/>
+
+### Getting Loggers
+
+<Source
+  language="typescript"
+  code={`
+const logger = GraphtyLogger.getLogger(["graphty", "mymodule"]);
+
+// Log at different levels
+logger.trace("Very detailed trace info");
+logger.debug("Debug information", { data: "value" });
+logger.info("Informational message");
+logger.warn("Warning message");
+logger.error("Error occurred", new Error("Details"), { context: "test" });
+
+// Check if level is enabled (useful for expensive operations)
+if (logger.isDebugEnabled()) {
+  logger.debug("Expensive data:", computeExpensiveData());
+}
+  `}
+/>
+
+### Custom Sinks
+
+Create custom sinks to send logs to external services:
+
+<Source
+  language="typescript"
+  code={`
+import { GraphtyLogger, type Sink, type LogRecord } from "@graphty/graphty-element";
+
+// Create a custom sink
+const customSink: Sink = {
+  name: "my-analytics",
+  write: (record: LogRecord) => {
+    // Send to analytics service
+    analytics.track("log_event", {
+      level: record.level,
+      category: record.category.join("."),
+      message: record.message,
+      data: record.data,
+      timestamp: record.timestamp.toISOString(),
+    });
+  },
+  // Optional: async flush for batched operations
+  flush: async () => {
+    await analytics.flush();
+  },
+};
+
+// Register the sink
+GraphtyLogger.addSink(customSink);
+
+// Later, remove if needed
+GraphtyLogger.removeSink("my-analytics");
+
+// List all registered sinks
+const sinks = GraphtyLogger.getSinks();
+
+// Flush all sinks
+await GraphtyLogger.flush();
+  `}
+/>
+
+### LogRecord Format
+
+Custom sinks receive `LogRecord` objects with this structure:
+
+<Source
+  language="typescript"
+  code={`
+interface LogRecord {
+  timestamp: Date;           // When the log was created
+  level: LogLevel;           // Log level (ERROR, WARN, INFO, DEBUG, TRACE)
+  category: string[];        // Module path, e.g., ["graphty", "layout"]
+  message: string;           // The log message
+  data?: Record<string, unknown>;  // Optional structured data
+  error?: Error;             // Optional error object (for error logs)
+}
+  `}
+/>
+
+## Remote Logging
+
+For debugging on mobile/XR devices, use the remote log server:
+
+### Start the Log Server
+
+<Source
+  language="bash"
+  code={`
+# Start with defaults (port 9080, auto-generated self-signed certs)
+npx graphty-log-server
+
+# Custom port
+npx graphty-log-server --port 9085
+
+# With custom SSL certs
+npx graphty-log-server --cert /path/to/cert.crt --key /path/to/key.key
+
+# Also write to file
+npx graphty-log-server --log-file ./tmp/graphty.log
+  `}
+/>
+
+### Enable Remote Logging in Browser
+
+Add the remote log URL to your URL parameters:
+
+<Source
+  language="text"
+  code={`
+?graphty-element-logging=true&graphty-element-remote-log=https://localhost:9080
+  `}
+/>
+
+Or configure programmatically:
+
+<Source
+  language="typescript"
+  code={`
+await GraphtyLogger.configure({
+  enabled: true,
+  level: LogLevel.DEBUG,
+  modules: "*",
+  format: { timestamp: true, module: true },
+  remoteLogUrl: "https://localhost:9080",
+});
+  `}
+/>
+
+## Session Persistence
+
+Logging configuration can be persisted across page reloads:
+
+<Source
+  language="typescript"
+  code={`
+import {
+  saveLoggingConfig,
+  loadLoggingConfig,
+  clearLoggingConfig,
+  getLoggingConfig
+} from "@graphty/graphty-element";
+
+// Save current config to sessionStorage
+saveLoggingConfig(getLoggingConfig());
+
+// Load saved config
+const savedConfig = loadLoggingConfig();
+if (savedConfig) {
+  configureLogging(savedConfig);
+}
+
+// Clear saved config
+clearLoggingConfig();
+  `}
+/>
+
+## Best Practices
+
+### Use Level Guards for Expensive Operations
+
+<Source
+  language="typescript"
+  code={`
+const logger = GraphtyLogger.getLogger(["graphty", "mymodule"]);
+
+// Bad: computeExpensiveData() runs even if debug is disabled
+logger.debug("Data:", computeExpensiveData());
+
+// Good: Only compute if debug is enabled
+if (logger.isDebugEnabled()) {
+  logger.debug("Data:", computeExpensiveData());
+}
+  `}
+/>
+
+### Include Structured Data
+
+<Source
+  language="typescript"
+  code={`
+// Good: Include relevant data as second argument
+logger.info("Layout completed", {
+  nodeCount: 1000,
+  edgeCount: 2500,
+  durationMs: 150
+});
+
+// Avoid: Concatenating data into message string
+logger.info("Layout completed with " + nodeCount + " nodes"); // harder to parse
+  `}
+/>
+
+### Use Appropriate Log Levels
+
+- **ERROR**: Unrecoverable errors, exceptions
+- **WARN**: Recoverable issues, deprecation warnings
+- **INFO**: Important events (initialization, completion)
+- **DEBUG**: Detailed debugging information
+- **TRACE**: Very detailed tracing (hot paths, loop iterations)

@@ -23,6 +23,7 @@ export default tseslint.config(
             "tmp/**",
             ".worktrees/**",
             "examples/**/*.js",
+            "bin/**",
         ],
     },
     {
