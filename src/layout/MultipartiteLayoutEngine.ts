@@ -1,7 +1,36 @@
 import {Edge as LayoutEdge, multipartiteLayout, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Multipartite Layout
+ */
+export const multipartiteLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(40),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    align: {
+        schema: z.enum(["vertical", "horizontal"]).default("vertical"),
+        meta: {
+            label: "Alignment",
+            description: "Direction of multipartite partitions",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the layout",
+            step: 0.1,
+        },
+    },
+});
 
 export const MultipartiteLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -17,6 +46,7 @@ export type MultipartiteLayoutOpts = Partial<MultipartiteLayoutConfigType>;
 export class MultipartiteLayout extends SimpleLayoutEngine {
     static type = "multipartite";
     static maxDimensions = 2;
+    static zodOptionsSchema: OptionsSchema = multipartiteLayoutOptionsSchema;
     scalingFactor = 40;
     config: MultipartiteLayoutConfigType;
 

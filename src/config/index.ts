@@ -13,3 +13,6 @@ export {StyleHelpers} from "./StyleHelpers";
 export type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig, CalculatedStyleConfig, StyleLayerType, StyleSchema, StyleSchemaV1} from "./StyleTemplate";
 export {CalculatedStyle, StyleTemplate} from "./StyleTemplate";
 export type {ApplySuggestedStylesOptions, SuggestedStyleLayer, SuggestedStyleLayerMetadata, SuggestedStylesConfig, SuggestedStylesProvider} from "./SuggestedStyles";
+// Unified options schema system (Zod-based)
+export type {ConfigurableInfo, InferOptions, OptionDefinition, OptionMeta, OptionsSchema, PartialOptions, SafeParseResult} from "./OptionsSchema";
+export {defineOptions, getDefaults, getOptionsFiltered, getOptionsGrouped, getOptionsMeta, hasOptions, parseOptions, safeParseOptions, toZodSchema} from "./OptionsSchema";

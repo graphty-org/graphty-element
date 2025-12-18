@@ -30,6 +30,7 @@ import {MinCutAlgorithm} from "./MinCutAlgorithm";
 import {PageRankAlgorithm} from "./PageRankAlgorithm";
 import {PrimAlgorithm} from "./PrimAlgorithm";
 import {StronglyConnectedComponentsAlgorithm} from "./StronglyConnectedComponentsAlgorithm";
+import type {OptionsSchema} from "./types/OptionSchema";
 
 // Phase 1 registrations
 Algorithm.register(DegreeAlgorithm);
@@ -69,3 +70,138 @@ Algorithm.register(PrimAlgorithm);
 Algorithm.register(BipartiteMatchingAlgorithm);
 Algorithm.register(MaxFlowAlgorithm);
 Algorithm.register(MinCutAlgorithm);
+
+// Export base class and types
+export {Algorithm} from "./Algorithm";
+
+// Export option schema types and utilities
+export type {
+    OptionDefinition,
+    OptionsFromSchema,
+    OptionsSchema,
+    OptionType,
+    SelectOption,
+} from "./types/OptionSchema";
+
+// Export algorithm option types for Phase 2: Community Detection
+export type {GirvanNewmanOptions} from "./GirvanNewmanAlgorithm";
+export type {LabelPropagationOptions} from "./LabelPropagationAlgorithm";
+export type {LeidenOptions} from "./LeidenAlgorithm";
+export type {LouvainOptions} from "./LouvainAlgorithm";
+export type {PageRankOptions} from "./PageRankAlgorithm";
+
+// Export algorithm option types for Phase 3: Centrality
+export type {EigenvectorCentralityOptions} from "./EigenvectorCentralityAlgorithm";
+export type {HITSOptions} from "./HITSAlgorithm";
+export type {KatzCentralityOptions} from "./KatzCentralityAlgorithm";
+
+// Export algorithm option types for Phase 4: Traversal & Path
+export type {BFSOptions} from "./BFSAlgorithm";
+export type {DFSOptions} from "./DFSAlgorithm";
+export type {DijkstraOptions} from "./DijkstraAlgorithm";
+export type {MaxFlowOptions} from "./MaxFlowAlgorithm";
+export type {MinCutOptions} from "./MinCutAlgorithm";
+export {
+    defineOptionsSchema,
+    OptionValidationError,
+    resolveOptions,
+    validateOption,
+} from "./types/OptionSchema";
+
+/**
+ * Information about a registered algorithm
+ */
+export interface AlgorithmInfo {
+    /** Algorithm namespace (e.g., "graphty") */
+    namespace: string;
+    /** Algorithm type (e.g., "pagerank") */
+    type: string;
+    /** Full key in format "namespace:type" */
+    key: string;
+    /** Options schema for this algorithm */
+    schema: OptionsSchema;
+    /** Whether the algorithm has configurable options */
+    hasOptions: boolean;
+    /** Whether the algorithm has suggested styles */
+    hasSuggestedStyles: boolean;
+}
+
+/**
+ * Get information about all registered algorithms including their options schemas
+ *
+ * @returns Array of algorithm information objects
+ *
+ * @example
+ * ```typescript
+ * const algorithms = getAllAlgorithmInfo();
+ * for (const algo of algorithms) {
+ *     if (algo.hasOptions) {
+ *         console.log(`${algo.key} has options:`, algo.schema);
+ *     }
+ * }
+ * ```
+ */
+export function getAllAlgorithmInfo(): AlgorithmInfo[] {
+    const algorithms: AlgorithmInfo[] = [];
+
+    // Access the registered algorithms through known registrations
+    const knownAlgorithms = [
+        DegreeAlgorithm,
+        DijkstraAlgorithm,
+        PageRankAlgorithm,
+        LouvainAlgorithm,
+        BetweennessCentralityAlgorithm,
+        ClosenessCentralityAlgorithm,
+        EigenvectorCentralityAlgorithm,
+        HITSAlgorithm,
+        KatzCentralityAlgorithm,
+        GirvanNewmanAlgorithm,
+        LeidenAlgorithm,
+        LabelPropagationAlgorithm,
+        BellmanFordAlgorithm,
+        FloydWarshallAlgorithm,
+        BFSAlgorithm,
+        DFSAlgorithm,
+        ConnectedComponentsAlgorithm,
+        StronglyConnectedComponentsAlgorithm,
+        KruskalAlgorithm,
+        PrimAlgorithm,
+        BipartiteMatchingAlgorithm,
+        MaxFlowAlgorithm,
+        MinCutAlgorithm,
+    ];
+
+    for (const AlgoClass of knownAlgorithms) {
+        algorithms.push({
+            namespace: AlgoClass.namespace,
+            type: AlgoClass.type,
+            key: `${AlgoClass.namespace}:${AlgoClass.type}`,
+            schema: AlgoClass.getOptionsSchema(),
+            hasOptions: AlgoClass.hasOptions(),
+            hasSuggestedStyles: AlgoClass.hasSuggestedStyles(),
+        });
+    }
+
+    return algorithms;
+}
+
+/**
+ * Get all algorithm options schemas as a Map
+ *
+ * @returns Map of algorithm key ("namespace:type") to options schema
+ *
+ * @example
+ * ```typescript
+ * const schemas = getAllAlgorithmSchemas();
+ * const pagerankSchema = schemas.get("graphty:pagerank");
+ * ```
+ */
+export function getAllAlgorithmSchemas(): Map<string, OptionsSchema> {
+    const schemas = new Map<string, OptionsSchema>();
+
+    for (const info of getAllAlgorithmInfo()) {
+        schemas.set(info.key, info.schema);
+    }
+
+    return schemas;
+}

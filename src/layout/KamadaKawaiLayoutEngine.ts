@@ -1,7 +1,44 @@
 import {Edge as LayoutEdge, kamadaKawaiLayout, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Kamada-Kawai Layout
+ */
+export const kamadaKawaiLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(50),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the layout",
+            step: 0.1,
+        },
+    },
+    dim: {
+        schema: z.number().int().min(2).max(3).default(3),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D or 3D)",
+        },
+    },
+    weightProperty: {
+        schema: z.string().optional(),
+        meta: {
+            label: "Weight Property",
+            description: "Edge property to use as weight",
+            advanced: true,
+        },
+    },
+});
 
 export const KamadaKawaiLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -18,6 +55,7 @@ export type KamadaKawaiLayoutOpts = Partial<KamadaKawaiLayoutConfigType>;
 export class KamadaKawaiLayout extends SimpleLayoutEngine {
     static type = "kamada-kawai";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = kamadaKawaiLayoutOptionsSchema;
     scalingFactor = 50;
     config: KamadaKawaiLayoutConfigType;
 

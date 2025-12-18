@@ -4,7 +4,7 @@
  */
 import {assert, describe, it} from "vitest";
 
-import {Algorithm} from "../../src/algorithms/Algorithm";
+import {AlgorithmStatics} from "../../src/algorithms/Algorithm";
 // Import all algorithm modules to trigger auto-registration
 import {BFSAlgorithm} from "../../src/algorithms/BFSAlgorithm";
 import {BipartiteMatchingAlgorithm} from "../../src/algorithms/BipartiteMatchingAlgorithm";
@@ -24,7 +24,7 @@ import {PrimAlgorithm} from "../../src/algorithms/PrimAlgorithm";
 import {StronglyConnectedComponentsAlgorithm} from "../../src/algorithms/StronglyConnectedComponentsAlgorithm";
 
 // All algorithms with their registry keys
-const algorithmClasses: [string, typeof Algorithm][] = [
+const algorithmClasses: [string, AlgorithmStatics][] = [
     ["graphty:bfs", BFSAlgorithm],
     ["graphty:bipartite-matching", BipartiteMatchingAlgorithm],
     ["graphty:connected-components", ConnectedComponentsAlgorithm],

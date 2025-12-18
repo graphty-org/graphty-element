@@ -1,7 +1,53 @@
 import {Edge as LayoutEdge, Node as LayoutNode, spiralLayout} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Spiral Layout
+ */
+export const spiralLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(80),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the spiral layout",
+            step: 0.1,
+        },
+    },
+    dim: {
+        schema: z.number().int().min(2).max(2).default(2),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D only for spiral)",
+        },
+    },
+    resolution: {
+        schema: z.number().positive().default(0.35),
+        meta: {
+            label: "Resolution",
+            description: "Controls spacing between spiral turns",
+            step: 0.05,
+            advanced: true,
+        },
+    },
+    equidistant: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Equidistant",
+            description: "Place nodes at equal distances along the spiral",
+            advanced: true,
+        },
+    },
+});
 
 export const SpiralLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -17,6 +63,7 @@ export type SpiralLayoutOpts = Partial<SpiralLayoutConfigType>;
 export class SpiralLayout extends SimpleLayoutEngine {
     static type = "spiral";
     static maxDimensions = 2;
+    static zodOptionsSchema: OptionsSchema = spiralLayoutOptionsSchema;
     scalingFactor = 80;
     config: SpiralLayoutConfigType;
 

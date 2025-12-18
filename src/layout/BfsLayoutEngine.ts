@@ -1,7 +1,43 @@
 import {bfsLayout, Edge as LayoutEdge, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for BFS Layout
+ */
+export const bfsLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(20),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    start: {
+        schema: z.union([z.string(), z.number()]),
+        meta: {
+            label: "Start Node",
+            description: "Starting node for BFS traversal",
+        },
+    },
+    align: {
+        schema: z.enum(["vertical", "horizontal"]).default("vertical"),
+        meta: {
+            label: "Alignment",
+            description: "Direction of BFS tree expansion",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the layout",
+            step: 0.1,
+        },
+    },
+});
 
 export const BfsLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -16,6 +52,7 @@ export type BfsLayoutOpts = Partial<BfsLayoutConfigType>;
 export class BfsLayout extends SimpleLayoutEngine {
     static type = "bfs";
     static maxDimensions = 2;
+    static zodOptionsSchema: OptionsSchema = bfsLayoutOptionsSchema;
     scalingFactor = 20;
     config: BfsLayoutConfigType;
 

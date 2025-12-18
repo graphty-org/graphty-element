@@ -68,17 +68,11 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(): Promise<void> {
-        // Forward internal graph events as DOM events
-        this.#graph.addListener("graph-settled", (event) => {
-            this.dispatchEvent(new CustomEvent("graph-settled", {
-                detail: event,
-                bubbles: true,
-                composed: true,
-            }));
-        });
-
-        this.#graph.addListener("skybox-loaded", (event) => {
-            this.dispatchEvent(new CustomEvent("skybox-loaded", {
+        // Universal event forwarder - all internal events become DOM CustomEvents
+        // This allows React (and other frameworks) to listen for any graph event
+        // including "style-changed", "graph-settled", "skybox-loaded", etc.
+        this.#graph.eventManager.onGraphEvent.add((event) => {
+            this.dispatchEvent(new CustomEvent(event.type, {
                 detail: event,
                 bubbles: true,
                 composed: true,

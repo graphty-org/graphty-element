@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated */
 import {assert, describe, it} from "vitest";
 
 import {Algorithm} from "../../../src/algorithms/Algorithm";

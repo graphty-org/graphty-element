@@ -1,7 +1,53 @@
 import {arfLayout, Edge as LayoutEdge, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for ARF Layout
+ */
+export const arfLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(100),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    scaling: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scaling",
+            description: "Scale factor for the attractive force",
+            step: 0.1,
+        },
+    },
+    a: {
+        schema: z.number().positive().default(1.1),
+        meta: {
+            label: "Attraction Ratio",
+            description: "Ratio of attraction to repulsion",
+            step: 0.1,
+            advanced: true,
+        },
+    },
+    maxIter: {
+        schema: z.number().int().positive().default(1000),
+        meta: {
+            label: "Max Iterations",
+            description: "Maximum number of iterations",
+        },
+    },
+    seed: {
+        schema: z.number().positive().nullable().default(null),
+        meta: {
+            label: "Random Seed",
+            description: "Seed for reproducible layout",
+            advanced: true,
+        },
+    },
+});
 
 export const ArfLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -20,6 +66,7 @@ export type ArfLayoutOpts = Partial<ArfLayoutConfigType>;
 export class ArfLayout extends SimpleLayoutEngine {
     static type = "arf";
     static maxDimensions = 2;
+    static zodOptionsSchema: OptionsSchema = arfLayoutOptionsSchema;
     scalingFactor = 100;
     config: ArfLayoutConfigType;
 
