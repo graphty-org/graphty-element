@@ -4,6 +4,11 @@ import {Camera, Scene, Vector3} from "@babylonjs/core";
 export interface CameraController {
     camera: Camera;
     zoomToBoundingBox(min: Vector3, max: Vector3): void;
+    /**
+     * Called when the canvas resizes. Allows camera controllers to update
+     * their projection to match the new aspect ratio.
+     */
+    onResize?(): void;
 }
 
 export interface InputHandler {
@@ -60,6 +65,16 @@ export class CameraManager {
 
     public update(): void {
         this.activeInputHandler?.update();
+    }
+
+    /**
+     * Called when the canvas resizes to allow camera controllers to update
+     * their projection to match the new aspect ratio.
+     */
+    public onResize(): void {
+        if (this.activeCameraController?.onResize) {
+            this.activeCameraController.onResize();
+        }
     }
 
     public getActiveController(): CameraController | null {

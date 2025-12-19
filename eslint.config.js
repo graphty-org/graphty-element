@@ -24,6 +24,7 @@ export default tseslint.config(
             ".worktrees/**",
             "examples/**/*.js",
             "bin/**",
+            ".storybook/webllm-stub.js",
         ],
     },
     {

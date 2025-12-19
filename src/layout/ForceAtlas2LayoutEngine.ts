@@ -1,7 +1,100 @@
 import {Edge as LayoutEdge, forceatlas2Layout, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for ForceAtlas2 Layout
+ */
+export const forceAtlas2LayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(100),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    maxIter: {
+        schema: z.number().int().positive().default(100),
+        meta: {
+            label: "Max Iterations",
+            description: "Maximum number of simulation iterations",
+        },
+    },
+    jitterTolerance: {
+        schema: z.number().positive().default(1.0),
+        meta: {
+            label: "Jitter Tolerance",
+            description: "Tolerance for position jitter",
+            step: 0.1,
+            advanced: true,
+        },
+    },
+    scalingRatio: {
+        schema: z.number().positive().default(2.0),
+        meta: {
+            label: "Scaling Ratio",
+            description: "Ratio for force scaling",
+            step: 0.1,
+        },
+    },
+    gravity: {
+        schema: z.number().positive().default(1.0),
+        meta: {
+            label: "Gravity",
+            description: "Strength of center gravity",
+            step: 0.1,
+        },
+    },
+    distributedAction: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Distributed Action",
+            description: "Use distributed attraction for hubs",
+            advanced: true,
+        },
+    },
+    strongGravity: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Strong Gravity",
+            description: "Use stronger gravity to prevent escape",
+            advanced: true,
+        },
+    },
+    dissuadeHubs: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Dissuade Hubs",
+            description: "Push hubs away from each other",
+            advanced: true,
+        },
+    },
+    linlog: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "LinLog Mode",
+            description: "Use logarithmic attraction",
+            advanced: true,
+        },
+    },
+    seed: {
+        schema: z.number().nullable().default(null),
+        meta: {
+            label: "Random Seed",
+            description: "Seed for reproducible layout",
+            advanced: true,
+        },
+    },
+    dim: {
+        schema: z.number().int().min(2).max(3).default(2),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D or 3D)",
+        },
+    },
+});
 
 export const ForceAtlas2LayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -26,6 +119,7 @@ export type ForceAtlas2LayoutOpts = Partial<ForceAtlas2LayoutConfigType>;
 export class ForceAtlas2Layout extends SimpleLayoutEngine {
     static type = "forceatlas2";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = forceAtlas2LayoutOptionsSchema;
     scalingFactor = 100;
     config: ForceAtlas2LayoutConfigType;
 

@@ -1,8 +1,72 @@
 import {hits} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import type {OptionsSchema} from "./types/OptionSchema";
 import {toAlgorithmGraph} from "./utils/graphConverter";
+
+/**
+ * Zod-based options schema for HITS algorithm
+ */
+export const hitsOptionsSchema = defineOptions({
+    maxIterations: {
+        schema: z.number().int().min(1).max(1000).default(100),
+        meta: {
+            label: "Max Iterations",
+            description: "Maximum iterations for hub/authority computation",
+            advanced: true,
+        },
+    },
+    tolerance: {
+        schema: z.number().min(1e-10).max(0.01).default(1e-6),
+        meta: {
+            label: "Tolerance",
+            description: "Convergence threshold",
+            advanced: true,
+        },
+    },
+    normalized: {
+        schema: z.boolean().default(true),
+        meta: {
+            label: "Normalized",
+            description: "Whether to normalize the final hub/authority scores",
+            advanced: true,
+        },
+    },
+    mode: {
+        schema: z.enum(["in", "out", "total"]).default("total"),
+        meta: {
+            label: "Direction Mode",
+            description: "Direction mode for directed graphs",
+            advanced: true,
+        },
+    },
+    endpoints: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Include Endpoints",
+            description: "Whether to include endpoints in path calculations",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for the HITS algorithm
+ */
+export interface HITSOptions extends Record<string, unknown> {
+    /** Maximum iterations for hub/authority computation */
+    maxIterations: number;
+    /** Convergence threshold */
+    tolerance: number;
+    /** Whether to normalize the final scores */
+    normalized: boolean;
+    /** Direction mode for directed graphs: "in", "out", or "total" */
+    mode: "in" | "out" | "total";
+    /** Whether to include endpoints in path calculations */
+    endpoints: boolean;
+}
 
 /**
  * HITS (Hyperlink-Induced Topic Search) Algorithm
@@ -19,9 +83,58 @@ import {toAlgorithmGraph} from "./utils/graphConverter";
  * - combinedScore: Average of hub and authority scores
  * - combinedScorePct: Normalized combined score in [0, 1] range
  */
-export class HITSAlgorithm extends Algorithm {
+export class HITSAlgorithm extends Algorithm<HITSOptions> {
     static namespace = "graphty";
     static type = "hits";
+
+    static zodOptionsSchema: ZodOptionsSchema = hitsOptionsSchema;
+
+    static optionsSchema: OptionsSchema = {
+        maxIterations: {
+            type: "integer",
+            default: 100,
+            label: "Max Iterations",
+            description: "Maximum iterations for hub/authority computation",
+            min: 1,
+            max: 1000,
+            advanced: true,
+        },
+        tolerance: {
+            type: "number",
+            default: 1e-6,
+            label: "Tolerance",
+            description: "Convergence threshold",
+            min: 1e-10,
+            max: 0.01,
+            advanced: true,
+        },
+        normalized: {
+            type: "boolean",
+            default: true,
+            label: "Normalized",
+            description: "Whether to normalize the final hub/authority scores",
+            advanced: true,
+        },
+        mode: {
+            type: "select",
+            default: "total",
+            label: "Direction Mode",
+            description: "Direction mode for directed graphs",
+            options: [
+                {value: "total", label: "Total (both directions)"},
+                {value: "in", label: "In-degree (incoming edges)"},
+                {value: "out", label: "Out-degree (outgoing edges)"},
+            ],
+            advanced: true,
+        },
+        endpoints: {
+            type: "boolean",
+            default: false,
+            label: "Include Endpoints",
+            description: "Whether to include endpoints in path calculations",
+            advanced: true,
+        },
+    };
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -73,10 +186,19 @@ export class HITSAlgorithm extends Algorithm {
             return;
         }
 
+        // Get options from schema
+        const {maxIterations, tolerance, normalized, mode, endpoints} = this.schemaOptions;
+
         // Convert to @graphty/algorithms format and run
         // HITS works best on directed graphs, but we'll run it anyway
         const graphData = toAlgorithmGraph(g, {directed: true});
-        const results = hits(graphData);
+        const results = hits(graphData, {
+            maxIterations,
+            tolerance,
+            normalized,
+            mode,
+            endpoints,
+        });
 
         // Find min/max for min-max normalization
         // This ensures values spread across full 0-1 range for better visual differentiation

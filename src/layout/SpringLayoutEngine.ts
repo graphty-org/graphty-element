@@ -1,7 +1,59 @@
 import {Edge as LayoutEdge, Node as LayoutNode, springLayout} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Spring Layout
+ */
+export const springLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(100),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    k: {
+        schema: z.number().nullable().default(null),
+        meta: {
+            label: "Spring Constant",
+            description: "Optimal distance between nodes (auto-calculated if null)",
+            advanced: true,
+        },
+    },
+    iterations: {
+        schema: z.number().positive().default(50),
+        meta: {
+            label: "Iterations",
+            description: "Number of spring simulation iterations",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the layout",
+            step: 0.1,
+        },
+    },
+    dim: {
+        schema: z.number().int().min(2).max(3).default(3),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D or 3D)",
+        },
+    },
+    seed: {
+        schema: z.number().positive().nullable().default(null),
+        meta: {
+            label: "Random Seed",
+            description: "Seed for reproducible layout",
+            advanced: true,
+        },
+    },
+});
 
 export const SpringLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -23,6 +75,7 @@ export type SpringLayoutOpts = Partial<SpringLayoutConfigType>;
 export class SpringLayout extends SimpleLayoutEngine {
     static type = "spring";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = springLayoutOptionsSchema;
     scalingFactor = 100;
     config: SpringLayoutConfigType;
 

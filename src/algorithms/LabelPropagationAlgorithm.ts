@@ -1,13 +1,68 @@
 import {labelPropagation} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import type {OptionsSchema} from "./types/OptionSchema";
 import {countUniqueCommunities} from "./utils/communityUtils";
-import {toAdjacencyMap} from "./utils/graphConverter";
+import {toAlgorithmGraph} from "./utils/graphConverter";
 
-export class LabelPropagationAlgorithm extends Algorithm {
+/**
+ * Zod-based options schema for Label Propagation algorithm
+ */
+export const labelPropagationOptionsSchema = defineOptions({
+    maxIterations: {
+        schema: z.number().int().min(1).max(500).default(100),
+        meta: {
+            label: "Max Iterations",
+            description: "Maximum label propagation rounds",
+        },
+    },
+    randomSeed: {
+        schema: z.number().int().min(0).max(2147483647).default(42),
+        meta: {
+            label: "Random Seed",
+            description: "Seed for reproducible tie-breaking",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for the Label Propagation community detection algorithm
+ */
+export interface LabelPropagationOptions extends Record<string, unknown> {
+    /** Maximum label propagation rounds */
+    maxIterations: number;
+    /** Seed for reproducible tie-breaking */
+    randomSeed: number;
+}
+
+export class LabelPropagationAlgorithm extends Algorithm<LabelPropagationOptions> {
     static namespace = "graphty";
     static type = "label-propagation";
+
+    static zodOptionsSchema: ZodOptionsSchema = labelPropagationOptionsSchema;
+
+    static optionsSchema: OptionsSchema = {
+        maxIterations: {
+            type: "integer",
+            default: 100,
+            label: "Max Iterations",
+            description: "Maximum label propagation rounds",
+            min: 1,
+            max: 500,
+        },
+        randomSeed: {
+            type: "integer",
+            default: 42,
+            label: "Random Seed",
+            description: "Seed for reproducible tie-breaking",
+            min: 0,
+            max: 2147483647,
+            advanced: true,
+        },
+    };
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -42,12 +97,16 @@ export class LabelPropagationAlgorithm extends Algorithm {
             return;
         }
 
-        // Convert to adjacency map format (required by labelPropagation)
-        const graphData = toAdjacencyMap(g);
+        // Get options from schema
+        const {maxIterations, randomSeed} = this.schemaOptions;
 
-        // Run Label Propagation algorithm - returns {communities: Map<string, number>, iterations, converged}
+        // Convert to @graphty/algorithms Graph format (undirected for community detection)
+        const graphData = toAlgorithmGraph(g, {addReverseEdges: false});
+
+        // Run Label Propagation algorithm - accepts Graph directly in new version
         const result = labelPropagation(graphData, {
-            maxIterations: 100,
+            maxIterations,
+            randomSeed,
         });
 
         // Store results on nodes

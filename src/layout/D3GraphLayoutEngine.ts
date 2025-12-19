@@ -9,9 +9,51 @@ import {
 } from "d3-force-3d";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import type {Edge} from "../Edge";
 import type {Node, NodeIdType} from "../Node";
 import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for D3 Force Layout
+ */
+export const d3LayoutOptionsSchema = defineOptions({
+    alphaMin: {
+        schema: z.number().positive().default(0.1),
+        meta: {
+            label: "Alpha Min",
+            description: "Minimum alpha before simulation stops",
+            step: 0.01,
+            advanced: true,
+        },
+    },
+    alphaTarget: {
+        schema: z.number().min(0).default(0),
+        meta: {
+            label: "Alpha Target",
+            description: "Target alpha value",
+            step: 0.01,
+            advanced: true,
+        },
+    },
+    alphaDecay: {
+        schema: z.number().positive().default(0.0228),
+        meta: {
+            label: "Alpha Decay",
+            description: "Rate of alpha decay per tick",
+            step: 0.001,
+            advanced: true,
+        },
+    },
+    velocityDecay: {
+        schema: z.number().positive().default(0.4),
+        meta: {
+            label: "Velocity Decay",
+            description: "Velocity damping factor",
+            step: 0.05,
+        },
+    },
+});
 
 interface D3InputNode extends Partial<D3Node> {
     id: NodeIdType;
@@ -68,6 +110,7 @@ function isD3Edge(e: unknown): e is D3Edge {
 export class D3GraphEngine extends LayoutEngine {
     static type = "d3";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = d3LayoutOptionsSchema;
     d3ForceLayout: ReturnType<typeof forceSimulation>;
     d3AlphaMin: number;
     d3AlphaTarget: number;

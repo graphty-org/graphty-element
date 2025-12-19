@@ -1,7 +1,44 @@
 import {bipartiteLayout, Edge as LayoutEdge, Node as LayoutNode} from "@graphty/layout";
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Bipartite Layout
+ */
+export const bipartiteLayoutOptionsSchema = defineOptions({
+    scalingFactor: {
+        schema: z.number().min(1).max(1000).default(40),
+        meta: {
+            label: "Scaling Factor",
+            description: "Multiplier for node positions",
+        },
+    },
+    align: {
+        schema: z.enum(["vertical", "horizontal"]).default("vertical"),
+        meta: {
+            label: "Alignment",
+            description: "Direction of bipartite partitions",
+        },
+    },
+    scale: {
+        schema: z.number().positive().default(1),
+        meta: {
+            label: "Scale",
+            description: "Scale factor for the layout",
+            step: 0.1,
+        },
+    },
+    aspectRatio: {
+        schema: z.number().positive().default(4 / 3),
+        meta: {
+            label: "Aspect Ratio",
+            description: "Width to height ratio",
+            step: 0.1,
+        },
+    },
+});
 
 export const BipartiteLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -17,6 +54,7 @@ export type BipartiteLayoutOpts = Partial<BipartiteLayoutConfigType>;
 export class BipartiteLayout extends SimpleLayoutEngine {
     static type = "bipartite";
     static maxDimensions = 2;
+    static zodOptionsSchema: OptionsSchema = bipartiteLayoutOptionsSchema;
     scalingFactor = 40;
     config: BipartiteLayoutConfigType;
 

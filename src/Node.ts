@@ -9,6 +9,7 @@ import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
+import {NodeEffects} from "./meshes/NodeEffects";
 import {NodeMesh} from "./meshes/NodeMesh";
 import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {NodeBehavior, type NodeDragHandler} from "./NodeBehavior";
@@ -91,6 +92,9 @@ export class Node {
             nodeId: this.id,
         };
 
+        // Apply outline effect if configured in style
+        NodeEffects.applyOutlineEffect(this.mesh, o.effect);
+
         // create label
         if (o.label?.enabled) {
             this.label = this.createLabel(o);
@@ -105,6 +109,11 @@ export class Node {
 
     update(): void {
         this.context.getStatsManager().startMeasurement("Node.update");
+
+        // Check if mesh was disposed (e.g., from 2D/3D mode switch) and recreate it
+        if (this.mesh.isDisposed()) {
+            this.updateStyle(this.styleId);
+        }
 
         const newStyleKeys = Object.keys(this.styleUpdates);
         if (newStyleKeys.length > 0) {
@@ -126,7 +135,10 @@ export class Node {
             return;
         }
 
-        const pos = this.context.getLayoutManager().layoutEngine?.getNodePosition(this);
+        const layoutManager = this.context.getLayoutManager();
+        const {layoutEngine} = layoutManager;
+
+        const pos = layoutEngine?.getNodePosition(this);
         if (pos) {
             this.mesh.position.x = pos.x;
             this.mesh.position.y = pos.y;
@@ -147,6 +159,16 @@ export class Node {
         }
 
         this.styleId = styleId;
+
+        // Save the current position before disposing the mesh
+        // This is critical for style changes when layout is settled,
+        // because updateNodes() won't be called to restore positions
+        const savedPosition = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y,
+            z: this.mesh.position.z,
+        };
+
         // Only dispose if not already disposed
         if (!this.mesh.isDisposed()) {
             this.mesh.dispose();
@@ -162,6 +184,11 @@ export class Node {
             this.context.getScene(),
         );
 
+        // Restore the saved position to the new mesh
+        this.mesh.position.x = savedPosition.x;
+        this.mesh.position.y = savedPosition.y;
+        this.mesh.position.z = savedPosition.z;
+
         // Parent to graph-root for XR gesture support
         const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
         if (graphRoot) {
@@ -176,14 +203,18 @@ export class Node {
             nodeId: this.id,
         };
 
-        console.log("🔍 [Node updateStyle] Metadata set:", {
-            nodeId: this.id,
-            meshName: this.mesh.name,
-            meshClass: this.mesh.getClassName(),
-            isInstancedMesh: this.mesh.getClassName() === "InstancedMesh",
-            metadata: this.mesh.metadata,
-            isPickable: this.mesh.isPickable,
-        });
+        // Restore position from layout engine after mesh recreation
+        // This ensures the mesh doesn't reset to (0, 0, 0) when style changes
+        const layoutManager = this.context.getLayoutManager();
+        const pos = layoutManager.layoutEngine?.getNodePosition(this);
+        if (pos) {
+            this.mesh.position.x = pos.x;
+            this.mesh.position.y = pos.y;
+            this.mesh.position.z = pos.z ?? 0;
+        }
+
+        // Apply outline effect if configured in style
+        NodeEffects.applyOutlineEffect(this.mesh, o.effect);
 
         // recreate label if needed
         if (o.label?.enabled) {
@@ -192,6 +223,11 @@ export class Node {
         } else if (this.label) {
             this.label.dispose();
             this.label = undefined;
+        }
+
+        // Dispose old drag handler before creating new one to prevent duplicate event listeners
+        if (this.dragHandler) {
+            this.dragHandler.dispose();
         }
 
         NodeBehavior.addDefaultBehaviors(this, this.opts);

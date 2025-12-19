@@ -52,6 +52,30 @@ export class TwoDCameraController {
         this.camera.orthoBottom = -size * aspect;
     }
 
+    /**
+     * Update the ortho bounds to match current aspect ratio without changing zoom level.
+     * This should be called when the canvas resizes to prevent visual shifts.
+     * Keeps the horizontal view (orthoLeft/Right) the same and adjusts vertical bounds.
+     */
+    public updateOrthoAspectRatio(): void {
+        const {orthoRight} = this.camera;
+        if (orthoRight === null) {
+            return;
+        }
+
+        const aspect = this.engine.getRenderHeight() / this.engine.getRenderWidth();
+        this.camera.orthoTop = orthoRight * aspect;
+        this.camera.orthoBottom = -orthoRight * aspect;
+    }
+
+    /**
+     * Called when the canvas resizes.
+     * Updates the ortho bounds to match the new aspect ratio.
+     */
+    public onResize(): void {
+        this.updateOrthoAspectRatio();
+    }
+
     public pan(dx: number, dy: number): void {
         this.camera.position.x += dx;
         this.camera.position.y += dy;

@@ -20,6 +20,7 @@ async function setup2DGraph(): Promise<void> {
         majorVersion: "1",
         graph: {
             twoD: true,
+            viewMode: "2d",
             background: {backgroundType: "color", color: "#f0f0f0"},
             addDefaultStyle: true,
             startingCameraDistance: 30,

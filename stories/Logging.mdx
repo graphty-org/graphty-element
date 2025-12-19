@@ -1,6 +1,4 @@
-import { Meta, Source } from '@storybook/blocks';
-
-<Meta title="Logging/Documentation" />
+{/* @meta title="Logging" */}
 
 # Logging System
 
@@ -18,9 +16,7 @@ graphty-element includes a comprehensive logging system for debugging and monito
 
 The easiest way to enable logging is via URL parameters:
 
-<Source
-  language="text"
-  code={`
+```text
 # Enable all logging at INFO level
 ?graphty-element-logging=true
 
@@ -35,14 +31,11 @@ The easiest way to enable logging is via URL parameters:
 
 # Enable remote logging to a server
 ?graphty-element-logging=true&graphty-element-remote-log=https://localhost:9080
-  `}
-/>
+```
 
 ### Enable Programmatically
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 import { GraphtyLogger, LogLevel } from "@graphty/graphty-element";
 
 // Configure logging
@@ -58,8 +51,7 @@ const logger = GraphtyLogger.getLogger(["graphty", "layout"]);
 logger.info("Layout started", { nodeCount: 100 });
 logger.debug("Processing nodes...");
 logger.error("Something went wrong", new Error("Test error"));
-  `}
-/>
+```
 
 ## Log Levels
 
@@ -97,9 +89,7 @@ Logs are organized hierarchically by module. Common categories include:
 
 ### Configuration
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 import {
   GraphtyLogger,
   LogLevel,
@@ -131,14 +121,11 @@ configureLogging({
 const config = getLoggingConfig();
 console.log("Logging enabled:", config.enabled);
 console.log("Log level:", config.level);
-  `}
-/>
+```
 
 ### Getting Loggers
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 const logger = GraphtyLogger.getLogger(["graphty", "mymodule"]);
 
 // Log at different levels
@@ -152,16 +139,13 @@ logger.error("Error occurred", new Error("Details"), { context: "test" });
 if (logger.isDebugEnabled()) {
   logger.debug("Expensive data:", computeExpensiveData());
 }
-  `}
-/>
+```
 
 ### Custom Sinks
 
 Create custom sinks to send logs to external services:
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 import { GraphtyLogger, type Sink, type LogRecord } from "@graphty/graphty-element";
 
 // Create a custom sink
@@ -194,16 +178,13 @@ const sinks = GraphtyLogger.getSinks();
 
 // Flush all sinks
 await GraphtyLogger.flush();
-  `}
-/>
+```
 
 ### LogRecord Format
 
 Custom sinks receive `LogRecord` objects with this structure:
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 interface LogRecord {
   timestamp: Date;           // When the log was created
   level: LogLevel;           // Log level (ERROR, WARN, INFO, DEBUG, TRACE)
@@ -212,8 +193,7 @@ interface LogRecord {
   data?: Record<string, unknown>;  // Optional structured data
   error?: Error;             // Optional error object (for error logs)
 }
-  `}
-/>
+```
 
 ## Remote Logging
 
@@ -221,9 +201,7 @@ For debugging on mobile/XR devices, use the remote log server:
 
 ### Start the Log Server
 
-<Source
-  language="bash"
-  code={`
+```bash
 # Start with defaults (port 9080, auto-generated self-signed certs)
 npx graphty-log-server
 
@@ -235,25 +213,19 @@ npx graphty-log-server --cert /path/to/cert.crt --key /path/to/key.key
 
 # Also write to file
 npx graphty-log-server --log-file ./tmp/graphty.log
-  `}
-/>
+```
 
 ### Enable Remote Logging in Browser
 
 Add the remote log URL to your URL parameters:
 
-<Source
-  language="text"
-  code={`
+```text
 ?graphty-element-logging=true&graphty-element-remote-log=https://localhost:9080
-  `}
-/>
+```
 
 Or configure programmatically:
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 await GraphtyLogger.configure({
   enabled: true,
   level: LogLevel.DEBUG,
@@ -261,16 +233,13 @@ await GraphtyLogger.configure({
   format: { timestamp: true, module: true },
   remoteLogUrl: "https://localhost:9080",
 });
-  `}
-/>
+```
 
 ## Session Persistence
 
 Logging configuration can be persisted across page reloads:
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 import {
   saveLoggingConfig,
   loadLoggingConfig,
@@ -289,16 +258,13 @@ if (savedConfig) {
 
 // Clear saved config
 clearLoggingConfig();
-  `}
-/>
+```
 
 ## Best Practices
 
 ### Use Level Guards for Expensive Operations
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 const logger = GraphtyLogger.getLogger(["graphty", "mymodule"]);
 
 // Bad: computeExpensiveData() runs even if debug is disabled
@@ -308,14 +274,11 @@ logger.debug("Data:", computeExpensiveData());
 if (logger.isDebugEnabled()) {
   logger.debug("Data:", computeExpensiveData());
 }
-  `}
-/>
+```
 
 ### Include Structured Data
 
-<Source
-  language="typescript"
-  code={`
+```typescript
 // Good: Include relevant data as second argument
 logger.info("Layout completed", {
   nodeCount: 1000,
@@ -325,8 +288,7 @@ logger.info("Layout completed", {
 
 // Avoid: Concatenating data into message string
 logger.info("Layout completed with " + nodeCount + " nodes"); // harder to parse
-  `}
-/>
+```
 
 ### Use Appropriate Log Levels
 

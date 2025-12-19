@@ -5,20 +5,73 @@
  * in a flow network using the Ford-Fulkerson method.
  */
 
-import {fordFulkerson} from "@graphty/algorithms";
+import {fordFulkerson, Graph as AlgorithmGraph} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import {type OptionsSchema} from "./types/OptionSchema";
 
-interface MaxFlowOptions {
-    source: string;
-    sink: string;
+/**
+ * Zod-based options schema for Max Flow algorithm
+ */
+export const maxFlowOptionsSchema = defineOptions({
+    source: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Source Node",
+            description: "Source node for flow network (uses first node if not set)",
+        },
+    },
+    sink: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Sink Node",
+            description: "Sink node for flow network (uses last node if not set)",
+        },
+    },
+});
+
+/**
+ * Options for Max Flow algorithm
+ */
+export interface MaxFlowOptions extends Record<string, unknown> {
+    /** Source node for flow network (defaults to first node if not provided) */
+    source: string | number | null;
+    /** Sink node for flow network (defaults to last node if not provided) */
+    sink: string | number | null;
 }
 
-export class MaxFlowAlgorithm extends Algorithm {
+export class MaxFlowAlgorithm extends Algorithm<MaxFlowOptions> {
     static namespace = "graphty";
     static type = "max-flow";
-    private options: MaxFlowOptions | null = null;
+
+    static zodOptionsSchema: ZodOptionsSchema = maxFlowOptionsSchema;
+
+    /**
+     * Options schema for Max Flow algorithm
+     */
+    static optionsSchema: OptionsSchema = {
+        source: {
+            type: "nodeId",
+            default: null,
+            label: "Source Node",
+            description: "Source node for flow network (uses first node if not set)",
+            required: false,
+        },
+        sink: {
+            type: "nodeId",
+            default: null,
+            label: "Sink Node",
+            description: "Sink node for flow network (uses last node if not set)",
+            required: false,
+        },
+    };
+
+    /**
+     * Legacy options set via configure() for backward compatibility
+     */
+    private legacyOptions: {source: string, sink: string} | null = null;
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -78,8 +131,13 @@ export class MaxFlowAlgorithm extends Algorithm {
         category: "edge-metric",
     });
 
-    configure(options: MaxFlowOptions): this {
-        this.options = options;
+    /**
+     * Configure the algorithm with source and sink nodes
+     *
+     * @deprecated Use constructor options instead. This method is kept for backward compatibility.
+     */
+    configure(options: {source: string, sink: string}): this {
+        this.legacyOptions = options;
         return this;
     }
 
@@ -93,26 +151,24 @@ export class MaxFlowAlgorithm extends Algorithm {
             return;
         }
 
-        // Get source and sink from options or use first and last node
-        let source: string;
-        let sink: string;
+        // Get source and sink from legacy options, schema options, or use defaults
+        // Legacy configure() takes precedence for backward compatibility
+        const nodeIds = Array.from(g.getDataManager().nodes.keys());
+        const source = String(this.legacyOptions?.source ?? this._schemaOptions.source ?? nodeIds[0]);
+        const sink = String(this.legacyOptions?.sink ?? this._schemaOptions.sink ?? nodeIds[nodeIds.length - 1]);
 
-        if (this.options?.source && this.options.sink) {
-            ({source, sink} = this.options);
-        } else {
-            // Default to first and last nodes if not configured
-            const nodeIds = Array.from(g.getDataManager().nodes.keys());
-            source = String(nodeIds[0]);
-            sink = String(nodeIds[nodeIds.length - 1]);
-        }
-
-        // Build capacity graph from edges
-        // Ford-Fulkerson expects Map<string, Map<string, number>>
-        const capacityGraph = new Map<string, Map<string, number>>();
+        // Build capacity graph from edges using AlgorithmGraph
+        const capacityGraph = new AlgorithmGraph({directed: true});
 
         // Initialize nodes
         for (const node of nodes) {
-            capacityGraph.set(String(node.id), new Map());
+            capacityGraph.addNode(String(node.id));
+        }
+
+        // Track capacities for result calculation
+        const capacityMap = new Map<string, Map<string, number>>();
+        for (const node of nodes) {
+            capacityMap.set(String(node.id), new Map());
         }
 
         // Add edges with capacities
@@ -126,10 +182,8 @@ export class MaxFlowAlgorithm extends Algorithm {
             const rawCapacity = edgeData?.capacity ?? edgeData?.value ?? edgeObject.value ?? 1;
             const capacity: number = typeof rawCapacity === "number" ? rawCapacity : 1;
 
-            const srcNeighbors = capacityGraph.get(srcId);
-            if (srcNeighbors) {
-                srcNeighbors.set(dstId, capacity);
-            }
+            capacityGraph.addEdge(srcId, dstId, capacity);
+            capacityMap.get(srcId)?.set(dstId, capacity);
         }
 
         // Run Ford-Fulkerson algorithm
@@ -152,7 +206,7 @@ export class MaxFlowAlgorithm extends Algorithm {
             const flowPct = maxEdgeFlow > 0 ? Math.abs(flow) / maxEdgeFlow : 0;
 
             // Get capacity for this edge
-            const capacity = capacityGraph.get(srcId)?.get(dstId) ?? 1;
+            const capacity = capacityMap.get(srcId)?.get(dstId) ?? 1;
             const utilization = capacity > 0 ? Math.abs(flow) / capacity : 0;
 
             this.addEdgeResult(edge, "flow", flow);

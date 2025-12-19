@@ -5,6 +5,7 @@ import type {MeshCache} from "../meshes/MeshCache";
 import type {XRSessionManager} from "../xr/XRSessionManager";
 import type {DataManager} from "./DataManager";
 import type {LayoutManager} from "./LayoutManager";
+import type {SelectionManager} from "./SelectionManager";
 import type {StatsManager} from "./StatsManager";
 import type {StyleManager} from "./StyleManager";
 
@@ -80,6 +81,12 @@ export interface GraphContext {
      * Optional method for XR-specific functionality
      */
     getXRSessionManager?(): XRSessionManager | undefined;
+
+    /**
+     * Get SelectionManager for node selection operations
+     * Optional method for selection functionality
+     */
+    getSelectionManager?(): SelectionManager | undefined;
 }
 
 /**
@@ -149,7 +156,10 @@ export class DefaultGraphContext implements GraphContext {
     }
 
     is2D(): boolean {
-        return this.styleManager.getStyles().config.graph.twoD;
+        const config = this.styleManager.getStyles().config.graph;
+        // Support both new viewMode and deprecated twoD for backward compatibility
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        return config.viewMode === "2d" || config.twoD;
     }
 
     needsRayUpdate(): boolean {

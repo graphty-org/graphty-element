@@ -1,18 +1,74 @@
 import {breadthFirstSearch} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import type {Graph} from "../Graph";
 import {Algorithm} from "./Algorithm";
+import {type OptionsSchema} from "./types/OptionSchema";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
-interface BFSOptions {
-    source: number | string;
+/**
+ * Zod-based options schema for BFS algorithm
+ */
+export const bfsOptionsSchema = defineOptions({
+    source: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Source Node",
+            description: "Starting node for BFS traversal (uses first node if not set)",
+        },
+    },
+    targetNode: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Target Node",
+            description: "Target node for early termination (optional - searches all nodes if not set)",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for BFS algorithm
+ */
+export interface BFSOptions extends Record<string, unknown> {
+    /** Starting node for traversal (defaults to first node if not provided) */
+    source: number | string | null;
+    /** Target node for early termination (optional) */
+    targetNode: number | string | null;
 }
 
-export class BFSAlgorithm extends Algorithm {
+export class BFSAlgorithm extends Algorithm<BFSOptions> {
     static namespace = "graphty";
     static type = "bfs";
-    private options: BFSOptions | null = null;
+
+    static zodOptionsSchema: ZodOptionsSchema = bfsOptionsSchema;
+
+    /**
+     * Options schema for BFS algorithm
+     */
+    static optionsSchema: OptionsSchema = {
+        source: {
+            type: "nodeId",
+            default: null,
+            label: "Source Node",
+            description: "Starting node for BFS traversal (uses first node if not set)",
+            required: false,
+        },
+        targetNode: {
+            type: "nodeId",
+            default: null,
+            label: "Target Node",
+            description: "Target node for early termination (optional - searches all nodes if not set)",
+            required: false,
+            advanced: true,
+        },
+    };
+
+    /**
+     * Legacy options set via configure() for backward compatibility
+     */
+    private legacyOptions: {source: number | string} | null = null;
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -38,9 +94,11 @@ export class BFSAlgorithm extends Algorithm {
 
     /**
      * Configure the algorithm with source node
+     *
+     * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
-    configure(options: BFSOptions): this {
-        this.options = options;
+    configure(options: {source: number | string}): this {
+        this.legacyOptions = options;
         return this;
     }
 
@@ -55,8 +113,10 @@ export class BFSAlgorithm extends Algorithm {
             return;
         }
 
-        // Get source from options or use first node as default
-        const source = this.options?.source ?? nodes[0];
+        // Get source from legacy options, schema options, or use first node as default
+        // Legacy configure() takes precedence for backward compatibility
+        const source = this.legacyOptions?.source ?? this._schemaOptions.source ?? nodes[0];
+        const targetNode = this._schemaOptions.targetNode ?? undefined;
 
         // Convert to @graphty/algorithms format
         // Using directed=false so the converter adds reverse edges for undirected traversal
@@ -73,15 +133,21 @@ export class BFSAlgorithm extends Algorithm {
         const visitOrders = new Map<string | number, number>();
         let visitOrder = 0;
         let maxLevel = 0;
+        let foundTarget = false;
 
         // Use visitCallback to track levels
         breadthFirstSearch(graphData, source, {
+            targetNode,
             visitCallback: (node, level) => {
                 levels.set(node, level);
                 visitOrders.set(node, visitOrder);
                 visitOrder++;
                 if (level > maxLevel) {
                     maxLevel = level;
+                }
+
+                if (targetNode !== undefined && node === targetNode) {
+                    foundTarget = true;
                 }
             },
         });
@@ -106,6 +172,9 @@ export class BFSAlgorithm extends Algorithm {
         // Store graph-level results
         this.addGraphResult("maxLevel", maxLevel);
         this.addGraphResult("visitedCount", levels.size);
+        if (targetNode !== undefined) {
+            this.addGraphResult("targetFound", foundTarget);
+        }
     }
 }
 

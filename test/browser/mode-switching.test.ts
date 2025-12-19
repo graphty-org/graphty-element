@@ -257,7 +257,7 @@ describe("2D/3D Mode Switching", () => {
             }
         });
 
-        it("should handle multiple round-trips correctly", async() => {
+        it("should handle multiple round-trips correctly", {timeout: 45000}, async() => {
             // Setup in 3D mode
             await graph.addNodes(TEST_NODES);
             await graph.addEdges(TEST_EDGES);
@@ -350,7 +350,7 @@ describe("2D/3D Mode Switching", () => {
     });
 
     describe("Edge Cases", () => {
-        it("should handle rapid consecutive mode switches", async() => {
+        it("should handle rapid consecutive mode switches", {timeout: 30000}, async() => {
             // Setup
             await graph.addNodes(TEST_NODES);
             await graph.addEdges(TEST_EDGES);

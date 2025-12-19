@@ -1,6 +1,20 @@
 import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import {SimpleLayoutConfig, SimpleLayoutEngine} from "./LayoutEngine";
+
+/**
+ * Zod-based options schema for Fixed Layout
+ */
+export const fixedLayoutOptionsSchema = defineOptions({
+    dim: {
+        schema: z.number().int().min(2).max(3).default(3),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D or 3D)",
+        },
+    },
+});
 
 export const FixedLayoutConfig = z.strictObject({
     ... SimpleLayoutConfig.shape,
@@ -15,6 +29,7 @@ export type FixedLayoutOpts = Partial<FixedLayoutConfigType>;
 export class FixedLayout extends SimpleLayoutEngine {
     static type = "fixed";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = fixedLayoutOptionsSchema;
     config: FixedLayoutConfigType;
     scalingFactor = 1;
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- XR debugging requires console logging for development */
 import type {Camera, Scene, WebXRDefaultExperience} from "@babylonjs/core";
 
 export type XRReferenceSpaceType =
@@ -124,33 +125,18 @@ export class XRSessionManager {
 
             console.log("🎮 [XRSessionManager] XR experience created, enabling hand tracking with hand meshes...");
 
-            // Enable hand tracking with FULL HAND MESHES (the purple rigged hands)
-            // Per Babylon.js docs:
-            // - jointMeshes: controls the joint sphere meshes (dots)
-            // - handMeshes: controls the rigged hand model
-            // Default hand models load from: https://assets.babylonjs.com/core/HandMeshes/
+            // Enable hand tracking with default rigged hand meshes (purple hands)
+            // Using simple config that matches the working demo
             try {
                 const handTracking = this.xrHelper.baseExperience.featuresManager.enableFeature(
                     WebXRFeatureName.HAND_TRACKING,
                     "latest",
                     {
                         xrInput: this.xrHelper.input,
-                        // Hide joint meshes (the dots) - we want the rigged hand model instead
-                        jointMeshes: {
-                            invisible: true,
-                        },
-                        // Enable the default rigged hand meshes (purple hands)
-                        // Note: Property is "disableDefaultMeshes" not "disableDefaultHandMesh"
-                        handMeshes: {
-                            disableDefaultMeshes: false, // false = enable the default purple hands
-                        },
+                        jointMeshes: {enablePhysics: false},
                     },
                 );
-                console.log("🤲 [XRSessionManager] Hand tracking enabled with config:", {
-                    feature: handTracking,
-                    jointMeshesInvisible: true,
-                    handMeshesEnabled: true,
-                });
+                console.log("🤲 [XRSessionManager] Hand tracking enabled:", handTracking);
             } catch (handError) {
                 console.error("🤲 [XRSessionManager] Failed to enable hand tracking:", handError);
             }

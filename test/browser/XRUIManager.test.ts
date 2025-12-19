@@ -273,7 +273,7 @@ describe("XRUIManager", () => {
         assert.exists(styleElement);
 
         // Verify it contains CSS custom properties
-        const css = styleElement.textContent ?? "";
+        const css = styleElement.textContent;
         assert.include(css, "--xr-button-font-family");
         assert.include(css, "--xr-button-color");
         assert.include(css, "--xr-available-bg");

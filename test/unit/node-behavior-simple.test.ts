@@ -59,7 +59,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
-                getConfig: vi.fn().mockReturnValue({xr: {input: {zAxisAmplification: 10, enableZAmplificationInDesktop: false}}}),
+                getConfig: vi.fn().mockReturnValue({xr: undefined}),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -97,7 +97,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
-                getConfig: vi.fn().mockReturnValue({xr: {input: {zAxisAmplification: 10, enableZAmplificationInDesktop: false}}}),
+                getConfig: vi.fn().mockReturnValue({xr: undefined}),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -145,7 +145,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
-                getConfig: vi.fn().mockReturnValue({xr: {input: {zAxisAmplification: 10, enableZAmplificationInDesktop: false}}}),
+                getConfig: vi.fn().mockReturnValue({xr: undefined}),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),
@@ -193,7 +193,7 @@ describe("NodeBehavior Unit Tests", () => {
                 getStyles: vi.fn(),
                 getScene: () => mockScene,
                 setRunning: vi.fn(),
-                getConfig: vi.fn().mockReturnValue({xr: {input: {zAxisAmplification: 10, enableZAmplificationInDesktop: false}}}),
+                getConfig: vi.fn().mockReturnValue({xr: undefined}),
                 getLayoutManager: () => ({
                     layoutEngine: {setNodePosition: vi.fn()},
                 }),

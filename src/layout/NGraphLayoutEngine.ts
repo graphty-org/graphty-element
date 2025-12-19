@@ -1,14 +1,88 @@
 import ngraphCreateLayout, {Layout as NGraphLayout} from "ngraph.forcelayout";
 import createGraph, {Graph as NGraph, Link as NGraphLink, Node as NGraphNode} from "ngraph.graph";
 import random from "ngraph.random";
+import {z} from "zod/v4";
 
+import {defineOptions, type OptionsSchema} from "../config";
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 import {EdgePosition, LayoutEngine, Position} from "./LayoutEngine";
 
+/**
+ * Zod-based options schema for NGraph Force Layout
+ */
+export const ngraphLayoutOptionsSchema = defineOptions({
+    dim: {
+        schema: z.number().int().min(2).max(3).default(3),
+        meta: {
+            label: "Dimensions",
+            description: "Layout dimensionality (2D or 3D)",
+        },
+    },
+    springLength: {
+        schema: z.number().positive().default(30),
+        meta: {
+            label: "Spring Length",
+            description: "Ideal spring length between connected nodes",
+        },
+    },
+    springCoefficient: {
+        schema: z.number().positive().default(0.0008),
+        meta: {
+            label: "Spring Coefficient",
+            description: "Spring stiffness coefficient",
+            step: 0.0001,
+            advanced: true,
+        },
+    },
+    gravity: {
+        schema: z.number().default(-1.2),
+        meta: {
+            label: "Gravity",
+            description: "Gravity strength (negative for repulsion)",
+            step: 0.1,
+        },
+    },
+    theta: {
+        schema: z.number().positive().default(0.8),
+        meta: {
+            label: "Theta",
+            description: "Barnes-Hut approximation parameter",
+            step: 0.1,
+            advanced: true,
+        },
+    },
+    dragCoefficient: {
+        schema: z.number().positive().default(0.02),
+        meta: {
+            label: "Drag Coefficient",
+            description: "Velocity damping coefficient",
+            step: 0.01,
+            advanced: true,
+        },
+    },
+    timeStep: {
+        schema: z.number().positive().default(20),
+        meta: {
+            label: "Time Step",
+            description: "Simulation time step size",
+            advanced: true,
+        },
+    },
+    seed: {
+        schema: z.number().int().positive().nullable().default(null),
+        meta: {
+            label: "Random Seed",
+            description: "Seed for reproducible layout",
+            advanced: true,
+        },
+    },
+});
+
 export class NGraphEngine extends LayoutEngine {
     static type = "ngraph";
     static maxDimensions = 3;
+    static zodOptionsSchema: OptionsSchema = ngraphLayoutOptionsSchema;
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
 

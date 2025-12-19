@@ -1,3 +1,5 @@
+import type {AiStatus} from "./ai/AiStatus";
+import type {CommandResult} from "./ai/commands/types";
 import type {NodeIdType} from "./config";
 import type {Edge} from "./Edge";
 import type {Graph} from "./Graph";
@@ -6,15 +8,17 @@ import type {Node} from "./Node";
 export type EventType =
     GraphEventType |
     NodeEventType |
-    EdgeEventType;
-export type EventCallbackType = (evt: GraphEvent | NodeEvent | EdgeEvent) => void;
+    EdgeEventType |
+    AiEventType;
+export type EventCallbackType = (evt: GraphEvent | NodeEvent | EdgeEvent | AiEvent) => void;
 
 export type GraphEventType = GraphEvent["type"];
 export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
+export type AiEventType = AiEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent | SelectionChangedEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -69,7 +73,8 @@ export interface GraphGenericEvent {
         | "operation-queue-active" | "operation-queue-idle" | "operation-batch-complete"
         | "operation-start" | "operation-complete" | "operation-progress" | "operation-obsoleted"
         | "animation-progress" | "animation-cancelled"
-        | "screenshot-enhancing" | "screenshot-ready";
+        | "screenshot-enhancing" | "screenshot-ready"
+        | "style-changed";
     [key: string]: unknown;
 }
 
@@ -117,6 +122,15 @@ export interface DataLoadingCompleteEvent {
     success: boolean;
 }
 
+// Selection events
+export interface SelectionChangedEvent {
+    type: "selection-changed";
+    previousNode: Node | null;
+    currentNode: Node | null;
+    previousNodeId: string | number | null;
+    currentNodeId: string | number | null;
+}
+
 // node events
 export type NodeEvent = NodeGenericEvent | NodeAddEvent;
 
@@ -144,4 +158,93 @@ export interface EdgeAddEvent {
     srcNodeId: NodeIdType;
     dstNodeId: NodeIdType;
     metadata: object;
+}
+
+// AI events (Phase 7)
+export type AiEvent =
+    | AiStatusChangeEvent
+    | AiCommandStartEvent
+    | AiCommandCompleteEvent
+    | AiCommandErrorEvent
+    | AiCommandCancelledEvent
+    | AiStreamChunkEvent
+    | AiStreamToolCallEvent
+    | AiStreamToolResultEvent
+    | AiVoiceStartEvent
+    | AiVoiceTranscriptEvent
+    | AiVoiceEndEvent;
+
+/** Main event for UI binding - single source of truth for AI status */
+export interface AiStatusChangeEvent {
+    type: "ai-status-change";
+    status: AiStatus;
+}
+
+/** Emitted when an AI command starts processing */
+export interface AiCommandStartEvent {
+    type: "ai-command-start";
+    input: string;
+    timestamp: number;
+}
+
+/** Emitted when an AI command completes successfully */
+export interface AiCommandCompleteEvent {
+    type: "ai-command-complete";
+    result: CommandResult;
+    duration: number;
+}
+
+/** Emitted when an AI command encounters an error */
+export interface AiCommandErrorEvent {
+    type: "ai-command-error";
+    error: Error;
+    input: string;
+    canRetry: boolean;
+}
+
+/** Emitted when an AI command is cancelled */
+export interface AiCommandCancelledEvent {
+    type: "ai-command-cancelled";
+    input: string;
+    reason: "user" | "timeout";
+}
+
+/** Emitted during streaming when text chunks arrive (throttled) */
+export interface AiStreamChunkEvent {
+    type: "ai-stream-chunk";
+    text: string;
+    accumulated: string;
+}
+
+/** Emitted when the LLM makes a tool call */
+export interface AiStreamToolCallEvent {
+    type: "ai-stream-tool-call";
+    name: string;
+    params: unknown;
+}
+
+/** Emitted when a tool call completes */
+export interface AiStreamToolResultEvent {
+    type: "ai-stream-tool-result";
+    name: string;
+    result: unknown;
+    success: boolean;
+}
+
+/** Emitted when voice input starts */
+export interface AiVoiceStartEvent {
+    type: "ai-voice-start";
+}
+
+/** Emitted when voice transcript is available */
+export interface AiVoiceTranscriptEvent {
+    type: "ai-voice-transcript";
+    transcript: string;
+    isFinal: boolean;
+}
+
+/** Emitted when voice input ends */
+export interface AiVoiceEndEvent {
+    type: "ai-voice-end";
+    reason: "user" | "timeout" | "error";
 }
