@@ -65,6 +65,7 @@ describe("Graph Batch Integration - Deferred Promises", () => {
                         startingCameraDistance: 100,
                         layout: "ngraph",
                         twoD: false,
+                        viewMode: "3d",
                     },
                     data: {
                         knownFields: {

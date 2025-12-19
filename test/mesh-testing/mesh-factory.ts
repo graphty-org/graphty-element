@@ -488,7 +488,7 @@ export const EdgeMeshFactory = {
         }
 
         // Validate opacity
-        const expectedOpacity = Number(style.opacity ?? 1);
+        const expectedOpacity = typeof style.opacity === "number" ? style.opacity : 1;
         if (mesh.metadata.lineOpacity !== expectedOpacity) {
             errors.push(`Opacity mismatch: expected ${expectedOpacity}, got ${mesh.metadata.lineOpacity}`);
         }
@@ -611,11 +611,11 @@ export const ArrowMeshFactory = {
     create(style: ArrowMockStyle): ArrowTestResult {
         const type = typeof style.type === "string" ? style.type : "normal";
         const is2D = Boolean(style.is2D);
-        const size = Number(style.size ?? 1);
-        const width = Number(style.width ?? 0.5);
-        const length = Number(style.length ?? 0.3);
+        const size = style.size ?? 1;
+        const width = style.width ?? 0.5;
+        const length = style.length ?? 0.3;
         const color = typeof style.color === "string" ? style.color : "#FFFFFF";
-        const opacity = Number(style.opacity ?? 1);
+        const opacity = style.opacity ?? 1;
 
         // Validate arrow type
         if (!ArrowMeshFactory.ARROW_TYPES.includes(type)) {
@@ -818,7 +818,7 @@ export const ArrowMeshFactory = {
         }
 
         // Validate opacity
-        const expectedOpacity = Number(style.opacity ?? 1);
+        const expectedOpacity = style.opacity ?? 1;
         if (Math.abs(mesh.visibility - expectedOpacity) > 0.001) {
             errors.push(`Opacity mismatch: expected ${expectedOpacity}, got ${mesh.visibility}`);
         }

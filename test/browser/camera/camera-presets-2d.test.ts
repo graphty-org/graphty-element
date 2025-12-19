@@ -28,6 +28,7 @@ describe("Camera Presets - 2D", () => {
             majorVersion: "1",
             graph: {
                 twoD: true,
+                viewMode: "2d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
                 startingCameraDistance: 30,

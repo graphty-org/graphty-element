@@ -159,7 +159,7 @@ class ChromaticGenerator {
 
         if (control === "select" && options) {
             return options.map((opt) => ({
-                name: String(opt).replace(/[^a-zA-Z0-9_]/g, "_"),
+                name: opt.replace(/[^a-zA-Z0-9_]/g, "_"),
                 value: opt,
             }));
         }

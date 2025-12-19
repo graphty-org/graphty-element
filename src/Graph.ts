@@ -12,6 +12,7 @@ import {
     EasingFunction,
     Engine,
     PhotoDome,
+    Quaternion,
     Scene,
     Vector3,
     WebGPUEngine,
@@ -551,12 +552,15 @@ export class Graph implements GraphContext {
             currentTwoD = currentViewMode === "2d";
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
             this.styles.config.graph.twoD = currentTwoD;
-        } else if (twoDExplicitlySet && currentTwoD !== previousTwoD) {
+        } else if (twoDExplicitlySet) {
             // Only twoD was explicitly set (deprecated usage) - sync viewMode to match
-            console.warn(
-                "[Graph] graph.twoD is deprecated. Use graph.viewMode instead. " +
-                "twoD: true → viewMode: \"2d\", twoD: false → viewMode: \"3d\"",
-            );
+            // Always sync when twoD is explicitly set, not just when changed
+            if (currentTwoD !== previousTwoD) {
+                console.warn(
+                    "[Graph] graph.twoD is deprecated. Use graph.viewMode instead. " +
+                    "twoD: true → viewMode: \"2d\", twoD: false → viewMode: \"3d\"",
+                );
+            }
 
             currentViewMode = currentTwoD ? "2d" : "3d";
             this.styles.config.graph.viewMode = currentViewMode;
@@ -1961,7 +1965,12 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - get world position and pivot position
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {
+                    position: Vector3,
+                    rotation: Vector3,
+                    rotationQuaternion: Quaternion | null,
+                    computeWorldMatrix: (force: boolean) => void,
+                };
                 cameraDistance: number;
                 camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
             };
@@ -1988,11 +1997,21 @@ export class Graph implements GraphContext {
             };
 
             // Store pivot rotation and distance for restoration
-            state.pivotRotation = {
-                x: orbitController.pivot.rotation.x,
-                y: orbitController.pivot.rotation.y,
-                z: orbitController.pivot.rotation.z,
-            };
+            // PivotController uses rotationQuaternion, so convert to Euler for storage
+            if (orbitController.pivot.rotationQuaternion) {
+                const euler = orbitController.pivot.rotationQuaternion.toEulerAngles();
+                state.pivotRotation = {
+                    x: euler.x,
+                    y: euler.y,
+                    z: euler.z,
+                };
+            } else {
+                state.pivotRotation = {
+                    x: orbitController.pivot.rotation.x,
+                    y: orbitController.pivot.rotation.y,
+                    z: orbitController.pivot.rotation.z,
+                };
+            }
             state.cameraDistance = orbitController.cameraDistance;
         } else if (controller && "velocity" in controller) {
             // TwoDCameraController - get zoom and pan
@@ -2123,7 +2142,12 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - work with pivot system
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {
+                    position: Vector3,
+                    rotation: Vector3,
+                    rotationQuaternion: Quaternion | null,
+                    computeWorldMatrix: (force: boolean) => void,
+                };
                 cameraDistance: number;
                 updateCameraPosition: () => void;
             };
@@ -2138,12 +2162,16 @@ export class Graph implements GraphContext {
             }
 
             // Set pivot rotation if provided (for exact state restoration)
+            // Must use rotationQuaternion because PivotController initializes with quaternion
+            // In Babylon.js, when rotationQuaternion is set (not null), it takes precedence over Euler rotation
             if (state.pivotRotation) {
-                orbitController.pivot.rotation.set(
-                    state.pivotRotation.x,
-                    state.pivotRotation.y,
-                    state.pivotRotation.z,
+                // Convert Euler angles to quaternion
+                const quat = Quaternion.RotationYawPitchRoll(
+                    state.pivotRotation.y, // yaw
+                    state.pivotRotation.x, // pitch
+                    state.pivotRotation.z, // roll
                 );
+                orbitController.pivot.rotationQuaternion = quat;
             } else if (state.position && state.target) {
                 // Calculate pivot rotation from position and target
                 // Camera should look from position towards target
@@ -2159,7 +2187,9 @@ export class Graph implements GraphContext {
                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                 const pitch = Math.asin(direction.y / distance);
 
-                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                // Convert Euler angles to quaternion
+                const quat = Quaternion.RotationYawPitchRoll(yaw, pitch, 0);
+                orbitController.pivot.rotationQuaternion = quat;
             }
 
             // Set camera distance if provided

@@ -160,7 +160,7 @@ export class GraphMLDataSource extends DataSource {
                         const keyId = data["@_key"];
                         const keyDef = keys.get(keyId);
 
-                        if (keyDef && keyDef.for === "node") {
+                        if (keyDef?.for === "node") {
                             // Check if this is yFiles node graphics data
                             if (keyDef.yfilesType === "nodegraphics" && data["y:ShapeNode"]) {
                                 const yFilesProps = this.parseYFilesShapeNode(data["y:ShapeNode"] as YFilesShapeNode);
@@ -222,7 +222,7 @@ export class GraphMLDataSource extends DataSource {
                         const keyId = data["@_key"];
                         const keyDef = keys.get(keyId);
 
-                        if (keyDef && keyDef.for === "edge") {
+                        if (keyDef?.for === "edge") {
                             // Check if this is yFiles edge graphics data
                             if (keyDef.yfilesType === "edgegraphics" && data["y:PolyLineEdge"]) {
                                 const yFilesProps = this.parseYFilesPolyLineEdge(data["y:PolyLineEdge"] as YFilesPolyLineEdge);

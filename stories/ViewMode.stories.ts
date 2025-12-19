@@ -1,7 +1,6 @@
 import "../index.ts";
 
-import type {DecoratorFunction} from "@storybook/csf";
-import type {Meta, StoryObj, WebComponentsRenderer} from "@storybook/web-components-vite";
+import type {Decorator, Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {StyleTemplate, VIEW_MODE_VALUES, type ViewMode} from "../src/config";
 import {Graphty} from "../src/graphty-element";
@@ -14,7 +13,7 @@ let arSupported: boolean | null = null;
 /**
  * Decorator that alerts when AR/VR mode is selected but WebXR isn't available
  */
-const xrAvailabilityDecorator: DecoratorFunction<WebComponentsRenderer> = (story, context) => {
+const xrAvailabilityDecorator: Decorator = (story, context) => {
     const viewMode = context.args.viewMode as ViewMode;
 
     // Check XR availability after a short delay to ensure component is ready

@@ -33,6 +33,7 @@ describe("Video Capture - 2D Orthographic Camera", () => {
             majorVersion: "1",
             graph: {
                 twoD: true,
+                viewMode: "2d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
                 startingCameraDistance: 30,
@@ -140,6 +141,7 @@ describe("Video Capture - 2D Animated Camera", () => {
             majorVersion: "1",
             graph: {
                 twoD: true,
+                viewMode: "2d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
                 startingCameraDistance: 30,
@@ -316,6 +318,7 @@ describe("Video Capture - 2D Camera Preservation", () => {
             majorVersion: "1",
             graph: {
                 twoD: true,
+                viewMode: "2d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
                 startingCameraDistance: 30,

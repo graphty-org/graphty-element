@@ -363,7 +363,7 @@ export class CSVDataSource extends DataSource {
 
             if (hasIdColumn || hasStartEnd) {
                 // This is a header row
-                currentHeaders = row.map((h) => String(h).trim());
+                currentHeaders = row.map((h) => h.trim());
                 isNodeSection = hasIdColumn && !hasStartEnd;
                 isEdgeSection = hasStartEnd;
                 continue;
@@ -558,12 +558,12 @@ export class CSVDataSource extends DataSource {
                 continue;
             }
 
-            const sourceNode = String(row[0]);
+            const sourceNode = row[0];
             nodeIds.add(sourceNode);
 
             // Process neighbors
             for (let j = 1; j < row.length; j++) {
-                const neighbor = String(row[j]);
+                const neighbor = row[j];
                 if (!neighbor) {
                     continue;
                 }

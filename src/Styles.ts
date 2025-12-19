@@ -156,7 +156,7 @@ export class Styles {
             const {edge} = layer;
 
             // Check if edge selector matches
-            let edgeMatch = edge?.selector !== undefined && edge.selector.length === 0;
+            let edgeMatch = edge?.selector === "";
             if (!edgeMatch && edge?.selector) {
                 // try JMES match
                 const searchResult = jmespath.search(data, `[${edge.selector}]`);
@@ -184,7 +184,7 @@ export class Styles {
         const styles: EdgeStyleConfig[] = [];
         for (const layer of this.layers) {
             const {edge} = layer;
-            let edgeMatch = edge?.selector !== undefined && edge.selector.length === 0;
+            let edgeMatch = edge?.selector === "";
             if (!edgeMatch) {
                 // try JMES match
                 const searchResult = jmespath.search(combinedData, `[${edge?.selector}]`);

@@ -77,7 +77,7 @@ describe("XRInputHandler", () => {
     }
 
     interface MockInputSource {
-        inputSource: {handedness: "left" | "right"};
+        inputSource: {handedness: "left" | "right", profiles: string[]};
         motionController: MockMotionController | null;
         uniqueId?: string;
     }
@@ -223,7 +223,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockLeftController: MockInputSource = {
-                inputSource: {handedness: "left"},
+                inputSource: {handedness: "left", profiles: []},
                 motionController: createMockMotionController(),
                 uniqueId: "left-1",
             };
@@ -243,7 +243,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockRightController: MockInputSource = {
-                inputSource: {handedness: "right"},
+                inputSource: {handedness: "right", profiles: []},
                 motionController: createMockMotionController(),
                 uniqueId: "right-1",
             };
@@ -262,7 +262,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockLeftController: MockInputSource = {
-                inputSource: {handedness: "left"},
+                inputSource: {handedness: "left", profiles: []},
                 motionController: createMockMotionController(),
                 uniqueId: "left-2",
             };
@@ -286,7 +286,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockLeftController: MockInputSource = {
-                inputSource: {handedness: "left"},
+                inputSource: {handedness: "left", profiles: []},
                 motionController: createMockMotionController({x: 0.8, y: 0}),
                 uniqueId: "left-controller-1",
             };
@@ -298,6 +298,10 @@ describe("XRInputHandler", () => {
             // Verify that the axis callback was registered
             const {motionController} = mockLeftController;
             assert.isDefined(motionController);
+            if (!motionController) {
+                return;
+            }
+
             const {onAxisValueChangedObservable} = motionController.getComponent();
             assert.isAbove(onAxisValueChangedObservable.add.mock.calls.length, 0);
         });
@@ -306,7 +310,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockRightController: MockInputSource = {
-                inputSource: {handedness: "right"},
+                inputSource: {handedness: "right", profiles: []},
                 motionController: createMockMotionController({x: 0.5, y: 0.5}),
                 uniqueId: "right-controller-1",
             };
@@ -323,7 +327,7 @@ describe("XRInputHandler", () => {
             handler.enable();
 
             const mockLeftController: MockInputSource = {
-                inputSource: {handedness: "left"},
+                inputSource: {handedness: "left", profiles: []},
                 motionController: createMockMotionController({x: 0, y: 0}),
                 uniqueId: "left-controller-3",
             };

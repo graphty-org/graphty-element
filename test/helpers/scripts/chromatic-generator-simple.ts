@@ -237,7 +237,7 @@ class SimpleChromaticGenerator {
             const opts = options ?? (typeof control === "object" ? control.options : undefined);
             if (opts) {
                 return opts.map((opt: string) => ({
-                    name: String(opt).replace(/[^a-zA-Z0-9_]/g, "_"),
+                    name: opt.replace(/[^a-zA-Z0-9_]/g, "_"),
                     value: opt,
                 }));
             }
