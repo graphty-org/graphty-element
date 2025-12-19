@@ -133,31 +133,40 @@ export function styleTemplate(opts: {
 }
 
 /**
- * Creates a test graph instance with NullEngine
- * This provides a real Graph instance without needing to render
+ * Creates a test graph instance.
+ * By default uses NullEngine for unit tests.
+ * Pass useRealEngine: true for interaction tests that need WebGL picking.
  */
-export async function createTestGraph(): Promise<Graph> {
+export async function createTestGraph(options: {useRealEngine?: boolean} = {}): Promise<Graph> {
     // Create a container element
     const container = document.createElement("div");
     container.id = "test-graph-container";
+    container.style.width = "414px";
+    container.style.height = "207px";
     document.body.appendChild(container);
 
     // Create graph instance
     const graph = new Graph(container);
 
-    // Override engine creation to use NullEngine
-    const graphWithEngine = graph as Graph & {createEngine: () => unknown, engine: unknown};
-    const originalCreateEngine = graphWithEngine.createEngine;
-    graphWithEngine.createEngine = function() {
-        this.engine = new NullEngine();
-        return this.engine;
-    };
+    // For unit tests, use NullEngine to avoid WebGL requirements
+    // For interaction tests, use real engine for proper picking
+    if (!options.useRealEngine) {
+        const graphWithEngine = graph as Graph & {createEngine: () => unknown, engine: unknown};
+        const originalCreateEngine = graphWithEngine.createEngine;
+        graphWithEngine.createEngine = function() {
+            this.engine = new NullEngine();
+            return this.engine;
+        };
 
-    // Initialize
-    await graph.init();
+        // Initialize
+        await graph.init();
 
-    // Restore original method
-    graphWithEngine.createEngine = originalCreateEngine;
+        // Restore original method
+        graphWithEngine.createEngine = originalCreateEngine;
+    } else {
+        // Use real WebGL engine
+        await graph.init();
+    }
 
     return graph;
 }

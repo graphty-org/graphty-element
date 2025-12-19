@@ -12,6 +12,8 @@ import {
     EasingFunction,
     Engine,
     PhotoDome,
+    PointerEventTypes,
+    Quaternion,
     Scene,
     Vector3,
     WebGPUEngine,
@@ -45,7 +47,7 @@ import {
     EventCallbackType,
     EventType,
 } from "./events";
-import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
+import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, SelectionManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
 import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
 import {Node, type NodeIdType} from "./Node";
@@ -100,6 +102,7 @@ export class Graph implements GraphContext {
     private updateManager: UpdateManager;
     private algorithmManager: AlgorithmManager;
     private inputManager: InputManager;
+    private selectionManager: SelectionManager;
     operationQueue: OperationQueueManager;
 
     // XR managers
@@ -205,6 +208,14 @@ export class Graph implements GraphContext {
         // Initialize AlgorithmManager
         this.algorithmManager = new AlgorithmManager(this.eventManager, this);
 
+        // Initialize SelectionManager
+        this.selectionManager = new SelectionManager(this.eventManager);
+        this.selectionManager.setDataManager(this.dataManager);
+        this.selectionManager.setStyleManager(this.styleManager);
+
+        // Set up background click handler for deselection
+        this.setupBackgroundClickHandler();
+
         // Initialize InputManager
         const inputConfig: InputManagerConfig = {
             useMockInput: useMockInput,
@@ -256,11 +267,12 @@ export class Graph implements GraphContext {
             ["update", this.updateManager],
             ["algorithm", this.algorithmManager],
             ["input", this.inputManager],
+            ["selection", this.selectionManager],
         ]);
         this.lifecycleManager = new LifecycleManager(
             managers,
             this.eventManager,
-            ["event", "queue", "style", "stats", "render", "data", "layout", "update", "algorithm", "input"],
+            ["event", "queue", "style", "stats", "render", "data", "layout", "update", "algorithm", "input", "selection"],
         );
 
         // Queue default layout early so user-specified layouts can obsolete it
@@ -393,6 +405,9 @@ export class Graph implements GraphContext {
 
             // Initialize all managers through lifecycle manager
             await this.lifecycleManager.init();
+
+            // Add the selection style layer (after managers are initialized)
+            this.styleManager.addLayer(this.selectionManager.getSelectionStyleLayer());
 
             // Apply default background color if no styleTemplate was explicitly set
             // This ensures stories without styleTemplate get the correct background
@@ -531,55 +546,64 @@ export class Graph implements GraphContext {
         const previousTwoD = this.styles.config.graph.twoD;
         const previousViewMode = this.styles.config.graph.viewMode;
 
-        // Use StyleManager to load the new styles
-        this.styleManager.loadStylesFromObject(t);
-        this.styles = this.styleManager.getStyles();
-
-        // Handle viewMode and twoD synchronization
-        // Priority: viewMode > twoD (viewMode is the canonical setting)
-        let currentViewMode = this.styles.config.graph.viewMode;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
-        let currentTwoD = this.styles.config.graph.twoD;
-
-        // Check if viewMode was explicitly set in the template (takes priority over twoD)
+        // CRITICAL: Determine the target 2D mode FIRST from the template, BEFORE loading styles
+        // This allows us to set up camera and metadata before any mesh operations triggered by style loading
         const templateGraph = t.graph as Record<string, unknown> | undefined;
         const viewModeExplicitlySet = templateGraph !== undefined && "viewMode" in templateGraph;
         const twoDExplicitlySet = templateGraph !== undefined && "twoD" in templateGraph;
 
-        if (viewModeExplicitlySet) {
-            // viewMode was explicitly set - sync twoD to match
-            currentTwoD = currentViewMode === "2d";
-            // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
-            this.styles.config.graph.twoD = currentTwoD;
-        } else if (twoDExplicitlySet && currentTwoD !== previousTwoD) {
-            // Only twoD was explicitly set (deprecated usage) - sync viewMode to match
-            console.warn(
-                "[Graph] graph.twoD is deprecated. Use graph.viewMode instead. " +
-                "twoD: true → viewMode: \"2d\", twoD: false → viewMode: \"3d\"",
-            );
+        // Calculate target twoD and viewMode from template (before styles are loaded)
+        let targetTwoD: boolean;
+        let targetViewMode: ViewMode;
 
-            currentViewMode = currentTwoD ? "2d" : "3d";
-            this.styles.config.graph.viewMode = currentViewMode;
-        } else if (currentViewMode !== previousViewMode) {
-            // viewMode changed through some other mechanism - sync twoD
-            currentTwoD = currentViewMode === "2d";
-            // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
-            this.styles.config.graph.twoD = currentTwoD;
-        } else if (currentTwoD !== previousTwoD) {
-            // twoD changed through some other mechanism - sync viewMode
-            currentViewMode = currentTwoD ? "2d" : "3d";
-            this.styles.config.graph.viewMode = currentViewMode;
+        if (viewModeExplicitlySet) {
+            targetViewMode = (templateGraph?.viewMode as ViewMode) ?? "3d";
+            targetTwoD = targetViewMode === "2d";
+        } else if (twoDExplicitlySet) {
+            targetTwoD = templateGraph?.twoD as boolean ?? false;
+            targetViewMode = targetTwoD ? "2d" : "3d";
+            if (targetTwoD !== previousTwoD) {
+                console.warn(
+                    "[Graph] graph.twoD is deprecated. Use graph.viewMode instead. " +
+                    "twoD: true → viewMode: \"2d\", twoD: false → viewMode: \"3d\"",
+                );
+            }
+        } else {
+            // No explicit mode in template, use schema defaults (3D mode)
+            // This ensures templates are idempotent - applying the same template
+            // always produces the same result regardless of previous state
+            targetTwoD = false;
+            targetViewMode = "3d";
         }
 
+        // CRITICAL: Set up metadata and camera FIRST, before loading styles
+        // This ensures any mesh operations triggered by style loading see correct state
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.viewMode = targetViewMode;
+        this.scene.metadata.twoD = targetTwoD;
+
+        // Activate appropriate camera (must happen before style loading)
+        const cameraType = targetTwoD ? "2d" : "orbit";
+        this.camera.activateCamera(cameraType);
+
+        // Now load the styles (this may trigger "style-changed" event and mesh operations)
+        this.styleManager.loadStylesFromObject(t);
+        this.styles = this.styleManager.getStyles();
+
+        // Synchronize styles config with our calculated values
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+        this.styles.config.graph.twoD = targetTwoD;
+        this.styles.config.graph.viewMode = targetViewMode;
+
+        // Use these as current values for subsequent logic
+        const currentTwoD = targetTwoD;
+        const currentViewMode = targetViewMode;
+
         // Clear mesh cache if switching between 2D and 3D modes
+        // This must happen AFTER metadata and camera are set up
         const modeSwitching = previousTwoD !== currentTwoD;
         if (modeSwitching) {
             this.dataManager.meshCache.clear();
-
-            // Update scene metadata for 2D mode detection
-            this.scene.metadata = this.scene.metadata ?? {};
-            this.scene.metadata.twoD = currentTwoD;
-            this.scene.metadata.viewMode = currentViewMode;
 
             // Save Z positions BEFORE any updates that might change them
             // (updateStyles calls node.update() which applies layout positions)
@@ -590,15 +614,6 @@ export class Graph implements GraphContext {
                 }
             }
         }
-
-        // Update scene metadata for viewMode even if not switching 2D/3D
-        this.scene.metadata = this.scene.metadata ?? {};
-        this.scene.metadata.viewMode = currentViewMode;
-
-        // Always activate appropriate camera when styles are loaded
-        // This ensures camera is set up correctly even on initial load
-        const cameraType = currentTwoD ? "2d" : "orbit";
-        this.camera.activateCamera(cameraType);
 
         // Update DataManager with new styles - this will apply styles to existing nodes/edges
         // IMPORTANT: DataManager needs to be updated after this.styles is set because
@@ -1062,8 +1077,17 @@ export class Graph implements GraphContext {
     }
 
     async removeNodes(nodeIds: (string | number)[], options?: QueueableOptions): Promise<void> {
+        const removeNodeWithSelectionCheck = (id: string | number): void => {
+            // Check if the node being removed is selected
+            const node = this.dataManager.getNode(id);
+            if (node) {
+                this.selectionManager.onNodeRemoved(node);
+            }
+            this.dataManager.removeNode(id);
+        };
+
         if (options?.skipQueue) {
-            nodeIds.forEach((id) => this.dataManager.removeNode(id));
+            nodeIds.forEach((id) => removeNodeWithSelectionCheck(id));
             return;
         }
 
@@ -1074,7 +1098,7 @@ export class Graph implements GraphContext {
                     throw new Error("Operation cancelled");
                 }
 
-                nodeIds.forEach((id) => this.dataManager.removeNode(id));
+                nodeIds.forEach((id) => removeNodeWithSelectionCheck(id));
             },
             {
                 description: `Removing ${nodeIds.length} nodes`,
@@ -1265,6 +1289,110 @@ export class Graph implements GraphContext {
 
     getStatsManager(): StatsManager {
         return this.statsManager;
+    }
+
+    getSelectionManager(): SelectionManager {
+        return this.selectionManager;
+    }
+
+    // ============================================================================
+    // SELECTION API
+    // ============================================================================
+
+    /**
+     * Get the currently selected node.
+     * @returns The selected node, or null if nothing is selected.
+     */
+    getSelectedNode(): Node | null {
+        return this.selectionManager.getSelectedNode();
+    }
+
+    /**
+     * Select a node by its ID.
+     * If another node is currently selected, it will be deselected first.
+     *
+     * @param nodeId - The ID of the node to select.
+     * @returns True if the node was found and selected, false if node not found.
+     *
+     * @example
+     * ```typescript
+     * graph.selectNode("node-123");
+     * const selected = graph.getSelectedNode();
+     * console.log(selected?.id); // "node-123"
+     * ```
+     */
+    selectNode(nodeId: string | number): boolean {
+        return this.selectionManager.selectById(nodeId);
+    }
+
+    /**
+     * Deselect the currently selected node.
+     * If no node is selected, this is a no-op.
+     *
+     * @example
+     * ```typescript
+     * graph.selectNode("node-123");
+     * graph.deselectNode();
+     * console.log(graph.getSelectedNode()); // null
+     * ```
+     */
+    deselectNode(): void {
+        this.selectionManager.deselect();
+    }
+
+    /**
+     * Check if a specific node is currently selected.
+     *
+     * @param nodeId - The ID of the node to check.
+     * @returns True if the node is selected, false otherwise.
+     */
+    isNodeSelected(nodeId: string | number): boolean {
+        const selectedNode = this.selectionManager.getSelectedNode();
+        return selectedNode !== null && selectedNode.id === nodeId;
+    }
+
+    /**
+     * Set up a scene pointer observer to handle background clicks for deselection.
+     * When the user clicks on an area with no node, the current selection is cleared.
+     */
+    private setupBackgroundClickHandler(): void {
+        // Track click state to distinguish from drags
+        let clickStartTime = 0;
+        let clickStartPos = {x: 0, y: 0};
+        const CLICK_MAX_DURATION_MS = 300;
+        const CLICK_MAX_MOVEMENT_PX = 5;
+
+        this.scene.onPrePointerObservable.add((pointerInfo) => {
+            // Skip in XR mode - XR has its own input handling
+            const xrHelper = this.scene.metadata?.xrHelper;
+            if (xrHelper?.baseExperience?.state === 2) { // WebXRState.IN_XR
+                return;
+            }
+
+            if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+                clickStartTime = Date.now();
+                clickStartPos = {
+                    x: this.scene.pointerX,
+                    y: this.scene.pointerY,
+                };
+            } else if (pointerInfo.type === PointerEventTypes.POINTERUP) {
+                // Check if this was a click (short duration, minimal movement)
+                const duration = Date.now() - clickStartTime;
+                const dx = this.scene.pointerX - clickStartPos.x;
+                const dy = this.scene.pointerY - clickStartPos.y;
+                const distance = Math.sqrt((dx * dx) + (dy * dy));
+
+                if (duration < CLICK_MAX_DURATION_MS && distance < CLICK_MAX_MOVEMENT_PX) {
+                    // This was a click - check if we hit anything
+                    const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+
+                    // If we didn't hit anything or hit something without a nodeId, deselect
+                    if (!pickResult.hit || !pickResult.pickedMesh?.metadata?.nodeId) {
+                        this.selectionManager.deselect();
+                    }
+                }
+            }
+        });
     }
 
     is2D(): boolean {
@@ -1961,7 +2089,11 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - get world position and pivot position
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {
+                    position: Vector3,
+                    rotationQuaternion: Quaternion | null,
+                    computeWorldMatrix: (force: boolean) => void
+                };
                 cameraDistance: number;
                 camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
             };
@@ -1987,11 +2119,14 @@ export class Graph implements GraphContext {
                 z: orbitController.pivot.position.z,
             };
 
-            // Store pivot rotation and distance for restoration
+            // Store pivot rotation (from quaternion) and distance for restoration
+            // PivotController uses rotationQuaternion, not euler rotation
+            const pivotQuat = orbitController.pivot.rotationQuaternion ?? Quaternion.Identity();
+            const pivotEuler = pivotQuat.toEulerAngles();
             state.pivotRotation = {
-                x: orbitController.pivot.rotation.x,
-                y: orbitController.pivot.rotation.y,
-                z: orbitController.pivot.rotation.z,
+                x: pivotEuler.x,
+                y: pivotEuler.y,
+                z: pivotEuler.z,
             };
             state.cameraDistance = orbitController.cameraDistance;
         } else if (controller && "velocity" in controller) {
@@ -2123,7 +2258,11 @@ export class Graph implements GraphContext {
         if (controller && "pivot" in controller && "cameraDistance" in controller) {
             // OrbitCameraController - work with pivot system
             const orbitController = controller as unknown as {
-                pivot: {position: Vector3, rotation: Vector3, computeWorldMatrix: (force: boolean) => void};
+                pivot: {
+                    position: Vector3,
+                    rotationQuaternion: Quaternion | null,
+                    computeWorldMatrix: (force: boolean) => void
+                };
                 cameraDistance: number;
                 updateCameraPosition: () => void;
             };
@@ -2139,9 +2278,11 @@ export class Graph implements GraphContext {
 
             // Set pivot rotation if provided (for exact state restoration)
             if (state.pivotRotation) {
-                orbitController.pivot.rotation.set(
-                    state.pivotRotation.x,
+                // Convert euler angles to quaternion
+                // PivotController uses rotationQuaternion, not rotation
+                orbitController.pivot.rotationQuaternion = Quaternion.RotationYawPitchRoll(
                     state.pivotRotation.y,
+                    state.pivotRotation.x,
                     state.pivotRotation.z,
                 );
             } else if (state.position && state.target) {
@@ -2159,7 +2300,8 @@ export class Graph implements GraphContext {
                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                 const pitch = Math.asin(direction.y / distance);
 
-                orbitController.pivot.rotation.set(pitch, yaw, 0);
+                // Use rotationQuaternion instead of rotation (PivotController uses quaternions)
+                orbitController.pivot.rotationQuaternion = Quaternion.RotationYawPitchRoll(yaw, pitch, 0);
             }
 
             // Set camera distance if provided

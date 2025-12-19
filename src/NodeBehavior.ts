@@ -26,12 +26,24 @@ interface DragState {
     dragPlaneNormal: Vector3 | null;
 }
 
+// Click detection state
+interface ClickState {
+    pointerDownTime: number;
+    pointerDownPosition: {x: number, y: number};
+    hasMoved: boolean;
+}
+
+// Click detection thresholds
+const CLICK_MAX_DURATION_MS = 300; // Maximum time for a click (vs long press/drag)
+const CLICK_MAX_MOVEMENT_PX = 5; // Maximum pixels of movement for a click
+
 /**
  * Main drag handler class - unified for both desktop and XR
  */
 export class NodeDragHandler {
     private node: GraphNode;
     private dragState: DragState;
+    private clickState: ClickState | null = null;
     private scene: Scene;
     private pointerObserver: Observer<PointerInfoPre> | null = null;
     private readonly zAxisAmplification: number;
@@ -197,7 +209,7 @@ export class NodeDragHandler {
 
     // Internal methods
     private setupPointerEvents(): void {
-        // Listen to pointer events for node dragging
+        // Listen to pointer events for node dragging and clicking
         this.pointerObserver = this.scene.onPrePointerObservable.add((pointerInfo) => {
             // Skip desktop pointer handling in XR mode - XRInputHandler handles it
             // This prevents conflicts where XR generates pointer events that the
@@ -214,15 +226,21 @@ export class NodeDragHandler {
                         this.scene.pointerY,
                     );
 
-                    console.log("🖱️ POINTERDOWN", {
-                        nodeId: this.node.id,
-                        pickedMeshName: pickInfo.pickedMesh?.name,
-                        nodeMeshName: this.node.mesh.name,
-                        meshesMatch: pickInfo.pickedMesh === this.node.mesh,
-                        hit: pickInfo.hit,
-                    });
+                    // Use nodeId from mesh metadata for comparison
+                    // This works with both regular and instanced meshes
+                    const pickedNodeId = pickInfo.pickedMesh?.metadata?.nodeId;
 
-                    if (pickInfo.pickedMesh === this.node.mesh) {
+                    if (pickedNodeId === this.node.id) {
+                        // Initialize click tracking
+                        this.clickState = {
+                            pointerDownTime: Date.now(),
+                            pointerDownPosition: {
+                                x: this.scene.pointerX,
+                                y: this.scene.pointerY,
+                            },
+                            hasMoved: false,
+                        };
+
                         // Get world position from pointer
                         const ray = this.scene.createPickingRay(
                             this.scene.pointerX,
@@ -239,6 +257,16 @@ export class NodeDragHandler {
 
                 case PointerEventTypes.POINTERMOVE:
                     if (this.dragState.dragging) {
+                        // Track movement for click detection
+                        if (this.clickState && !this.clickState.hasMoved) {
+                            const dx = this.scene.pointerX - this.clickState.pointerDownPosition.x;
+                            const dy = this.scene.pointerY - this.clickState.pointerDownPosition.y;
+                            const distance = Math.sqrt((dx * dx) + (dy * dy));
+                            if (distance > CLICK_MAX_MOVEMENT_PX) {
+                                this.clickState.hasMoved = true;
+                            }
+                        }
+
                         const ray = this.scene.createPickingRay(
                             this.scene.pointerX,
                             this.scene.pointerY,
@@ -253,15 +281,50 @@ export class NodeDragHandler {
 
                 case PointerEventTypes.POINTERUP:
                     if (this.dragState.dragging) {
+                        // Check if this was a click (short duration, minimal movement)
+                        const wasClick = this.isClick();
+
                         this.onDragEnd();
+
+                        // If it was a click, select this node
+                        if (wasClick) {
+                            this.handleClick();
+                        }
                     }
 
+                    // Reset click state
+                    this.clickState = null;
                     break;
                 default:
                     // Ignore other pointer events
                     break;
             }
         });
+    }
+
+    /**
+     * Check if the current pointer interaction qualifies as a click.
+     * A click is defined as a short duration interaction with minimal movement.
+     */
+    private isClick(): boolean {
+        if (!this.clickState) {
+            return false;
+        }
+
+        const duration = Date.now() - this.clickState.pointerDownTime;
+        return duration < CLICK_MAX_DURATION_MS && !this.clickState.hasMoved;
+    }
+
+    /**
+     * Handle a click on this node - select it.
+     */
+    private handleClick(): void {
+        // Get the selection manager from the graph context
+        const context = this.getContext();
+        const selectionManager = context.getSelectionManager?.();
+        if (selectionManager) {
+            selectionManager.select(this.node);
+        }
     }
 
     private getWorldPositionFromRay(ray: Ray): Vector3 {

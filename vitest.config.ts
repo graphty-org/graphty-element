@@ -25,6 +25,7 @@ export default defineConfig({
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
                         "test/managers/UpdateManager.test.ts",
+                        "test/managers/SelectionManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         // Edge tests require browser (hammerjs dependency)
                         "test/Edge.bezier.test.ts",
@@ -32,6 +33,8 @@ export default defineConfig({
                         "test/integration/Edge.integration.test.ts",
                         // Browser-only tests
                         "test/browser/**/*.test.ts",
+                        // Interaction tests require browser environment
+                        "test/interactions/**/*.test.ts",
                         // Performance tests need DOM and should run in browser
                         "test/performance/**/*.test.ts",
                         // Examples that need browser environment
@@ -58,6 +61,7 @@ export default defineConfig({
                         "test/managers/LayoutManager.test.ts",
                         "test/managers/LifecycleManager.test.ts",
                         "test/managers/UpdateManager.test.ts",
+                        "test/managers/SelectionManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         "test/performance/**/*.test.ts",
                         "test/examples/**/*.test.ts",
@@ -65,8 +69,11 @@ export default defineConfig({
                         "test/Edge.bezier.test.ts",
                         "test/edge-cases/**/*.test.ts",
                         "test/integration/Edge.integration.test.ts",
+                        // Interaction tests moved to dedicated 'interactions' project
                     ],
                     exclude: [
+                        // Interaction tests have their own project
+                        "test/interactions/**/*.test.ts",
                         // Tests using Node.js-only libraries (pngjs)
                         "test/browser/dash-spacing-measurement.test.ts",
                         // Exclude experimental/temporary folders ending with ~
@@ -88,6 +95,34 @@ export default defineConfig({
                         // when browser contexts are garbage collected during parallel execution
                         fileParallelism: false,
                     },
+                },
+            },
+            {
+                test: {
+                    name: "interactions",
+                    setupFiles: ["./test/setup.ts"],
+                    include: ["test/interactions/**/*.test.ts"],
+                    exclude: [
+                        // Exclude experimental/temporary folders ending with ~
+                        "**/*~/**",
+                        "**/*~",
+                        // Standard vitest excludes
+                        "**/node_modules/**",
+                        "**/dist/**",
+                        "**/cypress/**",
+                        "**/.{idea,git,cache,output,temp}/**",
+                        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
+                    ],
+                    browser: {
+                        enabled: true,
+                        headless: true,
+                        provider: "playwright",
+                        instances: [{browser: "chromium"}],
+                        // Disable file parallelism to prevent race conditions and flaky tests
+                        fileParallelism: false,
+                    },
+                    // Interaction tests load complex scenes and may need longer timeout
+                    testTimeout: 30000,
                 },
             },
             {

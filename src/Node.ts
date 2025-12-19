@@ -9,6 +9,7 @@ import {ChangeManager} from "./ChangeManager";
 import {AdHocData, NodeStyle, NodeStyleConfig} from "./config";
 import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
+import {NodeEffects} from "./meshes/NodeEffects";
 import {NodeMesh} from "./meshes/NodeMesh";
 import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
 import {NodeBehavior, type NodeDragHandler} from "./NodeBehavior";
@@ -91,6 +92,9 @@ export class Node {
             nodeId: this.id,
         };
 
+        // Apply outline effect if configured in style
+        NodeEffects.applyOutlineEffect(this.mesh, o.effect);
+
         // create label
         if (o.label?.enabled) {
             this.label = this.createLabel(o);
@@ -126,7 +130,10 @@ export class Node {
             return;
         }
 
-        const pos = this.context.getLayoutManager().layoutEngine?.getNodePosition(this);
+        const layoutManager = this.context.getLayoutManager();
+        const {layoutEngine} = layoutManager;
+
+        const pos = layoutEngine?.getNodePosition(this);
         if (pos) {
             this.mesh.position.x = pos.x;
             this.mesh.position.y = pos.y;
@@ -176,6 +183,19 @@ export class Node {
             nodeId: this.id,
         };
 
+        // Restore position from layout engine after mesh recreation
+        // This ensures the mesh doesn't reset to (0, 0, 0) when style changes
+        const layoutManager = this.context.getLayoutManager();
+        const pos = layoutManager.layoutEngine?.getNodePosition(this);
+        if (pos) {
+            this.mesh.position.x = pos.x;
+            this.mesh.position.y = pos.y;
+            this.mesh.position.z = pos.z ?? 0;
+        }
+
+        // Apply outline effect if configured in style
+        NodeEffects.applyOutlineEffect(this.mesh, o.effect);
+
         // recreate label if needed
         if (o.label?.enabled) {
             this.label?.dispose();
@@ -183,6 +203,11 @@ export class Node {
         } else if (this.label) {
             this.label.dispose();
             this.label = undefined;
+        }
+
+        // Dispose old drag handler before creating new one to prevent duplicate event listeners
+        if (this.dragHandler) {
+            this.dragHandler.dispose();
         }
 
         NodeBehavior.addDefaultBehaviors(this, this.opts);

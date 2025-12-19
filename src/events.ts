@@ -14,7 +14,7 @@ export type NodeEventType = NodeEvent["type"];
 export type EdgeEventType = EdgeEvent["type"];
 
 // graph events
-export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent;
+export type GraphEvent = GraphSettledEvent | GraphErrorEvent | GraphDataLoadedEvent | GraphDataAddedEvent | GraphLayoutInitializedEvent | CameraStateChangedEvent | GraphGenericEvent | DataLoadingProgressEvent | DataLoadingErrorEvent | DataLoadingErrorSummaryEvent | DataLoadingCompleteEvent | SelectionChangedEvent;
 
 export interface GraphSettledEvent {
     type: "graph-settled";
@@ -115,6 +115,15 @@ export interface DataLoadingCompleteEvent {
     errors: number;
     warnings: number;
     success: boolean;
+}
+
+// Selection events
+export interface SelectionChangedEvent {
+    type: "selection-changed";
+    previousNode: Node | null;
+    currentNode: Node | null;
+    previousNodeId: string | number | null;
+    currentNodeId: string | number | null;
 }
 
 // node events

@@ -5,6 +5,7 @@ import type {MeshCache} from "../meshes/MeshCache";
 import type {XRSessionManager} from "../xr/XRSessionManager";
 import type {DataManager} from "./DataManager";
 import type {LayoutManager} from "./LayoutManager";
+import type {SelectionManager} from "./SelectionManager";
 import type {StatsManager} from "./StatsManager";
 import type {StyleManager} from "./StyleManager";
 
@@ -80,6 +81,12 @@ export interface GraphContext {
      * Optional method for XR-specific functionality
      */
     getXRSessionManager?(): XRSessionManager | undefined;
+
+    /**
+     * Get SelectionManager for node selection operations
+     * Optional method for selection functionality
+     */
+    getSelectionManager?(): SelectionManager | undefined;
 }
 
 /**

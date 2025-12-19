@@ -16,8 +16,10 @@ import type {
     GraphLayoutInitializedEvent,
     GraphSettledEvent,
     NodeEvent,
+    SelectionChangedEvent,
 } from "../events";
 import type {Graph} from "../Graph";
+import type {Node} from "../Node";
 import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
@@ -234,6 +236,22 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    // Selection Events
+
+    emitSelectionChanged(
+        previousNode: SelectionChangedEvent["previousNode"],
+        currentNode: SelectionChangedEvent["currentNode"],
+    ): void {
+        const event: SelectionChangedEvent = {
+            type: "selection-changed",
+            previousNode,
+            currentNode,
+            previousNodeId: previousNode?.id ?? null,
+            currentNodeId: currentNode?.id ?? null,
+        };
+        this.graphObservable.notifyObservers(event);
+    }
+
     // Node Events
 
     emitNodeEvent(type: NodeEvent["type"], eventData: Omit<NodeEvent, "type">): void {
@@ -279,7 +297,8 @@ export class EventManager implements Manager {
             case "data-loading-progress":
             case "data-loading-error":
             case "data-loading-error-summary":
-            case "data-loading-complete": {
+            case "data-loading-complete":
+            case "selection-changed": {
                 const observer = this.graphObservable.add((event) => {
                     if (event.type === type) {
                         callback(event);
