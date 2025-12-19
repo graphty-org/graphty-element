@@ -273,4 +273,20 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
     static hasOptions(): boolean {
         return Object.keys(this.optionsSchema).length > 0;
     }
+
+    /**
+     * Get all registered algorithm names.
+     * @param namespace - Optional namespace to filter by
+     * @returns Array of algorithm names in "namespace:type" format
+     */
+    static getRegisteredAlgorithms(namespace?: string): string[] {
+        const algorithms: string[] = [];
+        for (const key of algorithmRegistry.keys()) {
+            if (!namespace || key.startsWith(`${namespace}:`)) {
+                algorithms.push(key);
+            }
+        }
+
+        return algorithms.sort();
+    }
 }

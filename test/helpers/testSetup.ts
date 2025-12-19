@@ -55,12 +55,13 @@ export function graphConfig(opts: {twoD?: boolean, addDefaultStyle?: boolean}): 
     viewMode: "2d" | "3d";
     twoD: boolean;
 } {
+    const twoD = opts.twoD ?? false;
     return {
         addDefaultStyle: opts.addDefaultStyle ?? true,
         background: {backgroundType: "color", color: "#2D2D2D"},
         startingCameraDistance: 30,
-        viewMode: opts.twoD ? "2d" : "3d",
-        twoD: opts.twoD ?? false,
+        viewMode: twoD ? "2d" : "3d",
+        twoD,
     };
 }
 

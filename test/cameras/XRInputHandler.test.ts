@@ -77,7 +77,7 @@ describe("XRInputHandler", () => {
     }
 
     interface MockInputSource {
-        inputSource: {handedness: "left" | "right"; profiles: string[]};
+        inputSource: {handedness: "left" | "right", profiles: string[]};
         motionController: MockMotionController | null;
         uniqueId?: string;
     }

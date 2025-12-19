@@ -149,7 +149,10 @@ export class DefaultGraphContext implements GraphContext {
     }
 
     is2D(): boolean {
-        return this.styleManager.getStyles().config.graph.viewMode === "2d";
+        const config = this.styleManager.getStyles().config.graph;
+        // Support both new viewMode and deprecated twoD for backward compatibility
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        return config.viewMode === "2d" || config.twoD;
     }
 
     needsRayUpdate(): boolean {
