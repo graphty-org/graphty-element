@@ -20,15 +20,14 @@ describe("NodeBehavior XR Compatibility", () => {
 
     beforeEach(async() => {
         // Create test graph using the helper (properly sets up styles)
-        graph = await createTestGraph({
-            camera: {type: "orbit"},
-            layout: {type: "fixed"},
-        });
+        graph = await createTestGraph();
 
         // Create test node using DataManager
         const dataManager = graph.getDataManager();
-        dataManager.addNode({id: "test-node-1", label: "Test Node"} as AdHocData);
-        node = dataManager.getNode("test-node-1")!;
+        dataManager.addNode({id: "test-node-1", label: "Test Node"} as unknown as AdHocData);
+        const retrievedNode = dataManager.getNode("test-node-1");
+        assert.exists(retrievedNode, "Node should be created");
+        node = retrievedNode;
     });
 
     afterEach(() => {
@@ -44,13 +43,14 @@ describe("NodeBehavior XR Compatibility", () => {
     test("drag behavior should set node.dragging flag", () => {
         // Initially not dragging
         assert.isFalse(node.dragging, "node should not be dragging initially");
+        assert.exists(node.dragHandler, "dragHandler should exist");
 
         // Simulate drag start (as XR controller would trigger)
-        node.dragHandler!.onDragStart(node.mesh.position.clone());
+        node.dragHandler.onDragStart(node.mesh.position.clone());
         assert.isTrue(node.dragging, "node.dragging should be true after drag start");
 
         // Simulate drag end
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
         assert.isFalse(node.dragging, "node.dragging should be false after drag end");
     });
 
@@ -81,19 +81,20 @@ describe("NodeBehavior XR Compatibility", () => {
     });
 
     test("drag position changes should update through drag handler", () => {
+        assert.exists(node.dragHandler, "dragHandler should exist");
         // Simulate drag start
-        node.dragHandler!.onDragStart(node.mesh.position.clone());
+        node.dragHandler.onDragStart(node.mesh.position.clone());
         assert.isTrue(node.dragging, "node should be dragging");
 
         // Simulate position change during drag (as XR controller would trigger)
         const newPosition = new Vector3(10, 20, 30);
-        node.dragHandler!.onDragUpdate(newPosition);
+        node.dragHandler.onDragUpdate(newPosition);
 
         // Verify the behavior is designed to work
         assert.isTrue(node.dragging, "node should still be dragging");
 
         // Cleanup
-        node.dragHandler!.onDragEnd();
+        node.dragHandler.onDragEnd();
         assert.isFalse(node.dragging, "node should not be dragging after end");
     });
 

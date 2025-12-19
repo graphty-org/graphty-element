@@ -207,6 +207,11 @@ describe("ViewMode API", () => {
             await graph.setLayout("circular");
             await graph.operationQueue.waitForCompletion();
 
+            // Force node positions to be updated from layout engine
+            for (const node of graph.getNodes()) {
+                node.update();
+            }
+
             // Store original 3D Z positions
             const originalZPositions = new Map<string | number, number>();
             for (const node of graph.getNodes()) {
@@ -317,6 +322,11 @@ describe("ViewMode API", () => {
             await graph.addEdges(TEST_EDGES);
             await graph.setLayout("circular");
             await graph.operationQueue.waitForCompletion();
+
+            // Force node positions to be updated from layout engine
+            for (const node of graph.getNodes()) {
+                node.update();
+            }
 
             // Store original Z positions
             const originalZPositions = new Map<string | number, number>();

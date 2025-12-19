@@ -1,4 +1,5 @@
-import {assert, beforeEach, afterEach, describe, it, vi} from "vitest";
+/* eslint-disable @typescript-eslint/no-unnecessary-condition -- Chai assertions don't narrow types */
+import {afterEach, assert, beforeEach, describe, it, vi} from "vitest";
 
 import type {AdHocData} from "../../src/config";
 import {Graph} from "../../src/Graph";
@@ -226,7 +227,7 @@ describe("SelectionManager", () => {
             const layer = selectionManager.getSelectionStyleLayer();
             assert.isNotNull(layer);
             assert.isDefined(layer.metadata);
-            assert.isTrue((layer.metadata as {isSelectionLayer: boolean}).isSelectionLayer);
+            assert.isTrue((layer.metadata as unknown as {isSelectionLayer: boolean}).isSelectionLayer);
         });
 
         it("selection layer has correct node selector", () => {
@@ -235,11 +236,10 @@ describe("SelectionManager", () => {
             assert.equal(layer.node?.selector, "_selected == `true`");
         });
 
-        it("selection layer has outline effect by default", () => {
+        it("selection layer has color style by default", () => {
             const layer = selectionManager.getSelectionStyleLayer();
-            assert.isDefined(layer.node?.style?.effect);
-            assert.isDefined(layer.node?.style?.effect?.outline);
-            assert.equal(layer.node?.style?.effect?.outline?.color, "#FFFF00");
+            assert.isDefined(layer.node?.style?.texture);
+            assert.equal(layer.node?.style?.texture?.color, "#FFD700");
         });
     });
 
@@ -258,7 +258,7 @@ describe("SelectionManager", () => {
 
         it("selectById() selects a node by its ID", async() => {
             // Add a node to the graph
-            await graph.addNode({id: "test-node-1"} as AdHocData);
+            await graph.addNode({id: "test-node-1"} as unknown as AdHocData);
 
             // Select by ID
             const result = selectionManager.selectById("test-node-1");
@@ -290,7 +290,7 @@ describe("SelectionManager integration with Graph", () => {
 
     it("node removal while selected deselects the node", async() => {
         // Add a node
-        await graph.addNode({id: "node-to-remove"} as AdHocData);
+        await graph.addNode({id: "node-to-remove"} as unknown as AdHocData);
 
         // Select it
         graph.selectNode("node-to-remove");
@@ -305,7 +305,7 @@ describe("SelectionManager integration with Graph", () => {
 
     it("selection persists across style template changes", async() => {
         // Add nodes
-        await graph.addNode({id: "persistent-node"} as AdHocData);
+        await graph.addNode({id: "persistent-node"} as unknown as AdHocData);
 
         // Select a node
         graph.selectNode("persistent-node");
@@ -318,8 +318,34 @@ describe("SelectionManager integration with Graph", () => {
             graph: {
                 addDefaultStyle: true,
                 background: {backgroundType: "color", color: "#000000"},
+                startingCameraDistance: 200,
+                viewMode: "3d",
+                twoD: false,
             },
             layers: [],
+            data: {
+                knownFields: {
+                    nodeIdPath: "id",
+                    nodeWeightPath: null,
+                    nodeTimePath: null,
+                    edgeSrcIdPath: "source",
+                    edgeDstIdPath: "target",
+                    edgeWeightPath: null,
+                    edgeTimePath: null,
+                },
+            },
+            behavior: {
+                layout: {
+                    type: "ngraph",
+                    preSteps: 0,
+                    stepMultiplier: 1,
+                    minDelta: 0.01,
+                    zoomStepInterval: 10,
+                },
+                node: {
+                    pinOnDrag: true,
+                },
+            },
         });
 
         // Selection should still be present

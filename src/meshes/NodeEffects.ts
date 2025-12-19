@@ -27,7 +27,7 @@ export class NodeEffects {
      * HighlightLayer doesn't have an isDisposed property, so we check if it's still in the scene.
      */
     private static isLayerDisposed(layer: HighlightLayer, scene: Scene): boolean {
-        return !scene.effectLayers?.includes(layer);
+        return !scene.effectLayers.includes(layer);
     }
 
     /**

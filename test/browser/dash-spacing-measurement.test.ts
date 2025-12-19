@@ -32,9 +32,9 @@ describe("Dash Pattern Spacing", () => {
             // Helper to get pixel brightness
             const getBrightness = (x: number, y: number): number => {
                 const idx = ((y * width) + x) * 4;
-                const r = Number(pixels[idx]);
-                const g = Number(pixels[idx + 1]);
-                const b = Number(pixels[idx + 2]);
+                const r = pixels[idx];
+                const g = pixels[idx + 1];
+                const b = pixels[idx + 2];
                 return (r + g + b) / 3;
             };
 

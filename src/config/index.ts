@@ -17,3 +17,6 @@ export type {ViewMode} from "./ViewMode";
 export {DEFAULT_VIEW_MODE, isViewMode, VIEW_MODE_VALUES} from "./ViewMode";
 export type {XRConfig, XRInputConfig, XRModeConfig, XRTeleportationConfig, XRUIConfig} from "./XRConfig";
 export {defaultXRConfig} from "./XRConfig";
+// Unified options schema system (Zod-based)
+export type {ConfigurableInfo, InferOptions, OptionDefinition, OptionMeta, OptionsSchema, PartialOptions, SafeParseResult} from "./OptionsSchema";
+export {defineOptions, getDefaults, getOptionsFiltered, getOptionsGrouped, getOptionsMeta, hasOptions, parseOptions, safeParseOptions, toZodSchema} from "./OptionsSchema";

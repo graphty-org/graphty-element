@@ -99,7 +99,9 @@ describe("Touch Controls Integration", () => {
             // However, mouse pan also works in 2D mode via scene observables, so we test that pathway.
             // The underlying pan mechanism is the same - only the gesture recognition differs.
             const cameraController = graph.camera.getActiveController();
-            assert.isDefined(cameraController, "Camera controller should be defined");
+            if (!cameraController) {
+                throw new Error("Camera controller should be defined");
+            }
 
             const {camera} = cameraController;
             const initialX = camera.position.x;
@@ -147,7 +149,9 @@ describe("Touch Controls Integration", () => {
         test("pinch to zoom in 2D mode - wheel simulates pinch", () => {
             // Get the camera controller
             const cameraController = graph.camera.getActiveController();
-            assert.isDefined(cameraController, "Camera controller should be defined");
+            if (!cameraController) {
+                throw new Error("Camera controller should be defined");
+            }
 
             const {camera} = cameraController;
             const initialOrthoTop = camera.orthoTop ?? 10;
@@ -177,7 +181,9 @@ describe("Touch Controls Integration", () => {
         test("pinch to zoom out in 2D mode - wheel simulates pinch", () => {
             // Get the camera controller
             const cameraController = graph.camera.getActiveController();
-            assert.isDefined(cameraController, "Camera controller should be defined");
+            if (!cameraController) {
+                throw new Error("Camera controller should be defined");
+            }
 
             const {camera} = cameraController;
             const initialOrthoTop = camera.orthoTop ?? 10;

@@ -68,6 +68,7 @@ export class SelectionManager implements Manager {
         if (this.selectedNode) {
             this.updateNodeSelectionData(this.selectedNode, false);
         }
+
         this.selectedNode = null;
     }
 
@@ -194,7 +195,7 @@ export class SelectionManager implements Manager {
             isSelectionLayer: true,
         };
         this.selectionStyleLayer = {
-            ...layer,
+            ... layer,
             metadata: newMetadata as StyleLayerType["metadata"],
         };
     }

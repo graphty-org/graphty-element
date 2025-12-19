@@ -18,7 +18,7 @@ import {Graph} from "../../src/Graph";
 import type {DataManager} from "../../src/managers/DataManager";
 
 // Type helper to access private Graph members in tests
-interface TestGraph extends Graph {
+interface TestGraph {
     dataManager: DataManager;
 }
 
@@ -89,20 +89,17 @@ describe("ViewMode Switching Regression Tests", () => {
                 assert.isDefined(srcNode, `Source node ${edge.srcId} should exist`);
                 assert.isDefined(dstNode, `Destination node ${edge.dstId} should exist`);
 
+                const srcPos = srcNode.mesh.position;
+                const dstPos = dstNode.mesh.position;
+
                 // Edge mesh should be positioned between the nodes
                 // The edge should start near the source node and end near the destination node
-                const srcPos = srcNode!.mesh.position;
-                const dstPos = dstNode!.mesh.position;
-
-                // Calculate expected edge center (approximately)
-                const expectedCenter = srcPos.add(dstPos).scale(0.5);
-
                 // Edge mesh position should be near the center of the two nodes
                 // Allow a reasonable tolerance since edges have their own positioning logic
                 const edgeMesh = edge.mesh;
-                if (edgeMesh && "position" in edgeMesh) {
+                if ("position" in edgeMesh && "isEnabled" in edgeMesh) {
                     // For non-patterned line meshes, check they exist and are enabled
-                    assert.isTrue(edgeMesh.isEnabled(), `Edge ${edge.id} mesh should be enabled after 2D→3D switch`);
+                    assert.isTrue((edgeMesh as {isEnabled: () => boolean}).isEnabled(), `Edge ${edge.id} mesh should be enabled after 2D→3D switch`);
                 }
 
                 // Verify edge endpoints are not at origin (0, 0, 0) unless nodes are there
@@ -173,7 +170,10 @@ describe("ViewMode Switching Regression Tests", () => {
 
             // Verify each edge's mesh is still enabled
             for (const edge of edges2D) {
-                assert.isTrue(edge.mesh.isEnabled(), `Edge ${edge.id} mesh should be enabled after switch`);
+                const edgeMesh = edge.mesh;
+                if ("isEnabled" in edgeMesh) {
+                    assert.isTrue((edgeMesh as {isEnabled: () => boolean}).isEnabled(), `Edge ${edge.id} mesh should be enabled after switch`);
+                }
             }
         });
 

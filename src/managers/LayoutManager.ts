@@ -86,7 +86,10 @@ export class LayoutManager implements Manager {
             const layoutOpts = {... opts};
 
             // Get dimension-specific options from the layout if not already provided
-            const dimension = this.styles.config.graph.twoD ? 2 : 3;
+            // Support both new viewMode and deprecated twoD for backward compatibility
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            const is2D = this.styles.config.graph.viewMode === "2d" || this.styles.config.graph.twoD;
+            const dimension = is2D ? 2 : 3;
             const dimensionOpts = LayoutEngine.getOptionsForDimensionByType(type, dimension);
 
             if (dimensionOpts) {
@@ -303,8 +306,7 @@ export class LayoutManager implements Manager {
             const options = layoutOptions ?? {};
 
             // Check if we need to update the layout
-            const needsUpdate = !this.layoutEngine ||
-                               this.layoutEngine.type !== layoutType ||
+            const needsUpdate = this.layoutEngine?.type !== layoutType ||
                                this.hasOptionsChanged(options);
 
             if (needsUpdate) {

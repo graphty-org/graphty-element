@@ -288,20 +288,20 @@ export class RichTextLabel {
             textOutlineWidth: this.options.textOutlineWidth,
         });
 
-        const bgPadding = Number(this.options.backgroundPadding) * 2;
+        const bgPadding = this.options.backgroundPadding * 2;
 
         this.totalBorderWidth = 0;
         if (this.options.borders.length > 0) {
             for (let i = 0; i < this.options.borders.length; i++) {
-                this.totalBorderWidth += Number(this.options.borders[i].width);
+                this.totalBorderWidth += this.options.borders[i].width;
                 if (i < this.options.borders.length - 1 && this.options.borders[i].spacing > 0) {
-                    this.totalBorderWidth += Number(this.options.borders[i].spacing);
+                    this.totalBorderWidth += this.options.borders[i].spacing;
                 }
             }
         }
 
-        const contentWidth = maxWidth + Number(this.options.marginLeft) + Number(this.options.marginRight) + bgPadding;
-        const contentHeight = totalHeight + Number(this.options.marginTop) + Number(this.options.marginBottom) + bgPadding;
+        const contentWidth = maxWidth + this.options.marginLeft + this.options.marginRight + bgPadding;
+        const contentHeight = totalHeight + this.options.marginTop + this.options.marginBottom + bgPadding;
 
         this.contentArea = {
             x: this.totalBorderWidth,
@@ -319,18 +319,18 @@ export class RichTextLabel {
             if (this.pointerInfo) {
                 switch (this.pointerInfo.direction) {
                     case "top":
-                        this.actualDimensions.height += Number(this.options.pointerHeight);
-                        this.contentArea.y = this.totalBorderWidth + Number(this.options.pointerHeight);
+                        this.actualDimensions.height += this.options.pointerHeight;
+                        this.contentArea.y = this.totalBorderWidth + this.options.pointerHeight;
                         break;
                     case "bottom":
-                        this.actualDimensions.height += Number(this.options.pointerHeight);
+                        this.actualDimensions.height += this.options.pointerHeight;
                         break;
                     case "left":
-                        this.actualDimensions.width += Number(this.options.pointerHeight);
-                        this.contentArea.x = this.totalBorderWidth + Number(this.options.pointerHeight);
+                        this.actualDimensions.width += this.options.pointerHeight;
+                        this.contentArea.x = this.totalBorderWidth + this.options.pointerHeight;
                         break;
                     case "right":
-                        this.actualDimensions.width += Number(this.options.pointerHeight);
+                        this.actualDimensions.width += this.options.pointerHeight;
                         break;
                     default:
                         break;
@@ -357,9 +357,9 @@ export class RichTextLabel {
 
         this.pointerInfo = {
             direction: direction,
-            width: Number(this.options.pointerWidth),
-            height: Number(this.options.pointerHeight),
-            offset: Number(this.options.pointerOffset),
+            width: this.options.pointerWidth,
+            height: this.options.pointerHeight,
+            offset: this.options.pointerOffset,
             curve: this.options.pointerCurve,
         };
     }
@@ -385,7 +385,7 @@ export class RichTextLabel {
             const isTest = typeof globalThis !== "undefined" &&
                           (("__vitest_worker__" in globalThis) ||
                            ("__vitest_environment__" in globalThis) ||
-                           Boolean(typeof window !== "undefined" && window.location.href.includes("vitest")));
+                           (typeof window !== "undefined" && window.location.href.includes("vitest")));
 
             if (!isTest) {
                 console.warn(`RichTextLabel: Texture size clamped to ${textureWidth}x${textureHeight} (max: ${MAX_TEXTURE_SIZE})`);
@@ -433,7 +433,7 @@ export class RichTextLabel {
                 x: this.contentArea.x,
                 y: this.contentArea.y,
                 width: this.contentArea.width,
-                height: this.contentArea.height - progressBarHeight - (Number(this.options.marginBottom) / 2),
+                height: this.contentArea.height - progressBarHeight - (this.options.marginBottom / 2),
             };
         }
 
@@ -455,7 +455,7 @@ export class RichTextLabel {
                 const border = this.options.borders[i];
 
                 if (i > 0 && this.options.borders[i - 1].spacing > 0) {
-                    currentOffset += Number(this.options.borders[i - 1].spacing);
+                    currentOffset += this.options.borders[i - 1].spacing;
                 }
 
                 ctx.save();
@@ -529,7 +529,7 @@ export class RichTextLabel {
                 const border = this.options.borders[i];
 
                 if (i > 0 && this.options.borders[i - 1].spacing > 0) {
-                    currentOffset += Number(this.options.borders[i - 1].spacing);
+                    currentOffset += this.options.borders[i - 1].spacing;
                 }
 
                 ctx.save();
@@ -693,9 +693,9 @@ export class RichTextLabel {
 
     private _drawProgressBar(ctx: CanvasRenderingContext2D): void {
         const progressBarHeight = this.contentArea.height * 0.2;
-        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding) - (Number(this.options.marginBottom) / 2);
-        const progressBarX = this.contentArea.x + Number(this.options.backgroundPadding);
-        const progressBarWidth = this.contentArea.width - (Number(this.options.backgroundPadding) * 2);
+        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - this.options.backgroundPadding - (this.options.marginBottom / 2);
+        const progressBarX = this.contentArea.x + this.options.backgroundPadding;
+        const progressBarWidth = this.contentArea.width - (this.options.backgroundPadding * 2);
 
         ctx.save();
 
@@ -724,9 +724,9 @@ export class RichTextLabel {
 
         // Calculate progress bar area
         const progressBarHeight = this.contentArea.height * 0.2;
-        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - Number(this.options.backgroundPadding) - (Number(this.options.marginBottom) / 2);
-        const progressBarX = this.contentArea.x + Number(this.options.backgroundPadding);
-        const progressBarWidth = this.contentArea.width - (Number(this.options.backgroundPadding) * 2);
+        const progressBarY = this.contentArea.y + this.contentArea.height - progressBarHeight - this.options.backgroundPadding - (this.options.marginBottom / 2);
+        const progressBarX = this.contentArea.x + this.options.backgroundPadding;
+        const progressBarWidth = this.contentArea.width - (this.options.backgroundPadding * 2);
 
         // Clear only the progress bar area
         ctx.save();
@@ -785,7 +785,7 @@ export class RichTextLabel {
     }
 
     private _createMesh(): void {
-        const sizeScale = Number(this.options.fontSize) / 48;
+        const sizeScale = this.options.fontSize / 48;
 
         const aspectRatio = this.actualDimensions.width / this.actualDimensions.height;
         const planeHeight = sizeScale;
@@ -837,7 +837,7 @@ export class RichTextLabel {
             return;
         }
 
-        const sizeScale = Number(this.options.fontSize) / 48;
+        const sizeScale = this.options.fontSize / 48;
         const labelWidth = (this.actualDimensions.width / this.actualDimensions.height) * sizeScale;
         const labelHeight = sizeScale;
 
@@ -929,13 +929,13 @@ export class RichTextLabel {
             const distance = Vector3.Distance(camera.position, this.mesh.position);
 
             let fadeFactor = 1.0;
-            if (distance < Number(this.options.depthFadeNear)) {
+            if (distance < this.options.depthFadeNear) {
                 fadeFactor = 1.0;
-            } else if (distance > Number(this.options.depthFadeFar)) {
+            } else if (distance > this.options.depthFadeFar) {
                 fadeFactor = 0.0;
             } else {
-                const fadeRange = Number(this.options.depthFadeFar) - Number(this.options.depthFadeNear);
-                fadeFactor = 1.0 - ((distance - Number(this.options.depthFadeNear)) / fadeRange);
+                const fadeRange = this.options.depthFadeFar - this.options.depthFadeNear;
+                fadeFactor = 1.0 - ((distance - this.options.depthFadeNear) / fadeRange);
             }
 
             this.material.alpha = fadeFactor;
@@ -945,13 +945,14 @@ export class RichTextLabel {
     }
 
     public setText(text: string): void {
-        if (this.options.smartOverflow && !isNaN(Number(text))) {
+        const numericValue = Number(text);
+        if (this.options.smartOverflow && !isNaN(numericValue)) {
             const num = parseInt(text, 10);
-            if (num > Number(this.options.maxNumber)) {
+            if (num > this.options.maxNumber) {
                 if (num >= 1000) {
                     this.options.text = `${Math.floor(num / 1000)}k`;
                 } else {
-                    this.options.text = `${Number(this.options.maxNumber)}${this.options.overflowSuffix}`;
+                    this.options.text = `${this.options.maxNumber}${this.options.overflowSuffix}`;
                 }
             } else {
                 this.options.text = text;

@@ -19,7 +19,6 @@ import type {
     SelectionChangedEvent,
 } from "../events";
 import type {Graph} from "../Graph";
-import type {Node} from "../Node";
 import type {GraphContext} from "./GraphContext";
 import type {Manager} from "./interfaces";
 
@@ -293,6 +292,7 @@ export class EventManager implements Manager {
             case "animation-cancelled":
             case "screenshot-enhancing":
             case "screenshot-ready":
+            case "style-changed":
             case "camera-state-changed":
             case "data-loading-progress":
             case "data-loading-error":
@@ -387,7 +387,7 @@ export class EventManager implements Manager {
      * Wait for a specific event to occur
      * Returns a promise that resolves with the event
      */
-    waitFor(type: EventType, timeout?: number): Promise<GraphEvent | NodeEvent | EdgeEvent> {
+    waitFor(type: EventType, timeout?: number): Promise<GraphEvent | NodeEvent | EdgeEvent | import("../events").AiEvent> {
         return new Promise((resolve, reject) => {
             const timeoutId = timeout ? setTimeout(() => {
                 this.removeListener(listenerId);

@@ -132,8 +132,8 @@ export const NodeMeshFactory = {
         material.setWireframe(Boolean(wireframe));
 
         // Opacity handling
-        if (style.opacity !== undefined) {
-            mesh.visibility = Number(style.opacity);
+        if (typeof style.opacity === "number") {
+            mesh.visibility = style.opacity;
             mesh.setMetadata("visibility", style.opacity);
         }
 
@@ -293,9 +293,9 @@ export const EdgeMeshFactory = {
 
         // Line properties
         const lineType = typeof style.type === "string" ? style.type : "solid";
-        const width = Number(style.width ?? 1);
+        const width = typeof style.width === "number" ? style.width : 1;
         const color = typeof style.color === "string" ? style.color : "#000000";
-        const opacity = Number(style.opacity ?? 1);
+        const opacity = typeof style.opacity === "number" ? style.opacity : 1;
 
         mesh.setMetadata("lineType", lineType);
         mesh.setMetadata("lineWidth", width);
@@ -345,9 +345,9 @@ export const EdgeMeshFactory = {
         style: Record<string, unknown>,
     ): void {
         const lineType = typeof style.type === "string" ? style.type : "solid";
-        const width = Number(style.width ?? 1);
+        const width = typeof style.width === "number" ? style.width : 1;
         const color = typeof style.color === "string" ? style.color : "#000000";
-        const opacity = Number(style.opacity ?? 1);
+        const opacity = typeof style.opacity === "number" ? style.opacity : 1;
 
         mesh.setMetadata("meshType", "instancedPattern");
         mesh.setMetadata("rendererType", "PatternedLineRenderer");
@@ -482,13 +482,13 @@ export const EdgeMeshFactory = {
         }
 
         // Validate width
-        const expectedWidth = Number(style.width ?? 1);
+        const expectedWidth = typeof style.width === "number" ? style.width : 1;
         if (mesh.metadata.lineWidth !== expectedWidth) {
             errors.push(`Width mismatch: expected ${expectedWidth}, got ${mesh.metadata.lineWidth}`);
         }
 
         // Validate opacity
-        const expectedOpacity = Number(style.opacity ?? 1);
+        const expectedOpacity = typeof style.opacity === "number" ? style.opacity : 1;
         if (mesh.metadata.lineOpacity !== expectedOpacity) {
             errors.push(`Opacity mismatch: expected ${expectedOpacity}, got ${mesh.metadata.lineOpacity}`);
         }
@@ -611,11 +611,11 @@ export const ArrowMeshFactory = {
     create(style: ArrowMockStyle): ArrowTestResult {
         const type = typeof style.type === "string" ? style.type : "normal";
         const is2D = Boolean(style.is2D);
-        const size = Number(style.size ?? 1);
-        const width = Number(style.width ?? 0.5);
-        const length = Number(style.length ?? 0.3);
+        const size = typeof style.size === "number" ? style.size : 1;
+        const width = typeof style.width === "number" ? style.width : 0.5;
+        const length = typeof style.length === "number" ? style.length : 0.3;
         const color = typeof style.color === "string" ? style.color : "#FFFFFF";
-        const opacity = Number(style.opacity ?? 1);
+        const opacity = typeof style.opacity === "number" ? style.opacity : 1;
 
         // Validate arrow type
         if (!ArrowMeshFactory.ARROW_TYPES.includes(type)) {
@@ -818,7 +818,7 @@ export const ArrowMeshFactory = {
         }
 
         // Validate opacity
-        const expectedOpacity = Number(style.opacity ?? 1);
+        const expectedOpacity = typeof style.opacity === "number" ? style.opacity : 1;
         if (Math.abs(mesh.visibility - expectedOpacity) > 0.001) {
             errors.push(`Opacity mismatch: expected ${expectedOpacity}, got ${mesh.visibility}`);
         }

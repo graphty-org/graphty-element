@@ -107,6 +107,10 @@ function get3DCameraState(graph: Graph): {
     radius: number;
 } {
     const controller = graph.camera.getActiveController();
+    if (!controller) {
+        throw new Error("No active camera controller");
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const camera = controller.camera as any;
     return {

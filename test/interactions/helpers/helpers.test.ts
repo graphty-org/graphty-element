@@ -87,6 +87,10 @@ describe("Interaction Test Helpers", () => {
         });
 
         test("returns valid coordinates for existing node", () => {
+            if (!graph) {
+                throw new Error("Graph should be defined");
+            }
+
             const pos = getNodeScreenPosition(graph, "node1");
 
             assert.isNotNull(pos, "Should return position for existing node");
@@ -95,6 +99,10 @@ describe("Interaction Test Helpers", () => {
         });
 
         test("returns null for non-existent node", () => {
+            if (!graph) {
+                throw new Error("Graph should be defined");
+            }
+
             const pos = getNodeScreenPosition(graph, "non-existent-node");
 
             assert.isNull(pos, "Should return null for non-existent node");
@@ -183,6 +191,10 @@ describe("Interaction Test Helpers", () => {
         });
 
         test("performs complete drag operation", async() => {
+            if (!graph) {
+                throw new Error("Graph should be defined");
+            }
+
             const initialPos = graph.getNode("test-node")?.getPosition();
             assert.isDefined(initialPos, "Node should exist");
 
@@ -196,6 +208,10 @@ describe("Interaction Test Helpers", () => {
         });
 
         test("throws error for non-existent node", async() => {
+            if (!graph) {
+                throw new Error("Graph should be defined");
+            }
+
             try {
                 await dragNode(graph, "non-existent", {dx: 10, dy: 10});
                 assert.fail("Should throw error for non-existent node");

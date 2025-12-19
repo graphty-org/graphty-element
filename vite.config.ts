@@ -35,6 +35,7 @@ export default defineConfig(({mode}) => {
                 external: [
                     "@babylonjs/core",
                     "@babylonjs/inspector",
+                    "@mlc-ai/web-llm", // Dynamically loaded at runtime for in-browser LLM
                     "lit",
                     "lit/decorators.js",
                     "lit/directives/class-map.js",

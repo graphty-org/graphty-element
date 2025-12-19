@@ -70,7 +70,9 @@ describe("XR Input Switching", () => {
 
     describe("Input Handler Management", () => {
         test("XR session manager exists", () => {
-            const xrManager = graph.xrSessionManager;
+            // Access private property for testing purposes
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const xrManager = (graph as any).xrSessionManager;
             assert.isDefined(xrManager, "XR session manager should exist");
         });
 

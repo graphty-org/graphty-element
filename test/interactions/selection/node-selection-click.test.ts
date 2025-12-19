@@ -4,7 +4,8 @@
  * These tests verify that clicking on nodes selects them correctly,
  * and clicking on the background deselects the current selection.
  */
-import {assert, afterEach, beforeEach, describe, it, vi} from "vitest";
+/* eslint-disable @typescript-eslint/no-unnecessary-condition -- Chai assertions don't narrow types */
+import {afterEach, assert, beforeEach, describe, it, vi} from "vitest";
 
 import type {Graph} from "../../../src/Graph";
 import {
@@ -21,9 +22,8 @@ describe("Node Selection - Click Interactions", () => {
     let graph: Graph;
 
     afterEach(() => {
-        if (graph) {
-            teardownTestGraph(graph);
-        }
+        // graph is assigned in beforeEach so will always be defined
+        teardownTestGraph(graph);
     });
 
     describe("3D mode", () => {
@@ -54,13 +54,16 @@ describe("Node Selection - Click Interactions", () => {
         it("clicking on a different node changes selection", async() => {
             // Select node1
             await clickOnNode(graph, "node1");
-            assert.equal(graph.getSelectedNode()?.id, "node1");
+            const firstSelected = graph.getSelectedNode();
+            assert.isNotNull(firstSelected);
+            assert.equal(firstSelected?.id, "node1");
 
             // Click on node2
             await clickOnNode(graph, "node2");
 
             // Selection should change to node2
             const selected = graph.getSelectedNode();
+            assert.isNotNull(selected);
             assert.equal(selected?.id, "node2");
         });
 
@@ -88,6 +91,7 @@ describe("Node Selection - Click Interactions", () => {
             const event = callback.mock.calls[0][0];
             assert.equal(event.type, "selection-changed");
             assert.isNull(event.previousNode);
+            assert.isNotNull(event.currentNode);
             assert.equal(event.currentNode?.id, "node1");
         });
 
@@ -139,13 +143,16 @@ describe("Node Selection - Click Interactions", () => {
         it("clicking on a different node changes selection", async() => {
             // Select node1
             await clickOnNode(graph, "node1");
-            assert.equal(graph.getSelectedNode()?.id, "node1");
+            const firstSelected = graph.getSelectedNode();
+            assert.isNotNull(firstSelected);
+            assert.equal(firstSelected?.id, "node1");
 
             // Click on node2
             await clickOnNode(graph, "node2");
 
             // Selection should change to node2
             const selected = graph.getSelectedNode();
+            assert.isNotNull(selected);
             assert.equal(selected?.id, "node2");
         });
 
@@ -177,7 +184,9 @@ describe("Node Selection - Click Interactions", () => {
             // A quick click (pointer down then up with no movement) should select
             const clicked = await clickOnNode(graph, "node1");
             assert.isTrue(clicked);
-            assert.equal(graph.getSelectedNode()?.id, "node1");
+            const selected = graph.getSelectedNode();
+            assert.isNotNull(selected);
+            assert.equal(selected?.id, "node1");
         });
 
         // Note: The "drag does not select" test is more complex and depends on
@@ -212,11 +221,11 @@ describe("Node Selection - Click Interactions", () => {
 
             for (const [nodeId, beforePos] of before) {
                 const afterPos = after.get(nodeId);
-                assert.isNotNull(afterPos, `Node ${nodeId} should still exist`);
-
-                const dx = Math.abs(beforePos.x - afterPos!.x);
-                const dy = Math.abs(beforePos.y - afterPos!.y);
-                const dz = Math.abs(beforePos.z - afterPos!.z);
+                assert.isDefined(afterPos, `Node ${nodeId} should still exist`);
+                // afterPos is guaranteed to exist after assert.isDefined
+                const dx = Math.abs(beforePos.x - (afterPos?.x ?? 0));
+                const dy = Math.abs(beforePos.y - (afterPos?.y ?? 0));
+                const dz = Math.abs(beforePos.z - (afterPos?.z ?? 0));
 
                 assert.isBelow(
                     dx,
@@ -255,7 +264,9 @@ describe("Node Selection - Click Interactions", () => {
                 await clickOnNode(graph, "node1");
 
                 // Verify selection worked
-                assert.equal(graph.getSelectedNode()?.id, "node1");
+                const selected = graph.getSelectedNode();
+                assert.isNotNull(selected);
+                assert.equal(selected?.id, "node1");
 
                 // Capture positions after selection
                 const positionsAfter = getAllNodePositions(graph);
@@ -299,10 +310,13 @@ describe("Node Selection - Click Interactions", () => {
 
             it("camera position does not change when selecting a node", async() => {
                 // Capture camera state before
+                const camera = graph.scene.activeCamera;
+                assert.isNotNull(camera, "Active camera should exist");
+                // camera is guaranteed to exist after assertion
                 const cameraBefore = {
-                    x: graph.scene.activeCamera!.position.x,
-                    y: graph.scene.activeCamera!.position.y,
-                    z: graph.scene.activeCamera!.position.z,
+                    x: camera?.position.x ?? 0,
+                    y: camera?.position.y ?? 0,
+                    z: camera?.position.z ?? 0,
                 };
 
                 // Select a node
@@ -310,9 +324,9 @@ describe("Node Selection - Click Interactions", () => {
 
                 // Capture camera state after
                 const cameraAfter = {
-                    x: graph.scene.activeCamera!.position.x,
-                    y: graph.scene.activeCamera!.position.y,
-                    z: graph.scene.activeCamera!.position.z,
+                    x: camera?.position.x ?? 0,
+                    y: camera?.position.y ?? 0,
+                    z: camera?.position.z ?? 0,
                 };
 
                 // Verify camera didn't move
@@ -341,7 +355,9 @@ describe("Node Selection - Click Interactions", () => {
                 await clickOnNode(graph, "node1");
 
                 // Verify selection worked
-                assert.equal(graph.getSelectedNode()?.id, "node1");
+                const selected = graph.getSelectedNode();
+                assert.isNotNull(selected);
+                assert.equal(selected?.id, "node1");
 
                 // Capture positions after selection
                 const positionsAfter = getAllNodePositions(graph);

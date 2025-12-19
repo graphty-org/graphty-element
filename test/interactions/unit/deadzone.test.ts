@@ -467,7 +467,7 @@ describe("Deadzone and Threshold Behavior", () => {
             let stateChanges = 0;
 
             for (const value of oscillatingValues) {
-                const shouldPinch = isPinching ?
+                const shouldPinch: boolean = isPinching ?
                     value > PINCH_END : // Already pinching, release below 0.5
                     value > PINCH_START; // Not pinching, start above 0.7
 

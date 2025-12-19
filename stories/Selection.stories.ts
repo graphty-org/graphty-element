@@ -9,7 +9,7 @@ import "../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
-import {StyleTemplate, type ViewMode} from "../src/config";
+import {type StyleSchema, StyleTemplate, type ViewMode} from "../src/config";
 import type {Graph} from "../src/Graph";
 import {Graphty} from "../src/graphty-element";
 import {eventWaitingDecorator, waitForGraphSettled} from "./helpers";
@@ -32,7 +32,7 @@ const selectionEdgeData = [
 ];
 
 // Create a style template with node labels
-const createStyleTemplate = (viewMode: ViewMode) => StyleTemplate.parse({
+const createStyleTemplate = (viewMode: ViewMode): StyleSchema => StyleTemplate.parse({
     graphtyTemplate: true,
     majorVersion: "1",
     graph: {
@@ -75,7 +75,7 @@ const createStyleTemplate = (viewMode: ViewMode) => StyleTemplate.parse({
 /**
  * Render function that creates a selection demo with status display
  */
-const renderSelectionDemo = (viewMode: ViewMode) => {
+const renderSelectionDemo = (viewMode: ViewMode): HTMLDivElement => {
     // Prevent document scrolling to avoid browser's focus-scroll behavior.
     // When clicking on the canvas, browsers auto-scroll to bring focused elements into view,
     // which can hide the status bar. For fullscreen stories, the document should never scroll.
@@ -128,9 +128,9 @@ const renderSelectionDemo = (viewMode: ViewMode) => {
         const display = container.querySelector("#selected-node-display");
         if (display) {
             const customEvent = event as CustomEvent<{currentNode: {id: string, data: {label?: string}} | null}>;
-            const node = customEvent.detail?.currentNode;
+            const node = customEvent.detail.currentNode;
             if (node) {
-                const label = node.data?.label ?? node.id;
+                const label = node.data.label ?? node.id;
                 display.textContent = `${label} (${node.id})`;
                 (display as HTMLElement).style.color = "#FFFF00";
             } else {
@@ -291,10 +291,10 @@ export const Programmatic: Story = {
             btn.style.cssText = buttonStyle;
             btn.textContent = `Select ${node.label}`;
             btn.addEventListener("click", () => {
-                const graphEl = container.querySelector("graphty-element") as Graphty;
+                const graphEl = container.querySelector("graphty-element");
                 if (graphEl) {
                     const graph = (graphEl as unknown as {"#graph": Graph})["#graph"];
-                    graph?.selectNode(node.id);
+                    graph.selectNode(node.id);
                 }
             });
             buttonBar.appendChild(btn);
@@ -302,13 +302,13 @@ export const Programmatic: Story = {
 
         // Deselect button
         const deselectBtn = document.createElement("button");
-        deselectBtn.style.cssText = buttonStyle + "background: #553333; border-color: #773333;";
+        deselectBtn.style.cssText = `${buttonStyle}background: #553333; border-color: #773333;`;
         deselectBtn.textContent = "Deselect";
         deselectBtn.addEventListener("click", () => {
-            const graphEl = container.querySelector("graphty-element") as Graphty;
+            const graphEl = container.querySelector("graphty-element");
             if (graphEl) {
                 const graph = (graphEl as unknown as {"#graph": Graph})["#graph"];
-                graph?.deselectNode();
+                graph.deselectNode();
             }
         });
         buttonBar.appendChild(deselectBtn);
@@ -338,9 +338,9 @@ export const Programmatic: Story = {
             const display = container.querySelector("#selected-node-display");
             if (display) {
                 const customEvent = event as CustomEvent<{currentNode: {id: string, data: {label?: string}} | null}>;
-                const node = customEvent.detail?.currentNode;
+                const node = customEvent.detail.currentNode;
                 if (node) {
-                    const label = node.data?.label ?? node.id;
+                    const label = node.data.label ?? node.id;
                     display.textContent = `Selected: ${label}`;
                     (display as HTMLElement).style.color = "#FFFF00";
                 } else {

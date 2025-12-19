@@ -1,17 +1,107 @@
 import {depthFirstSearch} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import {type OptionsSchema} from "./types/OptionSchema";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
-interface DFSOptions {
-    source: number | string;
+/**
+ * Zod-based options schema for DFS algorithm
+ */
+export const dfsOptionsSchema = defineOptions({
+    source: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Source Node",
+            description: "Starting node for DFS traversal (uses first node if not set)",
+        },
+    },
+    targetNode: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Target Node",
+            description: "Target node for early termination (optional - searches all nodes if not set)",
+            advanced: true,
+        },
+    },
+    recursive: {
+        schema: z.boolean().default(false),
+        meta: {
+            label: "Recursive",
+            description: "Use recursive implementation instead of iterative (may cause stack overflow on large graphs)",
+            advanced: true,
+        },
+    },
+    preOrder: {
+        schema: z.boolean().default(true),
+        meta: {
+            label: "Pre-Order",
+            description: "Visit nodes before their children (pre-order) vs after (post-order)",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for DFS algorithm
+ */
+export interface DFSOptions extends Record<string, unknown> {
+    /** Starting node for traversal (defaults to first node if not provided) */
+    source: number | string | null;
+    /** Target node for early termination (optional) */
+    targetNode: number | string | null;
+    /** Use recursive implementation vs iterative */
+    recursive: boolean;
+    /** Use pre-order traversal (visit before children) vs post-order */
+    preOrder: boolean;
 }
 
-export class DFSAlgorithm extends Algorithm {
+export class DFSAlgorithm extends Algorithm<DFSOptions> {
     static namespace = "graphty";
     static type = "dfs";
-    private options: DFSOptions | null = null;
+
+    static zodOptionsSchema: ZodOptionsSchema = dfsOptionsSchema;
+
+    /**
+     * Options schema for DFS algorithm
+     */
+    static optionsSchema: OptionsSchema = {
+        source: {
+            type: "nodeId",
+            default: null,
+            label: "Source Node",
+            description: "Starting node for DFS traversal (uses first node if not set)",
+            required: false,
+        },
+        targetNode: {
+            type: "nodeId",
+            default: null,
+            label: "Target Node",
+            description: "Target node for early termination (optional - searches all nodes if not set)",
+            required: false,
+            advanced: true,
+        },
+        recursive: {
+            type: "boolean",
+            default: false,
+            label: "Recursive",
+            description: "Use recursive implementation instead of iterative (may cause stack overflow on large graphs)",
+            advanced: true,
+        },
+        preOrder: {
+            type: "boolean",
+            default: true,
+            label: "Pre-Order",
+            description: "Visit nodes before their children (pre-order) vs after (post-order)",
+            advanced: true,
+        },
+    };
+
+    /**
+     * Legacy options set via configure() for backward compatibility
+     */
+    private legacyOptions: {source: number | string} | null = null;
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -37,9 +127,11 @@ export class DFSAlgorithm extends Algorithm {
 
     /**
      * Configure the algorithm with source node
+     *
+     * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
-    configure(options: DFSOptions): this {
-        this.options = options;
+    configure(options: {source: number | string}): this {
+        this.legacyOptions = options;
         return this;
     }
 
@@ -53,8 +145,10 @@ export class DFSAlgorithm extends Algorithm {
             return;
         }
 
-        // Get source from options or use first node as default
-        const source = this.options?.source ?? nodes[0];
+        // Get source from legacy options, schema options, or use first node as default
+        // Legacy configure() takes precedence for backward compatibility
+        const source = this.legacyOptions?.source ?? this._schemaOptions.source ?? nodes[0];
+        const {targetNode, recursive, preOrder} = this._schemaOptions;
 
         // Check if source exists
         if (!dm.nodes.has(source)) {
@@ -65,7 +159,11 @@ export class DFSAlgorithm extends Algorithm {
         const graphData = toAlgorithmGraph(g);
 
         // Run DFS algorithm - returns {visited: Set, order: NodeId[], tree?: Map}
-        const result = depthFirstSearch(graphData, source);
+        const result = depthFirstSearch(graphData, source, {
+            targetNode: targetNode ?? undefined,
+            recursive,
+            preOrder,
+        });
 
         // Build discovery time map from order array (index = discovery time)
         const discoveryTimeMap = new Map<number | string, number>();

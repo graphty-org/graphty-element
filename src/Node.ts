@@ -110,6 +110,11 @@ export class Node {
     update(): void {
         this.context.getStatsManager().startMeasurement("Node.update");
 
+        // Check if mesh was disposed (e.g., from 2D/3D mode switch) and recreate it
+        if (this.mesh.isDisposed()) {
+            this.updateStyle(this.styleId);
+        }
+
         const newStyleKeys = Object.keys(this.styleUpdates);
         if (newStyleKeys.length > 0) {
             let style = Styles.getStyleForNodeStyleId(this.styleId);
@@ -154,6 +159,16 @@ export class Node {
         }
 
         this.styleId = styleId;
+
+        // Save the current position before disposing the mesh
+        // This is critical for style changes when layout is settled,
+        // because updateNodes() won't be called to restore positions
+        const savedPosition = {
+            x: this.mesh.position.x,
+            y: this.mesh.position.y,
+            z: this.mesh.position.z,
+        };
+
         // Only dispose if not already disposed
         if (!this.mesh.isDisposed()) {
             this.mesh.dispose();
@@ -168,6 +183,11 @@ export class Node {
             {shape: o.shape, texture: o.texture, effect: o.effect},
             this.context.getScene(),
         );
+
+        // Restore the saved position to the new mesh
+        this.mesh.position.x = savedPosition.x;
+        this.mesh.position.y = savedPosition.y;
+        this.mesh.position.z = savedPosition.z;
 
         // Parent to graph-root for XR gesture support
         const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");

@@ -7,6 +7,7 @@
 
 import {Matrix, Vector3} from "@babylonjs/core";
 
+import type {AdHocData} from "../../../src/config";
 import {Graph} from "../../../src/Graph";
 import {cleanupTestGraph, createTestGraph} from "../../helpers/testSetup";
 import type {
@@ -37,9 +38,7 @@ export async function waitForGraphReady(
             await new Promise((resolve) => setTimeout(resolve, 50));
 
             // Trigger a render loop iteration to ensure layout is applied
-            if (graph.scene) {
-                graph.scene.render();
-            }
+            graph.scene.render();
 
             // Another small delay for positions to be applied
             await new Promise((resolve) => setTimeout(resolve, 50));
@@ -217,11 +216,11 @@ export async function setupTestGraph(options: TestGraphOptions = {}): Promise<Gr
 
     // Add initial nodes and edges if provided
     for (const nodeData of nodes) {
-        await graph.addNode(nodeData);
+        await graph.addNode(nodeData as unknown as AdHocData);
     }
 
     for (const edgeData of edges) {
-        await graph.addEdge(edgeData);
+        await graph.addEdge(edgeData as unknown as AdHocData);
     }
 
     // Wait for everything to settle
@@ -431,7 +430,7 @@ export async function clickAtPosition(
             buttons: 1,
             button: 0,
         } as PointerEvent,
-    } as Parameters<typeof scene.onPrePointerObservable.notifyObservers>[0]);
+    } as unknown as Parameters<typeof scene.onPrePointerObservable.notifyObservers>[0]);
 
     // Small delay for event processing
     await new Promise((resolve) => setTimeout(resolve, 16));
@@ -445,7 +444,7 @@ export async function clickAtPosition(
             buttons: 0,
             button: 0,
         } as PointerEvent,
-    } as Parameters<typeof scene.onPrePointerObservable.notifyObservers>[0]);
+    } as unknown as Parameters<typeof scene.onPrePointerObservable.notifyObservers>[0]);
 
     // Small delay for click detection processing
     await new Promise((resolve) => setTimeout(resolve, 50));

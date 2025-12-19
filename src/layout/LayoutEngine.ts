@@ -1,5 +1,6 @@
 import {z} from "zod/v4";
 
+import type {OptionsSchema} from "../config";
 import type {Edge} from "../Edge";
 import type {Node} from "../Node";
 
@@ -17,10 +18,30 @@ export interface EdgePosition {
 type LayoutEngineClass = new (opts: object) => LayoutEngine;
 const layoutEngineRegistry = new Map<string, LayoutEngineClass>();
 
+/**
+ * Interface for LayoutEngine class static members
+ * Exported for use in type annotations when referencing layout classes
+ */
+export interface LayoutEngineStatics {
+    type: string;
+    maxDimensions: number;
+    zodOptionsSchema?: OptionsSchema;
+    getZodOptionsSchema(): OptionsSchema;
+    hasZodOptions(): boolean;
+}
+
 export abstract class LayoutEngine {
     static type: string;
     static maxDimensions: number;
     config?: Record<string, unknown>;
+
+    /**
+     * NEW: Zod-based options schema for unified validation and UI metadata
+     *
+     * Subclasses should override this to define their configurable options
+     * using the new Zod-based schema system.
+     */
+    static zodOptionsSchema?: OptionsSchema;
 
     // basic functionality
     abstract init(): Promise<void>;
@@ -88,6 +109,38 @@ export abstract class LayoutEngine {
         }
 
         return ((SourceClass as unknown) as typeof LayoutEngine).getOptionsForDimension(dimension);
+    }
+
+    /**
+     * Get the Zod-based options schema for this layout
+     *
+     * @returns The options schema, or an empty object if no schema defined
+     */
+    static getZodOptionsSchema(): OptionsSchema {
+        return this.zodOptionsSchema ?? {};
+    }
+
+    /**
+     * Check if this layout has a Zod-based options schema
+     *
+     * @returns true if the layout has options defined
+     */
+    static hasZodOptions(): boolean {
+        return this.zodOptionsSchema !== undefined && Object.keys(this.zodOptionsSchema).length > 0;
+    }
+
+    /**
+     * Get a list of all registered layout types
+     */
+    static getRegisteredTypes(): string[] {
+        return Array.from(layoutEngineRegistry.keys());
+    }
+
+    /**
+     * Get a layout class by type
+     */
+    static getClass(type: string): (LayoutEngineClass & LayoutEngineStatics) | null {
+        return layoutEngineRegistry.get(type) as (LayoutEngineClass & LayoutEngineStatics) | null ?? null;
     }
 }
 

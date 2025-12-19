@@ -1,12 +1,105 @@
 import {louvain} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import type {OptionsSchema} from "./types/OptionSchema";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
-export class LouvainAlgorithm extends Algorithm {
+/**
+ * Zod-based options schema for Louvain algorithm
+ */
+export const louvainOptionsSchema = defineOptions({
+    resolution: {
+        schema: z.number().min(0.1).max(5.0).default(1.0),
+        meta: {
+            label: "Resolution",
+            description: "Higher = more communities, lower = fewer larger communities",
+            step: 0.1,
+        },
+    },
+    maxIterations: {
+        schema: z.number().int().min(1).max(500).default(100),
+        meta: {
+            label: "Max Iterations",
+            description: "Maximum optimization iterations",
+            advanced: true,
+        },
+    },
+    tolerance: {
+        schema: z.number().min(1e-10).max(0.01).default(1e-6),
+        meta: {
+            label: "Tolerance",
+            description: "Minimum modularity improvement to continue",
+            advanced: true,
+        },
+    },
+    useOptimized: {
+        schema: z.boolean().default(true),
+        meta: {
+            label: "Use Optimized",
+            description: "Use optimized implementation for better performance on large graphs",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for the Louvain community detection algorithm
+ */
+export interface LouvainOptions extends Record<string, unknown> {
+    /** Higher = more communities, lower = fewer larger communities */
+    resolution: number;
+    /** Maximum optimization iterations */
+    maxIterations: number;
+    /** Minimum modularity improvement to continue */
+    tolerance: number;
+    /** Use optimized implementation for better performance on large graphs */
+    useOptimized: boolean;
+}
+
+export class LouvainAlgorithm extends Algorithm<LouvainOptions> {
     static namespace = "graphty";
     static type = "louvain";
+
+    static zodOptionsSchema: ZodOptionsSchema = louvainOptionsSchema;
+
+    static optionsSchema: OptionsSchema = {
+        resolution: {
+            type: "number",
+            default: 1.0,
+            label: "Resolution",
+            description: "Higher = more communities, lower = fewer larger communities",
+            min: 0.1,
+            max: 5.0,
+            step: 0.1,
+        },
+        maxIterations: {
+            type: "integer",
+            default: 100,
+            label: "Max Iterations",
+            description: "Maximum optimization iterations",
+            min: 1,
+            max: 500,
+            advanced: true,
+        },
+        tolerance: {
+            type: "number",
+            default: 1e-6,
+            label: "Tolerance",
+            description: "Minimum modularity improvement to continue",
+            min: 1e-10,
+            max: 0.01,
+            advanced: true,
+        },
+        useOptimized: {
+            type: "boolean",
+            default: true,
+            label: "Use Optimized",
+            description: "Use optimized implementation for better performance on large graphs",
+            advanced: true,
+        },
+    };
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -41,15 +134,19 @@ export class LouvainAlgorithm extends Algorithm {
             return;
         }
 
+        // Get options from schema
+        const {resolution, maxIterations, tolerance, useOptimized} = this.schemaOptions;
+
         // Convert to @graphty/algorithms format (truly undirected for community detection)
         // addReverseEdges: false creates an undirected graph required by louvain
         const graphData = toAlgorithmGraph(g, {addReverseEdges: false});
 
         // Run Louvain algorithm
         const result = louvain(graphData, {
-            resolution: 1.0,
-            maxIterations: 100,
-            tolerance: 1e-6,
+            resolution,
+            maxIterations,
+            tolerance,
+            useOptimized,
         });
 
         // Store community assignments for each node

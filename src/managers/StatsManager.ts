@@ -699,7 +699,7 @@ export class StatsManager implements Manager {
         }
 
         const entry = this.activeStack.pop();
-        if (!entry || entry.label !== label) {
+        if (entry?.label !== label) {
             console.warn(`StatsManager: Mismatched measurement end for "${label}"`);
             return;
         }

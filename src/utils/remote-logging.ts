@@ -1,3 +1,4 @@
+/* eslint-disable no-console -- Remote logging utility requires console access */
 /**
  * Remote logging utility for XR debugging.
  * Sends console logs to a remote server for viewing on desktop.
@@ -82,7 +83,7 @@ function formatArgs(args: unknown[]): string {
             try {
                 return JSON.stringify(arg, null, 2);
             } catch {
-                return String(arg);
+                return "[Circular or non-serializable object]";
             }
         }
 

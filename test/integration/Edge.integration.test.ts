@@ -97,6 +97,7 @@ function createMinimalStyles(): Styles {
             startingCameraDistance: 100,
             layout: "none",
             twoD: false,
+            viewMode: "3d",
         },
         behavior: {
             layout: {

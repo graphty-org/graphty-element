@@ -92,7 +92,10 @@ describe("Node Drag and Drop", () => {
             assert.equal(graph.getEdgeCount(), 1, "Should have 1 edge");
 
             const node1 = graph.getNode("node1");
-            assert.isNotNull(node1);
+            if (!node1) {
+                throw new Error("node1 should exist");
+            }
+
             node1.mesh.position = new Vector3(10, 10, 10);
 
             await new Promise((resolve) => setTimeout(resolve, 50));

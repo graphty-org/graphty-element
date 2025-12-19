@@ -28,6 +28,7 @@ describe("Camera Presets - 3D", () => {
             majorVersion: "1",
             graph: {
                 twoD: false,
+                viewMode: "3d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
                 addDefaultStyle: true,
                 startingCameraDistance: 30,

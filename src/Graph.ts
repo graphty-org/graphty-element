@@ -20,6 +20,7 @@ import {
     WebXRDefaultExperience,
 } from "@babylonjs/core";
 
+import {VoiceInputAdapter} from "./ai/input/VoiceInputAdapter";
 import {Algorithm} from "./algorithms/Algorithm";
 import {
     BUILTIN_PRESETS,
@@ -337,6 +338,32 @@ export class Graph implements GraphContext {
             }
         });
 
+        // Listen for style-changed events to reapply styles to existing nodes/edges
+        // This is specifically for AI commands that add style layers via StyleManager.addLayer()
+        // Note: We use styleManager.getStyles() to get the current styles, not this.styles,
+        // because this.styles may not be updated yet when the event fires
+        this.eventManager.addListener("style-changed", () => {
+            // Skip if the graph isn't fully initialized yet
+            if (!this.initialized) {
+                return;
+            }
+
+            // Get the current styles from StyleManager
+            const currentStyles = this.styleManager.getStyles();
+
+            // Recompute and apply styles to all existing nodes and edges
+            for (const n of this.dataManager.nodes.values()) {
+                const styleId = currentStyles.getStyleForNode(n.data);
+                n.changeManager.loadCalculatedValues(currentStyles.getCalculatedStylesForNode(n.data));
+                n.updateStyle(styleId);
+            }
+
+            for (const e of this.dataManager.edges.values()) {
+                const styleId = currentStyles.getStyleForEdge(e.data);
+                e.updateStyle(styleId);
+            }
+        });
+
         // Default layout is now queued in constructor to ensure proper obsolescence ordering
     }
 
@@ -544,7 +571,6 @@ export class Graph implements GraphContext {
     private async _setStyleTemplateInternal(t: StyleSchema): Promise<Styles> {
         // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         const previousTwoD = this.styles.config.graph.twoD;
-        const previousViewMode = this.styles.config.graph.viewMode;
 
         // CRITICAL: Determine the target 2D mode FIRST from the template, BEFORE loading styles
         // This allows us to set up camera and metadata before any mesh operations triggered by style loading
@@ -557,10 +583,10 @@ export class Graph implements GraphContext {
         let targetViewMode: ViewMode;
 
         if (viewModeExplicitlySet) {
-            targetViewMode = (templateGraph?.viewMode as ViewMode) ?? "3d";
+            targetViewMode = (templateGraph.viewMode as ViewMode | undefined) ?? "3d";
             targetTwoD = targetViewMode === "2d";
         } else if (twoDExplicitlySet) {
-            targetTwoD = templateGraph?.twoD as boolean ?? false;
+            targetTwoD = (templateGraph.twoD as boolean | undefined) ?? false;
             targetViewMode = targetTwoD ? "2d" : "3d";
             if (targetTwoD !== previousTwoD) {
                 console.warn(
@@ -597,7 +623,6 @@ export class Graph implements GraphContext {
 
         // Use these as current values for subsequent logic
         const currentTwoD = targetTwoD;
-        const currentViewMode = targetViewMode;
 
         // Clear mesh cache if switching between 2D and 3D modes
         // This must happen AFTER metadata and camera are set up
@@ -1083,11 +1108,14 @@ export class Graph implements GraphContext {
             if (node) {
                 this.selectionManager.onNodeRemoved(node);
             }
+
             this.dataManager.removeNode(id);
         };
 
         if (options?.skipQueue) {
-            nodeIds.forEach((id) => removeNodeWithSelectionCheck(id));
+            nodeIds.forEach((id) => {
+                removeNodeWithSelectionCheck(id);
+            });
             return;
         }
 
@@ -1098,7 +1126,9 @@ export class Graph implements GraphContext {
                     throw new Error("Operation cancelled");
                 }
 
-                nodeIds.forEach((id) => removeNodeWithSelectionCheck(id));
+                nodeIds.forEach((id) => {
+                    removeNodeWithSelectionCheck(id);
+                });
             },
             {
                 description: `Removing ${nodeIds.length} nodes`,
@@ -2090,9 +2120,10 @@ export class Graph implements GraphContext {
             // OrbitCameraController - get world position and pivot position
             const orbitController = controller as unknown as {
                 pivot: {
-                    position: Vector3,
-                    rotationQuaternion: Quaternion | null,
-                    computeWorldMatrix: (force: boolean) => void
+                    position: Vector3;
+                    rotation: Vector3;
+                    rotationQuaternion: Quaternion | null;
+                    computeWorldMatrix: (force: boolean) => void;
                 };
                 cameraDistance: number;
                 camera: {position: Vector3, parent: unknown, computeWorldMatrix: (force: boolean) => void};
@@ -2119,15 +2150,23 @@ export class Graph implements GraphContext {
                 z: orbitController.pivot.position.z,
             };
 
-            // Store pivot rotation (from quaternion) and distance for restoration
-            // PivotController uses rotationQuaternion, not euler rotation
-            const pivotQuat = orbitController.pivot.rotationQuaternion ?? Quaternion.Identity();
-            const pivotEuler = pivotQuat.toEulerAngles();
-            state.pivotRotation = {
-                x: pivotEuler.x,
-                y: pivotEuler.y,
-                z: pivotEuler.z,
-            };
+            // Store pivot rotation and distance for restoration
+            // PivotController uses rotationQuaternion, so convert to Euler for storage
+            if (orbitController.pivot.rotationQuaternion) {
+                const euler = orbitController.pivot.rotationQuaternion.toEulerAngles();
+                state.pivotRotation = {
+                    x: euler.x,
+                    y: euler.y,
+                    z: euler.z,
+                };
+            } else {
+                state.pivotRotation = {
+                    x: orbitController.pivot.rotation.x,
+                    y: orbitController.pivot.rotation.y,
+                    z: orbitController.pivot.rotation.z,
+                };
+            }
+
             state.cameraDistance = orbitController.cameraDistance;
         } else if (controller && "velocity" in controller) {
             // TwoDCameraController - get zoom and pan
@@ -2259,9 +2298,10 @@ export class Graph implements GraphContext {
             // OrbitCameraController - work with pivot system
             const orbitController = controller as unknown as {
                 pivot: {
-                    position: Vector3,
-                    rotationQuaternion: Quaternion | null,
-                    computeWorldMatrix: (force: boolean) => void
+                    position: Vector3;
+                    rotation: Vector3;
+                    rotationQuaternion: Quaternion | null;
+                    computeWorldMatrix: (force: boolean) => void;
                 };
                 cameraDistance: number;
                 updateCameraPosition: () => void;
@@ -2277,14 +2317,16 @@ export class Graph implements GraphContext {
             }
 
             // Set pivot rotation if provided (for exact state restoration)
+            // Must use rotationQuaternion because PivotController initializes with quaternion
+            // In Babylon.js, when rotationQuaternion is set (not null), it takes precedence over Euler rotation
             if (state.pivotRotation) {
-                // Convert euler angles to quaternion
-                // PivotController uses rotationQuaternion, not rotation
-                orbitController.pivot.rotationQuaternion = Quaternion.RotationYawPitchRoll(
-                    state.pivotRotation.y,
-                    state.pivotRotation.x,
-                    state.pivotRotation.z,
+                // Convert Euler angles to quaternion
+                const quat = Quaternion.RotationYawPitchRoll(
+                    state.pivotRotation.y, // yaw
+                    state.pivotRotation.x, // pitch
+                    state.pivotRotation.z, // roll
                 );
+                orbitController.pivot.rotationQuaternion = quat;
             } else if (state.position && state.target) {
                 // Calculate pivot rotation from position and target
                 // Camera should look from position towards target
@@ -2300,8 +2342,9 @@ export class Graph implements GraphContext {
                 const yaw = Math.atan2(direction.x, direction.z) + Math.PI;
                 const pitch = Math.asin(direction.y / distance);
 
-                // Use rotationQuaternion instead of rotation (PivotController uses quaternions)
-                orbitController.pivot.rotationQuaternion = Quaternion.RotationYawPitchRoll(yaw, pitch, 0);
+                // Convert Euler angles to quaternion
+                const quat = Quaternion.RotationYawPitchRoll(yaw, pitch, 0);
+                orbitController.pivot.rotationQuaternion = quat;
             }
 
             // Set camera distance if provided
@@ -3158,6 +3201,315 @@ export class Graph implements GraphContext {
         this.scene.render();
     }
 
+    // ===========================================
+    // AI Control Methods (Phase 3)
+    // ===========================================
+
+    // AI Manager instance (lazy-initialized)
+    private aiManager: import("./ai/AiManager").AiManager | null = null;
+
+    /**
+     * Enable AI-powered natural language control of the graph.
+     *
+     * @param config - AI configuration including provider and optional API key
+     * @returns Promise resolving when AI is ready
+     *
+     * @example
+     * ```typescript
+     * // Enable with mock provider (for testing)
+     * await graph.enableAiControl({ provider: 'mock' });
+     *
+     * // Enable with OpenAI
+     * await graph.enableAiControl({
+     *   provider: 'openai',
+     *   apiKey: 'sk-...'
+     * });
+     *
+     * // Now you can send commands
+     * const result = await graph.aiCommand('Show me the graph summary');
+     * ```
+     */
+    async enableAiControl(config: import("./ai/AiManager").AiManagerConfig): Promise<void> {
+        // Dynamically import to avoid loading AI code when not needed
+        const {AiManager} = await import("./ai/AiManager");
+
+        // Create and initialize AI manager
+        this.aiManager = new AiManager();
+        this.aiManager.init(this, config);
+    }
+
+    /**
+     * Disable AI control and clean up resources.
+     *
+     * @example
+     * ```typescript
+     * graph.disableAiControl();
+     * // AI commands will no longer work
+     * ```
+     */
+    disableAiControl(): void {
+        if (this.aiManager) {
+            this.aiManager.dispose();
+            this.aiManager = null;
+        }
+    }
+
+    /**
+     * Send a natural language command to the AI controller.
+     *
+     * @param input - Natural language command (e.g., "switch to circular layout")
+     * @param options - Optional execution options
+     * @returns Promise resolving to command result
+     *
+     * @example
+     * ```typescript
+     * // Query graph info
+     * const result = await graph.aiCommand('How many nodes are there?');
+     * console.log(result.message);
+     *
+     * // Change layout
+     * await graph.aiCommand('Use circular layout');
+     *
+     * // Switch dimension
+     * await graph.aiCommand('Show in 2D');
+     * ```
+     */
+    async aiCommand(
+        input: string,
+    ): Promise<import("./ai/AiController").ExecutionResult> {
+        if (!this.aiManager) {
+            return {
+                success: false,
+                message: "AI control is not enabled. Call enableAiControl() first.",
+            };
+        }
+
+        return this.aiManager.execute(input);
+    }
+
+    /**
+     * Get the current AI status synchronously.
+     *
+     * @returns Current AI status or null if AI is not enabled
+     *
+     * @example
+     * ```typescript
+     * const status = graph.getAiStatus();
+     * if (status?.state === 'executing') {
+     *   console.log('AI is processing a command...');
+     * }
+     * ```
+     */
+    getAiStatus(): import("./ai/AiStatus").AiStatus | null {
+        return this.aiManager?.getStatus() ?? null;
+    }
+
+    /**
+     * Subscribe to AI status changes.
+     *
+     * @param callback - Function called when status changes
+     * @returns Unsubscribe function
+     *
+     * @example
+     * ```typescript
+     * const unsubscribe = graph.onAiStatusChange((status) => {
+     *   console.log('AI state:', status.state);
+     *   if (status.streamedText) {
+     *     console.log('Response:', status.streamedText);
+     *   }
+     * });
+     *
+     * // Later: stop listening
+     * unsubscribe();
+     * ```
+     */
+    onAiStatusChange(callback: import("./ai/AiStatus").StatusChangeCallback): () => void {
+        if (!this.aiManager) {
+            // Return no-op unsubscribe if AI not enabled
+            return (): void => undefined;
+        }
+
+        return this.aiManager.onStatusChange(callback);
+    }
+
+    /**
+     * Cancel any in-progress AI command.
+     *
+     * @example
+     * ```typescript
+     * // Start a long-running command
+     * const promise = graph.aiCommand('complex query');
+     *
+     * // Cancel it
+     * graph.cancelAiCommand();
+     * ```
+     */
+    cancelAiCommand(): void {
+        this.aiManager?.cancel();
+    }
+
+    /**
+     * Get the AI manager for advanced configuration.
+     * Returns null if AI is not enabled.
+     *
+     * @returns The AI manager or null
+     *
+     * @example
+     * ```typescript
+     * const manager = graph.getAiManager();
+     * if (manager) {
+     *   // Register custom command
+     *   manager.registerCommand(myCustomCommand);
+     * }
+     * ```
+     */
+    getAiManager(): import("./ai/AiManager").AiManager | null {
+        return this.aiManager;
+    }
+
+    /**
+     * Check if AI control is currently enabled.
+     *
+     * @returns True if AI is enabled
+     */
+    isAiEnabled(): boolean {
+        return this.aiManager !== null;
+    }
+
+    /**
+     * Retry the last AI command.
+     * Useful for retrying after transient errors.
+     *
+     * @returns Promise resolving to command result
+     * @throws Error if AI not enabled or no previous command
+     *
+     * @example
+     * ```typescript
+     * // After a failed command
+     * try {
+     *   const result = await graph.retryLastAiCommand();
+     *   console.log('Retry succeeded:', result);
+     * } catch (error) {
+     *   console.error('Retry failed:', error);
+     * }
+     * ```
+     */
+    retryLastAiCommand(): Promise<import("./ai/AiController").ExecutionResult> {
+        if (!this.aiManager) {
+            return Promise.reject(new Error("AI not enabled. Call enableAiControl() first."));
+        }
+
+        return this.aiManager.retry();
+    }
+
+    // ===========================================
+    // Voice Input Methods (Phase 6)
+    // ===========================================
+
+    // Voice input adapter instance (lazy-initialized)
+    private voiceAdapter: VoiceInputAdapter | null = null;
+
+    /**
+     * Get the voice input adapter.
+     * Creates the adapter on first use.
+     *
+     * @returns The voice input adapter
+     *
+     * @example
+     * ```typescript
+     * const adapter = graph.getVoiceAdapter();
+     * if (adapter.isSupported) {
+     *   adapter.start({ continuous: true });
+     * }
+     * ```
+     */
+    getVoiceAdapter(): VoiceInputAdapter {
+        this.voiceAdapter ??= new VoiceInputAdapter();
+
+        return this.voiceAdapter;
+    }
+
+    /**
+     * Start voice input and execute commands.
+     *
+     * @param options - Voice input options
+     * @returns True if voice input started successfully
+     *
+     * @example
+     * ```typescript
+     * graph.startVoiceInput({
+     *   continuous: true,
+     *   interimResults: true,
+     *   onTranscript: (text, isFinal) => {
+     *     console.log('Transcript:', text, isFinal ? '(final)' : '(interim)');
+     *     if (isFinal) {
+     *       graph.aiCommand(text);
+     *     }
+     *   },
+     * });
+     * ```
+     */
+    startVoiceInput(options?: {
+        continuous?: boolean;
+        interimResults?: boolean;
+        language?: string;
+        onTranscript?: (text: string, isFinal: boolean) => void;
+        onStart?: (started: boolean, error?: string) => void;
+    }): boolean {
+        const adapter = this.getVoiceAdapter();
+
+        if (!adapter.isSupported) {
+            console.warn("Voice input is not supported in this browser");
+            return false;
+        }
+
+        // Register transcript callback if provided
+        if (options?.onTranscript) {
+            adapter.onInput(options.onTranscript);
+        }
+
+        // Register start callback if provided
+        if (options?.onStart) {
+            adapter.onStart(options.onStart);
+        }
+
+        // Start listening
+        adapter.start({
+            continuous: options?.continuous ?? false,
+            interimResults: options?.interimResults ?? true,
+            language: options?.language ?? "en-US",
+        });
+
+        // Return true because permission is being requested
+        // Actual start/failure will be notified via onStart callback
+        return true;
+    }
+
+    /**
+     * Stop voice input.
+     *
+     * @example
+     * ```typescript
+     * graph.stopVoiceInput();
+     * ```
+     */
+    stopVoiceInput(): void {
+        this.voiceAdapter?.stop();
+    }
+
+    /**
+     * Check if voice input is currently active.
+     *
+     * @returns True if voice input is active
+     */
+    isVoiceActive(): boolean {
+        return this.voiceAdapter?.isActive ?? false;
+    }
+
+    // ===========================================
+    // XR (VR/AR) Methods
+    // ===========================================
+
     /**
      * Initialize XR (VR/AR) system
      * Creates session manager and UI buttons based on configuration
@@ -3283,10 +3635,16 @@ export class Graph implements GraphContext {
     }
 
     dispose(): void {
+        // Clean up voice adapter if created
+        this.voiceAdapter?.dispose();
+        this.voiceAdapter = null;
+
+        // Clean up AI manager if enabled
+        this.disableAiControl();
+
         // Clean up XR resources
         this.xrUIManager?.dispose();
         this.xrSessionManager?.dispose();
-
         this.shutdown();
     }
 }

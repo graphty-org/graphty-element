@@ -517,7 +517,7 @@ function enableRemoteLoggingInBrowser(): void {
                 try {
                     return JSON.stringify(arg, null, 2);
                 } catch {
-                    return String(arg);
+                    return "[Circular or non-serializable object]";
                 }
             }
 
@@ -543,7 +543,9 @@ function enableRemoteLoggingInBrowser(): void {
         flushTimer = setTimeout(flushLogs, 100);
     }
 
-    // Store original console methods
+    // Store original console methods and override them with remote logging wrappers
+    // This is intentional - the remote logging system intercepts console.* calls
+    /* eslint-disable no-console */
     const originalConsole = {
         log: console.log.bind(console),
         warn: console.warn.bind(console),
@@ -570,6 +572,7 @@ function enableRemoteLoggingInBrowser(): void {
     };
 
     originalConsole.log(`[RemoteLogging] Enabled with session: ${SESSION_ID}`);
+    /* eslint-enable no-console */
 }
 
 export const nodeShapes = [

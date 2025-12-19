@@ -1,18 +1,88 @@
 import {dijkstra, dijkstraPath} from "@graphty/algorithms";
+import {z} from "zod/v4";
 
-import type {SuggestedStylesConfig} from "../config";
+import {defineOptions, type OptionsSchema as ZodOptionsSchema, type SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
+import {type OptionsSchema} from "./types/OptionSchema";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
-interface DijkstraOptions {
-    source: number | string;
-    target?: number | string;
+/**
+ * Zod-based options schema for Dijkstra algorithm
+ */
+export const dijkstraOptionsSchema = defineOptions({
+    source: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Source Node",
+            description: "Starting node for shortest path (uses first node if not set)",
+        },
+    },
+    target: {
+        schema: z.union([z.string(), z.number()]).nullable().default(null),
+        meta: {
+            label: "Target Node",
+            description: "Destination node for shortest path (uses last node if not set)",
+        },
+    },
+    bidirectional: {
+        schema: z.boolean().default(true),
+        meta: {
+            label: "Bidirectional Search",
+            description: "Use bidirectional search optimization for faster point-to-point queries",
+            advanced: true,
+        },
+    },
+});
+
+/**
+ * Options for Dijkstra algorithm
+ */
+export interface DijkstraOptions extends Record<string, unknown> {
+    /** Starting node for shortest path (defaults to first node if not provided) */
+    source: number | string | null;
+    /** Destination node for shortest path (defaults to last node if not provided) */
+    target: number | string | null;
+    /** Use bidirectional search optimization for point-to-point queries */
+    bidirectional: boolean;
 }
 
-export class DijkstraAlgorithm extends Algorithm {
+export class DijkstraAlgorithm extends Algorithm<DijkstraOptions> {
     static namespace = "graphty";
     static type = "dijkstra";
-    private options: DijkstraOptions | null = null;
+
+    static zodOptionsSchema: ZodOptionsSchema = dijkstraOptionsSchema;
+
+    /**
+     * Options schema for Dijkstra algorithm
+     */
+    static optionsSchema: OptionsSchema = {
+        source: {
+            type: "nodeId",
+            default: null,
+            label: "Source Node",
+            description: "Starting node for shortest path (uses first node if not set)",
+            required: false,
+        },
+        target: {
+            type: "nodeId",
+            default: null,
+            label: "Target Node",
+            description: "Destination node for shortest path (uses last node if not set)",
+            required: false,
+        },
+        bidirectional: {
+            type: "boolean",
+            default: true,
+            label: "Bidirectional Search",
+            description: "Use bidirectional search optimization for faster point-to-point queries",
+            advanced: true,
+        },
+    };
+
+    /**
+     * Legacy options set via configure() for backward compatibility
+     */
+    private legacyOptions: {source: number | string, target?: number | string} | null = null;
 
     static suggestedStyles = (): SuggestedStylesConfig => ({
         layers: [
@@ -53,9 +123,11 @@ export class DijkstraAlgorithm extends Algorithm {
 
     /**
      * Configure the algorithm with source and optional target nodes
+     *
+     * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
-    configure(options: DijkstraOptions): this {
-        this.options = options;
+    configure(options: {source: number | string, target?: number | string}): this {
+        this.legacyOptions = options;
         return this;
     }
 
@@ -69,15 +141,17 @@ export class DijkstraAlgorithm extends Algorithm {
             return;
         }
 
-        // Get source and target from options or use defaults (first and last nodes)
-        const source = this.options?.source ?? nodes[0];
-        const target = this.options?.target ?? nodes[nodes.length - 1];
+        // Get source and target from legacy options, schema options, or use defaults
+        // Legacy configure() takes precedence for backward compatibility
+        const source = this.legacyOptions?.source ?? this._schemaOptions.source ?? nodes[0];
+        const target = this.legacyOptions?.target ?? this._schemaOptions.target ?? nodes[nodes.length - 1];
+        const {bidirectional} = this._schemaOptions;
 
         // Convert to @graphty/algorithms format (undirected for path finding)
         const graphData = toAlgorithmGraph(g);
 
         // Run Dijkstra to get path from source to target
-        const pathResult = dijkstraPath(graphData, source, target);
+        const pathResult = dijkstraPath(graphData, source, target, {bidirectional});
         const path = pathResult?.path ?? [];
 
         // Run Dijkstra once from source to get all distances

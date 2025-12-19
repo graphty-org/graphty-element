@@ -151,7 +151,9 @@ describe("Mouse Controls Integration", () => {
         test("wheel to zoom in 2D mode", () => {
             // Get the camera controller
             const cameraController = graph.camera.getActiveController();
-            assert.isDefined(cameraController, "Camera controller should be defined");
+            if (!cameraController) {
+                throw new Error("Camera controller should be defined");
+            }
 
             const {camera} = cameraController;
             const initialOrthoTop = camera.orthoTop ?? 10;
@@ -180,7 +182,9 @@ describe("Mouse Controls Integration", () => {
         test("wheel down to zoom out in 2D mode", () => {
             // Get the camera controller
             const cameraController = graph.camera.getActiveController();
-            assert.isDefined(cameraController, "Camera controller should be defined");
+            if (!cameraController) {
+                throw new Error("Camera controller should be defined");
+            }
 
             const {camera} = cameraController;
             const initialOrthoTop = camera.orthoTop ?? 10;
