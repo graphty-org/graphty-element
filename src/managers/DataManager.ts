@@ -76,7 +76,12 @@ export class DataManager implements Manager {
      */
     applyStylesToExistingNodes(): void {
         for (const n of this.nodes.values()) {
-            // Run calculated values immediately since node data (including algorithmResults) is already populated
+            // First, recalculate and apply the base style from the new template
+            // This handles static style values (color, shape, size, etc.)
+            const newStyleId = this.styles.getStyleForNode(n.data, n.algorithmResults);
+            n.updateStyle(newStyleId);
+
+            // Then run calculated values immediately since node data (including algorithmResults) is already populated
             // This sets values in n.styleUpdates (same as changeManager.dataObjects.style)
             n.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForNode(n.data), true);
             // Call update() to merge calculated style updates with the base style
@@ -90,8 +95,20 @@ export class DataManager implements Manager {
      */
     applyStylesToExistingEdges(): void {
         for (const e of this.edges.values()) {
-            const styleId = this.styles.getStyleForEdge(e.data, e.algorithmResults);
-            e.updateStyle(styleId);
+            // Combine data and algorithmResults for selector matching and calculated style evaluation
+            const combinedData = {... e.data, algorithmResults: e.algorithmResults};
+
+            // First, recalculate and apply the base style from the new template
+            // This handles static style values (color, width, arrow types, etc.)
+            const newStyleId = this.styles.getStyleForEdge(combinedData);
+            e.updateStyle(newStyleId);
+
+            // Then run calculated values immediately since edge data (including algorithmResults) is already populated
+            // This sets values in e.styleUpdates (same as changeManager.dataObjects.style)
+            e.changeManager.loadCalculatedValues(this.styles.getCalculatedStylesForEdge(combinedData), true);
+            // Call update() to merge calculated style updates with the base style
+            // update() checks styleUpdates and creates a new styleId that includes calculated values
+            e.update();
         }
     }
 

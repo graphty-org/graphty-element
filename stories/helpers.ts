@@ -74,12 +74,65 @@ export const eventWaitingDecorator = (story: any): any => {
     return result;
 };
 
+// Helper to wait for data to load - useful for URL-based data sources
+export async function waitForDataLoaded(canvasElement: HTMLElement): Promise<void> {
+    const graphtyElement = canvasElement.querySelector("graphty-element");
+    if (!graphtyElement) {
+        return;
+    }
+
+    const state = eventWaitingState.get(graphtyElement as HTMLElement);
+    if (state?.promises.has("data-loaded")) {
+        const dataPromise = state.promises.get("data-loaded");
+        if (!dataPromise) {
+            return;
+        }
+
+        // Longer timeout for network requests (10 seconds)
+        const timeoutPromise = new Promise<void>((resolve) => {
+            setTimeout(() => {
+                // Data may already be loaded (e.g., inline data) or failed
+                resolve();
+            }, 10000);
+        });
+
+        await Promise.race([dataPromise, timeoutPromise]);
+    } else {
+        // Fallback: wait for data-loaded event with timeout
+        await new Promise<void>((resolve) => {
+            let resolved = false;
+
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve();
+                }
+            }, 10000);
+
+            const handleDataLoaded = (): void => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            };
+
+            graphtyElement.addEventListener("data-loaded", handleDataLoaded, {once: true});
+        });
+    }
+}
+
 // Helper to wait for graph to settle - now uses pre-attached listeners
+// For URL-based data sources, this function first waits for data to load
 export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<void> {
     const graphtyElement = canvasElement.querySelector("graphty-element");
     if (!graphtyElement) {
         return;
     }
+
+    // First, wait for data to load (important for URL-based data sources)
+    // This ensures the layout has a chance to run before we wait for settling
+    await waitForDataLoaded(canvasElement);
 
     // For static layouts, the settled event may fire immediately on the first render
     // We need to give the render loop a chance to run
@@ -94,11 +147,12 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
             return;
         }
 
+        // Longer timeout for physics-based layouts to settle (5 seconds)
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 // For static layouts, this is not an error - they may have already settled
                 resolve();
-            }, 500); // Much shorter timeout since static layouts settle immediately
+            }, 5000);
         });
 
         await Promise.race([settledPromise, timeoutPromise]);
@@ -111,13 +165,14 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
         await new Promise<void>((resolve) => {
             let settled = false;
 
+            // Longer timeout for physics-based layouts (5 seconds)
             const timeout = setTimeout(() => {
                 if (!settled) {
                     // Not a warning - static layouts may have already settled
                     settled = true;
                     resolve();
                 }
-            }, 500); // Much shorter timeout
+            }, 5000);
 
             const handleSettled = (): void => {
                 if (!settled) {
@@ -325,8 +380,8 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 } else if (t.layers) {
                     deepSet(t, `layers[0].node.style.${name}`, val);
                 }
-            } else if (name.startsWith("line.") || name.startsWith("arrowHead.") || name.startsWith("arrowTail.")) {
-                // For edge properties (including tail)
+            } else if (name.startsWith("line.") || name.startsWith("arrowHead.") || name.startsWith("arrowTail.") || name.startsWith("tooltip.")) {
+                // For edge properties (including tail and tooltip)
                 if (t.edgeStyle) {
                     deepSet(t, `edgeStyle.${name}`, val);
                 } else if (t.layers) {
@@ -361,16 +416,164 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
     }
 
     // Set layout properties if provided
-    if (args.layout) {
-        g.layout = args.layout;
-    }
-
+    // IMPORTANT: Set layoutConfig BEFORE layout so that when layout triggers
+    // setLayout(), it already has access to the seed value for deterministic layouts
     if (args.layoutConfig) {
         g.layoutConfig = args.layoutConfig;
     }
 
+    if (args.layout) {
+        g.layout = args.layout;
+    }
+
+    // Set XR config if provided
+    if (args.xr) {
+        g.xr = args.xr;
+    }
+
     return g;
 };
+
+/**
+ * Decorator that enables remote logging for XR debugging.
+ * Logs are sent to the XR demo server at https://dev.ato.ms:9077/log
+ * Start the server with: npm run dev:xr
+ *
+ * Usage:
+ * ```
+ * export default {
+ *     decorators: [eventWaitingDecorator, remoteLoggingDecorator],
+ * }
+ * ```
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const remoteLoggingDecorator = (story: any): any => {
+    // Only enable in browser environment
+    if (typeof window !== "undefined") {
+        enableRemoteLoggingInBrowser();
+    }
+
+    return story();
+};
+
+/**
+ * Enable remote logging in the browser.
+ * Intercepts console.log/warn/error/info and sends to remote server.
+ */
+function enableRemoteLoggingInBrowser(): void {
+    // Don't enable twice
+    if ((window as unknown as {__remoteLoggingEnabled?: boolean}).__remoteLoggingEnabled) {
+        return;
+    }
+
+    (window as unknown as {__remoteLoggingEnabled?: boolean}).__remoteLoggingEnabled = true;
+
+    const SERVER_URL = "https://dev.ato.ms:9077/log";
+    const SESSION_ID = `storybook-${Date.now().toString(36)}`;
+    const LOG_BUFFER: {time: string, level: string, message: string}[] = [];
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Throttling for repeated messages
+    const lastMessages = new Map<string, number>();
+    const THROTTLE_MS = 5000;
+    const THROTTLE_PATTERNS = [/Max number of touches/, /Max touches exceeded/];
+
+    function shouldThrottle(message: string): boolean {
+        for (const pattern of THROTTLE_PATTERNS) {
+            if (pattern.test(message)) {
+                const key = pattern.source;
+                const lastTime = lastMessages.get(key) ?? 0;
+                const now = Date.now();
+                if (now - lastTime < THROTTLE_MS) {
+                    return true;
+                }
+
+                lastMessages.set(key, now);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    function flushLogs(): void {
+        if (LOG_BUFFER.length === 0) {
+            return;
+        }
+
+        const logsToSend = LOG_BUFFER.splice(0, LOG_BUFFER.length);
+        fetch(SERVER_URL, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({sessionId: SESSION_ID, logs: logsToSend}),
+        }).catch(() => {
+            // Put logs back on failure
+            LOG_BUFFER.unshift(... logsToSend);
+        });
+    }
+
+    function formatArgs(args: unknown[]): string {
+        return args.map((arg) => {
+            if (typeof arg === "object" && arg !== null) {
+                try {
+                    return JSON.stringify(arg, null, 2);
+                } catch {
+                    return "[Circular or non-serializable object]";
+                }
+            }
+
+            return String(arg);
+        }).join(" ");
+    }
+
+    function queueLog(level: string, args: unknown[]): void {
+        const message = formatArgs(args);
+        if (shouldThrottle(message)) {
+            return;
+        }
+
+        LOG_BUFFER.push({
+            time: new Date().toISOString(),
+            level,
+            message,
+        });
+        if (flushTimer) {
+            clearTimeout(flushTimer);
+        }
+
+        flushTimer = setTimeout(flushLogs, 100);
+    }
+
+    // Store original console methods and override them with remote logging wrappers
+    // This is intentional - the remote logging system intercepts console.* calls
+    /* eslint-disable no-console */
+    const originalConsole = {
+        log: console.log.bind(console),
+        warn: console.warn.bind(console),
+        error: console.error.bind(console),
+        info: console.info.bind(console),
+    };
+
+    // Override console methods
+    console.log = (... args: unknown[]) => {
+        originalConsole.log(... args);
+        queueLog("LOG", args);
+    };
+    console.warn = (... args: unknown[]) => {
+        originalConsole.warn(... args);
+        queueLog("WARN", args);
+    };
+    console.error = (... args: unknown[]) => {
+        originalConsole.error(... args);
+        queueLog("ERROR", args);
+    };
+    console.info = (... args: unknown[]) => {
+        originalConsole.info(... args);
+        queueLog("INFO", args);
+    };
+
+    originalConsole.log(`[RemoteLogging] Enabled with session: ${SESSION_ID}`);
+    /* eslint-enable no-console */
+}
 
 export const nodeShapes = [
     "box",
@@ -391,11 +594,11 @@ export const nodeShapes = [
     "pentagonal_pyramid",
     "triangular_dipyramid",
     "pentagonal_dipyramid",
-    "elongated_square_dypyramid",
+    "elongated_square_dipyramid",
     "elongated_pentagonal_dipyramid",
     "elongated_pentagonal_cupola",
     "goldberg",
     "icosphere",
     "geodesic",
-];
+] as const;
 

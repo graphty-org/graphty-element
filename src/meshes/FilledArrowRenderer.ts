@@ -8,6 +8,8 @@ import {
     VertexData,
 } from "@babylonjs/core";
 
+import {MaterialHelper} from "./MaterialHelper";
+
 export interface FilledArrowOptions {
     size: number; // Screen-space size in pixels
     color: string; // Hex color
@@ -935,5 +937,111 @@ void main() {
             const material = mesh.material as ShaderMaterial;
             material.setVector3("lineDirection", direction);
         }
+    }
+
+    /**
+     * Create a 2D arrow mesh with flat StandardMaterial
+     *
+     * This method reuses the same geometry creation logic as 3D arrows
+     * but applies a 2D StandardMaterial instead of billboarded ShaderMaterial.
+     *
+     * @param type - Arrow type (normal, diamond, box, dot, vee, tee, etc.)
+     * @param length - Arrow length in world units
+     * @param width - Arrow width in world units
+     * @param color - Hex color string
+     * @param opacity - Opacity value 0-1
+     * @param scene - Babylon.js scene
+     * @returns Mesh with StandardMaterial and XY plane rotation
+     */
+    static create2DArrow(
+        type: string,
+        length: number,
+        width: number,
+        color: string,
+        opacity: number,
+        scene: Scene,
+    ): Mesh {
+        // Get the appropriate geometry for the arrow type
+        const geometry = this.getGeometryForType(type, scene);
+
+        // Create mesh and apply geometry
+        const mesh = new Mesh(`arrow-2d-${type}`, scene);
+        geometry.applyToMesh(mesh);
+
+        // Scale the mesh to desired size
+        // Use uniform scaling to match 3D shader behavior (worldOffset * size)
+        // The arrow geometry already has correct proportions, we just scale it uniformly
+        mesh.scaling.setAll(length);
+
+        // Apply 2D material (StandardMaterial + XY rotation)
+        MaterialHelper.apply2DMaterial(mesh, color, opacity, scene);
+
+        return mesh;
+    }
+
+    /**
+     * Get geometry for a specific arrow type
+     *
+     * This extracts geometry creation from the existing create* methods
+     * to enable reuse between 2D and 3D arrow creation.
+     *
+     * @param type - Arrow type
+     * @param scene - Babylon.js scene
+     * @returns VertexData for the arrow geometry
+     */
+    private static getGeometryForType(type: string, scene: Scene): VertexData {
+        let mesh: Mesh;
+
+        switch (type) {
+            case "normal":
+                mesh = this.createTriangle(false, scene);
+                break;
+            case "inverted":
+                mesh = this.createTriangle(true, scene);
+                break;
+            case "diamond":
+                mesh = this.createDiamond(scene);
+                break;
+            case "box":
+                mesh = this.createBox(scene);
+                break;
+            case "dot":
+            case "sphere-dot": // 2D mode: sphere-dot uses circle geometry with StandardMaterial
+                mesh = this.createCircle(scene);
+                break;
+            case "vee":
+                mesh = this.createVee(scene);
+                break;
+            case "tee":
+                mesh = this.createTee(scene);
+                break;
+            case "crow":
+                mesh = this.createCrow(scene);
+                break;
+            case "half-open":
+                mesh = this.createHalfOpen(scene);
+                break;
+            case "open-normal":
+                mesh = this.createOpenNormal(scene);
+                break;
+            case "open-circle":
+            case "open-dot": // Alias for open-circle (used in 2D mode for consistency)
+                mesh = this.createOpenCircle(scene);
+                break;
+            case "open-diamond":
+                mesh = this.createOpenDiamond(scene);
+                break;
+            default:
+                // Default to normal triangle
+                mesh = this.createTriangle(false, scene);
+        }
+
+        // Extract vertex data from the temporary mesh
+        const geometry = VertexData.ExtractFromMesh(mesh);
+
+        // Dispose the temporary mesh
+        mesh.dispose();
+
+        return geometry;
     }
 }

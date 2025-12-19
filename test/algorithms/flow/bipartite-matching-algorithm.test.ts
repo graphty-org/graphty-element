@@ -43,10 +43,9 @@ describe("BipartiteMatchingAlgorithm", () => {
             assert.ok(matchedEdgeLayer.edge.calculatedStyle.output.includes("color"));
             assert.ok(matchedEdgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
 
-            // Should have style for line width
+            // Should have style enabled
             assert.ok(matchedEdgeLayer.edge.style);
-            assert.ok(matchedEdgeLayer.edge.style.line);
-            assert.ok(matchedEdgeLayer.edge.style.line.width);
+            assert.ok(matchedEdgeLayer.edge.style.enabled);
         });
 
         it("layers have metadata", () => {
@@ -110,7 +109,7 @@ describe("BipartiteMatchingAlgorithm", () => {
     });
 
     describe("Style Configuration", () => {
-        it("matched edges have increased line width", () => {
+        it("matched edges use calculatedStyle for color", () => {
             const styles = BipartiteMatchingAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -118,12 +117,11 @@ describe("BipartiteMatchingAlgorithm", () => {
             assert.ok(matchedEdgeLayer);
             assert.ok(matchedEdgeLayer.edge);
             assert.ok(matchedEdgeLayer.edge.style);
-            assert.ok(matchedEdgeLayer.edge.style.line);
+            assert.ok(matchedEdgeLayer.edge.style.enabled);
 
-            // Matched edges should have a larger width
-            const {width} = matchedEdgeLayer.edge.style.line;
-            assert.ok(typeof width === "number");
-            assert.ok(width >= 2); // Should be at least 2 for visibility
+            // Matched edges should use calculatedStyle for color
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle);
+            assert.ok(matchedEdgeLayer.edge.calculatedStyle.output.includes("color"));
         });
 
         it("non-matched edges have reduced visibility", () => {
@@ -137,12 +135,11 @@ describe("BipartiteMatchingAlgorithm", () => {
             });
 
             if (nonMatchedLayer?.edge?.style) {
-                // Should have either reduced opacity or smaller width
+                // Should have reduced opacity
                 const {style} = nonMatchedLayer.edge;
                 const hasReducedOpacity = typeof style.line?.opacity === "number" && style.line.opacity < 1;
-                const hasSmallerWidth = typeof style.line?.width === "number" && style.line.width <= 2;
 
-                assert.ok(hasReducedOpacity || hasSmallerWidth, "Non-matched edges should have reduced visibility");
+                assert.ok(hasReducedOpacity, "Non-matched edges should have reduced opacity");
             }
         });
     });

@@ -201,7 +201,11 @@ export class D3GraphEngine extends LayoutEngine {
     }
 
     get isSettled(): boolean {
-        // console.log(`this.d3ForceLayout.alpha() ${this.d3ForceLayout.alpha()}`);
+        // If there are pending nodes/edges to be processed, we're not settled
+        if (this.graphNeedsRefresh) {
+            return false;
+        }
+
         return this.d3ForceLayout.alpha() < this.d3AlphaMin;
     }
 

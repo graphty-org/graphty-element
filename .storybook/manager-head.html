@@ -1,0 +1,60 @@
+<script>
+  // Add WebXR permissions to the Storybook iframe
+  // This needs to run before the iframe is created
+  (function() {
+    console.log('[manager-head] Setting up WebXR iframe permissions...');
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', addIframePermissions);
+    } else {
+      addIframePermissions();
+    }
+
+    function addIframePermissions() {
+      // Use MutationObserver to watch for iframe creation
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeName === 'IFRAME' && node.id === 'storybook-preview-iframe') {
+              console.log('[manager-head] Found Storybook iframe, adding WebXR permissions...');
+
+              // Add XR permissions to the iframe
+              const currentAllow = node.getAttribute('allow') || '';
+              const xrPermissions = 'xr-spatial-tracking; camera; microphone; gyroscope; accelerometer';
+
+              // Combine existing permissions with XR permissions
+              const newAllow = currentAllow ? `${currentAllow}; ${xrPermissions}` : xrPermissions;
+              node.setAttribute('allow', newAllow);
+
+              console.log('[manager-head] WebXR permissions added:', newAllow);
+
+              // Stop observing once we've found and modified the iframe
+              observer.disconnect();
+            }
+          });
+        });
+      });
+
+      // Start observing the document
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      // Also check if iframe already exists
+      setTimeout(() => {
+        const iframe = document.getElementById('storybook-preview-iframe');
+        if (iframe) {
+          console.log('[manager-head] Found existing Storybook iframe, adding WebXR permissions...');
+          const currentAllow = iframe.getAttribute('allow') || '';
+          const xrPermissions = 'xr-spatial-tracking; camera; microphone; gyroscope; accelerometer';
+          const newAllow = currentAllow ? `${currentAllow}; ${xrPermissions}` : xrPermissions;
+          iframe.setAttribute('allow', newAllow);
+          console.log('[manager-head] WebXR permissions added:', newAllow);
+          observer.disconnect();
+        }
+      }, 100);
+    }
+  })();
+</script>

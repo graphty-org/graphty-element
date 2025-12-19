@@ -103,7 +103,7 @@ export class LabelPropagationAlgorithm extends Algorithm<LabelPropagationOptions
         // Convert to @graphty/algorithms Graph format (undirected for community detection)
         const graphData = toAlgorithmGraph(g, {addReverseEdges: false});
 
-        // Run Label Propagation algorithm - returns {communities: Map<string, number>, iterations, converged}
+        // Run Label Propagation algorithm - accepts Graph directly in new version
         const result = labelPropagation(graphData, {
             maxIterations,
             randomSeed,

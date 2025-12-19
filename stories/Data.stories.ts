@@ -4,7 +4,7 @@ import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
-import {edgeData, eventWaitingDecorator, nodeData} from "./helpers";
+import {edgeData, eventWaitingDecorator, nodeData, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Data",
@@ -48,6 +48,24 @@ export const Json: Story = {
         dataSourceConfig: {
             data: "https://raw.githubusercontent.com/graphty-org/graphty-element/refs/heads/master/test/helpers/data3.json",
         },
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
+        },
+        // Add styleTemplate with preSteps for physics-based layout (ngraph)
+        // data3.json has 77 nodes, which needs more preSteps to settle
+        styleTemplate: StyleTemplate.parse({
+            graphtyTemplate: true,
+            majorVersion: "1",
+            behavior: {
+                layout: {
+                    preSteps: 8000, // Extra preSteps for data3.json (77 nodes) with ngraph
+                },
+            },
+        }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -59,6 +77,10 @@ export const ModifiedJson: Story = {
             edge: {
                 path: "links",
             },
+        },
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests
         },
         // Put edge field mappings in styleTemplate where they belong
         styleTemplate: StyleTemplate.parse({
@@ -77,6 +99,9 @@ export const ModifiedJson: Story = {
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const GraphML: Story = {
@@ -85,6 +110,9 @@ export const GraphML: Story = {
         dataSourceConfig: {
             url: "https://raw.githubusercontent.com/chengw07/NetWalk/master/data/karate.GraphML",
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -104,6 +132,9 @@ monitoring-1,client-1,0.3,Metrics,10,50.0,true,"Monitor client metrics"
 database-1,backup-1,0.7,Backup,20,300.0,true,"Database backup connection"
 backup-1,backup-2,0.6,Sync,25,200.0,true,"Backup synchronization"`,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -227,6 +258,9 @@ graph [
   ]
 ]`,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -377,6 +411,9 @@ export const GEXF: Story = {
   </graph>
 </gexf>`,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -539,6 +576,9 @@ digraph ComprehensiveTest {
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const CsvNeo4j: Story = {
@@ -566,6 +606,9 @@ user-1,user-3,MANAGES,2019,1.0`,
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const CsvGephi: Story = {
@@ -590,6 +633,9 @@ cache-1,database-1,Directed,1.2,Cache Miss`,
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -616,6 +662,9 @@ protein-D,protein-A,feedback,0.70,medium`,
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const CsvAdjacencyList: Story = {
@@ -639,6 +688,9 @@ router-5,router-1:2.2`,
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -667,6 +719,9 @@ node-8,Henry Moore,person,4,false,HR,henry@example.com`,
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -714,6 +769,9 @@ export const JsonD3: Story = {
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -763,6 +821,9 @@ export const JsonCytoscapeJs: Story = {
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const JsonSigma: Story = {
@@ -810,6 +871,9 @@ export const JsonSigma: Story = {
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const JsonVisJs: Story = {
@@ -855,6 +919,9 @@ export const JsonVisJs: Story = {
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -905,6 +972,9 @@ export const JsonNetworkX: Story = {
             },
         }),
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 // CSV Paired Files
@@ -938,6 +1008,9 @@ monitor-1,database-1,Directed,0.3,Metrics,8`)}`,
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -980,6 +1053,9 @@ export const Pajek: Story = {
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 

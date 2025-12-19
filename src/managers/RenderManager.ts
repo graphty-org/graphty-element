@@ -1,9 +1,12 @@
 import {
+    Color3,
     Color4,
     Engine,
     HemisphericLight,
     Logger,
+    Quaternion,
     Scene,
+    TransformNode,
     Vector3,
     WebGPUEngine,
 } from "@babylonjs/core";
@@ -25,12 +28,19 @@ export interface RenderManagerConfig {
 }
 
 /**
+ * The name of the graph-root TransformNode used for XR gestures
+ * Gestures (zoom, rotate, pan) manipulate this node to transform the entire graph
+ */
+export const GRAPH_ROOT_NAME = "graph-root";
+
+/**
  * Manages Babylon.js scene, engine, and render loop
  */
 export class RenderManager implements Manager {
     engine: Engine | WebGPUEngine;
     scene: Scene;
     camera: CameraManager;
+    graphRoot: TransformNode;
 
     private renderLoopActive = false;
     private updateCallback?: () => void;
@@ -56,6 +66,14 @@ export class RenderManager implements Manager {
         // Create scene
         this.scene = new Scene(this.engine);
 
+        // Create graph-root transform node for XR gestures
+        // All graph nodes will be parented to this, allowing gestures to transform the entire graph
+        this.graphRoot = new TransformNode(GRAPH_ROOT_NAME, this.scene);
+        this.graphRoot.position = Vector3.Zero();
+        // Pre-initialize rotationQuaternion to avoid on-the-fly creation during first rotation
+        // This ensures smooth transitions when XR gestures start applying rotations
+        this.graphRoot.rotationQuaternion = Quaternion.Identity();
+
         // Setup resize handler
         this.resizeHandler = (): void => {
             this.engine.resize();
@@ -64,11 +82,16 @@ export class RenderManager implements Manager {
         // Initialize camera manager
         this.camera = new CameraManager(this.scene);
 
+        // Store camera manager in scene metadata for access by other components
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.cameraManager = this.camera;
+
         // Setup cameras
         this.setupCameras();
 
-        // Setup lighting
-        new HemisphericLight("light", new Vector3(1, 1, 0));
+        // Setup lighting with ground color for fill from below
+        const light = new HemisphericLight("light", new Vector3(1, 1, 0), this.scene);
+        light.groundColor = new Color3(0.35, 0.35, 0.35);
 
         // Set background color
         const backgroundColor = this.config.backgroundColor ?? "#F5F5F5"; // whitesmoke

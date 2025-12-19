@@ -69,8 +69,8 @@ describe("DijkstraAlgorithm", () => {
             assert.ok(edgeLayer.edge.calculatedStyle);
             assert.ok(edgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
             assert.ok(edgeLayer.edge.calculatedStyle.output.includes("color"));
-            assert.ok(edgeLayer.edge.style.line);
-            assert.ok(edgeLayer.edge.style.line.width);
+            assert.ok(edgeLayer.edge.style);
+            assert.ok(edgeLayer.edge.style.enabled);
         });
 
         it("node style uses calculatedStyle for colorblind-safe color", () => {

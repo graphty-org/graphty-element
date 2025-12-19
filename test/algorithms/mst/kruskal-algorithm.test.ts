@@ -44,10 +44,9 @@ describe("KruskalAlgorithm", () => {
             assert.ok(mstEdgeLayer.edge.calculatedStyle.output.includes("color"));
             assert.ok(mstEdgeLayer.edge.calculatedStyle.expr.includes("StyleHelpers"));
 
-            // Should have line width defined
+            // Should have style enabled
             assert.ok(mstEdgeLayer.edge.style);
-            assert.ok(mstEdgeLayer.edge.style.line);
-            assert.ok(mstEdgeLayer.edge.style.line.width);
+            assert.ok(mstEdgeLayer.edge.style.enabled);
         });
 
         it("second layer dims non-MST edges", () => {
@@ -152,7 +151,7 @@ describe("KruskalAlgorithm", () => {
     });
 
     describe("Style Configuration", () => {
-        it("MST edges have increased line width", () => {
+        it("MST edges use calculatedStyle for color", () => {
             const styles = KruskalAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -160,15 +159,14 @@ describe("KruskalAlgorithm", () => {
             assert.ok(mstEdgeLayer);
             assert.ok(mstEdgeLayer.edge);
             assert.ok(mstEdgeLayer.edge.style);
-            assert.ok(mstEdgeLayer.edge.style.line);
+            assert.ok(mstEdgeLayer.edge.style.enabled);
 
-            // MST edges should have a larger width
-            const {width} = mstEdgeLayer.edge.style.line;
-            assert.ok(typeof width === "number");
-            assert.ok(width >= 2); // Should be at least 2 for visibility
+            // MST edges should use calculatedStyle for color
+            assert.ok(mstEdgeLayer.edge.calculatedStyle);
+            assert.ok(mstEdgeLayer.edge.calculatedStyle.output.includes("color"));
         });
 
-        it("non-MST edges have reduced opacity or smaller width", () => {
+        it("non-MST edges have reduced opacity", () => {
             const styles = KruskalAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -177,12 +175,11 @@ describe("KruskalAlgorithm", () => {
             assert.ok(nonMstEdgeLayer.edge);
             assert.ok(nonMstEdgeLayer.edge.style);
 
-            // Should have either reduced opacity or smaller width
+            // Should have reduced opacity
             const {style} = nonMstEdgeLayer.edge;
             const hasReducedOpacity = typeof style.line?.opacity === "number" && style.line.opacity < 1;
-            const hasSmallerWidth = typeof style.line?.width === "number" && style.line.width <= 2;
 
-            assert.ok(hasReducedOpacity || hasSmallerWidth, "Non-MST edges should have reduced visibility");
+            assert.ok(hasReducedOpacity, "Non-MST edges should have reduced opacity");
         });
     });
 });

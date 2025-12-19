@@ -26,9 +26,9 @@ export enum PolyhedronType {
 }
 
 export const EDGE_CONSTANTS = {
-    DEFAULT_LINE_WIDTH: 4.5,
+    DEFAULT_LINE_WIDTH: 8.0,
     DEFAULT_LINE_COLOR: "#FFFFFF",
-    DEFAULT_ARROW_WIDTH: 5.0,
+    DEFAULT_ARROW_WIDTH: 1.25,
     DEFAULT_ARROW_LENGTH: 0.5,
     ARROW_CAP_WIDTH_MULTIPLIER: 20,
     ARROW_CAP_WIDTH_MINIMUM: 4,
@@ -49,11 +49,14 @@ export const EDGE_CONSTANTS = {
     ARROW_CROW_FORK_ANGLE: 30, // degrees
     ARROW_VEE_ANGLE: 60, // degrees
     ARROW_HALF_OPEN_RATIO: 0.5,
-    // Line pattern parameters
-    DASH_LENGTH_MULTIPLIER: 0.05,
-    DASH_GAP_MULTIPLIER: 0.05, // Match dash length for equal spacing
+    // Line pattern parameters (multipliers relative to line width)
+    DASH_LENGTH_MULTIPLIER: 3.0, // Dash length = 3x line width
+    DASH_GAP_MULTIPLIER: 2.0, // Gap length = 2x line width
     SINEWAVE_AMPLITUDE_MULTIPLIER: 2,
     SINEWAVE_FREQUENCY_DEFAULT: 0.5,
     ZIGZAG_AMPLITUDE_MULTIPLIER: 2,
     ZIGZAG_FREQUENCY_DEFAULT: 1.0,
+    // Bezier curve parameters
+    BEZIER_CONTROL_POINT_OFFSET: 0.3,
+    BEZIER_POINT_DENSITY: 8, // Lowered from 20 to reduce segment count and improve rendering
 } as const;

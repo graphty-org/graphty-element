@@ -86,7 +86,7 @@ export class LayoutManager implements Manager {
             const layoutOpts = {... opts};
 
             // Get dimension-specific options from the layout if not already provided
-            const dimension = this.styles.config.graph.twoD ? 2 : 3;
+            const dimension = this.styles.config.graph.viewMode === "2d" ? 2 : 3;
             const dimensionOpts = LayoutEngine.getOptionsForDimensionByType(type, dimension);
 
             if (dimensionOpts) {
@@ -303,8 +303,7 @@ export class LayoutManager implements Manager {
             const options = layoutOptions ?? {};
 
             // Check if we need to update the layout
-            const needsUpdate = !this.layoutEngine ||
-                               this.layoutEngine.type !== layoutType ||
+            const needsUpdate = this.layoutEngine?.type !== layoutType ||
                                this.hasOptionsChanged(options);
 
             if (needsUpdate) {

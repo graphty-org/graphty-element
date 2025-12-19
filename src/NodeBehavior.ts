@@ -1,7 +1,13 @@
 import {
     ActionManager,
     ExecuteCodeAction,
-    SixDofDragBehavior,
+    Matrix,
+    type Observer,
+    PointerEventTypes,
+    type PointerInfoPre,
+    Ray,
+    Scene,
+    Vector3,
 } from "@babylonjs/core";
 
 import type {Graph} from "./Graph";
@@ -12,6 +18,314 @@ interface NodeBehaviorOptions {
     pinOnDrag?: boolean;
 }
 
+// Define drag state interface
+interface DragState {
+    dragging: boolean;
+    dragStartMeshPosition: Vector3 | null;
+    dragStartWorldPosition: Vector3 | null;
+    dragPlaneNormal: Vector3 | null;
+}
+
+/**
+ * Main drag handler class - unified for both desktop and XR
+ */
+export class NodeDragHandler {
+    private node: GraphNode;
+    private dragState: DragState;
+    private scene: Scene;
+    private pointerObserver: Observer<PointerInfoPre> | null = null;
+    private readonly zAxisAmplification: number;
+    private readonly enableZAmplificationInDesktop: boolean;
+
+    constructor(node: GraphNode) {
+        this.node = node;
+        this.scene = node.mesh.getScene();
+        this.dragState = {
+            dragging: false,
+            dragStartMeshPosition: null,
+            dragStartWorldPosition: null,
+            dragPlaneNormal: null,
+        };
+
+        // Read config from graph context
+        const context = this.getContext();
+        const xrConfig = context.getConfig().xr;
+
+        this.zAxisAmplification = xrConfig?.input.zAxisAmplification ?? 10.0;
+        this.enableZAmplificationInDesktop = xrConfig?.input.enableZAmplificationInDesktop ?? false;
+
+        // Setup pointer event listeners
+        this.setupPointerEvents();
+    }
+
+    // Public API for both desktop and XR
+    public onDragStart(worldPosition: Vector3): void {
+        // Debug: console.log("🔍 [Drag] Drag Start:", {
+        //     nodeId: this.node.id,
+        //     isXRMode: this.isXRMode(),
+        // });
+
+        this.dragState.dragging = true;
+        this.dragState.dragStartMeshPosition = this.node.mesh.position.clone();
+        this.dragState.dragStartWorldPosition = worldPosition.clone();
+        this.node.dragging = true;
+
+        // Capture the drag plane orientation at drag start
+        // This prevents the plane from rotating with camera during drag
+        const camera = this.scene.activeCamera;
+        if (camera) {
+            this.dragState.dragPlaneNormal = camera.getForwardRay().direction.clone();
+
+            // Disable camera input handler during node drag
+            // This prevents OrbitInputController from rotating camera while dragging nodes
+            const cameraManager = this.scene.metadata?.cameraManager;
+            if (cameraManager) {
+                // Debug: console.log("📷 Disabling camera input during node drag");
+                cameraManager.temporarilyDisableInput();
+            }
+        }
+
+        // Make sure graph is running
+        const context = this.getContext();
+        context.setRunning(true);
+    }
+
+    public onDragUpdate(worldPosition: Vector3): void {
+        if (!this.dragState.dragging || !this.dragState.dragStartWorldPosition || !this.dragState.dragStartMeshPosition) {
+            return;
+        }
+
+        // Calculate delta from drag start
+        const delta = worldPosition.subtract(this.dragState.dragStartWorldPosition);
+
+        // TODO: Add back delta validation with appropriate threshold for XR mode
+        // The previous MAX_REASONABLE_DELTA of 5.0 was too small for 10x amplification
+        // and was blocking ALL movement in XR
+
+        // Apply movement amplification in XR mode
+        // In VR, all controller movements are physically constrained (not just Z-axis)
+        // so we amplify all axes to make node manipulation practical
+        const shouldAmplify = this.isXRMode() || this.enableZAmplificationInDesktop;
+
+        if (shouldAmplify) {
+            delta.x *= this.zAxisAmplification;
+            delta.y *= this.zAxisAmplification;
+            delta.z *= this.zAxisAmplification;
+        }
+
+        // Calculate new position
+        const newPosition = this.dragState.dragStartMeshPosition.add(delta);
+
+        // Update mesh position (triggers edge updates automatically)
+        this.node.mesh.position.copyFrom(newPosition);
+
+        // Update layout engine
+        const context = this.getContext();
+        context.getLayoutManager().layoutEngine?.setNodePosition(this.node, {
+            x: newPosition.x,
+            y: newPosition.y,
+            z: newPosition.z,
+        });
+    }
+
+    public onDragEnd(): void {
+        if (!this.dragState.dragging) {
+            return;
+        }
+
+        // Debug: console.log("🏁 NodeDragHandler.onDragEnd called", {
+        //     nodeId: this.node.id,
+        //     finalPosition: this.node.mesh.position.asArray(),
+        // });
+
+        // Make sure graph is running
+        const context = this.getContext();
+        context.setRunning(true);
+
+        // Pin after dragging if configured
+        if (this.node.pinOnDrag) {
+            this.node.pin();
+        }
+
+        // Re-enable camera input handler after node drag
+        const cameraManager = this.scene.metadata?.cameraManager;
+        if (cameraManager) {
+            // Debug: console.log("📷 Re-enabling camera input after node drag");
+            cameraManager.temporarilyEnableInput();
+        }
+
+        // Reset drag state
+        this.node.dragging = false;
+        this.dragState.dragging = false;
+        this.dragState.dragStartMeshPosition = null;
+        this.dragState.dragStartWorldPosition = null;
+        this.dragState.dragPlaneNormal = null;
+    }
+
+    /**
+     * Set node position directly (for XR mode).
+     * XRInputHandler calculates the position with pivot transform and amplification,
+     * then calls this method to update the node and layout engine.
+     *
+     * This bypasses the delta calculation in onDragUpdate() which doesn't account
+     * for pivot rotation changes during drag.
+     */
+    public setPositionDirect(newPosition: Vector3): void {
+        if (!this.dragState.dragging) {
+            return;
+        }
+
+        // Update mesh position
+        this.node.mesh.position.copyFrom(newPosition);
+
+        // Update layout engine
+        const context = this.getContext();
+        context.getLayoutManager().layoutEngine?.setNodePosition(this.node, {
+            x: newPosition.x,
+            y: newPosition.y,
+            z: newPosition.z,
+        });
+    }
+
+    /**
+     * Get the node being dragged.
+     * Used by XRInputHandler to access the node's mesh for position calculations.
+     */
+    public getNode(): GraphNode {
+        return this.node;
+    }
+
+    // Internal methods
+    private setupPointerEvents(): void {
+        // Listen to pointer events for node dragging
+        this.pointerObserver = this.scene.onPrePointerObservable.add((pointerInfo) => {
+            // Skip desktop pointer handling in XR mode - XRInputHandler handles it
+            // This prevents conflicts where XR generates pointer events that the
+            // desktop handler would misinterpret with wrong world position calculations
+            if (this.isXRMode()) {
+                return;
+            }
+
+            switch (pointerInfo.type) {
+                case PointerEventTypes.POINTERDOWN: {
+                    // Check if we clicked on this node
+                    const pickInfo = this.scene.pick(
+                        this.scene.pointerX,
+                        this.scene.pointerY,
+                    );
+
+                    // Debug: console.log("🖱️ POINTERDOWN", {
+                    //     nodeId: this.node.id,
+                    //     pickedMeshName: pickInfo.pickedMesh?.name,
+                    //     nodeMeshName: this.node.mesh.name,
+                    //     meshesMatch: pickInfo.pickedMesh === this.node.mesh,
+                    //     hit: pickInfo.hit,
+                    // });
+
+                    if (pickInfo.pickedMesh === this.node.mesh) {
+                        // Get world position from pointer
+                        const ray = this.scene.createPickingRay(
+                            this.scene.pointerX,
+                            this.scene.pointerY,
+                            Matrix.Identity(),
+                            this.scene.activeCamera,
+                        );
+                        const worldPosition = this.getWorldPositionFromRay(ray);
+                        this.onDragStart(worldPosition);
+                    }
+
+                    break;
+                }
+
+                case PointerEventTypes.POINTERMOVE:
+                    if (this.dragState.dragging) {
+                        const ray = this.scene.createPickingRay(
+                            this.scene.pointerX,
+                            this.scene.pointerY,
+                            Matrix.Identity(),
+                            this.scene.activeCamera,
+                        );
+                        const worldPosition = this.getWorldPositionFromRay(ray);
+                        this.onDragUpdate(worldPosition);
+                    }
+
+                    break;
+
+                case PointerEventTypes.POINTERUP:
+                    if (this.dragState.dragging) {
+                        this.onDragEnd();
+                    }
+
+                    break;
+                default:
+                    // Ignore other pointer events
+                    break;
+            }
+        });
+    }
+
+    private getWorldPositionFromRay(ray: Ray): Vector3 {
+        // Strategy: Plane intersection parallel to camera view
+        // This maintains predictable drag behavior
+        const camera = this.scene.activeCamera;
+        if (!camera) {
+            return this.node.mesh.position.clone();
+        }
+
+        const nodePosition = this.node.mesh.position;
+
+        // Use stored plane normal from drag start if available
+        // Otherwise fall back to current camera forward (for initial calculation)
+        const cameraForward = camera.getForwardRay().direction;
+        const planeNormal = this.dragState.dragPlaneNormal ?? cameraForward;
+
+        // Calculate distance from camera to node along plane normal
+        const cameraToNode = nodePosition.subtract(camera.position);
+        const depth = Vector3.Dot(cameraToNode, planeNormal);
+
+        // Create plane at node depth, with orientation from drag start
+        const planePoint = camera.position.add(planeNormal.scale(depth));
+
+        // Ray-plane intersection
+        const denominator = Vector3.Dot(ray.direction, planeNormal);
+        if (Math.abs(denominator) < 0.0001) {
+            // Ray parallel to plane, return current position
+            return this.node.mesh.position.clone();
+        }
+
+        const t = Vector3.Dot(
+            planePoint.subtract(ray.origin),
+            planeNormal,
+        ) / denominator;
+
+        return ray.origin.add(ray.direction.scale(t));
+    }
+
+    private isXRMode(): boolean {
+        // Check if we're in an XR session
+        // The scene has an xrSession property when XR is active
+        const xrHelper = this.scene.metadata?.xrHelper;
+        return xrHelper?.baseExperience?.state === 2; // WebXRState.IN_XR
+    }
+
+    private getContext(): GraphContext {
+        // Check if parentGraph has GraphContext methods
+        if ("getStyles" in this.node.parentGraph) {
+            return this.node.parentGraph;
+        }
+
+        // Otherwise, it's a Graph instance which implements GraphContext
+        return this.node.parentGraph;
+    }
+
+    public dispose(): void {
+        if (this.pointerObserver) {
+            this.scene.onPrePointerObservable.remove(this.pointerObserver);
+            this.pointerObserver = null;
+        }
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class NodeBehavior {
     /**
@@ -20,61 +334,14 @@ export class NodeBehavior {
     static addDefaultBehaviors(node: GraphNode, options: NodeBehaviorOptions = {}): void {
         node.mesh.isPickable = true;
 
-        this.addDragBehavior(node, options);
-        this.addClickBehavior(node);
-    }
-
-    /**
-     * Add drag behavior to a node
-     */
-    private static addDragBehavior(node: GraphNode, options: NodeBehaviorOptions): void {
-        // drag behavior setup
+        // Set pinOnDrag config
         node.pinOnDrag = options.pinOnDrag ?? true;
-        node.meshDragBehavior = new SixDofDragBehavior();
-        node.mesh.addBehavior(node.meshDragBehavior);
 
-        // drag started
-        node.meshDragBehavior.onDragStartObservable.add(() => {
-            // make sure the graph is running
-            const context = this.getContext(node);
-            context.setRunning(true);
+        // Create unified drag handler (replaces SixDofDragBehavior)
+        const dragHandler = new NodeDragHandler(node);
+        node.dragHandler = dragHandler;
 
-            // don't let the graph engine update the node -- we are controlling it
-            node.dragging = true;
-        });
-
-        // drag ended
-        node.meshDragBehavior.onDragEndObservable.add(() => {
-            // make sure the graph is running
-            const context = this.getContext(node);
-            context.setRunning(true);
-
-            // pin after dragging if configured
-            if (node.pinOnDrag) {
-                node.pin();
-            }
-
-            // the graph engine can have control of the node again
-            node.dragging = false;
-        });
-
-        // position changed
-        node.meshDragBehavior.onPositionChangedObservable.add((event) => {
-            // CRITICAL: DO NOT restart layout on position changes!
-            // This was causing infinite loop - position changes from layout engine
-            // would trigger this, which would restart layout, causing more position changes
-
-            // Only update position in layout engine if user is actively dragging
-            if (node.dragging) {
-                const context = this.getContext(node);
-                // update the node position
-                context.getLayoutManager().layoutEngine?.setNodePosition(node, event.position);
-            }
-        });
-
-        // TODO: this apparently updates dragging objects faster and more fluidly
-        // https://playground.babylonjs.com/#YEZPVT%23840
-        // https://forum.babylonjs.com/t/expandable-lines/24681/12
+        this.addClickBehavior(node);
     }
 
     /**

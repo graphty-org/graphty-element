@@ -1,11 +1,12 @@
 import "../index.ts";
 
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
+import isChromatic from "chromatic/isChromatic";
 import {html} from "lit";
 
 import {StyleTemplate} from "../src/config";
 import {Graphty} from "../src/graphty-element";
-import {edgeData, eventWaitingDecorator, nodeData} from "./helpers";
+import {edgeData, eventWaitingDecorator, nodeData, waitForGraphSettled} from "./helpers";
 
 const meta: Meta = {
     title: "Screenshot",
@@ -537,6 +538,11 @@ const largeGraphData = generateLargeGraph();
 
 export const Phase3InteractiveTests: Story = {
     name: "Phase 3: Timing & Queue Tests",
+    parameters: {
+        // Disable Chromatic snapshot for this interactive test story
+        // The play function tests timing features that exceed Chromatic's 15-second interaction timeout
+        chromatic: {disableSnapshot: true},
+    },
     args: {
         nodeData: largeGraphData.nodes,
         edgeData: largeGraphData.edges,
@@ -552,7 +558,8 @@ export const Phase3InteractiveTests: Story = {
             },
             behavior: {
                 layout: {
-                    preSteps: 0, // Don't pre-settle so we can test timing
+                    // Use preSteps in Chromatic for consistent snapshots, 0 for interactive testing
+                    preSteps: isChromatic() ? 20000 : 0,
                 },
             },
         }),
@@ -735,6 +742,10 @@ export const Phase3InteractiveTests: Story = {
       </div>
     </div>
   `,
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const ErrorHandling: Story = {

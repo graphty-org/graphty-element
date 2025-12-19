@@ -1,6 +1,8 @@
 import type {Scene} from "@babylonjs/core";
 
+import type {XRConfig} from "../config/XRConfig";
 import type {MeshCache} from "../meshes/MeshCache";
+import type {XRSessionManager} from "../xr/XRSessionManager";
 import type {DataManager} from "./DataManager";
 import type {LayoutManager} from "./LayoutManager";
 import type {StatsManager} from "./StatsManager";
@@ -66,6 +68,18 @@ export interface GraphContext {
      * Set the running state
      */
     setRunning(running: boolean): void;
+
+    /**
+     * Get XR configuration
+     * Optional method for XR-specific functionality
+     */
+    getXRConfig?(): XRConfig | undefined;
+
+    /**
+     * Get XR session manager
+     * Optional method for XR-specific functionality
+     */
+    getXRSessionManager?(): XRSessionManager | undefined;
 }
 
 /**
@@ -83,6 +97,11 @@ export interface GraphContextConfig {
      * Default: false (use existing StatsManager only)
      */
     enableDetailedProfiling?: boolean;
+
+    /**
+     * XR (VR/AR) configuration
+     */
+    xr?: XRConfig;
 
     /**
      * Other graph-level configuration options can be added here
@@ -130,7 +149,7 @@ export class DefaultGraphContext implements GraphContext {
     }
 
     is2D(): boolean {
-        return this.styleManager.getStyles().config.graph.twoD;
+        return this.styleManager.getStyles().config.graph.viewMode === "2d";
     }
 
     needsRayUpdate(): boolean {

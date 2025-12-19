@@ -4,6 +4,7 @@ import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- defineConfig not available in current typescript-eslint version
 export default tseslint.config(
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
@@ -22,6 +23,7 @@ export default tseslint.config(
             "test/fast-check-experiment/**",
             "tmp/**",
             ".worktrees/**",
+            "examples/**/*.js",
         ],
     },
     {

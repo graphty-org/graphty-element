@@ -1,30 +1,28 @@
 import {
     AbstractMesh,
+    Camera,
     Color3,
     Effect,
     Engine,
     GreasedLineBaseMesh,
     GreasedLineMeshColorMode,
-    GreasedLineMeshWidthDistribution,
-    GreasedLineTools,
     Mesh,
     MeshBuilder,
     RawTexture,
     type Scene,
-    ShaderMaterial,
     StandardMaterial,
     Vector3,
-    VertexData,
 } from "@babylonjs/core";
 import {CreateGreasedLine} from "@babylonjs/core/Meshes/Builders/greasedLineBuilder";
 
 import type {EdgeStyleConfig} from "../config";
 import {EDGE_CONSTANTS} from "../constants/meshConstants";
-import {CustomLineRenderer, type LineGeometry} from "./CustomLineRenderer";
+import {CustomLineRenderer} from "./CustomLineRenderer";
 import {FilledArrowRenderer} from "./FilledArrowRenderer";
 import type {MeshCache} from "./MeshCache";
 import {PatternedLineMesh} from "./PatternedLineMesh";
 import {PatternedLineRenderer} from "./PatternedLineRenderer";
+import {Simple2DLineRenderer} from "./Simple2DLineRenderer";
 
 export interface EdgeMeshOptions {
     styleId: string;
@@ -197,14 +195,94 @@ void main() {
         this.shadersRegistered = true;
     }
 
+    /**
+     * Determine if 2D rendering mode should be used
+     *
+     * 2D mode is enabled when BOTH conditions are met:
+     * 1. Camera is in orthographic mode
+     * 2. Graph has twoD metadata set to true
+     *
+     * @param scene - Babylon.js scene
+     * @returns true if 2D mode should be used
+     */
+    private static is2DMode(scene: Scene): boolean {
+        const camera = scene.activeCamera;
+        if (!camera) {
+            return false;
+        }
+
+        const isOrtho = camera.mode === Camera.ORTHOGRAPHIC_CAMERA;
+        // Check scene metadata for twoD flag (will be set by Graph)
+        const is2DGraph = scene.metadata?.twoD === true;
+
+        return isOrtho && is2DGraph;
+    }
+
+    /**
+     * Creates an edge mesh based on the specified style configuration.
+     *
+     * This factory method handles all edge types:
+     * - Solid lines (with optional animation)
+     * - Patterned lines (dot, dash, diamond, sinewave, zigzag, etc.)
+     * - Bezier curves (smooth curved lines between nodes)
+     * - 2D and 3D rendering modes
+     *
+     * Solid lines in 3D mode are cached via MeshCache for performance.
+     * Bezier curves and patterned lines are created per-edge (no caching).
+     *
+     * @param cache - MeshCache instance for caching reusable meshes
+     * @param options - Edge mesh options including styleId, width, and color
+     * @param style - Full edge style configuration
+     * @param scene - Babylon.js scene
+     * @param srcPoint - Optional source point for bezier curves
+     * @param dstPoint - Optional destination point for bezier curves
+     * @returns The created edge mesh (AbstractMesh or PatternedLineMesh)
+     */
     static create(
         cache: MeshCache,
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
         scene: Scene,
+        srcPoint?: Vector3,
+        dstPoint?: Vector3,
     ): AbstractMesh | PatternedLineMesh {
         const lineType = style.line?.type ?? "solid";
         const PATTERNED_TYPES = ["dot", "star", "box", "dash", "diamond", "dash-dot", "sinewave", "zigzag"];
+
+        // PHASE 5: Bezier curves use CustomLineRenderer with multi-point paths (individual meshes, no caching)
+        // Each bezier curve has unique geometry based on src/dst points, so can't be cached
+        if (style.line?.bezier && srcPoint && dstPoint) {
+            const bezierPoints = this.createBezierLine(srcPoint, dstPoint);
+
+            // Convert flat array to Vector3 array
+            const points: Vector3[] = [];
+            for (let i = 0; i < bezierPoints.length; i += 3) {
+                points.push(new Vector3(bezierPoints[i], bezierPoints[i + 1], bezierPoints[i + 2]));
+            }
+
+            // Create line mesh with bezier points
+            const lineConfig = style.line;
+            const mesh = CustomLineRenderer.create(
+                {
+                    points,
+                    width: options.width * 20, // Scale factor to match GreasedLine sizing
+                    color: options.color,
+                    opacity: lineConfig.opacity,
+                },
+                scene,
+            );
+
+            // Apply opacity to mesh visibility
+            if (lineConfig.opacity !== undefined) {
+                mesh.visibility = lineConfig.opacity;
+            }
+
+            // Mark as bezier curve so it's not transformed by transformEdgeMesh()
+            // Bezier curves have their geometry baked in world coordinates
+            mesh.metadata = {isBezierCurve: true};
+
+            return mesh;
+        }
 
         // PHASE 5: Pattern lines use PatternedLineRenderer (individual meshes, no caching)
         // See: design/mesh-based-patterned-lines.md Phase 5
@@ -218,10 +296,24 @@ void main() {
                 options.color,
                 style.line?.opacity ?? 1.0,
                 scene,
+                this.is2DMode(scene), // Pass 2D mode detection flag
             );
         }
 
-        // Solid lines can use caching
+        // PHASE 2: Solid lines in 2D mode use Simple2DLineRenderer
+        // 2D mode uses world-space StandardMaterial meshes instead of billboard shaders
+        if (lineType === "solid" && this.is2DMode(scene)) {
+            return Simple2DLineRenderer.create(
+                new Vector3(0, 0, -0.5), // Placeholder start (Edge.update() will set real positions)
+                new Vector3(0, 0, 0.5), // Placeholder end (Edge.update() will set real positions)
+                options.width / 40, // Convert back from scaled width to match 3D line thickness
+                options.color,
+                style.line?.opacity ?? 1.0,
+                scene,
+            );
+        }
+
+        // Solid lines can use caching (3D mode only, since 2D is handled above)
         const cacheKey = `edge-style-${options.styleId}`;
         return cache.get(cacheKey, () => {
             if (style.line?.animationSpeed) {
@@ -232,9 +324,26 @@ void main() {
         });
     }
 
+    /**
+     * Creates an arrow head mesh for edge endpoints.
+     *
+     * Supports multiple arrow types:
+     * - Filled: normal, inverted, diamond, box, dot, vee, tee, half-open, crow
+     * - Open: open-normal, open-diamond, open-dot
+     * - Spheres: sphere-dot
+     *
+     * In 2D mode, uses StandardMaterial with XY rotation.
+     * In 3D mode, uses shader-based billboard rendering.
+     *
+     * @param _cache - MeshCache instance (currently unused, kept for API compatibility)
+     * @param _styleId - Style ID (currently unused, kept for API compatibility)
+     * @param options - Arrow head options including type, width, color, size, and opacity
+     * @param scene - Babylon.js scene
+     * @returns The created arrow mesh, or null if type is "none" or undefined
+     */
     static createArrowHead(
-        cache: MeshCache,
-        styleId: string,
+        _cache: MeshCache,
+        _styleId: string,
         options: ArrowHeadOptions,
         scene: Scene,
     ): AbstractMesh | null {
@@ -247,13 +356,12 @@ void main() {
         const width = this.calculateArrowWidth() * size;
         const length = this.calculateArrowLength() * size;
 
+        // Detect 2D mode
+        const is2D = this.is2DMode(scene);
+
         // Arrow type routing:
-        // - Filled arrows: Use FilledArrowRenderer (uniform scaling shader) - INDIVIDUAL MESHES
-        // - Outline arrows: Use CustomLineRenderer (perpendicular expansion shader, same as lines!) - INDIVIDUAL MESHES
-        // - 3D billboard arrows: Use existing implementation (spheres) - INDIVIDUAL MESHES
-        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot"];
-        const OUTLINE_ARROWS = ["open"];
-        const BILLBOARD_ARROWS = ["sphere-dot", "sphere"];
+        // All arrows use FilledArrowRenderer (unified implementation)
+        const FILLED_ARROWS = ["normal", "inverted", "diamond", "box", "dot", "vee", "tee", "half-open", "crow", "open-normal", "open-diamond", "open-dot", "sphere-dot"];
 
         // PERFORMANCE FIX: Create individual meshes for all arrow types
         // Thin instances were causing 1,147ms bottleneck (35x slower than direct position updates)
@@ -263,25 +371,13 @@ void main() {
         const arrowType = options.type ?? "";
 
         if (FILLED_ARROWS.includes(arrowType)) {
-            // Filled arrows: Use FilledArrowRenderer - individual mesh per edge
-            mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
-        } else if (OUTLINE_ARROWS.includes(arrowType)) {
-            // Outline arrows: Use CustomLineRenderer (same shader as lines!)
-            mesh = this.createOutlineArrow(arrowType, length, width, options.color, scene);
-        } else if (BILLBOARD_ARROWS.includes(arrowType)) {
-            // 3D billboard arrows: Use existing sphere-based implementation
-            switch (options.type) {
-                case "open-dot":
-                    mesh = this.createOpenDotArrow(length, width, options.color, scene);
-                    break;
-                case "sphere-dot":
-                    mesh = this.createSphereDotArrow(length, width, options.color, scene);
-                    break;
-                case "sphere":
-                    mesh = this.createSphereArrow(length, width, options.color, scene);
-                    break;
-                default:
-                    throw new Error(`Unsupported arrow type: ${options.type}`);
+            // Filled arrows: Same geometry, different materials (StandardMaterial for 2D, ShaderMaterial for 3D)
+            if (is2D) {
+                // PHASE 4: Use 2D arrow creation (StandardMaterial, no shader, XY rotation)
+                mesh = FilledArrowRenderer.create2DArrow(arrowType, length, width, options.color, opacity, scene);
+            } else {
+                // 3D mode: Use shader-based arrows (ShaderMaterial, billboard)
+                mesh = this.createFilledArrow(arrowType, length, width, options.color, opacity, scene);
             }
         } else {
             throw new Error(`Unsupported arrow type: ${options.type}`);
@@ -323,6 +419,36 @@ void main() {
             case "dot":
                 mesh = FilledArrowRenderer.createCircle(scene);
                 break;
+            case "sphere-dot": {
+                // sphere-dot needs different handling for 2D vs 3D:
+                // - 2D: shader-based filled circle (handled in createArrowHead)
+                // - 3D: 3D sphere mesh (handled here)
+                // Since createFilledArrow is only called in 3D mode, create 3D sphere
+
+                // CRITICAL: The sphere size must match what positioning code expects
+                // calculateArrowPosition() uses actualSize = length * scaleFactor
+                // So we must create the sphere with diameter = length * scaleFactor
+                const sphereDotGeometry = EdgeMesh.getArrowGeometry("sphere-dot");
+                const sphereDotScaleFactor = sphereDotGeometry.scaleFactor ?? 1.0;
+                const sphereDiameter = length * sphereDotScaleFactor; // e.g., 0.5 * 0.25 = 0.125
+
+                const sphereMesh = MeshBuilder.CreateSphere(
+                    "sphere-dot-arrow-3d",
+                    {
+                        diameter: sphereDiameter,
+                        segments: 16,
+                    },
+                    scene,
+                );
+                const sphereMaterial = new StandardMaterial("sphere-dot-material-3d", scene);
+                sphereMaterial.diffuseColor = Color3.FromHexString(color);
+                sphereMaterial.emissiveColor = Color3.FromHexString(color);
+                sphereMaterial.disableLighting = true;
+                sphereMesh.material = sphereMaterial;
+                sphereMesh.visibility = opacity;
+                // Return directly - don't apply shader since this is a standard material mesh
+                return sphereMesh;
+            }
             case "vee":
                 mesh = FilledArrowRenderer.createVee(scene);
                 break;
@@ -361,57 +487,6 @@ void main() {
         );
     }
 
-    /**
-     * Create an outline arrow using CustomLineRenderer (perpendicular expansion shader)
-     * Uses the SAME shader as lines - guaranteed perfect alignment!
-     */
-    private static createOutlineArrow(
-        type: string,
-        length: number,
-        width: number,
-        color: string,
-        scene: Scene,
-    ): Mesh {
-        let geometry: LineGeometry;
-
-        // Generate appropriate line geometry
-        switch (type) {
-            case "open-normal":
-                geometry = CustomLineRenderer.createOpenNormalArrowGeometry(length, width);
-                break;
-            case "open-diamond":
-                geometry = CustomLineRenderer.createOpenDiamondArrowGeometry(length, width);
-                break;
-            case "tee":
-                geometry = CustomLineRenderer.createTeeArrowGeometry(width);
-                break;
-            case "vee":
-                geometry = CustomLineRenderer.createVeeArrowGeometry(length);
-                break;
-            case "open":
-                geometry = CustomLineRenderer.createOpenArrowGeometry(length, width);
-                break;
-            case "half-open":
-                geometry = CustomLineRenderer.createHalfOpenArrowGeometry(length, width);
-                break;
-            case "crow":
-                geometry = CustomLineRenderer.createCrowArrowGeometry(length);
-                break;
-            default:
-                throw new Error(`Unsupported outline arrow type: ${type}`);
-        }
-
-        // Create mesh from geometry using the SAME shader as lines
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Scale factor to match GreasedLine sizing
-                color,
-            },
-            scene,
-        );
-    }
-
     private static createStaticLine(
         options: EdgeMeshOptions,
         style: EdgeStyleConfig,
@@ -435,16 +510,15 @@ void main() {
                 ),
             ];
 
-            const lineType = style.line?.type ?? "solid";
-
-            // Solid lines use CustomLineRenderer (shader-based)
+            // CustomLineRenderer only handles solid lines
+            // All patterns are handled by PatternedLineMesh
             const mesh = CustomLineRenderer.create(
                 {
                     points,
                     width: options.width * 20, // Scale factor to match GreasedLine sizing
                     color: options.color,
                     opacity: style.line?.opacity,
-                    pattern: lineType,
+                    enableInstancing: true, // Required for MeshCache InstancedMesh
                 },
                 scene,
             );
@@ -558,132 +632,6 @@ void main() {
         });
     }
 
-    // Normal arrow - XY plane triangle (vertical, facing camera)
-    private static createNormalArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        const mesh = new Mesh("normal-arrow", scene);
-
-        // Define triangle vertices in XY plane (vertical triangle facing camera)
-        // Tip at origin (0,0,0) - this will be positioned at node surface
-        // Base extends BACK along -X (away from tip)
-        // Use normalized dimensions - actual sizing handled by positioning
-        const arrowLength = 1.0;
-        const arrowWidth = 0.8;
-
-        const positions = [
-            0,
-            0,
-            0, // Vertex 0: Tip at origin
-            -arrowLength,
-            arrowWidth / 2,
-            0, // Vertex 1: Top corner of base
-            -arrowLength,
-            -arrowWidth / 2,
-            0, // Vertex 2: Bottom corner of base
-        ];
-
-        // Triangle indices (counter-clockwise winding when viewed from +Z/camera)
-        const indices = [0, 1, 2];
-
-        // Normals pointing in +Z direction (toward camera)
-        const normals = [
-            0,
-            0,
-            1,
-            0,
-            0,
-            1,
-            0,
-            0,
-            1,
-        ];
-
-        // Apply vertex data
-        const vertexData = new VertexData();
-        vertexData.positions = positions;
-        vertexData.indices = indices;
-        vertexData.normals = normals;
-        vertexData.applyToMesh(mesh);
-
-        // Create material with same color as line
-        const material = new StandardMaterial("arrow-material", scene);
-        const colorObj = Color3.FromHexString(color);
-        material.diffuseColor = colorObj;
-        material.emissiveColor = colorObj;
-        material.disableLighting = true;
-        material.backFaceCulling = false; // Render both sides
-
-        mesh.material = material;
-
-        return mesh;
-    }
-
-    // Inverted arrow (points away from target) - wide base at surface, tip extends back along line
-    private static createInvertedArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createTriangularArrowGeometry(length, width, true);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
-    // Sphere arrow - creates a 3D sphere that appears as a filled circle from all angles
-    private static createSphereArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Sphere fits exactly within the allocated arrow space
-        const sphereDiameter = length;
-
-        // Create a 3D sphere positioned at z=0 (node surface)
-        // This will appear as a filled circle from all viewing angles
-        const mesh = MeshBuilder.CreateSphere(
-            "sphere-arrow",
-            {
-                diameter: sphereDiameter,
-                segments: 16,
-            },
-            scene,
-        );
-
-        // Apply color
-        const material = new StandardMaterial("sphere-material", scene);
-        material.diffuseColor = Color3.FromHexString(color);
-        material.emissiveColor = Color3.FromHexString(color);
-        material.disableLighting = true;
-        mesh.material = material;
-
-        return mesh;
-    }
-
-    // Sphere-dot arrow - creates a filled circle that appears circular from all angles
-    // Uses a 3D sphere which naturally appears as a circle regardless of viewing angle
-    private static createSphereDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Sphere-dot is a small variant (0.25x size for "dot" appearance)
-        const sphereDiameter = length * EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO;
-
-        // Create a 3D sphere
-        // A sphere naturally appears as a filled circle from all viewing angles
-        const mesh = MeshBuilder.CreateSphere(
-            "sphere-dot-arrow",
-            {
-                diameter: sphereDiameter,
-                segments: 16, // Lower segment count for performance (dots are small)
-            },
-            scene,
-        );
-
-        // Apply color
-        const material = new StandardMaterial("sphere-dot-material", scene);
-        material.diffuseColor = Color3.FromHexString(color);
-        material.emissiveColor = Color3.FromHexString(color);
-        material.disableLighting = true;
-        mesh.material = material;
-
-        return mesh;
-    }
-
     // Helper to create a circular texture with anti-aliasing (white circle on transparent background)
     private static createCircleTextureData(size: number): Uint8Array {
         const data = new Uint8Array(size * size * 4);
@@ -719,82 +667,20 @@ void main() {
         return data;
     }
 
-    // Open-dot arrow - creates a circle outline using GreasedLine
-    // Uses GreasedLineTools.GetCircleLinePoints to create a circular path
-    private static createOpenDotArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Open-dot is a small variant (0.25x size for "dot" appearance)
-        const circleDiameter = length * EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO;
-        const circleRadius = circleDiameter / 2;
-
-        // Generate circle points using GreasedLineTools
-        const points = GreasedLineTools.GetCircleLinePoints(
-            circleRadius, // radiusX
-            32, // segments - smooth circle
-        );
-
-        // Create GreasedLine circle with thin outline
-        const mesh = CreateGreasedLine(
-            "open-dot-arrow",
-            {
-                points,
-            },
-            {
-                color: Color3.FromHexString(color),
-                width: 0.05, // Thin line width for circle outline
-            },
-            scene,
-        );
-
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
-        }
-
-        // BILLBOARDMODE_X: Rotates around X-axis to maintain shape during vertical (up/down) camera movement
-        // while allowing foreshortening during horizontal (left/right) camera rotation
-        mesh.billboardMode = Mesh.BILLBOARDMODE_X;
-
-        return mesh as Mesh;
-    }
-
-    // Diamond arrow - uses 3 points with varying widths to create filled diamond shape
-    // Based on GetArrowCap technique: 2 points with widths create filled triangle
-    // Diamond needs 3 points: tip (sharp point), middle (wide), base (sharp point)
-    private static createDiamondArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createDiamondArrowGeometry(length, width);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
-    // Box arrow - modified GetArrowCap to create square instead of triangle
-    private static createBoxArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Use CustomLineRenderer for perfect alignment with lines
-        const geometry = CustomLineRenderer.createBoxArrowGeometry(length, width);
-        return CustomLineRenderer.createFromGeometry(
-            geometry,
-            {
-                width: width * 20, // Same scaling as lines to match visual appearance
-                color,
-            },
-            scene,
-        );
-    }
-
+    /**
+     * Gets the default arrow width based on constants.
+     *
+     * @returns The default arrow width value from EDGE_CONSTANTS
+     */
     static calculateArrowWidth(): number {
         return EDGE_CONSTANTS.DEFAULT_ARROW_WIDTH;
     }
 
+    /**
+     * Gets the default arrow length based on constants.
+     *
+     * @returns The default arrow length value from EDGE_CONSTANTS
+     */
     static calculateArrowLength(): number {
         return EDGE_CONSTANTS.DEFAULT_ARROW_LENGTH;
     }
@@ -805,29 +691,21 @@ void main() {
      */
     static getArrowGeometry(arrowType: string): ArrowGeometry {
         switch (arrowType) {
-            // Center-based arrows (sphere-like)
-            case "sphere-dot":
-                return {
-                    positioningMode: "center",
-                    needsRotation: false,
-                    positionOffset: 0,
-                    scaleFactor: EDGE_CONSTANTS.ARROW_SPHERE_DOT_DIAMETER_RATIO, // 0.25 - small "dot" variant
-                };
-            case "sphere":
-                return {
-                    positioningMode: "center",
-                    needsRotation: false,
-                    positionOffset: 0,
-                    scaleFactor: 1.0, // Full size
-                };
-
-            // Special center-based filled arrows (symmetric, positioned by center)
+            // Center-based arrows (all use same positioning, no scaling)
             case "dot":
             case "open-dot":
                 return {
-                    positioningMode: "center", // Dot and open-dot are symmetric, position by center
+                    positioningMode: "center", // Symmetric, positioned by center
                     needsRotation: false,
                     positionOffset: 0,
+                };
+
+            case "sphere-dot":
+                return {
+                    positioningMode: "center", // Symmetric, positioned by center
+                    needsRotation: false,
+                    positionOffset: 0,
+                    scaleFactor: 0.25, // Small dot-sized sphere (1/4 size)
                 };
 
             // Filled arrows using FilledArrowRenderer (billboard shaders, no rotation)
@@ -857,8 +735,6 @@ void main() {
                     positionOffset: 1.0, // Move arrow backward (toward sphere) to place base at surface
                 };
 
-            // Outline arrows using CustomLineRenderer (same positioning as old system)
-            case "open":
             default:
                 return {
                     positioningMode: "tip",
@@ -906,6 +782,20 @@ void main() {
         return surfacePoint.subtract(direction.scale(actualSize));
     }
 
+    /**
+     * Transforms an edge mesh to span between two points.
+     *
+     * Positions the mesh at the midpoint between source and destination,
+     * orients it to look at the destination, and scales it to match the
+     * distance between the two points.
+     *
+     * Note: This method is used for straight-line edges only.
+     * Bezier curves have their geometry baked in world coordinates.
+     *
+     * @param mesh - The edge mesh to transform
+     * @param srcPoint - The source point (start of edge)
+     * @param dstPoint - The destination point (end of edge)
+     */
     static transformMesh(
         mesh: AbstractMesh,
         srcPoint: Vector3,
@@ -924,357 +814,114 @@ void main() {
         mesh.scaling.z = length;
     }
 
-    // Open normal arrow - hollow triangle using thin outline
-    private static createOpenNormalArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Reuse normal arrow geometry but with thin line width to create outline effect
-        const cap = GreasedLineTools.GetArrowCap(
-            new Vector3(0, 0, -length),
-            new Vector3(0, 0, 1),
-            length,
-            width,
-            width,
-        );
-
-        // Create outline by using thin line width
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points: cap.points,
-                widths: cap.widths.map((w) => w * 0.15), // Thin outline
-                widthDistribution: GreasedLineMeshWidthDistribution.WIDTH_DISTRIBUTION_START,
-            },
-            {
-                color: Color3.FromHexString(color),
-            },
-            scene,
-        );
-
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
+    /**
+     * Generate Bezier curve points between two positions
+     * @param srcPoint - Start point of the curve
+     * @param dstPoint - End point of the curve
+     * @param controlPoints - Optional custom control points (default: auto-calculated)
+     * @returns Flat array of coordinates [x1, y1, z1, x2, y2, z2, ...]
+     */
+    static createBezierLine(
+        srcPoint: Vector3,
+        dstPoint: Vector3,
+        controlPoints?: Vector3[],
+    ): number[] {
+        // Handle self-loops (source === destination)
+        if (srcPoint.equalsWithEpsilon(dstPoint, 0.01)) {
+            return this.createSelfLoopCurve(srcPoint);
         }
 
-        return mesh as Mesh;
-    }
+        // Calculate automatic control points if not provided
+        const controls = controlPoints ?? this.calculateControlPoints(srcPoint, dstPoint);
 
-    // Open-diamond arrow - hollow diamond shape
-    private static createOpenDiamondArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Diamond fits exactly within the allocated arrow space
-        const diamondLength = length;
-
-        // Create diamond outline path: tip -> left -> base -> right -> tip
-        const points = [
-            new Vector3(0, 0, -diamondLength), // Tip (forward)
-            new Vector3(-width / 2, 0, -diamondLength / 2), // Left point (widest)
-            new Vector3(0, 0, 0), // Base (at line connection)
-            new Vector3(width / 2, 0, -diamondLength / 2), // Right point (widest)
-            new Vector3(0, 0, -diamondLength), // Back to tip (close the shape)
-        ];
-
-        // Thin uniform line width for outline
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points,
-            },
-            {
-                color: Color3.FromHexString(color),
-                width: 0.08, // Thin line for outline
-            },
-            scene,
+        // Determine point density based on curve length
+        const estimatedLength = Vector3.Distance(srcPoint, dstPoint) * 1.5; // Curve is ~1.5x longer
+        const numPoints = Math.max(
+            10,
+            Math.ceil(estimatedLength * EDGE_CONSTANTS.BEZIER_POINT_DENSITY),
         );
 
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
+        const points: number[] = [];
+
+        // Generate cubic Bezier curve points
+        for (let i = 0; i <= numPoints; i++) {
+            const t = i / numPoints;
+            const point = this.cubicBezier(t, srcPoint, controls[0], controls[1], dstPoint);
+            points.push(point.x, point.y, point.z);
         }
 
-        return mesh as Mesh;
+        return points;
     }
 
-    // Tee arrow - modified box arrow to create thin rectangle
-    private static createTeeArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Tee uses full allocated space along line direction
-        // Width parameter controls perpendicular dimension
-        const teeWidth = width * 1.25; // 1.25 times wider perpendicular to line
-        const teeLength = length; // Full allocated space along line direction
+    /**
+     * Calculate automatic control points for natural curve
+     * Creates a perpendicular offset from the midpoint for a smooth arc
+     */
+    private static calculateControlPoints(src: Vector3, dst: Vector3): [Vector3, Vector3] {
+        const direction = dst.subtract(src);
+        const distance = direction.length();
 
-        const points = [
-            new Vector3(0, 0, -teeLength), // Back of box (half depth)
-            new Vector3(0, 0, 0), // Front of box at surface
-        ];
+        // Create perpendicular vector in XY plane
+        // Use cross product with up vector (0, 1, 0) to get perpendicular in XY plane
+        const up = new Vector3(0, 1, 0);
+        let perpendicular = Vector3.Cross(direction, up);
 
-        // Keep width constant for both points to create parallel edges (rectangle)
-        const widths = [
-            teeWidth,
-            teeWidth, // Back point: full width (1.25x)
-            teeWidth,
-            teeWidth, // Front point: full width (1.25x, not tapered to 0)
-        ];
-
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points,
-                widths,
-                widthDistribution: GreasedLineMeshWidthDistribution.WIDTH_DISTRIBUTION_START,
-            },
-            {
-                color: Color3.FromHexString(color),
-            },
-            scene,
-        );
-
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
+        // If direction is parallel to up vector, use forward vector instead
+        if (perpendicular.length() < 0.01) {
+            const forward = new Vector3(0, 0, 1);
+            perpendicular = Vector3.Cross(direction, forward);
         }
 
-        return mesh as Mesh;
+        perpendicular.normalize();
+
+        // Offset control points perpendicular to line
+        const offset = distance * EDGE_CONSTANTS.BEZIER_CONTROL_POINT_OFFSET;
+
+        const midPoint = Vector3.Lerp(src, dst, 0.5);
+        const control1 = Vector3.Lerp(src, midPoint, 0.5).add(perpendicular.scale(offset));
+        const control2 = Vector3.Lerp(midPoint, dst, 0.5).add(perpendicular.scale(offset));
+
+        return [control1, control2];
     }
 
-    // Open arrow - V-shape without back edge
-    private static createOpenArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // V-shape: left arm -> tip -> right arm
-        const points = [
-            new Vector3(-width / 2, 0, -length), // Left arm
-            new Vector3(0, 0, 0), // Tip
-            new Vector3(width / 2, 0, -length), // Right arm
-        ];
+    /**
+     * Cubic Bezier formula: B(t) = (1-t)³P₀ + 3(1-t)²tP₁ + 3(1-t)t²P₂ + t³P₃
+     */
+    private static cubicBezier(
+        t: number,
+        p0: Vector3,
+        p1: Vector3,
+        p2: Vector3,
+        p3: Vector3,
+    ): Vector3 {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
 
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points,
-            },
-            {
-                color: Color3.FromHexString(color),
-                width: width * 0.15, // Proportional line width
-            },
-            scene,
-        );
+        return p0.scale(uuu)
+            .add(p1.scale(3 * uu * t))
+            .add(p2.scale(3 * u * tt))
+            .add(p3.scale(ttt));
+    }
 
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
+    /**
+     * Create a self-loop curve (circular arc) when source === destination
+     */
+    private static createSelfLoopCurve(center: Vector3): number[] {
+        const radius = 2.0; // Loop radius
+        const segments = 32; // Smooth circle
+        const points: number[] = [];
+
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const x = center.x + (Math.cos(angle) * radius);
+            const y = center.y + (Math.sin(angle) * radius);
+            const {z} = center;
+            points.push(x, y, z);
         }
 
-        return mesh as Mesh;
-    }
-
-    // Half-open arrow - asymmetric arrow (one side longer than the other)
-    private static createHalfOpenArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        const ratio = EDGE_CONSTANTS.ARROW_HALF_OPEN_RATIO;
-
-        // One full arm, one half arm
-        const points = [
-            new Vector3(-width / 2, 0, -length), // Left arm (full)
-            new Vector3(0, 0, 0), // Tip
-            new Vector3(width / 2, 0, -length * ratio), // Right arm (half)
-        ];
-
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points,
-            },
-            {
-                color: Color3.FromHexString(color),
-                width: width * 0.15, // Proportional line width
-            },
-            scene,
-        );
-
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
-        }
-
-        return mesh as Mesh;
-    }
-
-    // Helper function similar to GetArrowCap but for vee shape
-    // Creates geometry for a 90-degree V matching normal arrow dimensions
-    private static getVeeCap(length: number, width: number): VertexData {
-        // Calculate side length matching normal arrow (from tip to base corner)
-        // Normal arrow: tip at (0,0,0), base corners at (±width/2, 0, -length)
-        const sideLength = Math.sqrt(((width / 2) ** 2) + (length ** 2));
-
-        // For 90-degree angle between arms, each arm at 45° from center axis
-        // Left arm direction: (-1, 0, -1) normalized = (-0.707, 0, -0.707)
-        // Right arm direction: (1, 0, -1) normalized = (0.707, 0, -0.707)
-        // Verification: dot product = 0 (perpendicular)
-
-        // Each arm extends sideLength units from tip
-        const component = sideLength * Math.SQRT1_2; // ≈ 0.7071
-
-        const positions = [
-            // Left arm endpoint at 45° angle
-            -component,
-            0,
-            -component,
-            // Tip at surface
-            0,
-            0,
-            0,
-            // Right arm endpoint at 45° angle
-            component,
-            0,
-            -component,
-        ];
-
-        const vertexData = new VertexData();
-        vertexData.positions = positions;
-        return vertexData;
-    }
-
-    // Vee arrow - shader-based billboard approach for consistent appearance
-    // Based on GraphViz vee specification: 90-degree V shape
-    private static createVeeArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        // Register shaders if not already done
-        this.registerShaders();
-
-        // Vee fits exactly within the allocated arrow space
-        const size = length;
-
-        // Create quad geometry for the billboard
-        const positions = [
-            -1,
-            -1,
-            0, // Bottom-left
-            1,
-            -1,
-            0, // Bottom-right
-            1,
-            1,
-            0, // Top-right
-            -1,
-            1,
-            0, // Top-left
-        ];
-
-        const uvs = [
-            0,
-            0, // Bottom-left
-            1,
-            0, // Bottom-right
-            1,
-            1, // Top-right
-            0,
-            1, // Top-left
-        ];
-
-        const indices = [
-            0,
-            1,
-            2, // First triangle
-            0,
-            2,
-            3, // Second triangle
-        ];
-
-        // Create mesh with vertex data
-        const mesh = new Mesh("vee-arrow", scene);
-        const vertexData = new VertexData();
-        vertexData.positions = positions;
-        vertexData.uvs = uvs;
-        vertexData.indices = indices;
-        vertexData.applyToMesh(mesh);
-
-        // Create shader material
-        const shaderMaterial = new ShaderMaterial(
-            "veeArrowMaterial",
-            scene,
-            {
-                vertex: "veeArrow",
-                fragment: "veeArrow",
-            },
-            {
-                attributes: ["position", "uv"],
-                uniforms: ["worldViewProjection", "arrowColor", "lineWidth"],
-            },
-        );
-
-        // Set uniforms
-        const colorObj = Color3.FromHexString(color);
-        shaderMaterial.setVector3("arrowColor", new Vector3(colorObj.r, colorObj.g, colorObj.b));
-        shaderMaterial.setFloat("lineWidth", 0.10); // Doubled from 0.05 to 0.10
-
-        // Enable alpha blending
-        shaderMaterial.alpha = 1.0;
-        shaderMaterial.alphaMode = Engine.ALPHA_COMBINE;
-        shaderMaterial.backFaceCulling = false;
-
-        mesh.material = shaderMaterial;
-
-        // Enable cylindrical billboard mode (Y-axis rotation only)
-        // Faces camera horizontally while showing vertical foreshortening
-        mesh.billboardMode = Mesh.BILLBOARDMODE_Y;
-
-        // Scale mesh to match arrow size
-        mesh.scaling = new Vector3(size / 2, size / 2, 1);
-
-        return mesh;
-    }
-
-    // Crow arrow - three-pronged fork (crow's foot)
-    private static createCrowArrow(length: number, width: number, color: string, scene: Scene): Mesh {
-        const angle = EDGE_CONSTANTS.ARROW_CROW_FORK_ANGLE * (Math.PI / 180);
-        const spread = Math.tan(angle) * length;
-
-        // Three prongs radiating from the tip
-        const points = [
-            // Left prong
-            new Vector3(-spread, 0, -length),
-            new Vector3(0, 0, 0),
-            // Center prong
-            new Vector3(0, 0, -length),
-            new Vector3(0, 0, 0),
-            // Right prong
-            new Vector3(spread, 0, -length),
-        ];
-
-        const mesh = CreateGreasedLine(
-            "lines",
-            {
-                points,
-            },
-            {
-                color: Color3.FromHexString(color),
-                width: width * 0.15, // Proportional line width
-            },
-            scene,
-        );
-
-        // Ensure material color is set correctly for instancing
-        if (mesh.material) {
-            const material = mesh.material as StandardMaterial;
-            const colorObj = Color3.FromHexString(color);
-            material.diffuseColor = colorObj;
-            material.emissiveColor = colorObj;
-            material.disableLighting = true;
-        }
-
-        return mesh as Mesh;
+        return points;
     }
 }

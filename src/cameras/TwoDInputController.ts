@@ -48,8 +48,8 @@ export class InputController {
         private config: TwoDCameraControlsConfigType,
     ) {
         this.canvas.setAttribute("tabindex", "0"); // Make focusable
-        this.setupMouse();
-        this.setupTouch();
+        // Note: setupMouse() and setupTouch() are called in enable() to allow re-enabling
+        // after disable() removes the observers
     }
 
     private setupMouse(): void {
@@ -177,6 +177,10 @@ export class InputController {
 
         this.canvas.addEventListener("keydown", this.keyDownHandler);
         this.canvas.addEventListener("keyup", this.keyUpHandler);
+
+        // Setup mouse and touch handlers (these are removed in disable())
+        this.setupMouse();
+        this.setupTouch();
     }
 
     public disable(): void {

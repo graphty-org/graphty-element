@@ -21,14 +21,9 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
             {
                 edge: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                        line: {
-                            width: 2,
-                        },
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"bipartite-matching\".inMatching"],
+                        inputs: ["algorithmResults.graphty.bipartite-matching.inMatching"],
                         output: "style.line.color",
                         expr: "{ return StyleHelpers.color.binary.blueHighlight(arguments[0]) }",
                     },
@@ -44,7 +39,6 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
                     style: {
                         enabled: true,
                         line: {
-                            width: 1,
                             opacity: 0.3,
                         },
                     },
@@ -57,11 +51,9 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
             {
                 node: {
                     selector: "",
-                    style: {
-                        enabled: true,
-                    },
+                    style: {enabled: true},
                     calculatedStyle: {
-                        inputs: ["algorithmResults.graphty.\"bipartite-matching\".partition"],
+                        inputs: ["algorithmResults.graphty.bipartite-matching.partition"],
                         output: "style.texture.color",
                         expr: "{ return arguments[0] === 'left' ? StyleHelpers.color.categorical.okabeIto(0) : StyleHelpers.color.categorical.okabeIto(1) }",
                     },

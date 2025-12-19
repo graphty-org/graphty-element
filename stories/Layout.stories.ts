@@ -78,25 +78,24 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 
 export const ngraph: Story = {
     args: {
+        layout: "ngraph",
+        layoutConfig: {
+            seed: 42, // Fixed seed for consistent layouts in visual tests (same as other working ngraph stories)
+        },
         styleTemplate: templateCreator({
             graph: {
                 twoD: false, // Explicitly set to 3D mode
-                layout: "ngraph",
-                layoutOptions: {
-                    dim: 3,
-                    seed: 12, // Fixed seed for consistent layouts in visual tests
-                },
             },
             behavior: {
                 layout: {
                     // Physics-based layouts need preSteps for visual stability
-                    // Chromatic needs more steps for consistent snapshots, regular tests need minimal steps
-                    preSteps: isChromatic() ? 15000 : 200,
+                    // Use constant value like other working ngraph stories (NodeStyles, GraphStyles)
+                    preSteps: 8000,
                 },
             },
         }),
         // Individual parameter args for controls
-        ngraphSeed: 12,
+        ngraphSeed: 42,
         // ngraphSpringLength: 30,
         // ngraphSpringCoefficient: 0.0008,
         // ngraphGravity: -1.2,
@@ -134,6 +133,12 @@ export const D3: Story = {
                     alphaTarget: 0,
                     alphaDecay: 0.0228,
                     velocityDecay: 0.4,
+                },
+            },
+            behavior: {
+                layout: {
+                    // D3 physics-based layout needs preSteps for Chromatic
+                    preSteps: isChromatic() ? 15000 : 200,
                 },
             },
         }),

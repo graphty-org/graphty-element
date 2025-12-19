@@ -31,23 +31,31 @@ import {type CameraController, type CameraKey, CameraManager} from "./cameras/Ca
 import {
     AdHocData,
     ApplySuggestedStylesOptions,
+    defaultXRConfig,
     FetchEdgesFn,
     FetchNodesFn,
     StyleSchema,
     SuggestedStylesConfig,
+    type ViewMode,
+    type XRConfig,
 } from "./config";
+import {type PartialXRConfig, xrConfigSchema} from "./config/xr-config-schema";
+import {Edge} from "./Edge";
 import {
     EventCallbackType,
     EventType,
 } from "./events";
 import {AlgorithmManager, DataManager, DefaultGraphContext, EventManager, type GraphContext, type GraphContextConfig, InputManager, type InputManagerConfig, LayoutManager, LifecycleManager, type Manager, OperationQueueManager, type RecordedInputEvent, RenderManager, StatsManager, StyleManager, UpdateManager} from "./managers";
 import {MeshCache} from "./meshes/MeshCache";
-import {Node} from "./Node";
+import {PatternedLineMesh} from "./meshes/PatternedLineMesh";
+import {Node, type NodeIdType} from "./Node";
 import {ScreenshotCapture} from "./screenshot/ScreenshotCapture.js";
 import {ScreenshotError, ScreenshotErrorCode} from "./screenshot/ScreenshotError.js";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 import {Styles} from "./Styles";
+import {XRUIManager} from "./ui/XRUIManager";
 import type {QueueableOptions, RunAlgorithmOptions} from "./utils/queue-migration";
+import {XRSessionManager} from "./xr/XRSessionManager";
 // import {createXrButton} from "./xr-button";
 
 export class Graph implements GraphContext {
@@ -94,11 +102,18 @@ export class Graph implements GraphContext {
     private inputManager: InputManager;
     operationQueue: OperationQueueManager;
 
+    // XR managers
+    private xrSessionManager: XRSessionManager | null = null;
+    private xrUIManager: XRUIManager | null = null;
+
     // GraphContext implementation
     private graphContext: DefaultGraphContext;
 
     // Active video capture for cancellation support
     private activeCapture: import("./video/MediaRecorderCapture.js").MediaRecorderCapture | null = null;
+
+    // Storage for Z positions when switching from 3D to 2D mode
+    private savedZPositions = new Map<NodeIdType, number>();
 
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
@@ -212,6 +227,7 @@ export class Graph implements GraphContext {
         const contextConfig: GraphContextConfig = {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: defaultXRConfig,
         };
         this.graphContext = new DefaultGraphContext(
             this.styleManager,
@@ -390,7 +406,8 @@ export class Graph implements GraphContext {
                 this.update();
             });
 
-            // this.xrHelper = await createXrButton(this.scene, this.camera);
+            // Initialize XR (VR/AR) if enabled
+            await this.initializeXR();
 
             // Watch for browser/canvas resize events
             window.addEventListener("resize", this.resizeHandler);
@@ -436,38 +453,42 @@ export class Graph implements GraphContext {
             });
 
             this.statsManager.measure("Graph.settlementCheck", () => {
-                // Check if layout has settled
-                if (this.layoutManager.isSettled && this.layoutManager.running) {
-                    this.eventManager.emitGraphSettled(this);
-                    this.layoutManager.running = false;
+                // Only process settlement events if there are nodes - an empty graph
+                // has nothing to settle, so we shouldn't emit events or log
+                if (this.dataManager.nodes.size > 0) {
+                    // Check if layout has settled
+                    if (this.layoutManager.isSettled && this.layoutManager.running) {
+                        this.eventManager.emitGraphSettled(this);
+                        this.layoutManager.running = false;
 
-                    // Start label animations after layout has settled
-                    for (const node of this.dataManager.nodes.values()) {
-                        node.label?.startAnimation();
+                        // Start label animations after layout has settled
+                        for (const node of this.dataManager.nodes.values()) {
+                            node.label?.startAnimation();
+                        }
+
+                        // Force a final zoom to fit after layout has truly settled
+                        this.updateManager.enableZoomToFit();
                     }
 
-                    // Force a final zoom to fit after layout has truly settled
-                    this.updateManager.enableZoomToFit();
-                }
-
-                // Report performance when transitioning from unsettled to settled
-                if (this.layoutManager.isSettled && !this.wasSettled) {
-                    this.wasSettled = true;
-                    // End layout session tracking
-                    this.statsManager.endLayoutSession();
-                    const snapshot = this.statsManager.getSnapshot();
-                    // eslint-disable-next-line no-console
-                    console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
-                    this.statsManager.reportDetailed();
-                    // Reset measurements after reporting so next settlement shows fresh data
-                    this.statsManager.resetMeasurements();
-                } else if (!this.layoutManager.isSettled && this.wasSettled) {
-                    // Reset when layout becomes unsettled (so we can report next settlement)
-                    this.wasSettled = false;
-                    // Restart layout session tracking
-                    this.statsManager.startLayoutSession();
-                    // eslint-disable-next-line no-console
-                    console.log("🔄 Layout became unsettled, will report on next settlement");
+                    // Report performance when transitioning from unsettled to settled
+                    if (this.layoutManager.isSettled && !this.wasSettled) {
+                        this.wasSettled = true;
+                        // End layout session tracking
+                        this.statsManager.endLayoutSession();
+                        const snapshot = this.statsManager.getSnapshot();
+                        // eslint-disable-next-line no-console
+                        console.log(`🎯 Layout settled! (${snapshot.cpu.find((m) => m.label === "Graph.update")?.count ?? 0} update calls)`);
+                        this.statsManager.reportDetailed();
+                        // Reset measurements after reporting so next settlement shows fresh data
+                        this.statsManager.resetMeasurements();
+                    } else if (!this.layoutManager.isSettled && this.wasSettled) {
+                        // Reset when layout becomes unsettled (so we can report next settlement)
+                        this.wasSettled = false;
+                        // Restart layout session tracking
+                        this.statsManager.startLayoutSession();
+                        // eslint-disable-next-line no-console
+                        console.log("🔄 Layout became unsettled, will report on next settlement");
+                    }
                 }
             });
         });
@@ -506,18 +527,78 @@ export class Graph implements GraphContext {
     }
 
     private async _setStyleTemplateInternal(t: StyleSchema): Promise<Styles> {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         const previousTwoD = this.styles.config.graph.twoD;
+        const previousViewMode = this.styles.config.graph.viewMode;
 
         // Use StyleManager to load the new styles
         this.styleManager.loadStylesFromObject(t);
         this.styles = this.styleManager.getStyles();
 
-        const currentTwoD = this.styles.config.graph.twoD;
+        // Handle viewMode and twoD synchronization
+        // Priority: viewMode > twoD (viewMode is the canonical setting)
+        let currentViewMode = this.styles.config.graph.viewMode;
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+        let currentTwoD = this.styles.config.graph.twoD;
+
+        // Check if viewMode was explicitly set in the template (takes priority over twoD)
+        const templateGraph = t.graph as Record<string, unknown> | undefined;
+        const viewModeExplicitlySet = templateGraph !== undefined && "viewMode" in templateGraph;
+        const twoDExplicitlySet = templateGraph !== undefined && "twoD" in templateGraph;
+
+        if (viewModeExplicitlySet) {
+            // viewMode was explicitly set - sync twoD to match
+            currentTwoD = currentViewMode === "2d";
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+            this.styles.config.graph.twoD = currentTwoD;
+        } else if (twoDExplicitlySet && currentTwoD !== previousTwoD) {
+            // Only twoD was explicitly set (deprecated usage) - sync viewMode to match
+            console.warn(
+                "[Graph] graph.twoD is deprecated. Use graph.viewMode instead. " +
+                "twoD: true → viewMode: \"2d\", twoD: false → viewMode: \"3d\"",
+            );
+
+            currentViewMode = currentTwoD ? "2d" : "3d";
+            this.styles.config.graph.viewMode = currentViewMode;
+        } else if (currentViewMode !== previousViewMode) {
+            // viewMode changed through some other mechanism - sync twoD
+            currentTwoD = currentViewMode === "2d";
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+            this.styles.config.graph.twoD = currentTwoD;
+        } else if (currentTwoD !== previousTwoD) {
+            // twoD changed through some other mechanism - sync viewMode
+            currentViewMode = currentTwoD ? "2d" : "3d";
+            this.styles.config.graph.viewMode = currentViewMode;
+        }
 
         // Clear mesh cache if switching between 2D and 3D modes
-        if (previousTwoD !== currentTwoD) {
+        const modeSwitching = previousTwoD !== currentTwoD;
+        if (modeSwitching) {
             this.dataManager.meshCache.clear();
+
+            // Update scene metadata for 2D mode detection
+            this.scene.metadata = this.scene.metadata ?? {};
+            this.scene.metadata.twoD = currentTwoD;
+            this.scene.metadata.viewMode = currentViewMode;
+
+            // Save Z positions BEFORE any updates that might change them
+            // (updateStyles calls node.update() which applies layout positions)
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: save current Z positions
+                for (const node of this.getNodes()) {
+                    this.savedZPositions.set(node.id, node.mesh.position.z);
+                }
+            }
         }
+
+        // Update scene metadata for viewMode even if not switching 2D/3D
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.viewMode = currentViewMode;
+
+        // Always activate appropriate camera when styles are loaded
+        // This ensures camera is set up correctly even on initial load
+        const cameraType = currentTwoD ? "2d" : "orbit";
+        this.camera.activateCamera(cameraType);
 
         // Update DataManager with new styles - this will apply styles to existing nodes/edges
         // IMPORTANT: DataManager needs to be updated after this.styles is set because
@@ -526,6 +607,29 @@ export class Graph implements GraphContext {
 
         // Update LayoutManager with new styles reference
         this.layoutManager.updateStyles(this.styles);
+
+        // Handle Z-coordinate flattening/restoration AFTER style updates
+        // (style updates call node.update() which applies layout positions including Z)
+        if (modeSwitching) {
+            const nodes = this.getNodes();
+            if (currentTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: flatten Z positions to 0
+                for (const node of nodes) {
+                    node.mesh.position.z = 0;
+                }
+            } else if (!currentTwoD && previousTwoD) {
+                // Switching from 2D to 3D: restore saved Z positions (or leave at 0)
+                for (const node of nodes) {
+                    const savedZ = this.savedZPositions.get(node.id);
+                    if (savedZ !== undefined) {
+                        node.mesh.position.z = savedZ;
+                    }
+                    // If no saved Z, leave at current position (0)
+                }
+                // Clear saved positions after restoration
+                this.savedZPositions.clear();
+            }
+        }
 
         // setup PhotoDome Skybox
         if (this.styles.config.graph.background.backgroundType === "skybox" &&
@@ -566,16 +670,13 @@ export class Graph implements GraphContext {
         // default rendering pipeline?
         // https://doc.babylonjs.com/features/featuresDeepDive/postProcesses/defaultRenderingPipeline/
 
-        // setup camera
-        const cameraType = this.styles.config.graph.twoD ? "2d" : "orbit";
-        this.camera.activateCamera(cameraType);
-
         // Request zoom to fit when switching between 2D/3D modes
         if (previousTwoD !== currentTwoD) {
             this.updateManager.enableZoomToFit();
         }
 
         // Update layout dimension if it supports it and twoD mode changed
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         await this.layoutManager.updateLayoutDimension(this.styles.config.graph.twoD);
 
         // Apply layout from template if specified
@@ -638,6 +739,98 @@ export class Graph implements GraphContext {
             size: file.size,
             ... options,
         });
+    }
+
+    /**
+     * Load graph data from a URL with auto-format detection
+     *
+     * @remarks
+     * This method attempts to detect the format from the URL extension first.
+     * If the extension is not recognized (e.g., `.txt`), it fetches the content
+     * and uses content-based detection. The content is then passed directly to
+     * the data source to avoid a double-fetch.
+     *
+     * @param url - URL to fetch graph data from
+     * @param options - Loading options
+     *
+     * @example
+     * ```typescript
+     * // Auto-detect format from extension
+     * await graph.loadFromUrl("https://example.com/data.graphml");
+     *
+     * // Auto-detect from content when extension doesn't match
+     * await graph.loadFromUrl("https://example.com/data.txt");
+     *
+     * // Explicitly specify format
+     * await graph.loadFromUrl("https://example.com/data.txt", { format: "graphml" });
+     * ```
+     */
+    async loadFromUrl(
+        url: string,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        const {detectFormat} = await import("./data/format-detection.js");
+
+        let format = options?.format;
+        let fetchedContent: string | undefined;
+
+        if (!format) {
+            // First try extension-based detection (no fetch needed)
+            const detectedFromExtension = detectFormat(url, "");
+
+            if (detectedFromExtension) {
+                format = detectedFromExtension;
+            } else {
+                // Extension didn't match - fetch content for detection
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch URL '${url}': ${response.status} ${response.statusText}`,
+                    );
+                }
+
+                fetchedContent = await response.text();
+
+                const sample = fetchedContent.slice(0, 2048);
+                const detectedFromContent = detectFormat(url, sample);
+
+                if (!detectedFromContent) {
+                    throw new Error(
+                        `Could not detect file format from '${url}'. ` +
+                        "Supported formats: JSON, GraphML, GEXF, CSV, GML, DOT, Pajek. " +
+                        "Try specifying format explicitly: loadFromUrl(url, { format: \"graphml\" })",
+                    );
+                }
+
+                format = detectedFromContent;
+            }
+        }
+
+        // Merge graph config with explicit options (explicit options take precedence)
+        const mergedOptions = {
+            nodeIdPath: options?.nodeIdPath ?? this.styles.config.data.knownFields.nodeIdPath,
+            edgeSrcIdPath: options?.edgeSrcIdPath ?? this.styles.config.data.knownFields.edgeSrcIdPath,
+            edgeDstIdPath: options?.edgeDstIdPath ?? this.styles.config.data.knownFields.edgeDstIdPath,
+        };
+
+        // If we already fetched content for detection, pass it as data to avoid double-fetch
+        // Otherwise pass URL and let DataSource handle the fetch
+        if (fetchedContent !== undefined) {
+            await this.addDataFromSource(format, {
+                data: fetchedContent,
+                ... mergedOptions,
+            });
+        } else {
+            await this.addDataFromSource(format, {
+                url,
+                ... mergedOptions,
+            });
+        }
     }
 
     async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
@@ -736,7 +929,7 @@ export class Graph implements GraphContext {
 
     async runAlgorithm(namespace: string, type: string, options?: RunAlgorithmOptions): Promise<void> {
         if (options?.skipQueue) {
-            await this.algorithmManager.runAlgorithm(namespace, type);
+            await this.algorithmManager.runAlgorithm(namespace, type, options.algorithmOptions);
 
             if (options.applySuggestedStyles) {
                 this.applySuggestedStyles(`${namespace}:${type}`);
@@ -752,7 +945,7 @@ export class Graph implements GraphContext {
                     throw new Error("Operation cancelled");
                 }
 
-                await this.algorithmManager.runAlgorithm(namespace, type);
+                await this.algorithmManager.runAlgorithm(namespace, type, options?.algorithmOptions);
                 if (options?.applySuggestedStyles) {
                     this.applySuggestedStyles(`${namespace}:${type}`);
                 }
@@ -1075,7 +1268,214 @@ export class Graph implements GraphContext {
     }
 
     is2D(): boolean {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         return this.styles.config.graph.twoD;
+    }
+
+    /**
+     * Get the current view mode.
+     * Returns the viewMode from config (always set due to default value).
+     */
+    getViewMode(): ViewMode {
+        return this.styles.config.graph.viewMode;
+    }
+
+    /**
+     * Set the view mode.
+     * This controls the camera type, input handling, and rendering approach.
+     *
+     * @param mode - The view mode to set: "2d", "3d", "ar", or "vr"
+     * @param options - Optional queueing options
+     *
+     * @example
+     * ```typescript
+     * // Switch to 2D orthographic view
+     * await graph.setViewMode("2d");
+     *
+     * // Switch to VR mode
+     * await graph.setViewMode("vr");
+     * ```
+     */
+    async setViewMode(mode: ViewMode, options?: QueueableOptions): Promise<void> {
+        return this.operationQueue.queueOperationAsync(
+            "camera-update",
+            async(context) => {
+                if (context.signal.aborted) {
+                    throw new Error("Operation cancelled");
+                }
+
+                await this._setViewModeInternal(mode);
+            },
+            {
+                description: `Setting view mode to ${mode}`,
+                ... options,
+            },
+        );
+    }
+
+    /**
+     * Internal method for setting view mode - bypasses queue
+     * Used by operations that are already queued
+     */
+    private async _setViewModeInternal(mode: ViewMode): Promise<void> {
+        const previousMode = this.getViewMode();
+
+        // Skip if no change
+        if (previousMode === mode) {
+            return;
+        }
+
+        // Update the config
+        this.styles.config.graph.viewMode = mode;
+
+        // Sync twoD for backward compatibility
+        const isTwoD = mode === "2d";
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+        const previousTwoD = this.styles.config.graph.twoD;
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
+        this.styles.config.graph.twoD = isTwoD;
+
+        // Handle mode switching
+        const modeSwitchingBetween2D3D = previousTwoD !== isTwoD;
+
+        if (modeSwitchingBetween2D3D) {
+            // Clear mesh cache if switching between 2D and 3D modes
+            this.dataManager.meshCache.clear();
+
+            // Update scene metadata for 2D mode detection
+            this.scene.metadata = this.scene.metadata ?? {};
+            this.scene.metadata.twoD = isTwoD;
+            this.scene.metadata.viewMode = mode;
+
+            // Activate camera BEFORE mesh recreation so that is2DMode() checks
+            // in EdgeMesh.create() work correctly (camera.mode must be ORTHOGRAPHIC for 2D)
+            const cameraType: CameraKey = isTwoD ? "2d" : "orbit";
+            this.camera.activateCamera(cameraType);
+
+            // Force all nodes to recreate their meshes (they were disposed when cache was cleared)
+            // updateStyle() will detect the disposed mesh and create a new one
+            for (const node of this.getNodes()) {
+                node.updateStyle(node.styleId);
+            }
+
+            // Force all edges to recreate their meshes
+            // Note: Edge meshes from Simple2DLineRenderer are NOT tracked by MeshCache,
+            // so we must explicitly dispose them before calling updateStyle()
+            for (const edge of this.dataManager.edges.values()) {
+                // Dispose edge mesh if not already disposed (handles non-cached meshes like Simple2DLineRenderer)
+                if (edge.mesh instanceof PatternedLineMesh) {
+                    edge.mesh.dispose();
+                } else if (!edge.mesh.isDisposed()) {
+                    edge.mesh.dispose();
+                }
+
+                // Dispose arrow meshes too
+                if (edge.arrowMesh && !edge.arrowMesh.isDisposed()) {
+                    edge.arrowMesh.dispose();
+                }
+
+                if (edge.arrowTailMesh && !edge.arrowTailMesh.isDisposed()) {
+                    edge.arrowTailMesh.dispose();
+                }
+
+                edge.updateStyle(edge.styleId);
+            }
+
+            // Save Z positions before any layout changes (3D→2D only)
+            // We save here to capture the true 3D positions before layout is recreated
+            if (isTwoD && !previousTwoD) {
+                // Switching from 3D to 2D: save current Z positions
+                for (const node of this.getNodes()) {
+                    this.savedZPositions.set(node.id, node.mesh.position.z);
+                }
+            }
+        }
+
+        // Update scene metadata for any mode change
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.viewMode = mode;
+
+        // Handle XR modes (ar/vr)
+        if (mode === "ar" || mode === "vr") {
+            // For AR/VR, we need to initialize XR session
+            if (!this.xrSessionManager) {
+                // XR not available
+                console.warn(`[Graph] Cannot switch to ${mode} mode: XR session manager not initialized`);
+                // Fall back to 3D mode
+                this.styles.config.graph.viewMode = "3d";
+                this.scene.metadata.viewMode = "3d";
+                return;
+            }
+
+            try {
+                // Enter XR mode
+                await this.enterXR(mode === "vr" ? "immersive-vr" : "immersive-ar");
+            } catch (error) {
+                console.warn(`[Graph] Failed to enter ${mode} mode:`, error);
+                // Fall back to 3D mode
+                this.styles.config.graph.viewMode = "3d";
+                this.scene.metadata.viewMode = "3d";
+            }
+        } else if (previousMode === "ar" || previousMode === "vr") {
+            // Exiting XR mode - return to 3D or 2D
+            try {
+                await this.exitXR();
+            } catch (error) {
+                console.warn("[Graph] Failed to exit XR mode:", error);
+            }
+        }
+
+        // Activate appropriate camera based on mode
+        if (mode !== "ar" && mode !== "vr") {
+            // For 2D/3D, activate the appropriate camera
+            const cameraType: CameraKey = mode === "2d" ? "2d" : "orbit";
+            this.camera.activateCamera(cameraType);
+        }
+
+        // Update layout dimension if needed
+        await this.layoutManager.updateLayoutDimension(isTwoD);
+
+        // After mode switch, force a full update cycle to ensure:
+        // 1. Nodes get their positions from the new layout engine
+        // 2. Edges are transformed to connect to the new node positions
+        // This is necessary because updateLayoutDimension() may have created a new layout engine
+        // with different positions, but node/edge meshes haven't been updated yet.
+        if (modeSwitchingBetween2D3D) {
+            // Step the layout to ensure positions are computed
+            this.layoutManager.step();
+
+            // Update all nodes with positions from the new layout
+            for (const node of this.getNodes()) {
+                node.update();
+            }
+
+            // Update rays and all edges to connect to the updated node positions
+            Edge.updateRays(this);
+            for (const edge of this.dataManager.edges.values()) {
+                edge.update();
+            }
+
+            // Handle Z-coordinate flattening/restoration AFTER layout positions are applied
+            // This ensures we override the layout engine's Z values with our saved/flattened values
+            if (isTwoD) {
+                // 3D→2D: flatten Z to 0 (positions were saved earlier)
+                for (const node of this.getNodes()) {
+                    node.mesh.position.z = 0;
+                }
+            } else {
+                // 2D→3D: restore saved Z positions
+                for (const node of this.getNodes()) {
+                    const savedZ = this.savedZPositions.get(node.id);
+                    if (savedZ !== undefined) {
+                        node.mesh.position.z = savedZ;
+                    }
+                }
+                this.savedZPositions.clear();
+            }
+        }
+
+        // Request zoom to fit when mode changes
+        this.updateManager.enableZoomToFit();
     }
 
     needsRayUpdate(): boolean {
@@ -1086,6 +1486,7 @@ export class Graph implements GraphContext {
         return {
             pinOnDrag: this.pinOnDrag,
             enableDetailedProfiling: this.enableDetailedProfiling,
+            xr: this.graphContext.getConfig().xr,
         };
     }
 
@@ -1095,6 +1496,69 @@ export class Graph implements GraphContext {
 
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
+    }
+
+    getXRConfig(): XRConfig | undefined {
+        return this.graphContext.getConfig().xr;
+    }
+
+    /**
+     * Set XR configuration.
+     * Merges with defaults and updates the graph context.
+     * @param config - Partial XR configuration to apply
+     */
+    setXRConfig(config: PartialXRConfig): void {
+        // Parse through zod schema to apply defaults
+        const fullConfig = xrConfigSchema.parse(config);
+        this.graphContext.updateConfig({xr: fullConfig});
+    }
+
+    getXRSessionManager(): XRSessionManager | undefined {
+        return this.xrSessionManager ?? undefined;
+    }
+
+    /**
+     * Check if VR mode is supported on this device/browser.
+     * Returns true if WebXR is available and VR sessions are supported.
+     *
+     * @returns Promise resolving to true if VR is supported
+     *
+     * @example
+     * ```typescript
+     * const vrSupported = await graph.isVRSupported();
+     * if (!vrSupported) {
+     *   console.log("VR not available on this device");
+     * }
+     * ```
+     */
+    async isVRSupported(): Promise<boolean> {
+        if (!this.xrSessionManager) {
+            return false;
+        }
+
+        return this.xrSessionManager.isVRSupported();
+    }
+
+    /**
+     * Check if AR mode is supported on this device/browser.
+     * Returns true if WebXR is available and AR sessions are supported.
+     *
+     * @returns Promise resolving to true if AR is supported
+     *
+     * @example
+     * ```typescript
+     * const arSupported = await graph.isARSupported();
+     * if (!arSupported) {
+     *   console.log("AR not available on this device");
+     * }
+     * ```
+     */
+    async isARSupported(): Promise<boolean> {
+        if (!this.xrSessionManager) {
+            return false;
+        }
+
+        return this.xrSessionManager.isARSupported();
     }
 
     // Input manager access
@@ -2552,7 +3016,135 @@ export class Graph implements GraphContext {
         this.scene.render();
     }
 
+    /**
+     * Initialize XR (VR/AR) system
+     * Creates session manager and UI buttons based on configuration
+     */
+    private async initializeXR(): Promise<void> {
+        const xrConfig = this.graphContext.getConfig().xr;
+        if (!xrConfig?.enabled) {
+            return;
+        }
+
+        // Create XR session manager
+        this.xrSessionManager = new XRSessionManager(this.scene, {
+            vr: xrConfig.vr,
+            ar: xrConfig.ar,
+        });
+
+        // Determine which modes are available by actually checking device support
+        const vrAvailable = xrConfig.vr.enabled && await this.xrSessionManager.isVRSupported();
+        const arAvailable = xrConfig.ar.enabled && await this.xrSessionManager.isARSupported();
+
+        // Create XR UI manager
+        this.xrUIManager = new XRUIManager(
+            this.element as HTMLElement,
+            vrAvailable,
+            arAvailable,
+            xrConfig.ui,
+        );
+
+        // Wire up button click handlers
+        this.xrUIManager.onEnterXR = (mode) => {
+            void (async() => {
+                try {
+                    await this.enterXR(mode);
+                } catch (error) {
+                    console.error("Failed to enter XR mode:", error);
+
+                    // Show user-friendly alert on error
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    alert(`XR Session Failed:\n${errorMsg}\n\nCheck console for details.`);
+
+                    // Emit error event
+                    this.eventManager.emitGraphError(
+                        this,
+                        error instanceof Error ? error : new Error(String(error)),
+                        "xr",
+                        {mode},
+                    );
+                }
+            })();
+        };
+    }
+
+    /**
+     * Enter XR mode (VR or AR)
+     * @param mode - The XR mode to enter ('immersive-vr' or 'immersive-ar')
+     */
+    public async enterXR(mode: "immersive-vr" | "immersive-ar"): Promise<void> {
+        if (!this.xrSessionManager) {
+            throw new Error("XR is not initialized");
+        }
+
+        const previousCamera = this.camera.getActiveController()?.camera;
+
+        if (mode === "immersive-vr") {
+            await this.xrSessionManager.enterVR(previousCamera ?? undefined);
+        } else {
+            await this.xrSessionManager.enterAR(previousCamera ?? undefined);
+        }
+
+        // Phase 3: Set up XR camera controller and input handler
+        const xrHelper = this.xrSessionManager.getXRHelper();
+        if (!xrHelper) {
+            throw new Error("XR helper not available after session creation");
+        }
+
+        // Store XR helper in scene metadata for isXRMode() detection
+        this.scene.metadata = this.scene.metadata ?? {};
+        this.scene.metadata.xrHelper = xrHelper;
+
+        // Create XR pivot camera controller (handles input via pivot-based system)
+        const {XRPivotCameraController} = await import("./cameras/XRPivotCameraController");
+        const xrCameraController = new XRPivotCameraController(this.scene, xrHelper);
+
+        // Note: XRPivotCameraController automatically enables input when XR state changes
+        // We just need to call update() every frame for input processing
+
+        // Hook into render loop to update XR input
+        const xrUpdateObserver = this.scene.onBeforeRenderObservable.add(() => {
+            xrCameraController.update();
+        });
+
+        // Store for cleanup
+        this.scene.metadata.xrCameraController = xrCameraController;
+        this.scene.metadata.xrUpdateObserver = xrUpdateObserver;
+    }
+
+    /**
+     * Exit XR mode and return to previous camera
+     */
+    public async exitXR(): Promise<void> {
+        if (!this.xrSessionManager) {
+            return;
+        }
+
+        // Clean up XR camera controller
+        if (this.scene.metadata?.xrCameraController) {
+            this.scene.metadata.xrCameraController.dispose();
+            this.scene.metadata.xrCameraController = null;
+        }
+
+        // Remove render loop observer
+        if (this.scene.metadata?.xrUpdateObserver) {
+            this.scene.onBeforeRenderObservable.remove(this.scene.metadata.xrUpdateObserver);
+            this.scene.metadata.xrUpdateObserver = null;
+        }
+
+        // Clear XR helper from metadata
+        if (this.scene.metadata?.xrHelper) {
+            this.scene.metadata.xrHelper = null;
+        }
+
+        await this.xrSessionManager.exitXR();
+    }
+
     dispose(): void {
+        // Clean up XR resources
+        this.xrUIManager?.dispose();
+        this.xrSessionManager?.dispose();
+
         this.shutdown();
     }
 }

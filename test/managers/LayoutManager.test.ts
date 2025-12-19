@@ -404,5 +404,80 @@ describe("LayoutManager", () => {
             assert.isTrue(layoutManager.isSettled);
         });
     });
+
+    describe("2D layout dimension support", () => {
+        it("should use 2D mode for NGraphEngine when twoD is set in styles", async() => {
+            // Configure 2D mode in styles (testing deprecated API for backward compatibility)
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            graph.styles.config.graph.twoD = true;
+
+            // Add some nodes
+            const dataManager = graph.getDataManager();
+            dataManager.addNodes([
+                {id: "node1", label: "Node 1"},
+                {id: "node2", label: "Node 2"},
+                {id: "node3", label: "Node 3"},
+            ] as Record<string, unknown>[]);
+            dataManager.addEdges([
+                {id: "edge1", src: "node1", dst: "node2"},
+                {id: "edge2", src: "node2", dst: "node3"},
+            ] as Record<string, unknown>[]);
+
+            // Set ngraph layout which should respect 2D configuration
+            await layoutManager.setLayout("ngraph", {});
+
+            // Run some steps to let layout settle
+            for (let i = 0; i < 100; i++) {
+                layoutManager.step();
+            }
+
+            // Get positions for all nodes
+            const nodes = Array.from(layoutManager.nodes);
+            const positions = nodes.map((node) => layoutManager.getNodePosition(node));
+
+            // Verify all nodes have positions with z=0 in 2D mode
+            positions.forEach((pos, i) => {
+                assert.isDefined(pos, `Node ${i} should have a position`);
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                if (pos) {
+                    assert.equal(pos[2], 0, `Node ${i} Z coordinate should be 0 in 2D mode`);
+                }
+            });
+        });
+
+        it("should use 3D mode for NGraphEngine when twoD is not set", async() => {
+            // Ensure 3D mode (testing deprecated API for backward compatibility)
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            graph.styles.config.graph.twoD = false;
+
+            // Add some nodes
+            const dataManager = graph.getDataManager();
+            dataManager.addNodes([
+                {id: "node1", label: "Node 1"},
+                {id: "node2", label: "Node 2"},
+                {id: "node3", label: "Node 3"},
+            ] as Record<string, unknown>[]);
+            dataManager.addEdges([
+                {id: "edge1", src: "node1", dst: "node2"},
+                {id: "edge2", src: "node2", dst: "node3"},
+            ] as Record<string, unknown>[]);
+
+            // Set ngraph layout in 3D mode
+            await layoutManager.setLayout("ngraph", {seed: 12345});
+
+            // Run some steps to let layout settle
+            for (let i = 0; i < 100; i++) {
+                layoutManager.step();
+            }
+
+            // Get positions for all nodes
+            const nodes = Array.from(layoutManager.nodes);
+            const positions = nodes.map((node) => layoutManager.getNodePosition(node));
+
+            // In 3D mode, at least one node should have a non-zero z coordinate
+            const hasNonZeroZ = positions.some((pos) => pos && Math.abs(pos[2]) > 0.001);
+            assert.isTrue(hasNonZeroZ, "In 3D mode, nodes should have non-zero Z coordinates");
+        });
+    });
 });
 

@@ -1,8 +1,15 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import {html} from "lit";
 
+import {StyleHelpers} from "../../src/config/StyleHelpers";
+
 const meta: Meta = {
     title: "Algorithms/Palette Picker",
+    parameters: {
+        chromatic: {
+            delay: 300, // Ensure DOM updates complete before snapshot
+        },
+    },
 };
 export default meta;
 
@@ -237,85 +244,118 @@ export const PalettePicker: Story = {
                 </div>
             </div>
         </div>
-
-        <script type="module">
-            import {StyleHelpers} from "../../src/config/StyleHelpers.js";
-
-            // Sequential gradients
-            const renderSequential = (containerId, fn, steps = 20) => {
-                const container = document.getElementById(containerId);
-                for (let i = 0; i < steps; i++) {
-                    const value = i / (steps - 1);
-                    const color = fn(value);
-                    const swatch = document.createElement("div");
-                    swatch.className = "color-swatch";
-                    swatch.style.backgroundColor = color;
-                    swatch.setAttribute("data-color", color);
-                    container.appendChild(swatch);
-                }
-            };
-
-            renderSequential("seq-viridis", StyleHelpers.color.sequential.viridis);
-            renderSequential("seq-plasma", StyleHelpers.color.sequential.plasma);
-            renderSequential("seq-inferno", StyleHelpers.color.sequential.inferno);
-            renderSequential("seq-blues", StyleHelpers.color.sequential.blues);
-            renderSequential("seq-greens", StyleHelpers.color.sequential.greens);
-            renderSequential("seq-oranges", StyleHelpers.color.sequential.oranges);
-
-            // Categorical palettes
-            const renderCategorical = (containerId, fn, count) => {
-                const container = document.getElementById(containerId);
-                for (let i = 0; i < count; i++) {
-                    const color = fn(i);
-                    const swatch = document.createElement("div");
-                    swatch.className = "color-swatch";
-                    swatch.style.backgroundColor = color;
-                    swatch.setAttribute("data-color", color);
-                    container.appendChild(swatch);
-                }
-            };
-
-            renderCategorical("cat-okabe", StyleHelpers.color.categorical.okabeIto, 8);
-            renderCategorical("cat-tol-vibrant", StyleHelpers.color.categorical.tolVibrant, 7);
-            renderCategorical("cat-tol-muted", StyleHelpers.color.categorical.tolMuted, 9);
-            renderCategorical("cat-carbon", StyleHelpers.color.categorical.carbon, 5);
-            renderCategorical("cat-pastel", StyleHelpers.color.categorical.pastel, 8);
-
-            // Diverging gradients
-            const renderDiverging = (containerId, fn, steps = 20) => {
-                const container = document.getElementById(containerId);
-                for (let i = 0; i < steps; i++) {
-                    const value = i / (steps - 1);
-                    const color = fn(value, 0.5);
-                    const swatch = document.createElement("div");
-                    swatch.className = "color-swatch";
-                    swatch.style.backgroundColor = color;
-                    swatch.setAttribute("data-color", color);
-                    container.appendChild(swatch);
-                }
-            };
-
-            renderDiverging("div-purple-green", StyleHelpers.color.diverging.purpleGreen);
-            renderDiverging("div-blue-orange", StyleHelpers.color.diverging.blueOrange);
-            renderDiverging("div-red-blue", StyleHelpers.color.diverging.redBlue);
-
-            // Binary highlights
-            const renderBinary = (containerId, fn) => {
-                const container = document.getElementById(containerId);
-                [false, true].forEach((state) => {
-                    const color = fn(state);
-                    const swatch = document.createElement("div");
-                    swatch.className = "color-swatch";
-                    swatch.style.backgroundColor = color;
-                    swatch.setAttribute("data-color", color);
-                    swatch.style.flex = "0 0 48%";
-                    container.appendChild(swatch);
-                });
-            };
-
-            renderBinary("bin-blue", StyleHelpers.color.binary.blueHighlight);
-            renderBinary("bin-green", StyleHelpers.color.binary.greenSuccess);
-            renderBinary("bin-orange", StyleHelpers.color.binary.orangeWarning);
-        </script>
     `,
+    play: ({canvasElement}) => {
+        // Helper to render sequential gradient swatches
+        const renderSequential = (
+            containerId: string,
+            fn: (value: number) => string,
+            steps = 20,
+        ): void => {
+            const container = canvasElement.querySelector(`#${containerId}`);
+
+            if (!container) {
+                return;
+            }
+
+            for (let i = 0; i < steps; i++) {
+                const value = i / (steps - 1);
+                const color = fn(value);
+                const swatch = document.createElement("div");
+                swatch.className = "color-swatch";
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute("data-color", color);
+                container.appendChild(swatch);
+            }
+        };
+
+        // Helper to render categorical swatches
+        const renderCategorical = (
+            containerId: string,
+            fn: (index: number) => string,
+            count: number,
+        ): void => {
+            const container = canvasElement.querySelector(`#${containerId}`);
+
+            if (!container) {
+                return;
+            }
+
+            for (let i = 0; i < count; i++) {
+                const color = fn(i);
+                const swatch = document.createElement("div");
+                swatch.className = "color-swatch";
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute("data-color", color);
+                container.appendChild(swatch);
+            }
+        };
+
+        // Helper to render diverging gradient swatches
+        const renderDiverging = (
+            containerId: string,
+            fn: (value: number, midpoint: number) => string,
+            steps = 20,
+        ): void => {
+            const container = canvasElement.querySelector(`#${containerId}`);
+
+            if (!container) {
+                return;
+            }
+
+            for (let i = 0; i < steps; i++) {
+                const value = i / (steps - 1);
+                const color = fn(value, 0.5);
+                const swatch = document.createElement("div");
+                swatch.className = "color-swatch";
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute("data-color", color);
+                container.appendChild(swatch);
+            }
+        };
+
+        // Helper to render binary swatches
+        const renderBinary = (containerId: string, fn: (state: boolean) => string): void => {
+            const container = canvasElement.querySelector(`#${containerId}`);
+
+            if (!container) {
+                return;
+            }
+
+            [false, true].forEach((state) => {
+                const color = fn(state);
+                const swatch = document.createElement("div");
+                swatch.className = "color-swatch";
+                swatch.style.backgroundColor = color;
+                swatch.setAttribute("data-color", color);
+                (swatch as HTMLElement).style.flex = "0 0 48%";
+                container.appendChild(swatch);
+            });
+        };
+
+        // Render sequential gradients
+        renderSequential("seq-viridis", StyleHelpers.color.sequential.viridis);
+        renderSequential("seq-plasma", StyleHelpers.color.sequential.plasma);
+        renderSequential("seq-inferno", StyleHelpers.color.sequential.inferno);
+        renderSequential("seq-blues", StyleHelpers.color.sequential.blues);
+        renderSequential("seq-greens", StyleHelpers.color.sequential.greens);
+        renderSequential("seq-oranges", StyleHelpers.color.sequential.oranges);
+
+        // Render categorical palettes
+        renderCategorical("cat-okabe", StyleHelpers.color.categorical.okabeIto, 8);
+        renderCategorical("cat-tol-vibrant", StyleHelpers.color.categorical.tolVibrant, 7);
+        renderCategorical("cat-tol-muted", StyleHelpers.color.categorical.tolMuted, 9);
+        renderCategorical("cat-carbon", StyleHelpers.color.categorical.carbon, 5);
+        renderCategorical("cat-pastel", StyleHelpers.color.categorical.pastel, 8);
+
+        // Render diverging gradients
+        renderDiverging("div-purple-green", StyleHelpers.color.diverging.purpleGreen);
+        renderDiverging("div-blue-orange", StyleHelpers.color.diverging.blueOrange);
+        renderDiverging("div-red-blue", StyleHelpers.color.diverging.redBlue);
+
+        // Render binary highlights
+        renderBinary("bin-blue", StyleHelpers.color.binary.blueHighlight);
+        renderBinary("bin-green", StyleHelpers.color.binary.greenSuccess);
+        renderBinary("bin-orange", StyleHelpers.color.binary.orangeWarning);
+    },
 };

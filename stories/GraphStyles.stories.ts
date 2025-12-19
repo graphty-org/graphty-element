@@ -36,7 +36,7 @@ const meta: Meta = {
         styleTemplate: templateCreator({
             behavior: {
                 layout: {
-                    preSteps: 2000, // Extra preSteps for more stable physics layouts
+                    preSteps: 8000, // Extra preSteps for more stable physics layouts
                 },
             },
         }),
@@ -46,7 +46,13 @@ export default meta;
 
 type Story = StoryObj<Graphty>;
 
+// Common play function for all stories
+const waitForSettle = async({canvasElement}: {canvasElement: HTMLElement}): Promise<void> => {
+    await waitForGraphSettled(canvasElement);
+};
+
 export const Default: Story = {
+    play: waitForSettle,
 };
 
 export const Skybox: Story = {
@@ -81,13 +87,17 @@ export const Skybox: Story = {
 
 export const BackgroundColor: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {background: {backgroundType: "color", color: "hotpink"}}}),
+        styleTemplate: templateCreator({
+            graph: {background: {backgroundType: "color", color: "hotpink"}},
+            behavior: {layout: {preSteps: 8000}},
+        }),
     },
     parameters: {
         controls: {
             include: ["graph.background.color"],
         },
     },
+    play: waitForSettle,
 };
 
 export const Layers: Story = {
@@ -98,6 +108,7 @@ export const Layers: Story = {
                 {node: {selector: "starts_with(id, 'Mme') == `true`", style: {enabled: true, texture: {color: "yellow"}}}},
                 {node: {selector: "starts_with(id, 'Mlle') == `true`", style: {enabled: true, texture: {color: "red"}}}},
             ],
+            behavior: {layout: {preSteps: 8000}},
         }),
     },
     parameters: {
@@ -105,4 +116,5 @@ export const Layers: Story = {
             include: [],
         },
     },
+    play: waitForSettle,
 };

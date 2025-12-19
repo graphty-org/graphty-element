@@ -1,6 +1,5 @@
 import {
     AbstractMesh,
-    SixDofDragBehavior,
 } from "@babylonjs/core";
 import jmespath from "jmespath";
 import _ from "lodash";
@@ -12,7 +11,7 @@ import type {Graph} from "./Graph";
 import type {GraphContext} from "./managers/GraphContext";
 import {NodeMesh} from "./meshes/NodeMesh";
 import {RichTextLabel, type RichTextLabelOptions} from "./meshes/RichTextLabel";
-import {NodeBehavior} from "./NodeBehavior";
+import {NodeBehavior, type NodeDragHandler} from "./NodeBehavior";
 import {NodeStyleId, Styles} from "./Styles";
 
 export type NodeIdType = string | number;
@@ -30,7 +29,7 @@ export class Node {
     styleUpdates: AdHocData;
     mesh: AbstractMesh;
     label?: RichTextLabel;
-    meshDragBehavior!: SixDofDragBehavior;
+    dragHandler?: NodeDragHandler;
     dragging = false;
     styleId: NodeStyleId;
     pinOnDrag!: boolean;
@@ -76,6 +75,21 @@ export class Node {
             {shape: o.shape, texture: o.texture, effect: o.effect},
             this.context.getScene(),
         );
+
+        // Parent to graph-root for XR gesture support
+        // This allows gestures to transform the entire graph by manipulating the root
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            this.mesh.parent = graphRoot;
+        }
+
+        // Add metadata for XR controller raycasting
+        // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
+        this.mesh.metadata = {
+            graphNode: this,
+            styleId: String(styleId),
+            nodeId: this.id,
+        };
 
         // create label
         if (o.label?.enabled) {
@@ -147,6 +161,20 @@ export class Node {
             {shape: o.shape, texture: o.texture, effect: o.effect},
             this.context.getScene(),
         );
+
+        // Parent to graph-root for XR gesture support
+        const graphRoot = this.context.getScene().getTransformNodeByName("graph-root");
+        if (graphRoot) {
+            this.mesh.parent = graphRoot;
+        }
+
+        // Add metadata for XR controller raycasting
+        // IMPORTANT: For InstancedMesh, we must set metadata on the INSTANCE, not spread from source
+        this.mesh.metadata = {
+            graphNode: this,
+            styleId: String(styleId),
+            nodeId: this.id,
+        };
 
         // recreate label if needed
         if (o.label?.enabled) {

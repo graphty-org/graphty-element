@@ -26,6 +26,10 @@ export default defineConfig({
                         "test/managers/LifecycleManager.test.ts",
                         "test/managers/UpdateManager.test.ts",
                         "test/mesh-testing/real-mesh-simple.test.ts",
+                        // Edge tests require browser (hammerjs dependency)
+                        "test/Edge.bezier.test.ts",
+                        "test/edge-cases/**/*.test.ts",
+                        "test/integration/Edge.integration.test.ts",
                         // Browser-only tests
                         "test/browser/**/*.test.ts",
                         // Performance tests need DOM and should run in browser
@@ -57,8 +61,14 @@ export default defineConfig({
                         "test/mesh-testing/real-mesh-simple.test.ts",
                         "test/performance/**/*.test.ts",
                         "test/examples/**/*.test.ts",
+                        // Edge tests require browser (hammerjs dependency)
+                        "test/Edge.bezier.test.ts",
+                        "test/edge-cases/**/*.test.ts",
+                        "test/integration/Edge.integration.test.ts",
                     ],
                     exclude: [
+                        // Tests using Node.js-only libraries (pngjs)
+                        "test/browser/dash-spacing-measurement.test.ts",
                         // Exclude experimental/temporary folders ending with ~
                         "**/*~/**",
                         "**/*~",
@@ -85,7 +95,10 @@ export default defineConfig({
                 plugins: [
                     // The plugin will run tests for the stories defined in your Storybook config
                     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-                    storybookTest({configDir: path.join(dirname, ".storybook")}),
+                    storybookTest({
+                        configDir: path.join(dirname, ".storybook"),
+                        storybookUrl: "http://dev.ato.ms:9026",
+                    }),
                 ],
                 test: {
                     name: "storybook",

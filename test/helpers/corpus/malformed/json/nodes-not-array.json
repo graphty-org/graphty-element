@@ -1,0 +1,6 @@
+{
+  "nodes": "not an array",
+  "edges": [
+    {"source": "1", "target": "2"}
+  ]
+}

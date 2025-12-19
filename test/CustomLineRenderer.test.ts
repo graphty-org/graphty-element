@@ -5,11 +5,300 @@
  * properties and invariants hold across a wide range of inputs.
  */
 
-import {Vector3} from "@babylonjs/core";
+import {NullEngine, Scene, Vector3} from "@babylonjs/core";
 import fc from "fast-check";
 import {assert, describe, test} from "vitest";
 
 import {CustomLineRenderer} from "../src/meshes/CustomLineRenderer";
+
+describe("CustomLineRenderer Sinewave Geometry", () => {
+    test("createSinewaveGeometry generates wave pattern", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+        const amplitude = 1.0;
+        const frequency = 2.0;
+
+        const wavePoints = CustomLineRenderer.createSinewaveGeometry(points, amplitude, frequency);
+
+        // Should generate multiple points
+        assert.isAtLeast(wavePoints.length, 10);
+
+        // Points should vary in perpendicular direction (Y or Z)
+        let hasVariation = false;
+        for (const point of wavePoints) {
+            if (Math.abs(point.y) > 0.01 || Math.abs(point.z) > 0.01) {
+                hasVariation = true;
+                break;
+            }
+        }
+        assert.isTrue(hasVariation, "Sinewave should have perpendicular variation");
+    });
+
+    test("createSinewaveGeometry amplitude affects wave height", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+
+        const smallAmp = CustomLineRenderer.createSinewaveGeometry(points, 0.5, 2.0);
+        const largeAmp = CustomLineRenderer.createSinewaveGeometry(points, 2.0, 2.0);
+
+        // Find max deviation from line
+        const getMaxDeviation = (pts: Vector3[]): number => {
+            return pts.reduce((max, p) => Math.max(max, Math.abs(p.y), Math.abs(p.z)), 0);
+        };
+
+        const smallMax = getMaxDeviation(smallAmp);
+        const largeMax = getMaxDeviation(largeAmp);
+
+        assert.isAbove(largeMax, smallMax, "Larger amplitude should produce larger deviation");
+    });
+
+    test("createSinewaveGeometry frequency affects wave count", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+
+        const lowFreq = CustomLineRenderer.createSinewaveGeometry(points, 1.0, 1.0);
+        const highFreq = CustomLineRenderer.createSinewaveGeometry(points, 1.0, 5.0);
+
+        // Higher frequency should have more direction changes
+        // Count zero crossings (approximation of frequency)
+        const countCrossings = (pts: Vector3[]): number => {
+            let crossings = 0;
+            for (let i = 1; i < pts.length; i++) {
+                // Check if perpendicular component crossed zero
+                const prevPerp = Math.abs(pts[i - 1].y) > 0.001 ? pts[i - 1].y : pts[i - 1].z;
+                const currPerp = Math.abs(pts[i].y) > 0.001 ? pts[i].y : pts[i].z;
+                if ((prevPerp > 0 && currPerp < 0) || (prevPerp < 0 && currPerp > 0)) {
+                    crossings++;
+                }
+            }
+            return crossings;
+        };
+
+        const lowCrossings = countCrossings(lowFreq);
+        const highCrossings = countCrossings(highFreq);
+
+        assert.isAbove(highCrossings, lowCrossings, "Higher frequency should have more zero crossings");
+    });
+
+    test("createSinewaveGeometry throws for single point", () => {
+        assert.throws(() => {
+            CustomLineRenderer.createSinewaveGeometry([new Vector3(0, 0, 0)], 1.0, 1.0);
+        }, /at least 2 points/i);
+    });
+});
+
+describe("CustomLineRenderer Zigzag Geometry", () => {
+    test("createZigzagGeometry generates angular pattern", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+        const amplitude = 1.0;
+        const frequency = 4;
+
+        const zigzagPoints = CustomLineRenderer.createZigzagGeometry(points, amplitude, frequency);
+
+        // Should generate multiple points
+        assert.isAtLeast(zigzagPoints.length, frequency);
+
+        // Points should alternate in perpendicular direction
+        let hasVariation = false;
+        for (const point of zigzagPoints) {
+            if (Math.abs(point.y) > 0.01 || Math.abs(point.z) > 0.01) {
+                hasVariation = true;
+                break;
+            }
+        }
+        assert.isTrue(hasVariation, "Zigzag should have perpendicular variation");
+    });
+
+    test("createZigzagGeometry amplitude affects zigzag height", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+
+        const smallAmp = CustomLineRenderer.createZigzagGeometry(points, 0.5, 4);
+        const largeAmp = CustomLineRenderer.createZigzagGeometry(points, 2.0, 4);
+
+        const getMaxDeviation = (pts: Vector3[]): number => {
+            return pts.reduce((max, p) => Math.max(max, Math.abs(p.y), Math.abs(p.z)), 0);
+        };
+
+        const smallMax = getMaxDeviation(smallAmp);
+        const largeMax = getMaxDeviation(largeAmp);
+
+        assert.isAbove(largeMax, smallMax, "Larger amplitude should produce larger zigzag");
+    });
+
+    test("createZigzagGeometry points alternate sides", () => {
+        const points = [
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ];
+
+        const zigzagPoints = CustomLineRenderer.createZigzagGeometry(points, 1.0, 4);
+
+        // Check that consecutive points alternate sides
+        // First, determine which axis has the perpendicular offset
+        let perpAxis: "y" | "z" = "y";
+        for (const p of zigzagPoints) {
+            if (Math.abs(p.y) > 0.001) {
+                perpAxis = "y";
+                break;
+            }
+
+            if (Math.abs(p.z) > 0.001) {
+                perpAxis = "z";
+                break;
+            }
+        }
+
+        // Count sign changes
+        let signChanges = 0;
+        for (let i = 1; i < zigzagPoints.length; i++) {
+            const prev = zigzagPoints[i - 1][perpAxis];
+            const curr = zigzagPoints[i][perpAxis];
+            if ((prev > 0.001 && curr < -0.001) || (prev < -0.001 && curr > 0.001)) {
+                signChanges++;
+            }
+        }
+
+        // Zigzag should have alternating signs
+        assert.isAbove(signChanges, 0, "Zigzag should have alternating sides");
+    });
+
+    test("createZigzagGeometry throws for single point", () => {
+        assert.throws(() => {
+            CustomLineRenderer.createZigzagGeometry([new Vector3(0, 0, 0)], 1.0, 4);
+        }, /at least 2 points/i);
+    });
+});
+
+describe("CustomLineRenderer Mesh Creation", () => {
+    test("create returns mesh with shader material", () => {
+        const engine = new NullEngine();
+        const scene = new Scene(engine);
+
+        const mesh = CustomLineRenderer.create(
+            {
+                points: [new Vector3(0, 0, 0), new Vector3(10, 0, 0)],
+                width: 2,
+                color: "#ff0000",
+            },
+            scene,
+        );
+
+        assert.exists(mesh);
+        assert.exists(mesh.material);
+
+        mesh.dispose();
+        scene.dispose();
+        engine.dispose();
+    });
+
+    test("create sets custom vertex attributes", () => {
+        const engine = new NullEngine();
+        const scene = new Scene(engine);
+
+        const mesh = CustomLineRenderer.create(
+            {
+                points: [new Vector3(0, 0, 0), new Vector3(10, 0, 0)],
+                width: 2,
+                color: "#00ff00",
+            },
+            scene,
+        );
+
+        // Check custom attributes exist
+        const direction = mesh.getVerticesData("direction");
+        const side = mesh.getVerticesData("side");
+        const distance = mesh.getVerticesData("distance");
+        const segmentStart = mesh.getVerticesData("segmentStart");
+        const segmentEnd = mesh.getVerticesData("segmentEnd");
+
+        assert.exists(direction, "direction attribute should exist");
+        assert.exists(side, "side attribute should exist");
+        assert.exists(distance, "distance attribute should exist");
+        assert.exists(segmentStart, "segmentStart attribute should exist");
+        assert.exists(segmentEnd, "segmentEnd attribute should exist");
+
+        mesh.dispose();
+        scene.dispose();
+        engine.dispose();
+    });
+
+    test("create disables frustum culling", () => {
+        const engine = new NullEngine();
+        const scene = new Scene(engine);
+
+        const mesh = CustomLineRenderer.create(
+            {
+                points: [new Vector3(0, 0, 0), new Vector3(10, 0, 0)],
+                width: 2,
+                color: "#0000ff",
+            },
+            scene,
+        );
+
+        assert.isTrue(mesh.alwaysSelectAsActiveMesh, "Frustum culling should be disabled");
+
+        mesh.dispose();
+        scene.dispose();
+        engine.dispose();
+    });
+
+    test("createStraightLine is convenience method for two-point line", () => {
+        const engine = new NullEngine();
+        const scene = new Scene(engine);
+
+        const mesh = CustomLineRenderer.createStraightLine(
+            new Vector3(0, 0, 0),
+            new Vector3(5, 5, 5),
+            3,
+            "#ffffff",
+            scene,
+            0.8,
+        );
+
+        assert.exists(mesh);
+        assert.exists(mesh.material);
+
+        mesh.dispose();
+        scene.dispose();
+        engine.dispose();
+    });
+
+    test("createFromGeometry creates mesh from pre-computed geometry", () => {
+        const engine = new NullEngine();
+        const scene = new Scene(engine);
+
+        const geometry = CustomLineRenderer.createLineGeometry([
+            new Vector3(0, 0, 0),
+            new Vector3(10, 0, 0),
+        ]);
+
+        const mesh = CustomLineRenderer.createFromGeometry(
+            geometry,
+            {width: 2, color: "#ff00ff", opacity: 0.9},
+            scene,
+        );
+
+        assert.exists(mesh);
+        assert.exists(mesh.material);
+        assert.isTrue(mesh.alwaysSelectAsActiveMesh);
+
+        mesh.dispose();
+        scene.dispose();
+        engine.dispose();
+    });
+});
 
 describe("CustomLineRenderer Geometry Generation", () => {
     // Helper to generate random Vector3 points

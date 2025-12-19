@@ -85,6 +85,10 @@ export class NGraphEngine extends LayoutEngine {
     static zodOptionsSchema: OptionsSchema = ngraphLayoutOptionsSchema;
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
+
+    static getOptionsForDimension(dimension: 2 | 3): object {
+        return {dim: dimension};
+    }
     nodeMapping = new Map<Node, NGraphNode>();
     edgeMapping = new Map<Edge, NGraphLink>();
     _settled = true;

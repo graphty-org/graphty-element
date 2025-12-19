@@ -26,42 +26,6 @@ export class FloydWarshallAlgorithm extends Algorithm {
                     description: "Colors nodes by eccentricity (purple=central, yellow=peripheral)",
                 },
             },
-            {
-                node: {
-                    selector: "algorithmResults.graphty.\"floyd-warshall\".isCentral == `true`",
-                    style: {
-                        enabled: true,
-                        shape: {
-                            size: 2,
-                        },
-                        effect: {
-                            glow: {
-                                color: "#f39c12",
-                                strength: 2,
-                            },
-                        },
-                    },
-                },
-                metadata: {
-                    name: "Floyd-Warshall - Central Nodes",
-                    description: "Highlights central nodes (eccentricity = radius) with glow",
-                },
-            },
-            {
-                node: {
-                    selector: "algorithmResults.graphty.\"floyd-warshall\".isPeripheral == `true`",
-                    style: {
-                        enabled: true,
-                        texture: {
-                            color: "#999999",
-                        },
-                    },
-                },
-                metadata: {
-                    name: "Floyd-Warshall - Peripheral Nodes",
-                    description: "Grays out peripheral nodes (eccentricity = diameter)",
-                },
-            },
         ],
         description: "Visualizes all-pairs shortest path distances via eccentricity heatmap",
         category: "path",

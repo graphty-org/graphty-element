@@ -1,3 +1,63 @@
+## [1.2.4](https://github.com/graphty-org/graphty-element/compare/v1.2.3...v1.2.4) (2025-12-13)
+
+
+### Bug Fixes
+
+* fix exports to support graphty development ([647e474](https://github.com/graphty-org/graphty-element/commit/647e47480309e09ff30299b8220501d1fb6a6048))
+
+## [1.2.3](https://github.com/graphty-org/graphty-element/compare/v1.2.2...v1.2.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* build and ship typescript types and export default styles ([0ec479c](https://github.com/graphty-org/graphty-element/commit/0ec479cf8f682a75728bf2d458757c591feb21a7))
+
+## [1.2.2](https://github.com/graphty-org/graphty-element/compare/v1.2.1...v1.2.2) (2025-12-09)
+
+
+### Bug Fixes
+
+* event forwarding ([586b7af](https://github.com/graphty-org/graphty-element/commit/586b7afc2fe754c081aebdc9deda4253d3cbbb28))
+
+## [1.2.1](https://github.com/graphty-org/graphty-element/compare/v1.2.0...v1.2.1) (2025-12-02)
+
+
+### Bug Fixes
+
+* prevent over enthusiastic tree shaking ([c1e926a](https://github.com/graphty-org/graphty-element/commit/c1e926ab6419968180c22444d13d7196eff7d2da))
+
+# [1.2.0](https://github.com/graphty-org/graphty-element/compare/v1.1.1...v1.2.0) (2025-11-30)
+
+
+### Bug Fixes
+
+* deterministic outcomes from setting web component properties ([22f3459](https://github.com/graphty-org/graphty-element/commit/22f34595e9b03d8c154a089afc2111b78c629a60))
+* finishing details on arrowheads ([6c257b8](https://github.com/graphty-org/graphty-element/commit/6c257b85453ba5f57b626ba5ef9936013c602678))
+* fix deterministic rendering for cameras and algorithms, fix other rendering bugs ([b4a5c54](https://github.com/graphty-org/graphty-element/commit/b4a5c541329192180aadac648e9f680027cc3fb6))
+* fix diamond pattern line offset ([ee4005d](https://github.com/graphty-org/graphty-element/commit/ee4005d38388e6070071632da3211dd199aa66ee))
+* fix merge errors ([8e7168e](https://github.com/graphty-org/graphty-element/commit/8e7168e9c8edf638ab3dcfb42be64d5ea57c4708))
+* fix testing includes for vitest ([ca26089](https://github.com/graphty-org/graphty-element/commit/ca2608986d91631bffad8ecff018b0851cb49fc1))
+* implement phase 4 of dependency and batching, fix eslint TODOs, fix batching design ([a3dc4d9](https://github.com/graphty-org/graphty-element/commit/a3dc4d9cd86051e4c967a7c082549134c632fbb8))
+* implement phase 5 of dependency and batching ([7343935](https://github.com/graphty-org/graphty-element/commit/7343935e6720cf955ae875358ff536dd62ee18a0))
+* line rendering bug when switching stories ([b769690](https://github.com/graphty-org/graphty-element/commit/b76969088d33fb6ac599e1a691c48b3c09901016))
+* merge resizing fix ([41f565c](https://github.com/graphty-org/graphty-element/commit/41f565c1e09b0c416cae03c63e046402ef14540c))
+* working custom line renderer and custom arrowhead with shaders ([92e0709](https://github.com/graphty-org/graphty-element/commit/92e0709c6d9cb657de18176323c842cd604d8d0e))
+
+
+### Features
+
+* add dependency ordering and batching when setting web component properties ([fe17935](https://github.com/graphty-org/graphty-element/commit/fe17935b06816957cfa29e39112033c1861b7074))
+* add name to style layers to support UI ([4d1ea0e](https://github.com/graphty-org/graphty-element/commit/4d1ea0e8012f09d5985c6e9a0ae83cce43fad79d))
+* add performance profiling, edge performance enhancements, arrowheads are wip ([be33939](https://github.com/graphty-org/graphty-element/commit/be3393997dc33cc5dcd99910b2600df8f8b0a7ef))
+* add various formats for loading data ([deed260](https://github.com/graphty-org/graphty-element/commit/deed260b7e5c13be86265d9b6c0d3f13dadac106))
+* algorithm suggested styles and style helpers ([8f5f758](https://github.com/graphty-org/graphty-element/commit/8f5f7587a132215f6e548f766a8c22c021ddf49e))
+* comprehensive set of data loaders ([9d489f5](https://github.com/graphty-org/graphty-element/commit/9d489f58b061a4e457c91d18554aae0a355e2ba1))
+* new edge styles and arrowheads ([652d660](https://github.com/graphty-org/graphty-element/commit/652d6603eaed4a8fc4c41a50210b2a2a6889456e))
+* patterned line styles ([55af883](https://github.com/graphty-org/graphty-element/commit/55af883367940130e2c67b28fa17b92f3d6cbd5a))
+* screen capture and video capture ([1a0d5cf](https://github.com/graphty-org/graphty-element/commit/1a0d5cfca614fa2f8b55ee3e2502ffbd084e74f7))
+* working data loaders ([b6dd9e9](https://github.com/graphty-org/graphty-element/commit/b6dd9e95799009dde377aa9bd5907863f9bc9570))
+* working new arrowheads ([eac7fbf](https://github.com/graphty-org/graphty-element/commit/eac7fbf25326be7e1153bf4661f00eeae7fb1a3a))
+
 ## [1.1.1](https://github.com/graphty-org/graphty-element/compare/v1.1.0...v1.1.1) (2025-10-24)
 
 

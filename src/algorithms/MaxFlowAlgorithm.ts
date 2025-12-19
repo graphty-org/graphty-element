@@ -82,7 +82,7 @@ export class MaxFlowAlgorithm extends Algorithm<MaxFlowOptions> {
                     calculatedStyle: {
                         inputs: ["algorithmResults.graphty.max-flow.flowPct"],
                         output: "style.line.width",
-                        expr: "{ return StyleHelpers.edgeWidth.linear(arguments[0], 1, 8) }",
+                        expr: "{ return StyleHelpers.edgeWidth.linear(arguments[0], 8, 16) }",
                     },
                 },
                 metadata: {

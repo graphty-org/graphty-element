@@ -34,17 +34,14 @@ describe("MinCutAlgorithm", () => {
             const styles = MinCutAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
-            // Find an edge layer for cut edges
-            const cutEdgeLayer = styles.layers.find((l) => {
-                const selector = l.edge?.selector;
-                return selector?.includes("inCut");
-            });
+            // Find an edge layer with calculatedStyle for cut edges
+            const cutEdgeLayer = styles.layers.find((l) => l.edge?.calculatedStyle?.inputs[0]?.includes("inCut"));
             assert.ok(cutEdgeLayer, "Should have edge layer for cut edges");
             const {edge} = cutEdgeLayer;
             assert.ok(edge);
             const edgeStyle = edge.style;
             assert.ok(edgeStyle);
-            assert.ok(edgeStyle.line);
+            assert.ok(edgeStyle.enabled);
         });
 
         it("highlights cut edges with calculatedStyle (colorblind-safe)", () => {
@@ -61,11 +58,9 @@ describe("MinCutAlgorithm", () => {
             assert.ok(edge.calculatedStyle.output.includes("color"));
             assert.ok(edge.calculatedStyle.expr.includes("StyleHelpers"));
 
-            // Width should be increased for visibility
-            assert.ok(edge.style.line);
-            const {width} = edge.style.line;
-            assert.ok(typeof width === "number");
-            assert.ok(width >= 2);
+            // Style should be enabled
+            assert.ok(edge.style);
+            assert.ok(edge.style.enabled);
         });
 
         it("layers have metadata", () => {
@@ -173,13 +168,12 @@ describe("MinCutAlgorithm", () => {
             assert.ok(edge);
             assert.ok(edge.calculatedStyle);
 
-            // Should have visible styling (width or calculated color)
+            // Should have visible styling (calculated color)
             const hasCalculatedColor = edge.calculatedStyle.output.includes("color");
-            const hasWidth = edge.style.line?.width !== undefined;
-            assert.ok(hasCalculatedColor || hasWidth);
+            assert.ok(hasCalculatedColor);
         });
 
-        it("non-cut edges may have reduced visibility", () => {
+        it("non-cut edges have reduced visibility", () => {
             const styles = MinCutAlgorithm.getSuggestedStyles();
             assert.ok(styles);
 
@@ -190,6 +184,10 @@ describe("MinCutAlgorithm", () => {
 
             if (nonCutEdgeLayer?.edge) {
                 assert.ok(nonCutEdgeLayer.edge.style);
+                // Should have reduced opacity
+                const {style} = nonCutEdgeLayer.edge;
+                const hasReducedOpacity = typeof style.line?.opacity === "number" && style.line.opacity < 1;
+                assert.ok(hasReducedOpacity, "Non-cut edges should have reduced opacity");
             }
         });
     });

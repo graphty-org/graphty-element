@@ -6,7 +6,8 @@ import {LitElement} from "lit";
 import {customElement, property} from "lit/decorators.js";
 import {set as setDeep} from "lodash";
 
-import type {StyleSchema} from "./config";
+import type {StyleSchema, ViewMode} from "./config";
+import type {PartialXRConfig} from "./config/xr-config-schema";
 import {Graph} from "./Graph";
 import type {ScreenshotOptions, ScreenshotResult} from "./screenshot/types.js";
 
@@ -24,7 +25,8 @@ export class Graphty extends LitElement {
 
         this.#element = document.createElement("div");
         // Ensure the container div fills the graphty-element
-        this.#element.setAttribute("style", "width: 100%; height: 100%; display: block;");
+        // position: relative is needed for absolute positioning of XR UI overlay
+        this.#element.setAttribute("style", "width: 100%; height: 100%; display: block; position: relative;");
         this.#graph = new Graph(this.#element);
     }
 
@@ -68,9 +70,9 @@ export class Graphty extends LitElement {
     }
 
     async asyncFirstUpdated(): Promise<void> {
-        // Universal event forwarder - all internal events become DOM CustomEvents
-        // This allows React (and other frameworks) to listen for any graph event
-        // including "style-changed", "graph-settled", "skybox-loaded", etc.
+        // Forward ALL internal graph events as DOM CustomEvents
+        // This allows external code (e.g., React) to listen for any graph event
+        // using standard DOM addEventListener (e.g., "style-changed", "graph-settled", etc.)
         this.#graph.eventManager.onGraphEvent.add((event) => {
             this.dispatchEvent(new CustomEvent(event.type, {
                 detail: event,
@@ -119,9 +121,10 @@ export class Graphty extends LitElement {
     #edgeDstIdPath?: string;
     #layout?: string;
     #layoutConfig?: Record<string, unknown>;
-    #layout2d?: boolean;
+    #viewMode?: ViewMode;
     #styleTemplate?: StyleSchema;
     #runAlgorithmsOnLoad?: boolean;
+    #xr?: PartialXRConfig;
 
     /**
      * An array of objects describing the node data.
@@ -346,27 +349,67 @@ export class Graphty extends LitElement {
     }
 
     /**
+     * View mode controls how the graph is rendered and displayed.
+     * - "2d": Orthographic camera, fixed top-down view
+     * - "3d": Perspective camera with orbit controls (default)
+     * - "ar": Augmented reality mode using WebXR
+     * - "vr": Virtual reality mode using WebXR
+     *
+     * @example
+     * ```typescript
+     * element.viewMode = "2d";  // Switch to 2D orthographic view
+     * element.viewMode = "3d";  // Switch to 3D perspective view
+     * element.viewMode = "vr";  // Enter VR mode (requires WebXR support)
+     * ```
+     */
+    @property({attribute: "view-mode"})
+    get viewMode(): ViewMode | undefined {
+        return this.#viewMode;
+    }
+    set viewMode(value: ViewMode | undefined) {
+        const oldValue = this.#viewMode;
+        this.#viewMode = value;
+
+        // Forward to Graph method (which handles all mode switching logic)
+        if (value !== undefined) {
+            void this.#graph.setViewMode(value);
+        }
+
+        this.requestUpdate("viewMode", oldValue);
+    }
+
+    /**
+     * @deprecated Use viewMode instead. layout2d: true is equivalent to viewMode: "2d"
      * Specifies that the layout should be rendered in two dimensions (as
      * opposed to 3D)
      */
     @property({attribute: "layout-2d"})
     get layout2d(): boolean | undefined {
-        return this.#layout2d;
-    }
-    set layout2d(value: boolean | undefined) {
-        const oldValue = this.#layout2d;
-        this.#layout2d = value;
-
-        if (value !== undefined) {
-            setDeep(this.#graph.styles.config, "graph.twoD", value);
+        // Return true if viewMode is "2d", false if "3d", undefined otherwise
+        if (this.#viewMode === "2d") {
+            return true;
         }
 
-        this.requestUpdate("layout2d", oldValue);
+        if (this.#viewMode === "3d") {
+            return false;
+        }
+
+        return undefined;
+    }
+    set layout2d(value: boolean | undefined) {
+        console.warn(
+            "[graphty-element] layout2d is deprecated. Use viewMode instead. " +
+            "layout2d: true → viewMode: \"2d\", layout2d: false → viewMode: \"3d\"",
+        );
+
+        if (value !== undefined) {
+            // Convert boolean to viewMode
+            this.viewMode = value ? "2d" : "3d";
+        }
     }
 
     /**
-     * Specifies that the layout should be rendered in two dimensions (as
-     * opposed to 3D)
+     * Styles and configuration for the graph visualization
      */
     @property({attribute: "style-template"})
     get styleTemplate(): StyleSchema | undefined {
@@ -424,6 +467,42 @@ export class Graphty extends LitElement {
         }
 
         this.requestUpdate("enableDetailedProfiling", oldValue);
+    }
+
+    /**
+     * XR (VR/AR) configuration.
+     * Controls XR UI buttons, VR/AR mode settings, and input handling.
+     *
+     * @example
+     * ```typescript
+     * element.xr = {
+     *   enabled: true,
+     *   ui: {
+     *     enabled: true,
+     *     position: 'bottom-right',
+     *     showAvailabilityWarning: true  // Show warning if XR unavailable
+     *   },
+     *   input: {
+     *     handTracking: true,
+     *     controllers: true
+     *   }
+     * };
+     * ```
+     */
+    @property({attribute: false})
+    get xr(): PartialXRConfig | undefined {
+        return this.#xr;
+    }
+    set xr(value: PartialXRConfig | undefined) {
+        const oldValue = this.#xr;
+        this.#xr = value;
+
+        // Forward to Graph method
+        if (value !== undefined) {
+            this.#graph.setXRConfig(value);
+        }
+
+        this.requestUpdate("xr", oldValue);
     }
 
     /**
@@ -588,6 +667,90 @@ export class Graphty extends LitElement {
      */
     async estimateAnimationCapture(options: Pick<import("./video/VideoCapture.js").AnimationOptions, "duration" | "fps" | "width" | "height">): Promise<import("./video/estimation.js").CaptureEstimate> {
         return this.#graph.estimateAnimationCapture(options);
+    }
+
+    /**
+     * View Mode API
+     */
+
+    /**
+     * Get the current view mode.
+     * @returns The current view mode ("2d", "3d", "ar", or "vr")
+     *
+     * @example
+     * ```typescript
+     * const mode = element.getViewMode();
+     * console.log(`Current mode: ${mode}`); // "3d"
+     * ```
+     */
+    getViewMode(): ViewMode {
+        return this.#graph.getViewMode();
+    }
+
+    /**
+     * Set the view mode.
+     * Changes the rendering dimension and camera system.
+     *
+     * @param mode - The view mode to set ("2d", "3d", "ar", or "vr")
+     * @returns Promise that resolves when the mode switch is complete
+     *
+     * @example
+     * ```typescript
+     * // Switch to 2D orthographic view
+     * await element.setViewMode("2d");
+     *
+     * // Switch to VR mode
+     * await element.setViewMode("vr");
+     * ```
+     */
+    async setViewMode(mode: ViewMode): Promise<void> {
+        return this.#graph.setViewMode(mode);
+    }
+
+    /**
+     * Check if VR mode is supported on this device/browser.
+     * Returns true if WebXR is available and VR sessions are supported.
+     *
+     * Use this to conditionally show/hide VR controls or display
+     * appropriate messaging to users.
+     *
+     * @returns Promise resolving to true if VR is supported
+     *
+     * @example
+     * ```typescript
+     * const vrButton = document.querySelector('#vr-button');
+     * const vrSupported = await element.isVRSupported();
+     * if (!vrSupported) {
+     *   vrButton.disabled = true;
+     *   vrButton.title = "VR not available on this device";
+     * }
+     * ```
+     */
+    async isVRSupported(): Promise<boolean> {
+        return this.#graph.isVRSupported();
+    }
+
+    /**
+     * Check if AR mode is supported on this device/browser.
+     * Returns true if WebXR is available and AR sessions are supported.
+     *
+     * Use this to conditionally show/hide AR controls or display
+     * appropriate messaging to users.
+     *
+     * @returns Promise resolving to true if AR is supported
+     *
+     * @example
+     * ```typescript
+     * const arButton = document.querySelector('#ar-button');
+     * const arSupported = await element.isARSupported();
+     * if (!arSupported) {
+     *   arButton.disabled = true;
+     *   arButton.title = "AR not available on this device";
+     * }
+     * ```
+     */
+    async isARSupported(): Promise<boolean> {
+        return this.#graph.isARSupported();
     }
 
     /**
