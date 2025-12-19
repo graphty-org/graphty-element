@@ -175,3 +175,17 @@ export type {
 
 // Camera presets
 export {BUILTIN_PRESETS} from "./src/camera/presets";
+
+// AI Provider exports
+export type {
+    LlmProvider,
+    LlmResponse,
+    Message,
+    ProviderOptions,
+    ProviderType,
+    StreamCallbacks,
+    ToolCall,
+    ToolDefinition,
+    VercelProviderType,
+} from "./src/ai/providers";
+export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/providers";

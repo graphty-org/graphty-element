@@ -24,6 +24,7 @@ export default defineConfig(
             "tmp/**",
             ".worktrees/**",
             "examples/**/*.js",
+            ".storybook/webllm-stub.js",
         ],
     },
     {
