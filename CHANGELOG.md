@@ -1,3 +1,19 @@
+# [1.4.0](https://github.com/graphty-org/graphty-element/compare/v1.3.0...v1.4.0) (2025-12-20)
+
+
+### Bug Fixes
+
+* 2d, 3d, xr view mode api ([6e9299f](https://github.com/graphty-org/graphty-element/commit/6e9299f5d9823d0b0d0fa37dfe7fb04fa0fa5c13))
+* add algorithm options and schemas ([7277f8a](https://github.com/graphty-org/graphty-element/commit/7277f8adbb9429f8da493b180c5c7cf9f99f36f3))
+
+
+### Features
+
+* add logging ([af4bc9f](https://github.com/graphty-org/graphty-element/commit/af4bc9f5671e71318dcd976432a46100126c8c09))
+* add node selection, interaction testing ([4a50004](https://github.com/graphty-org/graphty-element/commit/4a50004e58935c1ad2e8480dcbedd191ece9ce1a))
+* schema detection to support LLM interactions ([941e0c9](https://github.com/graphty-org/graphty-element/commit/941e0c95df02574923f4793670623707ea0c3d2c))
+* working AI interface MVP ([9e6d228](https://github.com/graphty-org/graphty-element/commit/9e6d228c94951a1edb068fb035ac74ddc15c2eb2))
+
 # [1.3.0](https://github.com/graphty-org/graphty-element/compare/v1.2.4...v1.3.0) (2025-12-15)
 
 
