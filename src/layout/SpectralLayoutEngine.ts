@@ -53,7 +53,12 @@ export class SpectralLayout extends SimpleLayoutEngine {
         this.config = SpectralLayoutConfig.parse(opts);
     }
 
-    static getOptionsForDimension(dimension: 2 | 3): object {
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Spectral layout only supports 2D
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+
         return {dim: dimension};
     }
 

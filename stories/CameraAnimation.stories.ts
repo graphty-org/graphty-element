@@ -238,7 +238,7 @@ export const Animation2D: Story = {
             graphtyTemplate: true,
             majorVersion: "1",
             graph: {
-                twoD: true,
+                viewMode: "2d",
                 background: {backgroundType: "color", color: "#f0f0f0"},
             },
             behavior: {

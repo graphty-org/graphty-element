@@ -154,7 +154,7 @@ export const CombinedOpacity: Story = {
 export const TwoDAllArrows: Story = {
     args: {
         styleTemplate: templateCreator({
-            graph: {twoD: true, startingCameraDistance: 54},
+            graph: {viewMode: "2d", startingCameraDistance: 54},
             nodeStyle: {
                 texture: {
                     color: {
@@ -425,7 +425,7 @@ export const ThreeDAllLines: Story = {
 export const TwoDAllLines: Story = {
     args: {
         styleTemplate: templateCreator({
-            graph: {twoD: true},
+            graph: {viewMode: "2d"},
             nodeStyle: {
                 texture: {
                     color: {

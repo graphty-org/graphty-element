@@ -54,7 +54,12 @@ export class ShellLayout extends SimpleLayoutEngine {
         this.config = ShellLayoutConfig.parse(opts);
     }
 
-    static getOptionsForDimension(dimension: 2 | 3): object {
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Shell layout only supports 2D
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+
         return {dim: dimension};
     }
 

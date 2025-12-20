@@ -64,7 +64,7 @@ export const BipartiteMatching: Story = {
         edgeData: bipartiteJobMatchingData.edges,
         styleTemplate: templateCreator({
             graph: {
-                twoD: true,
+                viewMode: "2d",
                 layout: "bipartite",
                 layoutOptions: {
                     nodes: ["alice", "bob", "carol", "dave", "eve", "frank", "grace"],

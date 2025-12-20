@@ -19,6 +19,43 @@ const eventWaitingState = new WeakMap<HTMLElement, {
 }>();
 
 /**
+ * Set up event listeners for a graphty-element to capture events early.
+ * This prevents race conditions where events fire before play() can attach listeners.
+ */
+function setupEventListenersForElement(element: HTMLElement): void {
+    // Skip if already set up
+    if (eventWaitingState.has(element)) {
+        return;
+    }
+
+    // Create promise infrastructure for this element
+    const promises = new Map<string, Promise<void>>();
+    const resolvers = new Map<string, () => void>();
+
+    // Set up promises for common events
+    // Note: skybox-loaded is optional and only fires if a skybox is configured
+    const events = ["graph-settled", "data-loaded"];
+    events.forEach((eventName) => {
+        let resolver: (() => void) | undefined;
+        const promise = new Promise<void>((resolve) => {
+            resolver = resolve;
+        });
+        promises.set(eventName, promise);
+        resolvers.set(eventName, resolver as () => void);
+
+        // Attach listener immediately
+        element.addEventListener(eventName, () => {
+            if (resolver) {
+                resolver();
+            }
+        }, {once: true});
+    });
+
+    // Store state for this element
+    eventWaitingState.set(element, {promises, resolvers});
+}
+
+/**
  * Enhanced decorator that sets up event listeners before elements are rendered
  * This decorator should be added to the meta configuration
  */
@@ -29,33 +66,15 @@ export const eventWaitingDecorator = (story: any): any => {
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
                 if (node.nodeName === "GRAPHTY-ELEMENT") {
-                    const element = node as HTMLElement;
-
-                    // Create promise infrastructure for this element
-                    const promises = new Map<string, Promise<void>>();
-                    const resolvers = new Map<string, () => void>();
-
-                    // Set up promises for common events
-                    // Note: skybox-loaded is optional and only fires if a skybox is configured
-                    const events = ["graph-settled", "data-loaded"];
-                    events.forEach((eventName) => {
-                        let resolver: (() => void) | undefined;
-                        const promise = new Promise<void>((resolve) => {
-                            resolver = resolve;
-                        });
-                        promises.set(eventName, promise);
-                        resolvers.set(eventName, resolver as () => void);
-
-                        // Attach listener immediately
-                        element.addEventListener(eventName, () => {
-                            if (resolver) {
-                                resolver();
-                            }
-                        }, {once: true});
+                    // Direct match - element was added directly to DOM
+                    setupEventListenersForElement(node as HTMLElement);
+                } else if (node instanceof Element) {
+                    // Check descendants - handles stories that wrap graphty-element in a container
+                    // This is critical for stories like Selection that return a container div
+                    const graphtyElements = node.querySelectorAll("graphty-element");
+                    graphtyElements.forEach((el) => {
+                        setupEventListenersForElement(el as HTMLElement);
                     });
-
-                    // Store state for this element
-                    eventWaitingState.set(element, {promises, resolvers});
                 }
             });
         });
@@ -88,12 +107,12 @@ export async function waitForDataLoaded(canvasElement: HTMLElement): Promise<voi
             return;
         }
 
-        // Longer timeout for network requests (10 seconds)
+        // Timeout for network requests (5 seconds - inline data loads instantly)
         const timeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => {
                 // Data may already be loaded (e.g., inline data) or failed
                 resolve();
-            }, 10000);
+            }, 5000);
         });
 
         await Promise.race([dataPromise, timeoutPromise]);
@@ -107,7 +126,7 @@ export async function waitForDataLoaded(canvasElement: HTMLElement): Promise<voi
                     resolved = true;
                     resolve();
                 }
-            }, 10000);
+            }, 5000);
 
             const handleDataLoaded = (): void => {
                 if (!resolved) {
@@ -189,10 +208,10 @@ export async function waitForGraphSettled(canvasElement: HTMLElement): Promise<v
     // Render a fixed number of frames after settling to ensure Babylon.js completes rendering
     // Only needed for Chromatic visual testing - skip for regular tests to improve performance
     if (isChromatic()) {
-        const graph = (graphtyElement as Graphty & {["#graph"]?: {updateManager?: {renderFixedFrames: (count: number) => void}}})["#graph"];
-        if (graph?.updateManager) {
-            graph.updateManager.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
-        }
+        // Access private updateManager for Chromatic rendering - using type assertion since this is test-only code
+        const {graph} = graphtyElement as Graphty;
+        const updateMgr = (graph as unknown as {updateManager: {renderFixedFrames: (n: number) => void}}).updateManager;
+        updateMgr.renderFixedFrames(30); // 30 frames = 0.5s at 60fps
     }
 }
 

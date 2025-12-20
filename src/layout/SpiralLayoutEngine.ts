@@ -72,7 +72,12 @@ export class SpiralLayout extends SimpleLayoutEngine {
         this.config = SpiralLayoutConfig.parse(opts);
     }
 
-    static getOptionsForDimension(dimension: 2 | 3): object {
+    static getOptionsForDimension(dimension: 2 | 3): object | null {
+        // Spiral layout only supports 2D
+        if (dimension > this.maxDimensions) {
+            return null;
+        }
+
         return {dim: dimension};
     }
 

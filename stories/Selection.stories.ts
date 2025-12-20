@@ -10,7 +10,6 @@ import "../index.ts";
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {type StyleSchema, StyleTemplate, type ViewMode} from "../src/config";
-import type {Graph} from "../src/Graph";
 import {Graphty} from "../src/graphty-element";
 import {eventWaitingDecorator, waitForGraphSettled} from "./helpers";
 
@@ -293,7 +292,7 @@ export const Programmatic: Story = {
             btn.addEventListener("click", () => {
                 const graphEl = container.querySelector("graphty-element");
                 if (graphEl) {
-                    const graph = (graphEl as unknown as {"#graph": Graph})["#graph"];
+                    const {graph} = graphEl as Graphty;
                     graph.selectNode(node.id);
                 }
             });
@@ -307,7 +306,7 @@ export const Programmatic: Story = {
         deselectBtn.addEventListener("click", () => {
             const graphEl = container.querySelector("graphty-element");
             if (graphEl) {
-                const graph = (graphEl as unknown as {"#graph": Graph})["#graph"];
+                const {graph} = graphEl as Graphty;
                 graph.deselectNode();
             }
         });

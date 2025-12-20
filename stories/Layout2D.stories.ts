@@ -80,7 +80,7 @@ type Story = StoryObj<Graphty & Record<string, unknown>>;
 
 export const Spiral: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "spiral"}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "spiral"}}),
         spiralScale: 1,
         spiralResolution: 0.35,
         spiralEquidistant: true,
@@ -102,7 +102,7 @@ export const Spiral: Story = {
 
 export const Circular: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "circular", layoutOptions: {dim: 2}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "circular", layoutOptions: {dim: 2}}}),
         circularScale: 1,
     },
     parameters: {
@@ -122,7 +122,7 @@ export const Shell: Story = {
     args: {
         styleTemplate: templateCreator({
             graph: {
-                twoD: true,
+                viewMode: "2d",
                 layout: "shell",
                 layoutOptions: {
                     nlist: [
@@ -158,7 +158,7 @@ export const Shell: Story = {
 
 export const Random: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "random", layoutOptions: {dim: 2}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "random", layoutOptions: {dim: 2}}}),
         randomSeed: 12,
     },
     parameters: {
@@ -176,7 +176,7 @@ export const Random: Story = {
 
 export const Spring: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "spring", layoutOptions: {dim: 2}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "spring", layoutOptions: {dim: 2}}}),
         springK: null,
         springIterations: 50,
         springScale: 1,
@@ -203,7 +203,7 @@ export const Planar: Story = {
         dataSource: undefined,
         nodeData: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}],
         edgeData: [{src: 0, dst: 1}, {src: 1, dst: 2}, {src: 2, dst: 0}, {src: 3, dst: 2}, {src: 3, dst: 1}, {src: 3, dst: 0}, {src: 4, dst: 3}, {src: 4, dst: 2}, {src: 4, dst: 1}, {src: 5, dst: 4}, {src: 5, dst: 3}, {src: 5, dst: 2}, {src: 6, dst: 5}, {src: 6, dst: 4}, {src: 6, dst: 3}, {src: 7, dst: 6}, {src: 7, dst: 5}, {src: 7, dst: 4}, {src: 8, dst: 7}, {src: 8, dst: 6}, {src: 8, dst: 5}, {src: 9, dst: 8}, {src: 9, dst: 7}, {src: 9, dst: 6}],
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "planar", layoutOptions: {seed: 42}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "planar", layoutOptions: {seed: 42}}}),
         planarScale: 1,
     },
     parameters: {
@@ -221,7 +221,7 @@ export const Planar: Story = {
 
 export const KamadaKawai: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "kamada-kawai", layoutOptions: {dim: 2}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "kamada-kawai", layoutOptions: {dim: 2}}}),
         kamadaScale: 1,
     },
     parameters: {
@@ -239,7 +239,7 @@ export const KamadaKawai: Story = {
 
 export const ForceAtlas2: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "forceatlas2"}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "forceatlas2"}}),
         fa2MaxIter: 100,
         fa2ScalingRatio: 2.0,
         fa2Gravity: 1.0,
@@ -269,7 +269,7 @@ export const ForceAtlas2: Story = {
 
 export const Arf: Story = {
     args: {
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "arf"}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "arf"}}),
         arfScaling: 1,
         arfMaxIter: 1000,
         arfSeed: 12,
@@ -294,7 +294,7 @@ export const Bfs: Story = {
         dataSource: undefined,
         nodeData: [{id: 0}, {id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}, {id: 7}, {id: 8}, {id: 9}, {id: 10}, {id: 11}, {id: 12}, {id: 13}, {id: 14}, {id: 15}, {id: 16}, {id: 17}, {id: 18}, {id: 19}],
         edgeData: [{src: 0, dst: 1}, {src: 0, dst: 2}, {src: 0, dst: 3}, {src: 2, dst: 4}, {src: 0, dst: 5}, {src: 3, dst: 6}, {src: 5, dst: 7}, {src: 5, dst: 8}, {src: 4, dst: 9}, {src: 8, dst: 10}, {src: 3, dst: 11}, {src: 4, dst: 12}, {src: 8, dst: 13}, {src: 1, dst: 14}, {src: 13, dst: 15}, {src: 11, dst: 16}, {src: 3, dst: 17}, {src: 8, dst: 18}, {src: 0, dst: 19}],
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "bfs", layoutOptions: {start: 0}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "bfs", layoutOptions: {start: 0}}}),
         bfsAlign: "vertical",
         bfsScale: 1,
     },
@@ -317,7 +317,7 @@ export const Bipartite: Story = {
         dataSource: undefined,
         nodeData: [{id: "A0"}, {id: "A1"}, {id: "A2"}, {id: "A3"}, {id: "A4"}, {id: "A5"}, {id: "A6"}, {id: "A7"}, {id: "A8"}, {id: "A9"}, {id: "B0"}, {id: "B1"}, {id: "B2"}, {id: "B3"}, {id: "B4"}, {id: "B5"}, {id: "B6"}, {id: "B7"}, {id: "B8"}, {id: "B9"}],
         edgeData: [{src: "A3", dst: "B5"}, {src: "A5", dst: "B4"}, {src: "A4", dst: "B5"}, {src: "A9", dst: "B5"}, {src: "A5", dst: "B7"}, {src: "A5", dst: "B6"}, {src: "A4", dst: "B9"}, {src: "A8", dst: "B6"}, {src: "A5", dst: "B8"}, {src: "A3", dst: "B0"}, {src: "A2", dst: "B5"}, {src: "A7", dst: "B0"}, {src: "A2", dst: "B7"}, {src: "A4", dst: "B3"}, {src: "A7", dst: "B6"}, {src: "A6", dst: "B2"}, {src: "A5", dst: "B5"}, {src: "A0", dst: "B5"}, {src: "A7", dst: "B8"}, {src: "A4", dst: "B1"}, {src: "A6", dst: "B9"}, {src: "A0", dst: "B0"}, {src: "A0", dst: "B6"}, {src: "A2", dst: "B2"}, {src: "A8", dst: "B5"}, {src: "A2", dst: "B1"}, {src: "A7", dst: "B1"}, {src: "A1", dst: "B4"}, {src: "A2", dst: "B6"}, {src: "A5", dst: "B3"}, {src: "A1", dst: "B5"}, {src: "A6", dst: "B7"}, {src: "A4", dst: "B4"}, {src: "A2", dst: "B4"}, {src: "A6", dst: "B5"}, {src: "A7", dst: "B2"}, {src: "A9", dst: "B6"}, {src: "A9", dst: "B9"}, {src: "A1", dst: "B7"}, {src: "A7", dst: "B5"}, {src: "A4", dst: "B7"}, {src: "A8", dst: "B3"}, {src: "A8", dst: "B4"}, {src: "A9", dst: "B3"}, {src: "A6", dst: "B3"}, {src: "A0", dst: "B1"}, {src: "A3", dst: "B2"}, {src: "A8", dst: "B2"}, {src: "A4", dst: "B2"}],
-        styleTemplate: templateCreator({graph: {twoD: true, layout: "bipartite", layoutOptions: {nodes: ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9"]}}}),
+        styleTemplate: templateCreator({graph: {viewMode: "2d", layout: "bipartite", layoutOptions: {nodes: ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9"]}}}),
         bipartiteAlign: "vertical",
         bipartiteScale: 1,
         bipartiteAspectRatio: 1.33,
@@ -344,7 +344,7 @@ export const Multipartite: Story = {
         edgeData: [{src: "L0N0", dst: "L1N1"}, {src: "L0N0", dst: "L1N2"}, {src: "L0N0", dst: "L1N3"}, {src: "L0N1", dst: "L1N0"}, {src: "L0N1", dst: "L1N2"}, {src: "L0N1", dst: "L1N3"}, {src: "L0N1", dst: "L1N4"}, {src: "L0N2", dst: "L1N1"}, {src: "L0N2", dst: "L1N2"}, {src: "L0N3", dst: "L1N2"}, {src: "L0N3", dst: "L1N3"}, {src: "L0N4", dst: "L1N3"}, {src: "L1N0", dst: "L2N2"}, {src: "L1N1", dst: "L2N3"}, {src: "L1N2", dst: "L2N2"}, {src: "L1N2", dst: "L2N4"}, {src: "L1N3", dst: "L2N1"}, {src: "L1N4", dst: "L2N1"}, {src: "L1N4", dst: "L2N3"}, {src: "L2N0", dst: "L3N3"}, {src: "L2N0", dst: "L3N4"}, {src: "L2N1", dst: "L3N0"}, {src: "L2N1", dst: "L3N1"}, {src: "L2N1", dst: "L3N2"}, {src: "L2N1", dst: "L3N4"}, {src: "L2N2", dst: "L3N0"}, {src: "L2N2", dst: "L3N1"}, {src: "L2N2", dst: "L3N2"}, {src: "L2N2", dst: "L3N3"}, {src: "L2N2", dst: "L3N4"}, {src: "L2N3", dst: "L3N0"}, {src: "L2N3", dst: "L3N3"}, {src: "L2N4", dst: "L3N0"}, {src: "L2N4", dst: "L3N1"}, {src: "L2N4", dst: "L3N3"}],
         styleTemplate: templateCreator({
             graph: {
-                twoD: true,
+                viewMode: "2d",
                 layout: "multipartite",
                 layoutOptions: {
                     subsetKey: {

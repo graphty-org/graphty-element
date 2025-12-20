@@ -42,6 +42,7 @@ export {
     colorToHex,
     defaultEdgeStyle,
     defaultNodeStyle,
+    defaultRichTextLabelStyle,
     EdgeStyle,
     NodeStyle,
     RichTextStyle,

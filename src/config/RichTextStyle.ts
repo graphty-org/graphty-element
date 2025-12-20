@@ -140,3 +140,9 @@ export const RichTextStyle = z.strictObject({
 // Type export for convenience
 export type RichTextStyleType = z.infer<typeof RichTextStyle>;
 
+/**
+ * Default values for RichTextStyle labels.
+ * Parsed from the Zod schema to ensure defaults stay in sync.
+ */
+export const defaultRichTextLabelStyle: RichTextStyleType = RichTextStyle.parse({});
+
