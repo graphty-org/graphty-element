@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- Testing legacy backward-compatible API */
 import {assert, describe, it} from "vitest";
 
 import {Algorithm} from "../../../src/algorithms/Algorithm";
@@ -104,7 +105,7 @@ describe("Traversal & Path Algorithm Options", () => {
                     ],
                 });
                 const algo = new BFSAlgorithm(graph);
-                // eslint-disable-next-line @typescript-eslint/no-deprecated
+
                 algo.configure({source: "B"});
                 await algo.run();
 
@@ -214,7 +215,7 @@ describe("Traversal & Path Algorithm Options", () => {
                     ],
                 });
                 const algo = new DFSAlgorithm(graph);
-                // eslint-disable-next-line @typescript-eslint/no-deprecated
+
                 algo.configure({source: "B"});
                 await algo.run();
 
@@ -357,7 +358,7 @@ describe("Traversal & Path Algorithm Options", () => {
                     ],
                 });
                 const algo = new DijkstraAlgorithm(graph);
-                // eslint-disable-next-line @typescript-eslint/no-deprecated
+
                 algo.configure({source: "B", target: "C"});
                 await algo.run();
 
@@ -498,7 +499,7 @@ describe("Traversal & Path Algorithm Options", () => {
                     ],
                 });
                 const algo = new MaxFlowAlgorithm(graph);
-                // eslint-disable-next-line @typescript-eslint/no-deprecated
+
                 algo.configure({source: "B", sink: "C"});
                 await algo.run();
 
@@ -668,7 +669,7 @@ describe("Traversal & Path Algorithm Options", () => {
                     ],
                 });
                 const algo = new MinCutAlgorithm(graph);
-                // eslint-disable-next-line @typescript-eslint/no-deprecated
+
                 algo.configure({source: "A", sink: "C"});
                 await algo.run();
 

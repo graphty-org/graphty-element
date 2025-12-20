@@ -1,6 +1,6 @@
 import {set as deepSet} from "lodash";
 
-import {AdHocData, SuggestedStylesConfig, SuggestedStylesProvider} from "../config";
+import {AdHocData, type OptionsSchema as ZodOptionsSchema, SuggestedStylesConfig, SuggestedStylesProvider} from "../config";
 import {Edge} from "../Edge";
 import {Graph} from "../Graph";
 import {type OptionsFromSchema, type OptionsSchema, resolveOptions} from "./types/OptionSchema";
@@ -21,10 +21,18 @@ export interface AlgorithmStatics {
     namespace: string;
     optionsSchema: OptionsSchema;
     suggestedStyles?: SuggestedStylesProvider;
+    /** @deprecated Use getZodOptionsSchema() instead */
     getOptionsSchema(): OptionsSchema;
+    /** @deprecated Use hasZodOptions() instead */
     hasOptions(): boolean;
     hasSuggestedStyles(): boolean;
     getSuggestedStyles(): SuggestedStylesConfig | null;
+    /** NEW: Zod-based options schema for unified validation and UI metadata */
+    zodOptionsSchema?: ZodOptionsSchema;
+    /** Get the Zod-based options schema for this algorithm */
+    getZodOptionsSchema(): ZodOptionsSchema;
+    /** Check if this algorithm has a Zod-based options schema */
+    hasZodOptions(): boolean;
 }
 
 const algorithmRegistry = new Map<string, AlgorithmClass>();
@@ -94,8 +102,18 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      *
      * Subclasses should override this to define their configurable options.
      * An empty schema means the algorithm has no configurable options.
+     *
+     * @deprecated Use zodOptionsSchema instead for new implementations
      */
     static optionsSchema: OptionsSchema = {};
+
+    /**
+     * NEW: Zod-based options schema with rich metadata for UI generation.
+     *
+     * Override in subclasses to define algorithm-specific options.
+     * This is the new unified system that provides both validation and UI metadata.
+     */
+    static zodOptionsSchema?: ZodOptionsSchema;
 
     protected graph: Graph;
 
@@ -141,6 +159,7 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      * @returns Fully resolved options with defaults applied
      */
     protected resolveOptions(options?: Partial<TOptions>): TOptions {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         const schema = (this.constructor as typeof Algorithm).optionsSchema;
 
         // If no schema defined, return empty object (backward compatible)
@@ -260,8 +279,10 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      * Get the options schema for this algorithm
      *
      * @returns The options schema, or an empty object if no options defined
+     * @deprecated Use getZodOptionsSchema() instead
      */
     static getOptionsSchema(): OptionsSchema {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Implementation of deprecated method
         return this.optionsSchema;
     }
 
@@ -269,9 +290,30 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      * Check if this algorithm has configurable options
      *
      * @returns true if the algorithm has at least one option defined
+     * @deprecated Use hasZodOptions() instead
      */
     static hasOptions(): boolean {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- Implementation of deprecated method
         return Object.keys(this.optionsSchema).length > 0;
+    }
+
+    /**
+     * Get the Zod-based options schema for this algorithm.
+     *
+     * @returns The Zod options schema, or an empty object if no schema defined
+     */
+    static getZodOptionsSchema(): ZodOptionsSchema {
+        return this.zodOptionsSchema ?? {};
+    }
+
+    /**
+     * Check if this algorithm has a Zod-based options schema.
+     *
+     * @returns true if the algorithm has a Zod options schema defined
+     */
+    static hasZodOptions(): boolean {
+        return this.zodOptionsSchema !== undefined &&
+               Object.keys(this.zodOptionsSchema).length > 0;
     }
 
     /**

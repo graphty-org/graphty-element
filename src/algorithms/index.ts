@@ -1,3 +1,4 @@
+import type {OptionsSchema as ZodOptionsSchema} from "../config";
 import {Algorithm} from "./Algorithm";
 // Phase 4 shortest path algorithms
 import {BellmanFordAlgorithm} from "./BellmanFordAlgorithm";
@@ -30,7 +31,6 @@ import {MinCutAlgorithm} from "./MinCutAlgorithm";
 import {PageRankAlgorithm} from "./PageRankAlgorithm";
 import {PrimAlgorithm} from "./PrimAlgorithm";
 import {StronglyConnectedComponentsAlgorithm} from "./StronglyConnectedComponentsAlgorithm";
-import type {OptionsSchema} from "./types/OptionSchema";
 
 // Phase 1 registrations
 Algorithm.register(DegreeAlgorithm);
@@ -118,9 +118,9 @@ export interface AlgorithmInfo {
     type: string;
     /** Full key in format "namespace:type" */
     key: string;
-    /** Options schema for this algorithm */
-    schema: OptionsSchema;
-    /** Whether the algorithm has configurable options */
+    /** Zod-based options schema for this algorithm */
+    zodOptionsSchema: ZodOptionsSchema;
+    /** Whether the algorithm has configurable options (Zod-based) */
     hasOptions: boolean;
     /** Whether the algorithm has suggested styles */
     hasSuggestedStyles: boolean;
@@ -136,7 +136,7 @@ export interface AlgorithmInfo {
  * const algorithms = getAllAlgorithmInfo();
  * for (const algo of algorithms) {
  *     if (algo.hasOptions) {
- *         console.log(`${algo.key} has options:`, algo.schema);
+ *         console.log(`${algo.key} has options:`, algo.zodOptionsSchema);
  *     }
  * }
  * ```
@@ -176,8 +176,8 @@ export function getAllAlgorithmInfo(): AlgorithmInfo[] {
             namespace: AlgoClass.namespace,
             type: AlgoClass.type,
             key: `${AlgoClass.namespace}:${AlgoClass.type}`,
-            schema: AlgoClass.getOptionsSchema(),
-            hasOptions: AlgoClass.hasOptions(),
+            zodOptionsSchema: AlgoClass.getZodOptionsSchema(),
+            hasOptions: AlgoClass.hasZodOptions(),
             hasSuggestedStyles: AlgoClass.hasSuggestedStyles(),
         });
     }
@@ -186,9 +186,9 @@ export function getAllAlgorithmInfo(): AlgorithmInfo[] {
 }
 
 /**
- * Get all algorithm options schemas as a Map
+ * Get all algorithm Zod-based options schemas as a Map
  *
- * @returns Map of algorithm key ("namespace:type") to options schema
+ * @returns Map of algorithm key ("namespace:type") to Zod options schema
  *
  * @example
  * ```typescript
@@ -196,11 +196,11 @@ export function getAllAlgorithmInfo(): AlgorithmInfo[] {
  * const pagerankSchema = schemas.get("graphty:pagerank");
  * ```
  */
-export function getAllAlgorithmSchemas(): Map<string, OptionsSchema> {
-    const schemas = new Map<string, OptionsSchema>();
+export function getAllAlgorithmSchemas(): Map<string, ZodOptionsSchema> {
+    const schemas = new Map<string, ZodOptionsSchema>();
 
     for (const info of getAllAlgorithmInfo()) {
-        schemas.set(info.key, info.schema);
+        schemas.set(info.key, info.zodOptionsSchema);
     }
 
     return schemas;

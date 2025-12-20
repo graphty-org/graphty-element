@@ -22,7 +22,7 @@ describe("Algorithm Info Utilities", () => {
                 assert.isString(algo.type, "type should be a string");
                 assert.isString(algo.key, "key should be a string");
                 assert.strictEqual(algo.key, `${algo.namespace}:${algo.type}`, "key should match namespace:type");
-                assert.isObject(algo.schema, "schema should be an object");
+                assert.isObject(algo.zodOptionsSchema, "zodOptionsSchema should be an object");
                 assert.isBoolean(algo.hasOptions, "hasOptions should be a boolean");
                 assert.isBoolean(algo.hasSuggestedStyles, "hasSuggestedStyles should be a boolean");
             }
@@ -37,6 +37,35 @@ describe("Algorithm Info Utilities", () => {
             assert.include(keys, "graphty:dijkstra");
             assert.include(keys, "graphty:pagerank");
             assert.include(keys, "graphty:louvain");
+        });
+
+        it("returns Zod schema for algorithms with zodOptionsSchema", () => {
+            const info = getAllAlgorithmInfo();
+            const pageRankInfo = info.find((i) => i.key === "graphty:pagerank");
+
+            // Use explicit assertion that narrows the type
+            if (!pageRankInfo) {
+                assert.fail("PageRank algorithm should be found");
+            }
+
+            assert.isTrue(pageRankInfo.hasOptions, "PageRank should have options");
+            assert.isObject(pageRankInfo.zodOptionsSchema, "PageRank should have zodOptionsSchema");
+            // Verify it has expected options
+            assert.property(pageRankInfo.zodOptionsSchema, "dampingFactor");
+            assert.property(pageRankInfo.zodOptionsSchema, "maxIterations");
+        });
+
+        it("returns empty schema for algorithms without options", () => {
+            const info = getAllAlgorithmInfo();
+            const degreeInfo = info.find((i) => i.key === "graphty:degree");
+
+            // Use explicit assertion that narrows the type
+            if (!degreeInfo) {
+                assert.fail("Degree algorithm should be found");
+            }
+
+            assert.isFalse(degreeInfo.hasOptions, "Degree should not have options");
+            assert.deepStrictEqual(degreeInfo.zodOptionsSchema, {}, "Degree should have empty zodOptionsSchema");
         });
     });
 
@@ -53,15 +82,62 @@ describe("Algorithm Info Utilities", () => {
             assert.strictEqual(schemas.size, info.length);
         });
 
-        it("schema values match algorithm schemas", () => {
+        it("schema values match algorithm Zod schemas", () => {
             const schemas = getAllAlgorithmSchemas();
 
-            // Check a specific algorithm
-            const degreeSchema = schemas.get("graphty:degree");
-            const DegreeClass = Algorithm.getClass("graphty", "degree");
+            // Check a specific algorithm with options
+            const pagerankSchema = schemas.get("graphty:pagerank");
+            const PageRankClass = Algorithm.getClass("graphty", "pagerank");
 
+            assert.isDefined(pagerankSchema);
+            assert.deepStrictEqual(pagerankSchema, PageRankClass?.getZodOptionsSchema());
+        });
+
+        it("returns empty schema for algorithms without Zod options", () => {
+            const schemas = getAllAlgorithmSchemas();
+
+            const degreeSchema = schemas.get("graphty:degree");
             assert.isDefined(degreeSchema);
-            assert.deepStrictEqual(degreeSchema, DegreeClass?.getOptionsSchema());
+            assert.deepStrictEqual(degreeSchema, {});
+        });
+    });
+
+    describe("Algorithm static methods", () => {
+        it("getZodOptionsSchema returns Zod schema for algorithms with zodOptionsSchema", () => {
+            const PageRankClass = Algorithm.getClass("graphty", "pagerank");
+            assert.isDefined(PageRankClass);
+
+            if (PageRankClass) {
+                const schema = PageRankClass.getZodOptionsSchema();
+                assert.isObject(schema);
+                assert.property(schema, "dampingFactor");
+            }
+        });
+
+        it("getZodOptionsSchema returns empty object for algorithms without zodOptionsSchema", () => {
+            const DegreeClass = Algorithm.getClass("graphty", "degree");
+            assert.isDefined(DegreeClass);
+
+            if (DegreeClass) {
+                const schema = DegreeClass.getZodOptionsSchema();
+                assert.deepStrictEqual(schema, {});
+            }
+        });
+
+        it("hasZodOptions returns true for algorithms with zodOptionsSchema", () => {
+            const PageRankClass = Algorithm.getClass("graphty", "pagerank");
+            assert.isDefined(PageRankClass);
+            if (PageRankClass) {
+                assert.isTrue(PageRankClass.hasZodOptions());
+            }
+        });
+
+        it("hasZodOptions returns false for algorithms without zodOptionsSchema", () => {
+            const DegreeClass = Algorithm.getClass("graphty", "degree");
+            assert.isDefined(DegreeClass);
+            if (DegreeClass) {
+                assert.isFalse(DegreeClass.hasZodOptions());
+            }
         });
     });
 

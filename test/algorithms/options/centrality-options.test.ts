@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- Testing legacy backward-compatible API */
 import {assert, describe, it} from "vitest";
 
 import {Algorithm} from "../../../src/algorithms/Algorithm";
