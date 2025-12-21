@@ -1,21 +1,27 @@
 // @ts-nocheck
-import {ActionManager} from "@babylonjs/core";
 import {describe, expect, test, vi} from "vitest";
 
 import {NodeBehavior} from "../../src/NodeBehavior";
 
-// Mock ActionManager at the module level
+// Mock ActionManager at the module level - MUST be before any imports from @babylonjs/core
+// NOTE: vi.mock is hoisted to the top of the file, so we cannot use variables defined
+// in the module scope. All values inside the mock factory must be literals or come from
+// vi.importActual.
 vi.mock("@babylonjs/core", async() => {
     const actual = await vi.importActual("@babylonjs/core");
     return {
         ... actual,
-        ActionManager: vi.fn().mockImplementation(function(this: {scene: unknown, actions: unknown[], registerAction: (action: unknown) => void}, scene: unknown) {
-            this.scene = scene;
-            this.actions = [];
-            this.registerAction = vi.fn((action) => {
-                this.actions.push(action);
-            });
-        }),
+        ActionManager: Object.assign(
+            vi.fn().mockImplementation(function(this: {scene: unknown, actions: unknown[], registerAction: (action: unknown) => void}, scene: unknown) {
+                this.scene = scene;
+                this.actions = [];
+                this.registerAction = vi.fn((action) => {
+                    this.actions.push(action);
+                });
+            }),
+            // Add static constants to the mock constructor - use literal value (6 is OnDoublePickTrigger)
+            {OnDoublePickTrigger: 6},
+        ),
         SixDofDragBehavior: vi.fn().mockImplementation(function(this: {onDragStartObservable: {add: unknown}, onDragEndObservable: {add: unknown}, onPositionChangedObservable: {add: unknown}}) {
             this.onDragStartObservable = {add: vi.fn()};
             this.onDragEndObservable = {add: vi.fn()};
@@ -33,8 +39,8 @@ vi.mock("@babylonjs/core", async() => {
     };
 });
 
-// Make sure ActionManager constants are available
-(ActionManager as {OnDoublePickTrigger: number}).OnDoublePickTrigger = 1;
+// Define constant for use in tests - must match the value in the mock above
+const DOUBLE_PICK_TRIGGER = 6;
 
 describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors makes node pickable", () => {
@@ -166,7 +172,7 @@ describe("NodeBehavior Unit Tests", () => {
 
         // Check that double-click action was registered
         const doubleClickAction = mockNode.mesh.actionManager?.actions.find(
-            (action: {_trigger: number}) => action._trigger === ActionManager.OnDoublePickTrigger,
+            (action: {_trigger: number}) => action._trigger === DOUBLE_PICK_TRIGGER,
         );
         expect(doubleClickAction).toBeDefined();
     });

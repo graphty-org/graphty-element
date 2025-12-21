@@ -1,6 +1,5 @@
-import {Logger} from "@babylonjs/core";
 import {Vector2, Vector3} from "@babylonjs/core/Maths/math.vector";
-import {afterEach, expect, vi} from "vitest";
+import {afterEach, beforeAll, expect, vi} from "vitest";
 
 import type {Graph} from "../src/Graph";
 import {MockDeviceInputSystem} from "../src/input/mock-device-input-system";
@@ -28,8 +27,11 @@ declare global {
     }
 }
 
-// Suppress Babylon.js logs during tests
-Logger.LogLevels = Logger.ErrorLogLevel;
+// Suppress Babylon.js logs during tests - must use dynamic import since we mock @babylonjs/core
+beforeAll(async() => {
+    const {Logger} = await import("@babylonjs/core");
+    Logger.LogLevels = Logger.ErrorLogLevel;
+});
 
 // Suppress Lit dev mode warnings by setting production mode
 if (typeof window !== "undefined") {
