@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/graphty-org/graphty-element/compare/v1.4.0...v1.4.1) (2025-12-21)
+
+
+### Bug Fixes
+
+* algorithms options export ([e7a7c05](https://github.com/graphty-org/graphty-element/commit/e7a7c05ec70af75df67ef9efd0b4032f69ce542d))
+
 # [1.4.0](https://github.com/graphty-org/graphty-element/compare/v1.3.0...v1.4.0) (2025-12-20)
 
 
