@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/graphty-org/graphty-element/compare/v1.4.1...v1.4.2) (2025-12-22)
+
+
+### Bug Fixes
+
+* ai key persistence api ([be2a808](https://github.com/graphty-org/graphty-element/commit/be2a8083e9479327261a2dc5b86c4493e81bb38d))
+
 ## [1.4.1](https://github.com/graphty-org/graphty-element/compare/v1.4.0...v1.4.1) (2025-12-21)
 
 
