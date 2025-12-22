@@ -21,6 +21,7 @@ import {
 } from "@babylonjs/core";
 
 import {VoiceInputAdapter} from "./ai/input/VoiceInputAdapter";
+import {ApiKeyManager} from "./ai/keys";
 import {Algorithm} from "./algorithms/Algorithm";
 import {
     BUILTIN_PRESETS,
@@ -3400,6 +3401,46 @@ export class Graph implements GraphContext {
         }
 
         return this.aiManager.retry();
+    }
+
+    /**
+     * Get the API key manager for configuring keys before enabling AI.
+     * Returns null if AI has never been enabled.
+     *
+     * @returns The API key manager or null
+     *
+     * @example
+     * ```typescript
+     * const keyManager = graph.getApiKeyManager();
+     * if (keyManager) {
+     *   const providers = keyManager.getConfiguredProviders();
+     *   console.log('Configured providers:', providers);
+     * }
+     * ```
+     */
+    getApiKeyManager(): ApiKeyManager | null {
+        return this.aiManager?.getApiKeyManager() ?? null;
+    }
+
+    /**
+     * Create a standalone ApiKeyManager for key management without enabling AI.
+     * Useful for settings UIs that configure keys before AI activation.
+     *
+     * @returns A new ApiKeyManager instance
+     *
+     * @example
+     * ```typescript
+     * // In a settings UI component
+     * const keyManager = Graph.createApiKeyManager();
+     * keyManager.enablePersistence({
+     *   encryptionKey: userSecret,
+     *   storage: 'localStorage',
+     * });
+     * keyManager.setKey('openai', apiKey);
+     * ```
+     */
+    static createApiKeyManager(): ApiKeyManager {
+        return new ApiKeyManager();
     }
 
     // ===========================================

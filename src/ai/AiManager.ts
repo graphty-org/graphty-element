@@ -26,6 +26,20 @@ import {SchemaManager} from "./schema";
 const SCHEMA_UPDATE_DEBOUNCE_MS = 300;
 
 /**
+ * Configuration for enabling encrypted key persistence.
+ */
+export interface KeyPersistenceConfig {
+    /** Enable encrypted key persistence */
+    enabled: boolean;
+    /** Encryption key for AES encryption (min 10 characters) */
+    encryptionKey: string;
+    /** Storage backend (default: "localStorage") */
+    storage?: "localStorage" | "sessionStorage";
+    /** Storage key prefix (default: "@graphty-ai-keys") */
+    prefix?: string;
+}
+
+/**
  * Configuration options for initializing the AiManager.
  */
 export interface AiManagerConfig {
@@ -39,6 +53,8 @@ export interface AiManagerConfig {
     registerBuiltinCommands?: boolean;
     /** Optional custom provider instance (e.g., pre-initialized WebLlmProvider) */
     providerInstance?: LlmProvider;
+    /** Key persistence configuration for encrypted storage */
+    keyPersistence?: KeyPersistenceConfig;
 }
 
 /**
@@ -80,6 +96,15 @@ export class AiManager {
         this.graph = graph;
         this.disposed = false;
 
+        // Configure key persistence if specified (before setting API key)
+        if (config.keyPersistence?.enabled) {
+            this.apiKeyManager.enablePersistence({
+                encryptionKey: config.keyPersistence.encryptionKey,
+                storage: config.keyPersistence.storage ?? "localStorage",
+                prefix: config.keyPersistence.prefix,
+            });
+        }
+
         // Use custom provider instance if provided, otherwise create one
         if (config.providerInstance) {
             this.provider = config.providerInstance;
@@ -87,7 +112,7 @@ export class AiManager {
             // Create the provider
             this.provider = createProvider(config.provider);
 
-            // Configure the provider with API key if provided
+            // Configure the provider with API key if provided (will be persisted if persistence enabled)
             if (config.apiKey) {
                 this.apiKeyManager.setKey(config.provider, config.apiKey);
                 this.provider.configure({
@@ -317,6 +342,15 @@ export class AiManager {
      */
     getSchemaManager(): SchemaManager | null {
         return this.schemaManager;
+    }
+
+    /**
+     * Get the API key manager for external key operations.
+     * Useful for managing keys before AI is fully initialized.
+     * @returns The API key manager
+     */
+    getApiKeyManager(): ApiKeyManager {
+        return this.apiKeyManager;
     }
 
     /**

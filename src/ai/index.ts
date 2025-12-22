@@ -19,7 +19,7 @@ export type {AiControllerOptions, AiEventEmitter, ExecutionResult} from "./AiCon
 export {AiController} from "./AiController";
 
 // Manager (Phase 3)
-export type {AiManagerConfig} from "./AiManager";
+export type {AiManagerConfig, KeyPersistenceConfig} from "./AiManager";
 export {AiManager, createAiManager} from "./AiManager";
 
 // Commands
