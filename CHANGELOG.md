@@ -1,3 +1,11 @@
+## [1.4.4](https://github.com/graphty-org/graphty-element/compare/v1.4.3...v1.4.4) (2025-12-23)
+
+
+### Bug Fixes
+
+* better web-llm optional dependency handling ([755c7ee](https://github.com/graphty-org/graphty-element/commit/755c7eeade7783600f28090890b65e9ac733177d))
+* correct zoom to fit calculations ([c9dc578](https://github.com/graphty-org/graphty-element/commit/c9dc578f9c9bc66e34e0f7d8032e0d4306632f4b))
+
 ## [1.4.3](https://github.com/graphty-org/graphty-element/compare/v1.4.2...v1.4.3) (2025-12-23)
 
 

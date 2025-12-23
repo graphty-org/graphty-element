@@ -1,6 +1,6 @@
 {
   "name": "@graphty/graphty-element",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "A Web Component library for 3D/2D graph visualization built with Lit and Babylon.js",
   "type": "module",
   "main": "./dist/graphty.umd.cjs",
