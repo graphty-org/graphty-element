@@ -27,7 +27,7 @@ export const Basic: Story = {
         edgeData,
         layout: "ngraph", // Use deterministic layout for visual tests
         layoutConfig: {
-            // circular layout is deterministic, no seed needed
+            seed: 42, // Fixed seed for consistent layouts in visual tests
         },
         // Add minimal styleTemplate just for preSteps
         styleTemplate: StyleTemplate.parse({
@@ -39,6 +39,9 @@ export const Basic: Story = {
                 },
             },
         }),
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
