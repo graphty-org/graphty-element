@@ -272,8 +272,16 @@ export class WebLlmProvider implements LlmProvider {
             this.emitProgress(0, "Loading WebLLM module...");
 
             // Dynamically import @mlc-ai/web-llm
-            // @ts-expect-error - @mlc-ai/web-llm is loaded dynamically at runtime
-            const webllm = await import("@mlc-ai/web-llm");
+            let webllm;
+            try {
+                // @ts-expect-error - @mlc-ai/web-llm is an optional peer dependency loaded dynamically at runtime
+                webllm = await import("@mlc-ai/web-llm");
+            } catch {
+                throw new Error(
+                    "Failed to load @mlc-ai/web-llm. This is an optional dependency for in-browser AI. " +
+                    "To use WebLLM, install it with: npm install @mlc-ai/web-llm",
+                );
+            }
 
             this.emitProgress(0.1, "Creating engine...");
 

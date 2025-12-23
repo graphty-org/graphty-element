@@ -131,7 +131,13 @@
   },
   "peerDependencies": {
     "@babylonjs/core": "^8.0.0",
+    "@mlc-ai/web-llm": ">=0.2.0",
     "lit": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@mlc-ai/web-llm": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.50",
