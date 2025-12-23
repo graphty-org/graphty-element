@@ -412,7 +412,7 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
                 if (val !== undefined) {
                     deepSet(t, `graph.layoutOptions.${configKey}`, val);
                 }
-            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData", "runAlgorithmsOnLoad", "onGraphSettled", "onSkyboxLoaded"].includes(arg)) {
+            } else if (!["dataSource", "dataSourceConfig", "layout", "layoutConfig", "styleTemplate", "nodeData", "edgeData", "runAlgorithmsOnLoad", "onGraphSettled", "onSkyboxLoaded", "xr"].includes(arg)) {
                 // For other properties, apply directly (but skip component-level props and event handlers)
                 deepSet(t, name, val);
             }
