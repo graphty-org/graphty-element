@@ -212,7 +212,57 @@ export {
     type Sink,
 } from "./src/logging/index";
 
-// AI Provider exports
+// =============================================================================
+// AI Module
+// =============================================================================
+
+// AI Status
+export type {
+    AiStage,
+    AiState,
+    AiStatus,
+    StatusChangeCallback,
+    ToolCallStatus,
+    ToolCallStatusType,
+} from "./src/ai/index";
+export {AiStatusManager} from "./src/ai/index";
+
+// AI Controller
+export type {AiControllerOptions, AiEventEmitter, ExecutionResult} from "./src/ai/index";
+export {AiController} from "./src/ai/index";
+
+// AI Manager
+export type {AiManagerConfig, KeyPersistenceConfig} from "./src/ai/index";
+export {AiManager, createAiManager} from "./src/ai/index";
+
+// AI Commands
+export type {
+    CommandContext,
+    CommandExample,
+    CommandResult,
+    GraphCommand,
+} from "./src/ai/index";
+export {
+    captureScreenshot,
+    captureVideo,
+    clearStyles,
+    CommandRegistry,
+    describeProperty,
+    findAndStyleEdges,
+    findAndStyleNodes,
+    findNodes,
+    listAlgorithms,
+    queryGraph,
+    runAlgorithm,
+    sampleData,
+    setCameraPosition,
+    setDimension,
+    setImmersiveMode,
+    setLayout,
+    zoomToNodes,
+} from "./src/ai/index";
+
+// AI Providers
 export type {
     LlmProvider,
     LlmResponse,
@@ -223,5 +273,28 @@ export type {
     ToolCall,
     ToolDefinition,
     VercelProviderType,
-} from "./src/ai/providers";
-export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/providers";
+} from "./src/ai/index";
+export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/index";
+
+// AI Key Management
+export type {PersistenceConfig} from "./src/ai/index";
+export {ApiKeyManager} from "./src/ai/index";
+
+// AI Prompt Builder
+export type {SystemPromptOptions} from "./src/ai/index";
+export {createSystemPromptBuilder, SystemPromptBuilder} from "./src/ai/index";
+
+// AI Input Adapters
+export type {InputAdapter, InputCallback, InputOptions} from "./src/ai/index";
+export {TextInputAdapter, VoiceInputAdapter} from "./src/ai/index";
+
+// AI Schema Discovery
+export type {
+    HistogramBin,
+    NumericStatistics,
+    PropertySummary,
+    PropertyType,
+    SchemaExtractorOptions,
+    SchemaSummary,
+} from "./src/ai/index";
+export {formatSchemaForPrompt, SchemaExtractor, SchemaManager} from "./src/ai/index";
