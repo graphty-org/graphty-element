@@ -53,11 +53,17 @@
     "url": "https://github.com/graphty-org/graphty-element/issues"
   },
   "scripts": {
-    "test": "vitest run --project=storybook --project=default --project=browser && npm run test:visual",
+    "test": "npm run test:shards:parallel && npm run test:visual",
     "test:default": "vitest --project=default",
     "test:browser": "vitest --project=browser",
     "test:storybook": "vitest --project=storybook",
     "test:visual": "npx chromatic",
+    "test:shard:default": "vitest run --project=default",
+    "test:shard:browser": "vitest run --project=browser --project=interactions",
+    "test:shard:storybook": "vitest run --project=storybook",
+    "test:shard:visual": "npx chromatic",
+    "test:shards": "npm run test:shard:default && npm run test:shard:browser && npm run test:shard:storybook && npm run test:shard:visual",
+    "test:shards:parallel": "npm run test:shard:default & npm run test:shard:browser & npm run test:shard:storybook & wait",
     "test:visual:debug": "npx chromatic --debug",
     "test:mesh": "vitest run --config test/mesh-testing/vitest-mesh.config.ts",
     "test:mesh:watch": "vitest --config test/mesh-testing/vitest-mesh.config.ts",
