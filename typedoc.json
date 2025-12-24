@@ -1,0 +1,35 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "./src/graphty-element.ts",
+        "./src/Graph.ts",
+        "./src/Node.ts",
+        "./src/Edge.ts",
+        "./src/Styles.ts",
+        "./src/config/index.ts",
+        "./src/layout/LayoutEngine.ts",
+        "./src/algorithms/Algorithm.ts",
+        "./src/data/DataSource.ts",
+        "./src/managers/index.ts"
+    ],
+    "entryPointStrategy": "expand",
+    "out": "./docs/api/generated",
+    "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+    "readme": "none",
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "excludeInternal": true,
+    "excludeExternals": true,
+    "hideGenerator": true,
+    "sanitizeComments": true,
+    "categorizeByGroup": true,
+    "sort": ["alphabetical"],
+    "kindSortOrder": [
+        "Class",
+        "Interface",
+        "TypeAlias",
+        "Function",
+        "Variable"
+    ],
+    "docsRoot": "./docs"
+}

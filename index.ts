@@ -225,3 +225,25 @@ export type {
     VercelProviderType,
 } from "./src/ai/providers";
 export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/providers";
+
+// =============================================================================
+// Colorblind Simulation Utilities
+// =============================================================================
+/**
+ * Colorblind simulation utilities for accessibility testing.
+ *
+ * @remarks
+ * These functions help test whether color palettes are accessible to users
+ * with various forms of color vision deficiency.
+ *
+ * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-palettepicker--default | Palette Examples}
+ */
+export {
+    areDistinguishableInGrayscale,
+    colorDifference,
+    isPaletteSafe,
+    simulateDeuteranopia,
+    simulateProtanopia,
+    simulateTritanopia,
+    toGrayscale,
+} from "./src/utils/styleHelpers/accessibility/colorblindSimulation";

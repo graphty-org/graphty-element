@@ -141,22 +141,35 @@ export class Graphty extends LitElement {
     #xr?: PartialXRConfig;
 
     /**
-     * An array of objects describing the node data.
-     * The path to the unique ID for the node is `.id` unless
-     * otherwise specified in `known-properties`.
+     * Array of node data objects to visualize.
      *
      * @remarks
-     * **Important**: Setting this property REPLACES all existing nodes with the new data.
-     * To add nodes incrementally without replacing existing ones, use the
-     * `graph.addNodes()` method instead.
+     * Setting this property replaces all existing nodes. For incremental
+     * updates, use the `graph.addNodes()` method instead.
      *
-     * @example
+     * Each node object should have an ID field (default: "id"). Additional
+     * properties can be used in style selectors and accessed via `node.data`.
+     *
+     * @defaultValue `[]`
+     * @since 1.0.0
+     *
+     * @see {@link edgeData} for edge data
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--default | Basic Examples}
+     *
+     * @example HTML attribute (JSON string)
+     * ```html
+     * <graphty-element
+     *   node-data='[{"id": "1", "label": "Node 1"}, {"id": "2", "label": "Node 2"}]'>
+     * </graphty-element>
+     * ```
+     *
+     * @example JavaScript property
      * ```typescript
-     * // Replace all nodes (this is what the property setter does)
-     * element.nodeData = [{id: "1"}, {id: "2"}];
-     *
-     * // Add nodes incrementally (use the API method)
-     * await element.graph.addNodes([{id: "3"}, {id: "4"}]);
+     * const element = document.querySelector('graphty-element');
+     * element.nodeData = [
+     *   { id: 'a', label: 'Node A', category: 'primary' },
+     *   { id: 'b', label: 'Node B', category: 'secondary' }
+     * ];
      * ```
      */
     @property({attribute: "node-data"})
@@ -176,22 +189,35 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * An array of objects describing the edge data.
-     * The path to the source node ID and destination node ID are `src` and
-     * `dst` (respectively) unless otherwise specified in `known-properties`.
+     * Array of edge data objects defining connections between nodes.
      *
      * @remarks
-     * **Important**: Setting this property REPLACES all existing edges with the new data.
-     * To add edges incrementally without replacing existing ones, use the
-     * `graph.addEdges()` method instead.
+     * Setting this property replaces all existing edges. For incremental
+     * updates, use the `graph.addEdges()` method instead.
      *
-     * @example
+     * Each edge object should have source and target fields (default: "source", "target").
+     * Additional properties can be used for styling (e.g., weight, label).
+     *
+     * @defaultValue `[]`
+     * @since 1.0.0
+     *
+     * @see {@link nodeData} for node data
+     * @see {@link edgeSrcIdPath} to customize source field
+     * @see {@link edgeDstIdPath} to customize target field
+     *
+     * @example HTML attribute
+     * ```html
+     * <graphty-element
+     *   edge-data='[{"source": "1", "target": "2"}, {"source": "2", "target": "3"}]'>
+     * </graphty-element>
+     * ```
+     *
+     * @example JavaScript property
      * ```typescript
-     * // Replace all edges (this is what the property setter does)
-     * element.edgeData = [{src: "1", dst: "2"}];
-     *
-     * // Add edges incrementally (use the API method)
-     * await element.graph.addEdges([{source: "2", target: "3"}], "source", "target");
+     * element.edgeData = [
+     *   { source: 'a', target: 'b', weight: 1.5 },
+     *   { source: 'b', target: 'c', weight: 2.0 }
+     * ];
      * ```
      */
     @property({attribute: "edge-data"})
@@ -319,8 +345,33 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * Specifies which type of layout to use. See the layout documentation for
-     * more information.
+     * Layout algorithm to use for positioning nodes.
+     *
+     * @remarks
+     * Available layouts:
+     * - `ngraph`: Force-directed (3D optimized, recommended)
+     * - `d3-force`: Force-directed (2D)
+     * - `circular`: Nodes arranged in a circle
+     * - `grid`: Nodes arranged in a grid
+     * - `hierarchical`: Tree/DAG layout
+     * - `random`: Random positions
+     * - `fixed`: Pre-defined positions from node data
+     *
+     * @defaultValue `'ngraph'`
+     * @since 1.0.0
+     *
+     * @see {@link layoutConfig} for layout-specific options
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout--default | Layout Examples}
+     *
+     * @example
+     * ```typescript
+     * // Set force-directed layout
+     * element.layout = 'ngraph';
+     *
+     * // Set circular layout with config
+     * element.layout = 'circular';
+     * element.layoutConfig = { radius: 5 };
+     * ```
      */
     @property()
     get layout(): string | undefined {
@@ -364,10 +415,19 @@ export class Graphty extends LitElement {
 
     /**
      * View mode controls how the graph is rendered and displayed.
-     * - "2d": Orthographic camera, fixed top-down view
-     * - "3d": Perspective camera with orbit controls (default)
-     * - "ar": Augmented reality mode using WebXR
-     * - "vr": Virtual reality mode using WebXR
+     *
+     * @remarks
+     * - `"2d"`: Orthographic camera, fixed top-down view
+     * - `"3d"`: Perspective camera with orbit controls (default)
+     * - `"ar"`: Augmented reality mode using WebXR
+     * - `"vr"`: Virtual reality mode using WebXR
+     *
+     * VR and AR modes require WebXR support in the browser.
+     *
+     * @defaultValue `'3d'`
+     * @since 1.0.0
+     *
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/viewmode--default | View Mode Examples}
      *
      * @example
      * ```typescript
@@ -423,7 +483,33 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * Styles and configuration for the graph visualization
+     * Style template configuration for the graph visualization.
+     *
+     * @remarks
+     * Style templates define the visual appearance of nodes, edges, and the graph
+     * background. They can include colors, sizes, shapes, labels, and selection styles.
+     *
+     * Templates can be:
+     * - A string name (e.g., "default", "dark")
+     * - A partial configuration object to override defaults
+     * - A complete StyleSchema configuration
+     *
+     * @defaultValue `'default'`
+     * @since 1.0.0
+     *
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphstyles--default | Style Examples}
+     *
+     * @example
+     * ```typescript
+     * // Apply dark theme
+     * element.styleTemplate = 'dark';
+     *
+     * // Custom node colors
+     * element.styleTemplate = {
+     *   node: { color: '#ff6600', size: 1.5 },
+     *   edge: { color: '#cccccc' }
+     * };
+     * ```
      */
     @property({attribute: "style-template"})
     get styleTemplate(): StyleSchema | undefined {

@@ -882,20 +882,39 @@ export class Graph implements GraphContext {
      * Add nodes to the graph incrementally.
      *
      * @remarks
-     * This method ADDS nodes to the existing graph. It does not replace
-     * existing nodes. If you want to replace all nodes, use the
-     * `nodeData` property on the web component instead.
+     * This method ADDS nodes to the existing graph without removing existing nodes.
+     * For complete replacement, use the `nodeData` property on the web component instead.
      *
-     * @param nodes - Array of node data to add
+     * Nodes are added to the current layout and will animate into position if
+     * a force-directed layout is active.
+     *
+     * @param nodes - Array of node data objects to add
      * @param idPath - Key to use for node IDs (default: "id")
-     * @param options - Queue options
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when nodes are added
+     * @since 1.0.0
+     *
+     * @see {@link addEdges} for adding edges
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default | Data Loading Examples}
      *
      * @example
      * ```typescript
-     * // Add nodes incrementally
-     * await graph.addNodes([{id: "1"}, {id: "2"}]);
-     * await graph.addNodes([{id: "3"}, {id: "4"}]);
-     * // Graph now has 4 nodes
+     * // Add nodes with default ID field
+     * await graph.addNodes([
+     *   { id: 'node-1', label: 'First Node', category: 'A' },
+     *   { id: 'node-2', label: 'Second Node', category: 'B' }
+     * ]);
+     *
+     * // Add nodes with custom ID field
+     * await graph.addNodes(
+     *   [{ nodeId: 'n1', name: 'Node One' }],
+     *   'nodeId'
+     * );
+     *
+     * // Wait for layout to settle after adding
+     * await graph.addNodes(newNodes);
+     * await graph.waitForSettled();
+     * graph.zoomToFit();
      * ```
      */
     async addNodes(nodes: Record<string | number, unknown>[], idPath?: string, options?: QueueableOptions): Promise<void> {
@@ -924,6 +943,47 @@ export class Graph implements GraphContext {
         await this.addEdges([edge], srcIdPath, dstIdPath, options);
     }
 
+    /**
+     * Add edges to the graph incrementally.
+     *
+     * @remarks
+     * This method ADDS edges to the existing graph without removing existing edges.
+     * Source and target nodes should exist before adding edges, otherwise the edges
+     * will reference non-existent nodes.
+     *
+     * Edges connect nodes and can optionally store additional data accessible
+     * via `edge.data`.
+     *
+     * @param edges - Array of edge data objects to add
+     * @param srcIdPath - Path to source node ID in edge data (default: "source")
+     * @param dstIdPath - Path to target node ID in edge data (default: "target")
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when edges are added
+     * @since 1.0.0
+     *
+     * @see {@link addNodes} for adding nodes first
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default | Data Loading Examples}
+     *
+     * @example
+     * ```typescript
+     * // Add edges with default source/target fields
+     * await graph.addEdges([
+     *   { source: 'node-1', target: 'node-2', weight: 1.5 },
+     *   { source: 'node-2', target: 'node-3', weight: 2.0 }
+     * ]);
+     *
+     * // Add edges with custom field names
+     * await graph.addEdges(
+     *   [{ from: 'a', to: 'b', label: 'connects' }],
+     *   'from',
+     *   'to'
+     * );
+     *
+     * // Add nodes and edges together
+     * await graph.addNodes([{id: 'a'}, {id: 'b'}]);
+     * await graph.addEdges([{source: 'a', target: 'b'}]);
+     * ```
+     */
     async addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string, options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             this.dataManager.addEdges(edges, srcIdPath, dstIdPath);
@@ -946,6 +1006,50 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Set the layout algorithm and configuration.
+     *
+     * @remarks
+     * Available layouts:
+     * - `ngraph`: Force-directed (3D optimized, recommended for general use)
+     * - `d3-force`: Force-directed (2D, web standard)
+     * - `circular`: Nodes arranged in a circle
+     * - `grid`: Nodes arranged in a grid
+     * - `hierarchical`: Tree/DAG layout
+     * - `random`: Random positions (useful for testing)
+     * - `fixed`: Use pre-defined positions from node data
+     *
+     * Layout changes are queued and execute in order. The layout will
+     * animate nodes from their current positions to new positions.
+     *
+     * @param type - Layout algorithm name
+     * @param opts - Layout-specific configuration options
+     * @param options - Options for operation queue behavior
+     * @returns Promise that resolves when layout is initialized
+     * @since 1.0.0
+     *
+     * @see {@link waitForSettled} to wait for layout completion
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout--default | 3D Layout Examples}
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout2d--default | 2D Layout Examples}
+     *
+     * @example
+     * ```typescript
+     * // Use force-directed layout with custom settings
+     * await graph.setLayout('ngraph', {
+     *   springLength: 100,
+     *   springCoefficient: 0.0008,
+     *   gravity: -1.2,
+     *   dimensions: 3
+     * });
+     *
+     * // Wait for layout to settle then zoom to fit
+     * await graph.waitForSettled();
+     * graph.zoomToFit();
+     *
+     * // Switch to circular layout
+     * await graph.setLayout('circular', { radius: 5 });
+     * ```
+     */
     async setLayout(type: string, opts: object = {}, options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             await this.layoutManager.setLayout(type, opts);
@@ -968,6 +1072,55 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Run a graph algorithm and store results on nodes/edges.
+     *
+     * @remarks
+     * Algorithms are identified by namespace and type (e.g., `graphty:degree`).
+     * Results are stored on each node's `algorithmResults` property and can be
+     * accessed in style selectors.
+     *
+     * Available algorithms by category:
+     * - **Centrality**: degree, betweenness, closeness, pagerank, eigenvector
+     * - **Community**: louvain, label-propagation, leiden
+     * - **Components**: connected-components, strongly-connected
+     * - **Traversal**: bfs, dfs
+     * - **Shortest Path**: dijkstra, bellman-ford
+     * - **Spanning Tree**: prim, kruskal
+     * - **Flow**: max-flow, min-cut
+     *
+     * @param namespace - Algorithm namespace (e.g., "graphty")
+     * @param type - Algorithm type (e.g., "degree", "pagerank")
+     * @param options - Algorithm options and queue settings
+     * @returns Promise that resolves when algorithm completes
+     * @since 1.0.0
+     *
+     * @see {@link applySuggestedStyles} to visualize results
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-centrality--degree | Centrality Examples}
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-community--louvain | Community Detection}
+     *
+     * @example
+     * ```typescript
+     * // Run degree centrality
+     * await graph.runAlgorithm('graphty', 'degree');
+     *
+     * // Access results
+     * const node = graph.getNode('node-1');
+     * console.log('Degree:', node.algorithmResults['graphty:degree']);
+     *
+     * // Run with auto-styling
+     * await graph.runAlgorithm('graphty', 'pagerank', {
+     *   algorithmOptions: { damping: 0.85 },
+     *   applySuggestedStyles: true
+     * });
+     *
+     * // Use results in style selectors
+     * styleManager.addLayer({
+     *   selector: "[?algorithmResults.'graphty:degree' > `10`]",
+     *   styles: { node: { color: '#ff0000', size: 2.0 } }
+     * });
+     * ```
+     */
     async runAlgorithm(namespace: string, type: string, options?: RunAlgorithmOptions): Promise<void> {
         if (options?.skipQueue) {
             await this.algorithmManager.runAlgorithm(namespace, type, options.algorithmOptions);
@@ -1276,11 +1429,24 @@ export class Graph implements GraphContext {
      * This operation executes immediately and does not go through the
      * operation queue. It may race with queued camera updates.
      *
-     * For better coordination, consider using:
+     * For better coordination, consider using batchOperations.
+     *
+     * @since 1.0.0
+     *
+     * @see {@link waitForSettled} to wait for layout before zooming
+     * @see {@link setCameraState} for manual camera control
+     *
+     * @example
      * ```typescript
+     * // Zoom to fit after data loads
+     * await graph.addNodes(nodes);
+     * await graph.waitForSettled();
+     * graph.zoomToFit();
+     *
+     * // Zoom to fit within batch operations
      * await graph.batchOperations(async () => {
      *     await graph.setStyleTemplate({graph: {twoD: true}});
-     *     graph.zoomToFit(); // Will execute after camera update
+     *     graph.zoomToFit(); // Will execute after style change
      * });
      * ```
      */
@@ -1340,16 +1506,38 @@ export class Graph implements GraphContext {
 
     /**
      * Select a node by its ID.
-     * If another node is currently selected, it will be deselected first.
      *
-     * @param nodeId - The ID of the node to select.
-     * @returns True if the node was found and selected, false if node not found.
+     * @remarks
+     * Selection triggers a `selection-changed` event and applies selection styles
+     * (defined in the style template). Only one node can be selected at a time;
+     * calling this method will deselect any previously selected node.
+     *
+     * Selection is often used to:
+     * - Show a details panel with node information
+     * - Highlight the node and its connections
+     * - Enable context-specific actions
+     *
+     * @param nodeId - The ID of the node to select
+     * @returns True if the node was found and selected, false if not found
+     * @since 1.0.0
+     *
+     * @see {@link deselectNode} to clear selection
+     * @see {@link getSelectedNode} to get current selection
+     * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/selection--default | Selection Examples}
      *
      * @example
      * ```typescript
-     * graph.selectNode("node-123");
-     * const selected = graph.getSelectedNode();
-     * console.log(selected?.id); // "node-123"
+     * // Select a node and show its details
+     * if (graph.selectNode('node-123')) {
+     *   const node = graph.getSelectedNode();
+     *   console.log('Selected:', node.data);
+     *   showDetailsPanel(node);
+     * }
+     *
+     * // Handle click events for selection
+     * graph.on('node-click', ({ node }) => {
+     *   graph.selectNode(node.id);
+     * });
      * ```
      */
     selectNode(nodeId: string | number): boolean {
@@ -1358,13 +1546,29 @@ export class Graph implements GraphContext {
 
     /**
      * Deselect the currently selected node.
+     *
+     * @remarks
+     * Clears the current selection and triggers a `selection-changed` event.
      * If no node is selected, this is a no-op.
+     *
+     * @since 1.0.0
+     *
+     * @see {@link selectNode} to select a node
+     * @see {@link getSelectedNode} to check current selection
      *
      * @example
      * ```typescript
+     * // Clear selection programmatically
      * graph.selectNode("node-123");
      * graph.deselectNode();
      * console.log(graph.getSelectedNode()); // null
+     *
+     * // Clear selection on escape key
+     * document.addEventListener('keydown', (e) => {
+     *   if (e.key === 'Escape') {
+     *     graph.deselectNode();
+     *   }
+     * });
      * ```
      */
     deselectNode(): void {
@@ -1797,8 +2001,41 @@ export class Graph implements GraphContext {
     }
 
     /**
-     * Async method to wait for graph operations to settle
-     * Waits for operation queue to drain
+     * Wait for the graph operations to complete and layout to stabilize.
+     *
+     * @remarks
+     * This method waits for all queued operations (data loading, layout changes,
+     * algorithm execution) to complete. Use this before taking screenshots,
+     * exporting data, or performing actions that require the graph to be stable.
+     *
+     * The method returns when:
+     * - All queued operations have completed
+     * - The operation queue is empty
+     *
+     * @returns Promise that resolves when all operations are complete
+     * @since 1.0.0
+     *
+     * @see {@link zoomToFit} to zoom after settling
+     * @see {@link captureScreenshot} for capturing stable views
+     *
+     * @example
+     * ```typescript
+     * // Wait for layout to settle before zooming
+     * await graph.addNodes(nodes);
+     * await graph.addEdges(edges);
+     * await graph.waitForSettled();
+     * graph.zoomToFit();
+     *
+     * // Wait before taking a screenshot
+     * await graph.setLayout('circular');
+     * await graph.waitForSettled();
+     * const screenshot = await graph.captureScreenshot();
+     *
+     * // Chain operations with settle
+     * await graph.runAlgorithm('graphty', 'pagerank');
+     * await graph.waitForSettled();
+     * console.log('Algorithm complete, results available');
+     * ```
      */
     async waitForSettled(): Promise<void> {
         // Wait for operation queue to complete all operations

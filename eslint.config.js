@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
+import jsdoc from "eslint-plugin-jsdoc";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -8,6 +9,7 @@ export default tseslint.config(
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
+    jsdoc.configs["flat/recommended-typescript"],
     {
         ignores: [
             "**/dist/**",
@@ -25,6 +27,8 @@ export default tseslint.config(
             "examples/**/*.js",
             "bin/**",
             ".storybook/webllm-stub.js",
+            "docs/.vitepress/**",
+            "scripts/**",
         ],
     },
     {
@@ -165,6 +169,25 @@ export default tseslint.config(
             ],
         },
     },
+    // JSDoc custom rules - start with warnings to not break CI
+    {
+        plugins: {
+            jsdoc,
+        },
+        rules: {
+            // Start with warnings to not break CI
+            "jsdoc/require-description": "warn",
+            "jsdoc/require-param-description": "warn",
+            "jsdoc/require-returns-description": "warn",
+            "jsdoc/no-types": "error", // TypeScript handles types
+            "jsdoc/check-tag-names": ["warn", {
+                definedTags: ["since", "internal"],
+            }],
+            // Disable require-jsdoc for now - too many existing gaps
+            "jsdoc/require-jsdoc": "off",
+        },
+    },
+    // Disable JSDoc requirements for test files
     {
         files: ["**/*.test.ts", "test/**/*.ts", "test/**/*.js"],
         rules: {
@@ -175,6 +198,8 @@ export default tseslint.config(
                 "ts-expect-error": false, // Allow @ts-expect-error in test files
                 "minimumDescriptionLength": 5,
             }],
+            "jsdoc/require-jsdoc": "off",
+            "jsdoc/require-description": "off",
         },
     },
 );

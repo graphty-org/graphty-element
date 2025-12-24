@@ -56,3 +56,7 @@ test-results/
 
 # wtt worktrees
 .worktrees/
+
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
