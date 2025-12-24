@@ -31,6 +31,7 @@ interface ClickState {
     pointerDownTime: number;
     pointerDownPosition: {x: number, y: number};
     hasMoved: boolean;
+    pointerEvent: PointerEvent | null;
 }
 
 // Click detection thresholds
@@ -46,6 +47,8 @@ export class NodeDragHandler {
     private clickState: ClickState | null = null;
     private scene: Scene;
     private pointerObserver: Observer<PointerInfoPre> | null = null;
+    private hoverObserver: Observer<PointerInfoPre> | null = null;
+    private isHovered = false;
     private readonly zAxisAmplification: number;
     private readonly enableZAmplificationInDesktop: boolean;
 
@@ -68,6 +71,7 @@ export class NodeDragHandler {
 
         // Setup pointer event listeners
         this.setupPointerEvents();
+        this.setupHoverEvents();
     }
 
     // Public API for both desktop and XR
@@ -100,6 +104,16 @@ export class NodeDragHandler {
         // Make sure graph is running
         const context = this.getContext();
         context.setRunning(true);
+
+        // Emit node-drag-start event
+        const eventManager = context.getEventManager?.();
+        if (eventManager) {
+            const pos = this.node.mesh.position;
+            eventManager.emitNodeEvent("node-drag-start", {
+                node: this.node,
+                position: {x: pos.x, y: pos.y, z: pos.z},
+            });
+        }
     }
 
     public onDragUpdate(worldPosition: Vector3): void {
@@ -164,6 +178,16 @@ export class NodeDragHandler {
         if (cameraManager) {
             // Debug: console.log("📷 Re-enabling camera input after node drag");
             cameraManager.temporarilyEnableInput();
+        }
+
+        // Emit node-drag-end event before resetting drag state
+        const eventManager = context.getEventManager?.();
+        if (eventManager) {
+            const pos = this.node.mesh.position;
+            eventManager.emitNodeEvent("node-drag-end", {
+                node: this.node,
+                position: {x: pos.x, y: pos.y, z: pos.z},
+            });
         }
 
         // Reset drag state
@@ -239,6 +263,7 @@ export class NodeDragHandler {
                                 y: this.scene.pointerY,
                             },
                             hasMoved: false,
+                            pointerEvent: pointerInfo.event as PointerEvent,
                         };
 
                         // Get world position from pointer
@@ -303,6 +328,52 @@ export class NodeDragHandler {
     }
 
     /**
+     * Setup hover detection for emitting node-hover events.
+     */
+    private setupHoverEvents(): void {
+        this.hoverObserver = this.scene.onPrePointerObservable.add((pointerInfo) => {
+            // Skip in XR mode
+            if (this.isXRMode()) {
+                return;
+            }
+
+            // Only process move events for hover detection
+            if (pointerInfo.type !== PointerEventTypes.POINTERMOVE) {
+                return;
+            }
+
+            // Skip if we're currently dragging
+            if (this.dragState.dragging) {
+                return;
+            }
+
+            // Check if we're hovering over this node
+            const pickInfo = this.scene.pick(
+                this.scene.pointerX,
+                this.scene.pointerY,
+            );
+            const pickedNodeId = pickInfo.pickedMesh?.metadata?.nodeId;
+            const isOverThisNode = pickedNodeId === this.node.id;
+
+            // Emit node-hover when entering the node (not when already hovering)
+            if (isOverThisNode && !this.isHovered) {
+                this.isHovered = true;
+                const context = this.getContext();
+                const eventManager = context.getEventManager?.();
+                if (eventManager) {
+                    eventManager.emitNodeEvent("node-hover", {
+                        node: this.node,
+                        data: this.node.data,
+                    });
+                }
+            } else if (!isOverThisNode && this.isHovered) {
+                // Reset hover state when leaving
+                this.isHovered = false;
+            }
+        });
+    }
+
+    /**
      * Check if the current pointer interaction qualifies as a click.
      * A click is defined as a short duration interaction with minimal movement.
      */
@@ -316,7 +387,7 @@ export class NodeDragHandler {
     }
 
     /**
-     * Handle a click on this node - select it.
+     * Handle a click on this node - select it and emit node-click event.
      */
     private handleClick(): void {
         // Get the selection manager from the graph context
@@ -324,6 +395,16 @@ export class NodeDragHandler {
         const selectionManager = context.getSelectionManager?.();
         if (selectionManager) {
             selectionManager.select(this.node);
+        }
+
+        // Emit node-click event
+        const eventManager = context.getEventManager?.();
+        if (eventManager && this.clickState?.pointerEvent) {
+            eventManager.emitNodeEvent("node-click", {
+                node: this.node,
+                data: this.node.data,
+                event: this.clickState.pointerEvent,
+            });
         }
     }
 
@@ -385,6 +466,11 @@ export class NodeDragHandler {
         if (this.pointerObserver) {
             this.scene.onPrePointerObservable.remove(this.pointerObserver);
             this.pointerObserver = null;
+        }
+
+        if (this.hoverObserver) {
+            this.scene.onPrePointerObservable.remove(this.hoverObserver);
+            this.hoverObserver = null;
         }
     }
 }

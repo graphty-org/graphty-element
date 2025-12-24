@@ -4,6 +4,7 @@ import type {XRConfig} from "../config/XRConfig";
 import type {MeshCache} from "../meshes/MeshCache";
 import type {XRSessionManager} from "../xr/XRSessionManager";
 import type {DataManager} from "./DataManager";
+import type {EventManager} from "./EventManager";
 import type {LayoutManager} from "./LayoutManager";
 import type {SelectionManager} from "./SelectionManager";
 import type {StatsManager} from "./StatsManager";
@@ -87,6 +88,13 @@ export interface GraphContext {
      * Optional method for selection functionality
      */
     getSelectionManager?(): SelectionManager | undefined;
+
+    /**
+     * Get EventManager for emitting events
+     * Optional method for event emission
+     * @since 1.5.0
+     */
+    getEventManager?(): EventManager | undefined;
 }
 
 /**

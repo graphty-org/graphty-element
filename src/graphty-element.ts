@@ -991,6 +991,1193 @@ export class Graphty extends LitElement {
     get graph(): Graph {
         return this.#graph;
     }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Data Management
+    // ============================================================================
+
+    /**
+     * Add a single node to the graph.
+     *
+     * @param node - Node data object to add
+     * @param idPath - Key to use for node ID (default: "id")
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when node is added
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addNode({ id: 'node-1', label: 'First Node' });
+     * ```
+     */
+    async addNode(
+        node: import("./config").AdHocData,
+        idPath?: string,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.addNode(node, idPath, options);
+    }
+
+    /**
+     * Add multiple nodes to the graph.
+     *
+     * @param nodes - Array of node data objects to add
+     * @param idPath - Key to use for node IDs (default: "id")
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when nodes are added
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addNodes([
+     *   { id: 'a', label: 'Node A' },
+     *   { id: 'b', label: 'Node B' }
+     * ]);
+     * ```
+     */
+    async addNodes(
+        nodes: import("./config").AdHocData[],
+        idPath?: string,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.addNodes(nodes, idPath, options);
+    }
+
+    /**
+     * Add a single edge to the graph.
+     *
+     * @param edge - Edge data object to add
+     * @param srcIdPath - Path to source node ID (default: "source")
+     * @param dstIdPath - Path to target node ID (default: "target")
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when edge is added
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addEdge({ source: 'a', target: 'b', weight: 1.5 });
+     * ```
+     */
+    async addEdge(
+        edge: import("./config").AdHocData,
+        srcIdPath?: string,
+        dstIdPath?: string,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.addEdge(edge, srcIdPath, dstIdPath, options);
+    }
+
+    /**
+     * Add multiple edges to the graph.
+     *
+     * @param edges - Array of edge data objects to add
+     * @param srcIdPath - Path to source node ID (default: "source")
+     * @param dstIdPath - Path to target node ID (default: "target")
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when edges are added
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addEdges([
+     *   { source: 'a', target: 'b' },
+     *   { source: 'b', target: 'c' }
+     * ]);
+     * ```
+     */
+    async addEdges(
+        edges: import("./config").AdHocData[],
+        srcIdPath?: string,
+        dstIdPath?: string,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.addEdges(edges, srcIdPath, dstIdPath, options);
+    }
+
+    /**
+     * Remove nodes from the graph.
+     *
+     * @param nodeIds - Array of node IDs to remove
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when nodes are removed
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.removeNodes(['node-1', 'node-2']);
+     * ```
+     */
+    async removeNodes(
+        nodeIds: (string | number)[],
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.removeNodes(nodeIds, options);
+    }
+
+    /**
+     * Update node data.
+     *
+     * @param updates - Array of update objects with id and properties to update
+     * @param options - Queue options for operation ordering
+     * @returns Promise that resolves when nodes are updated
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.updateNodes([
+     *   { id: 'node-1', label: 'Updated Label' }
+     * ]);
+     * ```
+     */
+    async updateNodes(
+        updates: {id: string | number, [key: string]: unknown}[],
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.updateNodes(updates, options);
+    }
+
+    /**
+     * Add data from a data source.
+     *
+     * @param type - Data source type (e.g., "json", "csv", "graphml")
+     * @param opts - Data source configuration options
+     * @returns Promise that resolves when data is loaded
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addDataFromSource('json', { url: 'https://example.com/data.json' });
+     * ```
+     */
+    async addDataFromSource(type: string, opts?: object): Promise<void> {
+        return this.#graph.addDataFromSource(type, opts ?? {});
+    }
+
+    /**
+     * Load graph data from a URL.
+     *
+     * @param url - URL to fetch graph data from
+     * @param options - Loading options
+     * @returns Promise that resolves when data is loaded
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.loadFromUrl('https://example.com/graph.json');
+     * ```
+     */
+    async loadFromUrl(
+        url: string,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        return this.#graph.loadFromUrl(url, options);
+    }
+
+    /**
+     * Load graph data from a File object.
+     *
+     * @param file - File object from file input
+     * @param options - Loading options
+     * @returns Promise that resolves when data is loaded
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const input = document.querySelector('input[type="file"]');
+     * const file = input.files[0];
+     * await element.loadFromFile(file);
+     * ```
+     */
+    async loadFromFile(
+        file: File,
+        options?: {
+            format?: string;
+            nodeIdPath?: string;
+            edgeSrcIdPath?: string;
+            edgeDstIdPath?: string;
+        },
+    ): Promise<void> {
+        return this.#graph.loadFromFile(file, options);
+    }
+
+    /**
+     * Get a node by its ID.
+     *
+     * @param nodeId - The ID of the node to get
+     * @returns The node, or undefined if not found
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const node = element.getNode('node-1');
+     * if (node) {
+     *   console.log('Node data:', node.data);
+     * }
+     * ```
+     */
+    getNode(nodeId: string | number): import("./Node").Node | undefined {
+        return this.#graph.getNode(nodeId);
+    }
+
+    /**
+     * Get all nodes in the graph.
+     *
+     * @returns Array of all nodes
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const nodes = element.getNodes();
+     * console.log('Total nodes:', nodes.length);
+     * ```
+     */
+    getNodes(): import("./Node").Node[] {
+        return this.#graph.getNodes();
+    }
+
+    /**
+     * Get the number of nodes in the graph.
+     *
+     * @returns Number of nodes
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * console.log('Node count:', element.getNodeCount());
+     * ```
+     */
+    getNodeCount(): number {
+        return this.#graph.getNodeCount();
+    }
+
+    /**
+     * Get the number of edges in the graph.
+     *
+     * @returns Number of edges
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * console.log('Edge count:', element.getEdgeCount());
+     * ```
+     */
+    getEdgeCount(): number {
+        return this.#graph.getEdgeCount();
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Selection
+    // ============================================================================
+
+    /**
+     * Select a node by its ID.
+     *
+     * @param nodeId - The ID of the node to select
+     * @returns True if the node was found and selected, false otherwise
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * if (element.selectNode('node-1')) {
+     *   console.log('Node selected');
+     * }
+     * ```
+     */
+    selectNode(nodeId: string | number): boolean {
+        return this.#graph.selectNode(nodeId);
+    }
+
+    /**
+     * Deselect the currently selected node.
+     *
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.deselectNode();
+     * ```
+     */
+    deselectNode(): void {
+        this.#graph.deselectNode();
+    }
+
+    /**
+     * Get the currently selected node.
+     *
+     * @returns The selected node, or null if no node is selected
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const selected = element.getSelectedNode();
+     * if (selected) {
+     *   console.log('Selected node:', selected.id);
+     * }
+     * ```
+     */
+    getSelectedNode(): import("./Node").Node | null {
+        return this.#graph.getSelectedNode();
+    }
+
+    /**
+     * Check if a specific node is selected.
+     *
+     * @param nodeId - The ID of the node to check
+     * @returns True if the node is selected, false otherwise
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * if (element.isNodeSelected('node-1')) {
+     *   console.log('Node 1 is selected');
+     * }
+     * ```
+     */
+    isNodeSelected(nodeId: string | number): boolean {
+        return this.#graph.isNodeSelected(nodeId);
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Algorithm
+    // ============================================================================
+
+    /**
+     * Run a graph algorithm.
+     *
+     * @param namespace - Algorithm namespace (e.g., "graphty")
+     * @param type - Algorithm type (e.g., "degree", "pagerank")
+     * @param options - Algorithm options
+     * @returns Promise that resolves when algorithm completes
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.runAlgorithm('graphty', 'degree');
+     * await element.runAlgorithm('graphty', 'pagerank', { applySuggestedStyles: true });
+     * ```
+     */
+    async runAlgorithm(
+        namespace: string,
+        type: string,
+        options?: import("./utils/queue-migration").RunAlgorithmOptions,
+    ): Promise<void> {
+        return this.#graph.runAlgorithm(namespace, type, options);
+    }
+
+    /**
+     * Apply suggested styles from an algorithm.
+     *
+     * @param algorithmKey - Algorithm key (e.g., "graphty:degree")
+     * @param options - Options for applying styles
+     * @returns True if styles were applied, false otherwise
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.runAlgorithm('graphty', 'degree');
+     * element.applySuggestedStyles('graphty:degree');
+     * ```
+     */
+    applySuggestedStyles(
+        algorithmKey: string | string[],
+        options?: import("./config").ApplySuggestedStylesOptions,
+    ): boolean {
+        return this.#graph.applySuggestedStyles(algorithmKey, options);
+    }
+
+    /**
+     * Get suggested styles for an algorithm without applying them.
+     *
+     * @param algorithmKey - Algorithm key (e.g., "graphty:degree")
+     * @returns Suggested styles config, or null if none exist
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const styles = element.getSuggestedStyles('graphty:degree');
+     * if (styles) {
+     *   console.log('Available style layers:', styles.layers.length);
+     * }
+     * ```
+     */
+    getSuggestedStyles(algorithmKey: string): import("./config").SuggestedStylesConfig | null {
+        return this.#graph.getSuggestedStyles(algorithmKey);
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Style
+    // ============================================================================
+
+    /**
+     * Set the style template.
+     *
+     * @param template - Style template configuration
+     * @param options - Queue options
+     * @returns Promise that resolves with the applied styles
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.setStyleTemplate({
+     *   node: { color: '#ff6600', size: 1.5 }
+     * });
+     * ```
+     */
+    async setStyleTemplate(
+        template: StyleSchema,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<import("./Styles").Styles> {
+        return this.#graph.setStyleTemplate(template, options);
+    }
+
+    /**
+     * Get the style manager for advanced style manipulation.
+     *
+     * @returns The style manager instance
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const styleManager = element.getStyleManager();
+     * styleManager.addLayer({
+     *   selector: '[?type == "important"]',
+     *   styles: { node: { color: '#ff0000' } }
+     * });
+     * ```
+     */
+    getStyleManager(): import("./managers/StyleManager").StyleManager {
+        return this.#graph.getStyleManager();
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Layout
+    // ============================================================================
+
+    /**
+     * Set the layout algorithm.
+     *
+     * @param type - Layout algorithm name
+     * @param opts - Layout-specific options
+     * @param options - Queue options
+     * @returns Promise that resolves when layout is initialized
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.setLayout('circular', { radius: 5 });
+     * await element.setLayout('ngraph', { springLength: 100 });
+     * ```
+     */
+    async setLayout(
+        type: string,
+        opts?: object,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.setLayout(type, opts ?? {}, options);
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Utility
+    // ============================================================================
+
+    /**
+     * Zoom the camera to fit all nodes in view.
+     *
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.waitForSettled();
+     * element.zoomToFit();
+     * ```
+     */
+    zoomToFit(): void {
+        this.#graph.zoomToFit();
+    }
+
+    /**
+     * Wait for all operations to complete and layout to stabilize.
+     *
+     * @returns Promise that resolves when all operations are complete
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.addNodes(nodes);
+     * await element.waitForSettled();
+     * console.log('Graph is ready');
+     * ```
+     */
+    async waitForSettled(): Promise<void> {
+        return this.#graph.waitForSettled();
+    }
+
+    /**
+     * Execute multiple operations as a batch.
+     *
+     * @param fn - Function containing batch operations
+     * @returns Promise that resolves when batch completes
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.batchOperations(async () => {
+     *   await element.addNodes(nodes);
+     *   await element.addEdges(edges);
+     *   await element.setLayout('circular');
+     * });
+     * ```
+     */
+    async batchOperations(fn: () => Promise<void> | void): Promise<void> {
+        return this.#graph.batchOperations(fn);
+    }
+
+    // ============================================================================
+    // Phase 7a: High Priority Methods - Events
+    // ============================================================================
+
+    /**
+     * Subscribe to graph events.
+     *
+     * @param type - Event type to listen for
+     * @param callback - Callback function
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.on('graph-settled', () => {
+     *   console.log('Graph layout has settled');
+     * });
+     * ```
+     */
+    on(
+        type: import("./events").EventType,
+        callback: import("./events").EventCallbackType,
+    ): void {
+        this.#graph.on(type, callback);
+    }
+
+    /**
+     * Subscribe to graph events (alias for on).
+     *
+     * @param type - Event type to listen for
+     * @param callback - Callback function
+     * @since 1.5.0
+     */
+    addListener(
+        type: import("./events").EventType,
+        callback: import("./events").EventCallbackType,
+    ): void {
+        this.#graph.addListener(type, callback);
+    }
+
+    /**
+     * Get the total number of registered event listeners.
+     *
+     * @returns Number of registered listeners
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * console.log('Active listeners:', element.listenerCount());
+     * ```
+     */
+    listenerCount(): number {
+        return this.#graph.listenerCount();
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - View
+    // ============================================================================
+
+    /**
+     * Check if the graph is in 2D mode.
+     *
+     * @returns True if in 2D mode, false otherwise
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * if (element.is2D()) {
+     *   console.log('Graph is in 2D mode');
+     * }
+     * ```
+     */
+    is2D(): boolean {
+        return this.#graph.is2D();
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - XR
+    // ============================================================================
+
+    /**
+     * Set XR (VR/AR) configuration.
+     *
+     * @param config - XR configuration
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.setXRConfig({
+     *   enabled: true,
+     *   ui: { enabled: true, position: 'bottom-right' }
+     * });
+     * ```
+     */
+    setXRConfig(config: PartialXRConfig): void {
+        this.#graph.setXRConfig(config);
+    }
+
+    /**
+     * Get the current XR configuration.
+     *
+     * @returns The current XR configuration, or undefined if not set
+     * @since 1.5.0
+     */
+    getXRConfig(): import("./config/XRConfig").XRConfig | undefined {
+        return this.#graph.getXRConfig();
+    }
+
+    /**
+     * Exit XR (VR/AR) mode.
+     *
+     * @returns Promise that resolves when XR session ends
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.exitXR();
+     * ```
+     */
+    async exitXR(): Promise<void> {
+        return this.#graph.exitXR();
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - Camera
+    // ============================================================================
+
+    /**
+     * Resolve a camera preset to a CameraState.
+     *
+     * @param preset - Preset name (e.g., "fitToGraph", "topView")
+     * @returns The resolved camera state
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const state = element.resolveCameraPreset('topView');
+     * await element.setCameraState(state, { animate: true });
+     * ```
+     */
+    resolveCameraPreset(preset: string): import("./screenshot/types.js").CameraState {
+        return this.#graph.resolveCameraPreset(preset);
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - Input
+    // ============================================================================
+
+    /**
+     * Enable or disable user input.
+     *
+     * @param enabled - Whether input should be enabled
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.setInputEnabled(false); // Disable interaction
+     * ```
+     */
+    setInputEnabled(enabled: boolean): void {
+        this.#graph.setInputEnabled(enabled);
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - Lifecycle
+    // ============================================================================
+
+    /**
+     * Shut down the graph and release resources.
+     *
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.shutdown();
+     * ```
+     */
+    shutdown(): void {
+        this.#graph.shutdown();
+    }
+
+    /**
+     * Check if the graph is running.
+     *
+     * @returns True if the graph is running, false otherwise
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * if (element.isRunning()) {
+     *   console.log('Graph is active');
+     * }
+     * ```
+     */
+    isRunning(): boolean {
+        return this.#graph.isRunning();
+    }
+
+    // ============================================================================
+    // Phase 7b: Medium Priority Methods - Coordinate Transform
+    // ============================================================================
+
+    /**
+     * Convert world coordinates to screen coordinates.
+     *
+     * @param worldPos - Position in world space
+     * @returns Position in screen space
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const node = element.getNode('node-1');
+     * const screenPos = element.worldToScreen({
+     *   x: node.mesh.position.x,
+     *   y: node.mesh.position.y,
+     *   z: node.mesh.position.z
+     * });
+     * // Position a tooltip at screenPos
+     * ```
+     */
+    worldToScreen(worldPos: {x: number, y: number, z: number}): {x: number, y: number} {
+        return this.#graph.worldToScreen(worldPos);
+    }
+
+    /**
+     * Convert screen coordinates to world coordinates.
+     *
+     * @param screenPos - Position in screen space
+     * @returns Position in world space, or null if not found
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const worldPos = element.screenToWorld({ x: 100, y: 200 });
+     * if (worldPos) {
+     *   console.log('World position:', worldPos);
+     * }
+     * ```
+     */
+    screenToWorld(screenPos: {x: number, y: number}): {x: number, y: number, z: number} | null {
+        return this.#graph.screenToWorld(screenPos);
+    }
+
+    // ============================================================================
+    // Additional Data Methods
+    // ============================================================================
+
+    /**
+     * Set graph data (both nodes and edges) at once.
+     *
+     * @param data - Object containing nodes and edges arrays
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * element.setData({
+     *   nodes: [{ id: 'a' }, { id: 'b' }],
+     *   edges: [{ source: 'a', target: 'b' }]
+     * });
+     * ```
+     */
+    setData(data: {nodes: Record<string, unknown>[], edges: Record<string, unknown>[]}): void {
+        this.#graph.setData(data);
+    }
+
+    // ============================================================================
+    // Manager Accessors
+    // ============================================================================
+
+    /**
+     * Get the Styles object for direct style access.
+     *
+     * @returns The Styles object
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const styles = element.getStyles();
+     * console.log('Background color:', styles.config.graph.background.color);
+     * ```
+     */
+    getStyles(): import("./Styles").Styles {
+        return this.#graph.getStyles();
+    }
+
+    /**
+     * Get the DataManager for advanced data operations.
+     *
+     * @returns The DataManager instance
+     * @since 1.5.0
+     */
+    getDataManager(): import("./managers/DataManager").DataManager {
+        return this.#graph.getDataManager();
+    }
+
+    /**
+     * Get the LayoutManager for advanced layout operations.
+     *
+     * @returns The LayoutManager instance
+     * @since 1.5.0
+     */
+    getLayoutManager(): import("./managers/LayoutManager").LayoutManager {
+        return this.#graph.getLayoutManager();
+    }
+
+    /**
+     * Get the UpdateManager for update scheduling.
+     *
+     * @returns The UpdateManager instance
+     * @since 1.5.0
+     */
+    getUpdateManager(): import("./managers/UpdateManager").UpdateManager {
+        return this.#graph.getUpdateManager();
+    }
+
+    /**
+     * Get the StatsManager for performance statistics.
+     *
+     * @returns The StatsManager instance
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const stats = element.getStatsManager();
+     * console.log('FPS:', stats.getSnapshot().fps);
+     * ```
+     */
+    getStatsManager(): import("./managers/StatsManager").StatsManager {
+        return this.#graph.getStatsManager();
+    }
+
+    /**
+     * Get the SelectionManager for selection operations.
+     *
+     * @returns The SelectionManager instance
+     * @since 1.5.0
+     */
+    getSelectionManager(): import("./managers/SelectionManager").SelectionManager {
+        return this.#graph.getSelectionManager();
+    }
+
+    /**
+     * Get the EventManager for event operations.
+     *
+     * @returns The EventManager instance
+     * @since 1.5.0
+     */
+    getEventManager(): import("./managers/EventManager").EventManager {
+        return this.#graph.getEventManager();
+    }
+
+    /**
+     * Get the Babylon.js Scene for advanced rendering operations.
+     *
+     * @returns The Babylon.js Scene
+     * @since 1.5.0
+     */
+    getScene(): import("@babylonjs/core").Scene {
+        return this.#graph.getScene();
+    }
+
+    /**
+     * Get the MeshCache for mesh management.
+     *
+     * @returns The MeshCache instance
+     * @since 1.5.0
+     */
+    getMeshCache(): import("./meshes/MeshCache").MeshCache {
+        return this.#graph.getMeshCache();
+    }
+
+    // ============================================================================
+    // Camera and Rendering
+    // ============================================================================
+
+    /**
+     * Set the camera mode.
+     *
+     * @param mode - Camera mode key
+     * @param options - Queue options
+     * @returns Promise that resolves when camera mode is set
+     * @since 1.5.0
+     */
+    async setCameraMode(
+        mode: import("./cameras/CameraManager").CameraKey,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.setCameraMode(mode, options);
+    }
+
+    /**
+     * Get the current camera controller.
+     *
+     * @returns The camera controller, or null if not available
+     * @since 1.5.0
+     */
+    getCameraController(): import("./cameras/CameraManager").CameraController | null {
+        return this.#graph.getCameraController();
+    }
+
+    /**
+     * Set render settings for advanced rendering control.
+     *
+     * @param settings - Render settings object
+     * @param options - Queue options
+     * @returns Promise that resolves when settings are applied
+     * @since 1.5.0
+     */
+    async setRenderSettings(
+        settings: Record<string, unknown>,
+        options?: import("./utils/queue-migration").QueueableOptions,
+    ): Promise<void> {
+        return this.#graph.setRenderSettings(settings, options);
+    }
+
+    /**
+     * Get a node's mesh by its ID.
+     *
+     * @param nodeId - The ID of the node
+     * @returns The node's mesh, or null if not found
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const mesh = element.getNodeMesh('node-1');
+     * if (mesh) {
+     *   console.log('Node position:', mesh.position);
+     * }
+     * ```
+     */
+    getNodeMesh(nodeId: string): import("@babylonjs/core").AbstractMesh | null {
+        return this.#graph.getNodeMesh(nodeId);
+    }
+
+    /**
+     * Get the XR session manager.
+     *
+     * @returns The XR session manager, or undefined if not initialized
+     * @since 1.5.0
+     */
+    getXRSessionManager(): import("./xr/XRSessionManager").XRSessionManager | undefined {
+        return this.#graph.getXRSessionManager();
+    }
+
+    // ============================================================================
+    // AI Control Methods
+    // ============================================================================
+
+    /**
+     * Enable AI control for the graph.
+     *
+     * @param config - AI manager configuration
+     * @returns Promise that resolves when AI is enabled
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * await element.enableAiControl({
+     *   provider: { type: 'openai', apiKey: 'your-api-key' }
+     * });
+     * ```
+     */
+    async enableAiControl(config: import("./ai/AiManager").AiManagerConfig): Promise<void> {
+        return this.#graph.enableAiControl(config);
+    }
+
+    /**
+     * Disable AI control for the graph.
+     *
+     * @since 1.5.0
+     */
+    disableAiControl(): void {
+        this.#graph.disableAiControl();
+    }
+
+    /**
+     * Send a command to the AI assistant.
+     *
+     * @param message - The command message
+     * @returns Promise with the execution result
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const result = await element.aiCommand('Show me the most connected nodes');
+     * console.log('AI response:', result.message);
+     * ```
+     */
+    async aiCommand(message: string): Promise<import("./ai/AiController").ExecutionResult> {
+        return this.#graph.aiCommand(message);
+    }
+
+    /**
+     * Get the current AI status.
+     *
+     * @returns The AI status, or null if AI is not enabled
+     * @since 1.5.0
+     */
+    getAiStatus(): import("./ai/AiStatus").AiStatus | null {
+        return this.#graph.getAiStatus();
+    }
+
+    /**
+     * Subscribe to AI status changes.
+     *
+     * @param callback - Callback function for status changes
+     * @returns Unsubscribe function
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const unsubscribe = element.onAiStatusChange((status) => {
+     *   console.log('AI state:', status.state);
+     * });
+     * // Later: unsubscribe();
+     * ```
+     */
+    onAiStatusChange(callback: import("./ai/AiStatus").StatusChangeCallback): () => void {
+        return this.#graph.onAiStatusChange(callback);
+    }
+
+    /**
+     * Cancel the current AI command.
+     *
+     * @since 1.5.0
+     */
+    cancelAiCommand(): void {
+        this.#graph.cancelAiCommand();
+    }
+
+    /**
+     * Get the AI manager.
+     *
+     * @returns The AI manager, or null if not enabled
+     * @since 1.5.0
+     */
+    getAiManager(): import("./ai/AiManager").AiManager | null {
+        return this.#graph.getAiManager();
+    }
+
+    /**
+     * Check if AI control is enabled.
+     *
+     * @returns True if AI is enabled
+     * @since 1.5.0
+     */
+    isAiEnabled(): boolean {
+        return this.#graph.isAiEnabled();
+    }
+
+    /**
+     * Retry the last AI command that failed.
+     *
+     * @returns Promise with the execution result
+     * @since 1.5.0
+     */
+    async retryLastAiCommand(): Promise<import("./ai/AiController").ExecutionResult> {
+        return this.#graph.retryLastAiCommand();
+    }
+
+    /**
+     * Get the API key manager.
+     *
+     * @returns The API key manager, or null if not created
+     * @since 1.5.0
+     */
+    getApiKeyManager(): import("./ai/keys/ApiKeyManager").ApiKeyManager | null {
+        return this.#graph.getApiKeyManager();
+    }
+
+    /**
+     * Create an API key manager for persistent key storage.
+     * This is a static method - the manager is not tied to any specific graph instance.
+     *
+     * @returns The created API key manager
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const keyManager = Graphty.createApiKeyManager();
+     * await keyManager.setKey('openai', 'your-api-key');
+     * ```
+     */
+    static createApiKeyManager(): import("./ai/keys/ApiKeyManager").ApiKeyManager {
+        return Graph.createApiKeyManager();
+    }
+
+    /**
+     * Get the voice input adapter.
+     *
+     * @returns The voice input adapter
+     * @since 1.5.0
+     */
+    getVoiceAdapter(): import("./ai/input/VoiceInputAdapter").VoiceInputAdapter {
+        return this.#graph.getVoiceAdapter();
+    }
+
+    /**
+     * Start voice input for AI commands.
+     *
+     * @param options - Voice input options
+     * @returns True if voice input started successfully
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const started = element.startVoiceInput({
+     *   onTranscript: (text, isFinal) => {
+     *     if (isFinal) element.aiCommand(text);
+     *   },
+     *   onStart: (started) => console.log('Voice started:', started)
+     * });
+     * ```
+     */
+    startVoiceInput(options?: {
+        continuous?: boolean;
+        interimResults?: boolean;
+        language?: string;
+        onTranscript?: (text: string, isFinal: boolean) => void;
+        onStart?: (started: boolean, error?: string) => void;
+    }): boolean {
+        return this.#graph.startVoiceInput(options);
+    }
+
+    /**
+     * Stop voice input.
+     *
+     * @since 1.5.0
+     */
+    stopVoiceInput(): void {
+        this.#graph.stopVoiceInput();
+    }
+
+    /**
+     * Check if voice input is active.
+     *
+     * @returns True if voice input is active
+     * @since 1.5.0
+     */
+    isVoiceActive(): boolean {
+        return this.#graph.isVoiceActive();
+    }
 }
 
 // Type alias for easier importing

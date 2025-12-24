@@ -1,0 +1,51 @@
+[@graphty/graphty-element](../index.md) / events
+
+# events
+
+## Interfaces
+
+- [AiCommandCancelledEvent](interfaces/AiCommandCancelledEvent.md)
+- [AiCommandCompleteEvent](interfaces/AiCommandCompleteEvent.md)
+- [AiCommandErrorEvent](interfaces/AiCommandErrorEvent.md)
+- [AiCommandStartEvent](interfaces/AiCommandStartEvent.md)
+- [AiStatusChangeEvent](interfaces/AiStatusChangeEvent.md)
+- [AiStreamChunkEvent](interfaces/AiStreamChunkEvent.md)
+- [AiStreamToolCallEvent](interfaces/AiStreamToolCallEvent.md)
+- [AiStreamToolResultEvent](interfaces/AiStreamToolResultEvent.md)
+- [AiVoiceEndEvent](interfaces/AiVoiceEndEvent.md)
+- [AiVoiceStartEvent](interfaces/AiVoiceStartEvent.md)
+- [AiVoiceTranscriptEvent](interfaces/AiVoiceTranscriptEvent.md)
+- [CameraStateChangedEvent](interfaces/CameraStateChangedEvent.md)
+- [DataLoadingCompleteEvent](interfaces/DataLoadingCompleteEvent.md)
+- [DataLoadingErrorEvent](interfaces/DataLoadingErrorEvent.md)
+- [DataLoadingErrorSummaryEvent](interfaces/DataLoadingErrorSummaryEvent.md)
+- [DataLoadingProgressEvent](interfaces/DataLoadingProgressEvent.md)
+- [EdgeAddEvent](interfaces/EdgeAddEvent.md)
+- [EdgeClickEvent](interfaces/EdgeClickEvent.md)
+- [EdgeGenericEvent](interfaces/EdgeGenericEvent.md)
+- [GraphDataAddedEvent](interfaces/GraphDataAddedEvent.md)
+- [GraphDataLoadedEvent](interfaces/GraphDataLoadedEvent.md)
+- [GraphErrorEvent](interfaces/GraphErrorEvent.md)
+- [GraphGenericEvent](interfaces/GraphGenericEvent.md)
+- [GraphLayoutInitializedEvent](interfaces/GraphLayoutInitializedEvent.md)
+- [GraphSettledEvent](interfaces/GraphSettledEvent.md)
+- [NodeAddEvent](interfaces/NodeAddEvent.md)
+- [NodeClickEvent](interfaces/NodeClickEvent.md)
+- [NodeDragEndEvent](interfaces/NodeDragEndEvent.md)
+- [NodeDragStartEvent](interfaces/NodeDragStartEvent.md)
+- [NodeGenericEvent](interfaces/NodeGenericEvent.md)
+- [NodeHoverEvent](interfaces/NodeHoverEvent.md)
+- [SelectionChangedEvent](interfaces/SelectionChangedEvent.md)
+
+## Type Aliases
+
+- [AiEvent](type-aliases/AiEvent.md)
+- [AiEventType](type-aliases/AiEventType.md)
+- [EdgeEvent](type-aliases/EdgeEvent.md)
+- [EdgeEventType](type-aliases/EdgeEventType.md)
+- [EventCallbackType](type-aliases/EventCallbackType.md)
+- [EventType](type-aliases/EventType.md)
+- [GraphEvent](type-aliases/GraphEvent.md)
+- [GraphEventType](type-aliases/GraphEventType.md)
+- [NodeEvent](type-aliases/NodeEvent.md)
+- [NodeEventType](type-aliases/NodeEventType.md)

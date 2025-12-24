@@ -2,7 +2,7 @@
 
 # Interface: Manager
 
-Defined in: [src/managers/interfaces.ts:9](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L9)
+Defined in: [src/managers/interfaces.ts:9](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L9)
 
 Base interface for all manager classes
 
@@ -16,7 +16,7 @@ Base interface for all manager classes
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/interfaces.ts:18](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L18)
+Defined in: [src/managers/interfaces.ts:18](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L18)
 
 Dispose of all resources held by the manager
 
@@ -30,7 +30,7 @@ Dispose of all resources held by the manager
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/interfaces.ts:13](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L13)
+Defined in: [src/managers/interfaces.ts:13](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L13)
 
 Initialize the manager
 

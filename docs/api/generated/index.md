@@ -6,6 +6,7 @@
 - [config](config/index.md)
 - [data/DataSource](data/DataSource/index.md)
 - [Edge](Edge/index.md)
+- [events](events/index.md)
 - [Graph](Graph/index.md)
 - [graphty-element](graphty-element/index.md)
 - [layout/LayoutEngine](layout/LayoutEngine/index.md)

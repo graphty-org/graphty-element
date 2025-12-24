@@ -2,7 +2,7 @@
 
 # Interface: OperationBlockingStats
 
-Defined in: [src/managers/StatsManager.ts:108](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L108)
+Defined in: [src/managers/StatsManager.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L108)
 
 Operation blocking correlation statistics
 Shows which operations correlate with high blocking
@@ -13,7 +13,7 @@ Shows which operations correlate with high blocking
 
 > **appearanceCount**: `number`
 
-Defined in: [src/managers/StatsManager.ts:111](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L111)
+Defined in: [src/managers/StatsManager.ts:111](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L111)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [src/managers/StatsManager.ts:111](https://github.com/graphty-org/gr
 
 > **avgBlockingRatioWhenPresent**: `number`
 
-Defined in: [src/managers/StatsManager.ts:114](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L114)
+Defined in: [src/managers/StatsManager.ts:114](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L114)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [src/managers/StatsManager.ts:114](https://github.com/graphty-org/gr
 
 > **highBlockingFrames**: `number`
 
-Defined in: [src/managers/StatsManager.ts:112](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L112)
+Defined in: [src/managers/StatsManager.ts:112](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L112)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [src/managers/StatsManager.ts:112](https://github.com/graphty-org/gr
 
 > **highBlockingPercentage**: `number`
 
-Defined in: [src/managers/StatsManager.ts:113](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L113)
+Defined in: [src/managers/StatsManager.ts:113](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L113)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: [src/managers/StatsManager.ts:113](https://github.com/graphty-org/gr
 
 > **label**: `string`
 
-Defined in: [src/managers/StatsManager.ts:109](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L109)
+Defined in: [src/managers/StatsManager.ts:109](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L109)
 
 ***
 
@@ -53,4 +53,4 @@ Defined in: [src/managers/StatsManager.ts:109](https://github.com/graphty-org/gr
 
 > **totalCpuTime**: `number`
 
-Defined in: [src/managers/StatsManager.ts:110](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L110)
+Defined in: [src/managers/StatsManager.ts:110](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L110)

@@ -2,7 +2,7 @@
 
 # Class: DefaultGraphContext
 
-Defined in: [src/managers/GraphContext.ts:122](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L122)
+Defined in: [src/managers/GraphContext.ts:130](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L130)
 
 Default implementation of GraphContext
 This can be used by Graph to provide services to Node/Edge
@@ -17,7 +17,7 @@ This can be used by Graph to provide services to Node/Edge
 
 > **new DefaultGraphContext**(`styleManager`, `dataManager`, `layoutManager`, `meshCache`, `scene`, `statsManager`, `config`, `rayUpdateNeeded`): `DefaultGraphContext`
 
-Defined in: [src/managers/GraphContext.ts:123](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L123)
+Defined in: [src/managers/GraphContext.ts:131](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L131)
 
 #### Parameters
 
@@ -63,7 +63,7 @@ Defined in: [src/managers/GraphContext.ts:123](https://github.com/graphty-org/gr
 
 > **getConfig**(): [`GraphContextConfig`](../interfaces/GraphContextConfig.md)
 
-Defined in: [src/managers/GraphContext.ts:173](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L173)
+Defined in: [src/managers/GraphContext.ts:181](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L181)
 
 Get graph-level configuration options
 
@@ -81,7 +81,7 @@ Get graph-level configuration options
 
 > **getDataManager**(): [`DataManager`](DataManager.md)
 
-Defined in: [src/managers/GraphContext.ts:138](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L138)
+Defined in: [src/managers/GraphContext.ts:146](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L146)
 
 Get the DataManager for node/edge operations
 
@@ -99,7 +99,7 @@ Get the DataManager for node/edge operations
 
 > **getLayoutManager**(): [`LayoutManager`](LayoutManager.md)
 
-Defined in: [src/managers/GraphContext.ts:142](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L142)
+Defined in: [src/managers/GraphContext.ts:150](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L150)
 
 Get the LayoutManager for layout operations
 
@@ -117,7 +117,7 @@ Get the LayoutManager for layout operations
 
 > **getMeshCache**(): `MeshCache`
 
-Defined in: [src/managers/GraphContext.ts:146](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L146)
+Defined in: [src/managers/GraphContext.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L154)
 
 Get the MeshCache for mesh creation and caching
 
@@ -135,7 +135,7 @@ Get the MeshCache for mesh creation and caching
 
 > **getScene**(): `Scene`
 
-Defined in: [src/managers/GraphContext.ts:150](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L150)
+Defined in: [src/managers/GraphContext.ts:158](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L158)
 
 Get the Babylon.js Scene
 
@@ -153,7 +153,7 @@ Get the Babylon.js Scene
 
 > **getStatsManager**(): [`StatsManager`](StatsManager.md)
 
-Defined in: [src/managers/GraphContext.ts:154](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L154)
+Defined in: [src/managers/GraphContext.ts:162](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L162)
 
 Get the StatsManager for performance monitoring
 
@@ -171,7 +171,7 @@ Get the StatsManager for performance monitoring
 
 > **getStyleManager**(): [`StyleManager`](StyleManager.md)
 
-Defined in: [src/managers/GraphContext.ts:134](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L134)
+Defined in: [src/managers/GraphContext.ts:142](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L142)
 
 Get the StyleManager for style operations
 
@@ -189,7 +189,7 @@ Get the StyleManager for style operations
 
 > **is2D**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:158](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L158)
+Defined in: [src/managers/GraphContext.ts:166](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L166)
 
 Check if the graph is in 2D mode
 
@@ -207,7 +207,7 @@ Check if the graph is in 2D mode
 
 > **isRunning**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:184](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L184)
+Defined in: [src/managers/GraphContext.ts:192](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L192)
 
 Check if the layout is running
 
@@ -225,7 +225,7 @@ Check if the layout is running
 
 > **needsRayUpdate**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:165](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L165)
+Defined in: [src/managers/GraphContext.ts:173](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L173)
 
 Check if ray updates are needed (for edge arrows)
 
@@ -243,7 +243,7 @@ Check if ray updates are needed (for edge arrows)
 
 > **setRayUpdateNeeded**(`needed`): `void`
 
-Defined in: [src/managers/GraphContext.ts:169](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L169)
+Defined in: [src/managers/GraphContext.ts:177](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L177)
 
 #### Parameters
 
@@ -261,7 +261,7 @@ Defined in: [src/managers/GraphContext.ts:169](https://github.com/graphty-org/gr
 
 > **setRunning**(`running`): `void`
 
-Defined in: [src/managers/GraphContext.ts:188](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L188)
+Defined in: [src/managers/GraphContext.ts:196](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L196)
 
 Set the running state
 
@@ -285,7 +285,7 @@ Set the running state
 
 > **updateConfig**(`config`): `void`
 
-Defined in: [src/managers/GraphContext.ts:180](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/GraphContext.ts#L180)
+Defined in: [src/managers/GraphContext.ts:188](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L188)
 
 Update configuration
 

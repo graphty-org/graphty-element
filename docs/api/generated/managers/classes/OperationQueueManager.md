@@ -2,7 +2,7 @@
 
 # Class: OperationQueueManager
 
-Defined in: [src/managers/OperationQueueManager.ts:49](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L49)
+Defined in: [src/managers/OperationQueueManager.ts:49](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L49)
 
 Base interface for all manager classes
 
@@ -16,7 +16,7 @@ Base interface for all manager classes
 
 > **new OperationQueueManager**(`eventManager`, `options`): `OperationQueueManager`
 
-Defined in: [src/managers/OperationQueueManager.ts:129](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L129)
+Defined in: [src/managers/OperationQueueManager.ts:129](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L129)
 
 #### Parameters
 
@@ -52,7 +52,7 @@ Defined in: [src/managers/OperationQueueManager.ts:129](https://github.com/graph
 
 > `optional` **hasLayoutEngine**: () => `boolean`
 
-Defined in: [src/managers/OperationQueueManager.ts:86](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L86)
+Defined in: [src/managers/OperationQueueManager.ts:86](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L86)
 
 #### Returns
 
@@ -64,7 +64,7 @@ Defined in: [src/managers/OperationQueueManager.ts:86](https://github.com/grapht
 
 > `optional` **onOperationQueued**: (`category`, `description?`) => `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:83](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L83)
+Defined in: [src/managers/OperationQueueManager.ts:83](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L83)
 
 #### Parameters
 
@@ -86,7 +86,7 @@ Defined in: [src/managers/OperationQueueManager.ts:83](https://github.com/grapht
 
 > **cancelByCategory**(`category`): `number`
 
-Defined in: [src/managers/OperationQueueManager.ts:856](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L856)
+Defined in: [src/managers/OperationQueueManager.ts:856](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L856)
 
 Cancel all operations of a specific category
 
@@ -106,7 +106,7 @@ Cancel all operations of a specific category
 
 > **cancelOperation**(`operationId`): `boolean`
 
-Defined in: [src/managers/OperationQueueManager.ts:818](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L818)
+Defined in: [src/managers/OperationQueueManager.ts:818](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L818)
 
 Cancel a specific operation
 
@@ -126,7 +126,7 @@ Cancel a specific operation
 
 > **clear**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:683](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L683)
+Defined in: [src/managers/OperationQueueManager.ts:683](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L683)
 
 Clear all pending operations
 
@@ -140,7 +140,7 @@ Clear all pending operations
 
 > **clearCategoryCompleted**(`category`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:849](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L849)
+Defined in: [src/managers/OperationQueueManager.ts:849](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L849)
 
 Clear completed status for a category
 This is useful when a category needs to be re-executed
@@ -162,7 +162,7 @@ This is useful when a category needs to be re-executed
 
 > **disableBatching**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:705](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L705)
+Defined in: [src/managers/OperationQueueManager.ts:705](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L705)
 
 Disable batching (execute operations immediately)
 
@@ -176,7 +176,7 @@ Disable batching (execute operations immediately)
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:175](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L175)
+Defined in: [src/managers/OperationQueueManager.ts:175](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L175)
 
 Dispose of all resources held by the manager
 
@@ -194,7 +194,7 @@ Dispose of all resources held by the manager
 
 > **enableBatching**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:709](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L709)
+Defined in: [src/managers/OperationQueueManager.ts:709](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L709)
 
 #### Returns
 
@@ -206,7 +206,7 @@ Defined in: [src/managers/OperationQueueManager.ts:709](https://github.com/graph
 
 > **enterBatchMode**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:718](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L718)
+Defined in: [src/managers/OperationQueueManager.ts:718](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L718)
 
 Enter batch mode - operations will be queued but not executed
 
@@ -220,7 +220,7 @@ Enter batch mode - operations will be queued but not executed
 
 > **exitBatchMode**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/OperationQueueManager.ts:726](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L726)
+Defined in: [src/managers/OperationQueueManager.ts:726](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L726)
 
 Exit batch mode - execute all batched operations in dependency order
 
@@ -234,7 +234,7 @@ Exit batch mode - execute all batched operations in dependency order
 
 > **getActiveOperations**(): `string`[]
 
-Defined in: [src/managers/OperationQueueManager.ts:881](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L881)
+Defined in: [src/managers/OperationQueueManager.ts:881](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L881)
 
 Get all active operation IDs
 
@@ -248,7 +248,7 @@ Get all active operation IDs
 
 > **getOperationController**(`operationId`): `AbortController` \| `undefined`
 
-Defined in: [src/managers/OperationQueueManager.ts:811](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L811)
+Defined in: [src/managers/OperationQueueManager.ts:811](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L811)
 
 Get the AbortController for a specific operation
 
@@ -268,7 +268,7 @@ Get the AbortController for a specific operation
 
 > **getOperationProgress**(`operationId`): `OperationProgress` \| `undefined`
 
-Defined in: [src/managers/OperationQueueManager.ts:874](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L874)
+Defined in: [src/managers/OperationQueueManager.ts:874](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L874)
 
 Get current progress for an operation
 
@@ -288,7 +288,7 @@ Get current progress for an operation
 
 > **getStats**(): `object`
 
-Defined in: [src/managers/OperationQueueManager.ts:657](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L657)
+Defined in: [src/managers/OperationQueueManager.ts:657](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L657)
 
 Get queue statistics
 
@@ -314,7 +314,7 @@ Get queue statistics
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/OperationQueueManager.ts:171](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L171)
+Defined in: [src/managers/OperationQueueManager.ts:171](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L171)
 
 Initialize the manager
 
@@ -332,7 +332,7 @@ Initialize the manager
 
 > **isInBatchMode**(): `boolean`
 
-Defined in: [src/managers/OperationQueueManager.ts:757](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L757)
+Defined in: [src/managers/OperationQueueManager.ts:757](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L757)
 
 Check if currently in batch mode
 
@@ -346,7 +346,7 @@ Check if currently in batch mode
 
 > **markCategoryCompleted**(`category`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:840](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L840)
+Defined in: [src/managers/OperationQueueManager.ts:840](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L840)
 
 Mark a category as completed (for satisfying cross-batch dependencies)
 This is useful when a category's requirements are met through other means
@@ -368,7 +368,7 @@ This is useful when a category's requirements are met through other means
 
 > **pause**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:672](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L672)
+Defined in: [src/managers/OperationQueueManager.ts:672](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L672)
 
 Pause/resume queue execution
 
@@ -382,7 +382,7 @@ Pause/resume queue execution
 
 > **queueOperation**(`category`, `execute`, `options?`): `string`
 
-Defined in: [src/managers/OperationQueueManager.ts:194](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L194)
+Defined in: [src/managers/OperationQueueManager.ts:194](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L194)
 
 Queue an operation for execution
 Returns the operation ID
@@ -411,7 +411,7 @@ Returns the operation ID
 
 > **queueOperationAsync**(`category`, `execute`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/managers/OperationQueueManager.ts:765](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L765)
+Defined in: [src/managers/OperationQueueManager.ts:765](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L765)
 
 Queue an operation and get a promise for its completion
 Used for batch mode operations
@@ -440,7 +440,7 @@ Used for batch mode operations
 
 > **registerTrigger**(`category`, `trigger`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:888](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L888)
+Defined in: [src/managers/OperationQueueManager.ts:888](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L888)
 
 Register a custom trigger for a specific operation category
 
@@ -464,7 +464,7 @@ Register a custom trigger for a specific operation category
 
 > **resume**(): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:676](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L676)
+Defined in: [src/managers/OperationQueueManager.ts:676](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L676)
 
 #### Returns
 
@@ -476,7 +476,7 @@ Defined in: [src/managers/OperationQueueManager.ts:676](https://github.com/graph
 
 > **waitForCompletion**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/OperationQueueManager.ts:644](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L644)
+Defined in: [src/managers/OperationQueueManager.ts:644](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L644)
 
 Wait for all queued operations to complete
 

@@ -38,6 +38,17 @@ All configuration is done through HTML attributes or their corresponding JavaScr
 | `edgeDstIdPath` | `edge-dst-id-path` | `string` | `'target'` | Path to target ID in edge data |
 | `debug` | `debug` | `boolean` | `false` | Enable debug overlay |
 
+### Read-only Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `graph` | `Graph` | The underlying Graph instance for advanced operations |
+| `styles` | `Styles` | Access to the style manager |
+
+### Methods
+
+The Web Component exposes many methods directly. See [Direct Methods](#direct-methods-on-the-web-component) below for the complete list.
+
 ## Basic Usage
 
 ### Minimal Example
@@ -334,17 +345,133 @@ element.dataSourceConfig = { url: 'https://example.com/graph.json' };
 
 See [Data Sources](./data-sources) for available data source types.
 
+## Direct Methods on the Web Component
+
+Many methods from the `Graph` class are available directly on the `<graphty-element>` for convenience. This eliminates the need to access `.graph` for common operations.
+
+### Data Methods
+
+```javascript
+const element = document.querySelector('graphty-element');
+
+// Bulk data loading
+element.setData({
+  nodes: [{ id: 'a' }, { id: 'b' }],
+  edges: [{ source: 'a', target: 'b' }]
+});
+
+// Add nodes/edges
+await element.addNode({ id: 'c', label: 'Node C' });
+await element.addEdge({ source: 'b', target: 'c' });
+
+// Get data
+const node = element.getNode('a');
+const allNodes = element.getNodes();
+const nodeCount = element.getNodeCount();
+```
+
+### Selection and Layout
+
+```javascript
+// Selection
+element.selectNode('node1');
+element.deselectNode();
+const selected = element.getSelectedNode();
+
+// Layout control
+element.setLayout('circular');
+await element.waitForSettled();
+```
+
+### Camera Control
+
+```javascript
+// Fit view
+element.zoomToFit();
+
+// Camera state
+const state = element.getCameraState();
+element.setCameraPosition({ x: 0, y: 0, z: 100 });
+element.setCameraTarget({ x: 0, y: 0, z: 0 });
+
+// Camera mode
+await element.setCameraMode('arc-rotate', { target: { x: 0, y: 0, z: 0 } });
+const controller = element.getCameraController();
+```
+
+### Manager Access
+
+```javascript
+// Access internal managers
+const dataManager = element.getDataManager();
+const layoutManager = element.getLayoutManager();
+const styleManager = element.getStyleManager();
+const selectionManager = element.getSelectionManager();
+const eventManager = element.getEventManager();
+const statsManager = element.getStatsManager();
+```
+
+### AI Control
+
+```javascript
+// Enable AI commands
+await element.enableAiControl({
+  provider: 'anthropic',
+  apiKey: 'your-api-key'
+});
+
+// Execute commands
+const result = await element.aiCommand('Find the central node');
+
+// Status tracking
+element.onAiStatusChange((status) => {
+  console.log('AI:', status.stage);
+});
+
+// Voice input
+element.startVoiceInput();
+if (element.isVoiceActive()) {
+  console.log('Listening...');
+}
+element.stopVoiceInput();
+
+// Cleanup
+element.disableAiControl();
+```
+
+### Screenshot and Capture
+
+```javascript
+// Take screenshot
+const result = await element.takeScreenshot({
+  width: 1920,
+  height: 1080
+});
+
+// Check capabilities
+const capability = await element.checkScreenshotCapability();
+```
+
+### Algorithms
+
+```javascript
+// Run algorithm
+await element.runAlgorithm('graphty', 'degree');
+
+// Apply styling from results
+element.applySuggestedStyles('graphty:degree');
+```
+
 ## Need More Control?
 
-The Web Component API covers declarative configuration. For programmatic operations like:
+While many methods are now available directly on the Web Component, some advanced operations still require accessing the underlying `Graph` instance:
 
-- Adding/removing nodes dynamically
-- Running graph algorithms
-- Camera control and animation
-- Custom style layers
-- Screenshot capture
+- Custom layout engine implementations
+- Direct Babylon.js scene access (`element.graph.getScene()`)
+- Mesh cache access (`element.graph.getMeshCache()`)
+- Advanced XR session management
 
-See the **[JavaScript API Guide](./javascript-api)** which provides full programmatic access via the `Graph` class.
+See the **[JavaScript API Guide](./javascript-api)** for the complete `Graph` class reference.
 
 ## Interactive Examples
 

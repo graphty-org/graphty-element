@@ -2,7 +2,7 @@
 
 # Class: Node
 
-Defined in: [src/Node.ts:24](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L24)
+Defined in: [src/Node.ts:24](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L24)
 
 ## Constructors
 
@@ -10,7 +10,7 @@ Defined in: [src/Node.ts:24](https://github.com/graphty-org/graphty-element/blob
 
 > **new Node**(`graph`, `nodeId`, `styleId`, `data`, `opts`): `Node`
 
-Defined in: [src/Node.ts:53](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L53)
+Defined in: [src/Node.ts:53](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L53)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [src/Node.ts:53](https://github.com/graphty-org/graphty-element/blob
 
 > **algorithmResults**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/Node.ts:29](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L29)
+Defined in: [src/Node.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L29)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [src/Node.ts:29](https://github.com/graphty-org/graphty-element/blob
 
 > **changeManager**: `ChangeManager`
 
-Defined in: [src/Node.ts:38](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L38)
+Defined in: [src/Node.ts:38](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L38)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/Node.ts:38](https://github.com/graphty-org/graphty-element/blob
 
 > **data**: [`AdHocData`](../../config/type-aliases/AdHocData.md)\<`string` \| `number`\>
 
-Defined in: [src/Node.ts:28](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L28)
+Defined in: [src/Node.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L28)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [src/Node.ts:28](https://github.com/graphty-org/graphty-element/blob
 
 > **dragging**: `boolean` = `false`
 
-Defined in: [src/Node.ts:34](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L34)
+Defined in: [src/Node.ts:34](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L34)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [src/Node.ts:34](https://github.com/graphty-org/graphty-element/blob
 
 > `optional` **dragHandler**: `NodeDragHandler`
 
-Defined in: [src/Node.ts:33](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L33)
+Defined in: [src/Node.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L33)
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [src/Node.ts:33](https://github.com/graphty-org/graphty-element/blob
 
 > **id**: [`NodeIdType`](../type-aliases/NodeIdType.md)
 
-Defined in: [src/Node.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L27)
+Defined in: [src/Node.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L27)
 
 ***
 
@@ -92,7 +92,7 @@ Defined in: [src/Node.ts:27](https://github.com/graphty-org/graphty-element/blob
 
 > `optional` **label**: `RichTextLabel`
 
-Defined in: [src/Node.ts:32](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L32)
+Defined in: [src/Node.ts:32](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L32)
 
 ***
 
@@ -100,7 +100,7 @@ Defined in: [src/Node.ts:32](https://github.com/graphty-org/graphty-element/blob
 
 > **mesh**: `AbstractMesh`
 
-Defined in: [src/Node.ts:31](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L31)
+Defined in: [src/Node.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L31)
 
 ***
 
@@ -108,7 +108,7 @@ Defined in: [src/Node.ts:31](https://github.com/graphty-org/graphty-element/blob
 
 > **opts**: `NodeOpts`
 
-Defined in: [src/Node.ts:26](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L26)
+Defined in: [src/Node.ts:26](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L26)
 
 ***
 
@@ -116,7 +116,7 @@ Defined in: [src/Node.ts:26](https://github.com/graphty-org/graphty-element/blob
 
 > **parentGraph**: [`GraphContext`](../../managers/interfaces/GraphContext.md) \| [`Graph`](../../Graph/classes/Graph.md)
 
-Defined in: [src/Node.ts:25](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L25)
+Defined in: [src/Node.ts:25](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L25)
 
 ***
 
@@ -124,7 +124,7 @@ Defined in: [src/Node.ts:25](https://github.com/graphty-org/graphty-element/blob
 
 > **pinOnDrag**: `boolean`
 
-Defined in: [src/Node.ts:36](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L36)
+Defined in: [src/Node.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L36)
 
 ***
 
@@ -132,7 +132,7 @@ Defined in: [src/Node.ts:36](https://github.com/graphty-org/graphty-element/blob
 
 > **size**: `number`
 
-Defined in: [src/Node.ts:37](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L37)
+Defined in: [src/Node.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L37)
 
 ***
 
@@ -140,7 +140,7 @@ Defined in: [src/Node.ts:37](https://github.com/graphty-org/graphty-element/blob
 
 > **styleId**: [`NodeStyleId`](../../Styles/type-aliases/NodeStyleId.md)
 
-Defined in: [src/Node.ts:35](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L35)
+Defined in: [src/Node.ts:35](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L35)
 
 ***
 
@@ -148,7 +148,7 @@ Defined in: [src/Node.ts:35](https://github.com/graphty-org/graphty-element/blob
 
 > **styleUpdates**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/Node.ts:30](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L30)
+Defined in: [src/Node.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L30)
 
 ## Methods
 
@@ -156,7 +156,7 @@ Defined in: [src/Node.ts:30](https://github.com/graphty-org/graphty-element/blob
 
 > **addCalculatedStyle**(`cv`): `void`
 
-Defined in: [src/Node.ts:106](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L106)
+Defined in: [src/Node.ts:106](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L106)
 
 #### Parameters
 
@@ -174,7 +174,7 @@ Defined in: [src/Node.ts:106](https://github.com/graphty-org/graphty-element/blo
 
 > **getPosition**(): `object`
 
-Defined in: [src/Node.ts:382](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L382)
+Defined in: [src/Node.ts:382](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L382)
 
 #### Returns
 
@@ -198,7 +198,7 @@ Defined in: [src/Node.ts:382](https://github.com/graphty-org/graphty-element/blo
 
 > **isPinned**(): `boolean`
 
-Defined in: [src/Node.ts:390](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L390)
+Defined in: [src/Node.ts:390](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L390)
 
 #### Returns
 
@@ -210,7 +210,7 @@ Defined in: [src/Node.ts:390](https://github.com/graphty-org/graphty-element/blo
 
 > **isSelected**(): `boolean`
 
-Defined in: [src/Node.ts:395](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L395)
+Defined in: [src/Node.ts:395](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L395)
 
 #### Returns
 
@@ -222,7 +222,7 @@ Defined in: [src/Node.ts:395](https://github.com/graphty-org/graphty-element/blo
 
 > **pin**(): `void`
 
-Defined in: [src/Node.ts:238](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L238)
+Defined in: [src/Node.ts:238](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L238)
 
 #### Returns
 
@@ -234,7 +234,7 @@ Defined in: [src/Node.ts:238](https://github.com/graphty-org/graphty-element/blo
 
 > **unpin**(): `void`
 
-Defined in: [src/Node.ts:242](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L242)
+Defined in: [src/Node.ts:242](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L242)
 
 #### Returns
 
@@ -246,7 +246,7 @@ Defined in: [src/Node.ts:242](https://github.com/graphty-org/graphty-element/blo
 
 > **update**(): `void`
 
-Defined in: [src/Node.ts:110](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L110)
+Defined in: [src/Node.ts:110](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L110)
 
 #### Returns
 
@@ -258,7 +258,7 @@ Defined in: [src/Node.ts:110](https://github.com/graphty-org/graphty-element/blo
 
 > **updateStyle**(`styleId`): `void`
 
-Defined in: [src/Node.ts:151](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Node.ts#L151)
+Defined in: [src/Node.ts:151](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Node.ts#L151)
 
 #### Parameters
 

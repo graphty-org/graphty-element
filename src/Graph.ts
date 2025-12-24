@@ -1492,6 +1492,10 @@ export class Graph implements GraphContext {
         return this.selectionManager;
     }
 
+    getEventManager(): EventManager {
+        return this.eventManager;
+    }
+
     // ============================================================================
     // SELECTION API
     // ============================================================================

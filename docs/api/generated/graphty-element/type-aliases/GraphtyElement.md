@@ -4,4 +4,4 @@
 
 > **GraphtyElement** = [`Graphty`](../classes/Graphty.md)
 
-Defined in: [src/graphty-element.ts:911](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/graphty-element.ts#L911)
+Defined in: [src/graphty-element.ts:2184](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/graphty-element.ts#L2184)

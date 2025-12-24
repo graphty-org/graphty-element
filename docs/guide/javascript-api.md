@@ -79,6 +79,21 @@ await graph.removeNodes(['node1']);
 await graph.removeNodes(['node1', 'node2']);
 ```
 
+**Bulk Data Loading:**
+
+```typescript
+// Load nodes and edges in one call
+graph.setData({
+  nodes: [
+    { id: 'node1', label: 'First' },
+    { id: 'node2', label: 'Second' }
+  ],
+  edges: [
+    { source: 'node1', target: 'node2' }
+  ]
+});
+```
+
 **Updating Data:**
 
 ```typescript
@@ -90,6 +105,26 @@ await graph.updateNodes([
   { id: 'node1', label: 'Updated 1' },
   { id: 'node2', label: 'Updated 2' }
 ]);
+```
+
+**Accessing Data:**
+
+```typescript
+// Get a single node by ID
+const node = graph.getNode('node1');
+
+// Get all nodes
+const allNodes = graph.getNodes();
+
+// Get a single edge
+const edge = graph.getEdge('node1', 'node2');
+
+// Get all edges
+const allEdges = graph.getEdges();
+
+// Get counts
+const nodeCount = graph.getNodeCount();
+const edgeCount = graph.getEdgeCount();
 ```
 
 ### Selection
@@ -159,6 +194,101 @@ graph.setCameraState(newState, {
   animate: true,
   duration: 1000
 });
+```
+
+### Managers
+
+Access internal managers for advanced control:
+
+```typescript
+// Data management
+const dataManager = graph.getDataManager();
+
+// Layout control
+const layoutManager = graph.getLayoutManager();
+
+// Style management
+const styleManager = graph.getStyleManager();
+
+// Event handling
+const eventManager = graph.getEventManager();
+
+// Selection state
+const selectionManager = graph.getSelectionManager();
+
+// Performance statistics
+const statsManager = graph.getStatsManager();
+```
+
+### Screenshot and Video Capture
+
+```typescript
+// Take a screenshot
+const result = await graph.takeScreenshot({
+  width: 1920,
+  height: 1080,
+  quality: 'high'
+});
+
+// Copy to clipboard
+await graph.takeScreenshot({ copyToClipboard: true });
+
+// Capture video animation
+const video = await graph.captureVideo({
+  duration: 5000,
+  fps: 30
+});
+```
+
+### AI Control
+
+Enable AI-powered natural language commands:
+
+```typescript
+import type { AiManagerConfig } from '@graphty/graphty-element';
+
+// Enable AI control
+await graph.enableAiControl({
+  provider: 'anthropic',
+  apiKey: 'your-api-key'
+});
+
+// Execute natural language commands
+const result = await graph.aiCommand('Select the node with the highest degree');
+
+// Check AI status
+const status = graph.getAiStatus();
+
+// Listen for status changes
+const unsubscribe = graph.onAiStatusChange((status) => {
+  console.log('AI status:', status.stage);
+});
+
+// Disable AI control
+graph.disableAiControl();
+```
+
+### Voice Input
+
+Enable voice commands:
+
+```typescript
+// Get voice adapter
+const voiceAdapter = graph.getVoiceAdapter();
+
+// Start listening
+const started = graph.startVoiceInput({
+  language: 'en-US',
+  continuous: false
+});
+
+// Check if active
+if (graph.isVoiceActive()) {
+  console.log('Listening...');
+}
+
+// Stop listening
+graph.stopVoiceInput();
 ```
 
 ## Async Operations

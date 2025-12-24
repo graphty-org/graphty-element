@@ -7,6 +7,7 @@
         "./src/Edge.ts",
         "./src/Styles.ts",
         "./src/config/index.ts",
+        "./src/events.ts",
         "./src/layout/LayoutEngine.ts",
         "./src/algorithms/Algorithm.ts",
         "./src/data/DataSource.ts",

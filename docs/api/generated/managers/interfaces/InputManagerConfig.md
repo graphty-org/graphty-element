@@ -2,7 +2,7 @@
 
 # Interface: InputManagerConfig
 
-Defined in: [src/managers/InputManager.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L27)
+Defined in: [src/managers/InputManager.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L27)
 
 Configuration options for InputManager
 
@@ -12,7 +12,7 @@ Configuration options for InputManager
 
 > `optional` **keyboardEnabled**: `boolean`
 
-Defined in: [src/managers/InputManager.ts:41](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L41)
+Defined in: [src/managers/InputManager.ts:41](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L41)
 
 Whether keyboard input is enabled
 
@@ -22,7 +22,7 @@ Whether keyboard input is enabled
 
 > `optional` **playbackFile**: `string`
 
-Defined in: [src/managers/InputManager.ts:52](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L52)
+Defined in: [src/managers/InputManager.ts:52](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L52)
 
 ***
 
@@ -30,7 +30,7 @@ Defined in: [src/managers/InputManager.ts:52](https://github.com/graphty-org/gra
 
 > `optional` **pointerLockEnabled**: `boolean`
 
-Defined in: [src/managers/InputManager.ts:46](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L46)
+Defined in: [src/managers/InputManager.ts:46](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L46)
 
 Whether pointer lock is enabled for FPS-style controls
 
@@ -40,7 +40,7 @@ Whether pointer lock is enabled for FPS-style controls
 
 > `optional` **recordInput**: `boolean`
 
-Defined in: [src/managers/InputManager.ts:51](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L51)
+Defined in: [src/managers/InputManager.ts:51](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L51)
 
 Input recording/playback for automation
 
@@ -50,7 +50,7 @@ Input recording/playback for automation
 
 > `optional` **touchEnabled**: `boolean`
 
-Defined in: [src/managers/InputManager.ts:36](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L36)
+Defined in: [src/managers/InputManager.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L36)
 
 Whether touch input is enabled
 
@@ -60,6 +60,6 @@ Whether touch input is enabled
 
 > `optional` **useMockInput**: `boolean`
 
-Defined in: [src/managers/InputManager.ts:31](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/InputManager.ts#L31)
+Defined in: [src/managers/InputManager.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L31)
 
 Whether to use mock input system for testing

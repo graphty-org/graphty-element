@@ -2,7 +2,7 @@
 
 # Class: StatsManager
 
-Defined in: [src/managers/StatsManager.ts:154](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L154)
+Defined in: [src/managers/StatsManager.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L154)
 
 Manages performance statistics and monitoring
 Centralizes all performance tracking and reporting
@@ -17,7 +17,7 @@ Centralizes all performance tracking and reporting
 
 > **new StatsManager**(`eventManager`): `StatsManager`
 
-Defined in: [src/managers/StatsManager.ts:193](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L193)
+Defined in: [src/managers/StatsManager.ts:193](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L193)
 
 #### Parameters
 
@@ -35,7 +35,7 @@ Defined in: [src/managers/StatsManager.ts:193](https://github.com/graphty-org/gr
 
 > **arrowCapUpdate**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:165](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L165)
+Defined in: [src/managers/StatsManager.ts:165](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L165)
 
 ***
 
@@ -43,7 +43,7 @@ Defined in: [src/managers/StatsManager.ts:165](https://github.com/graphty-org/gr
 
 > **edgeUpdate**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:164](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L164)
+Defined in: [src/managers/StatsManager.ts:164](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L164)
 
 ***
 
@@ -51,7 +51,7 @@ Defined in: [src/managers/StatsManager.ts:164](https://github.com/graphty-org/gr
 
 > **graphStep**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:162](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L162)
+Defined in: [src/managers/StatsManager.ts:162](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L162)
 
 ***
 
@@ -59,7 +59,7 @@ Defined in: [src/managers/StatsManager.ts:162](https://github.com/graphty-org/gr
 
 > **intersectCalc**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:166](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L166)
+Defined in: [src/managers/StatsManager.ts:166](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L166)
 
 ***
 
@@ -67,7 +67,7 @@ Defined in: [src/managers/StatsManager.ts:166](https://github.com/graphty-org/gr
 
 > **loadTime**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:167](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L167)
+Defined in: [src/managers/StatsManager.ts:167](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L167)
 
 ***
 
@@ -75,7 +75,7 @@ Defined in: [src/managers/StatsManager.ts:167](https://github.com/graphty-org/gr
 
 > **nodeUpdate**: `PerfCounter`
 
-Defined in: [src/managers/StatsManager.ts:163](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L163)
+Defined in: [src/managers/StatsManager.ts:163](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L163)
 
 ***
 
@@ -83,7 +83,7 @@ Defined in: [src/managers/StatsManager.ts:163](https://github.com/graphty-org/gr
 
 > **totalUpdates**: `number` = `0`
 
-Defined in: [src/managers/StatsManager.ts:168](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L168)
+Defined in: [src/managers/StatsManager.ts:168](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L168)
 
 ## Methods
 
@@ -91,7 +91,7 @@ Defined in: [src/managers/StatsManager.ts:168](https://github.com/graphty-org/gr
 
 > **decrementCounter**(`label`, `amount`): `void`
 
-Defined in: [src/managers/StatsManager.ts:1225](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1225)
+Defined in: [src/managers/StatsManager.ts:1225](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1225)
 
 Decrement a counter by a specified amount
 
@@ -119,7 +119,7 @@ Amount to decrement (default: 1)
 
 > **disableFrameProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:483](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L483)
+Defined in: [src/managers/StatsManager.ts:483](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L483)
 
 Disable frame-level blocking detection and clear data
 
@@ -133,7 +133,7 @@ Disable frame-level blocking detection and clear data
 
 > **disableProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:445](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L445)
+Defined in: [src/managers/StatsManager.ts:445](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L445)
 
 Disable detailed profiling and clear measurements
 
@@ -147,7 +147,7 @@ Disable detailed profiling and clear measurements
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:202](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L202)
+Defined in: [src/managers/StatsManager.ts:202](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L202)
 
 Dispose of all resources held by the manager
 
@@ -165,7 +165,7 @@ Dispose of all resources held by the manager
 
 > **enableFrameProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:457](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L457)
+Defined in: [src/managers/StatsManager.ts:457](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L457)
 
 Enable frame-level blocking detection
 This tracks operations within each frame and correlates them with inter-frame time
@@ -181,7 +181,7 @@ to identify which operations cause blocking overhead
 
 > **enableProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:438](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L438)
+Defined in: [src/managers/StatsManager.ts:438](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L438)
 
 Enable detailed profiling
 
@@ -195,7 +195,7 @@ Enable detailed profiling
 
 > **endFrameProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:511](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L511)
+Defined in: [src/managers/StatsManager.ts:511](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L511)
 
 End profiling for the current frame
 Should be called at the end of each frame
@@ -210,7 +210,7 @@ Should be called at the end of each frame
 
 > **endLayoutSession**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:868](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L868)
+Defined in: [src/managers/StatsManager.ts:868](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L868)
 
 End tracking a layout session
 
@@ -224,7 +224,7 @@ End tracking a layout session
 
 > **endMeasurement**(`label`): `void`
 
-Defined in: [src/managers/StatsManager.ts:696](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L696)
+Defined in: [src/managers/StatsManager.ts:696](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L696)
 
 End manual timing
 
@@ -244,7 +244,7 @@ End manual timing
 
 > **getBlockingReport**(): [`OperationBlockingStats`](../interfaces/OperationBlockingStats.md)[]
 
-Defined in: [src/managers/StatsManager.ts:571](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L571)
+Defined in: [src/managers/StatsManager.ts:571](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L571)
 
 Get blocking correlation report
 Shows which operations appear most often in high-blocking frames
@@ -259,7 +259,7 @@ Shows which operations appear most often in high-blocking frames
 
 > **getCounter**(`label`): `number`
 
-Defined in: [src/managers/StatsManager.ts:1273](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1273)
+Defined in: [src/managers/StatsManager.ts:1273](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1273)
 
 Get current value of a counter
 
@@ -283,7 +283,7 @@ Current counter value (0 if not found)
 
 > **getCountersSnapshot**(): [`CounterSnapshot`](../interfaces/CounterSnapshot.md)[]
 
-Defined in: [src/managers/StatsManager.ts:1316](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1316)
+Defined in: [src/managers/StatsManager.ts:1316](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1316)
 
 Get snapshot of all counters
 
@@ -297,7 +297,7 @@ Get snapshot of all counters
 
 > **getPerformanceSummary**(): `object`
 
-Defined in: [src/managers/StatsManager.ts:407](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L407)
+Defined in: [src/managers/StatsManager.ts:407](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L407)
 
 Get performance summary
 
@@ -331,7 +331,7 @@ Get performance summary
 
 > **getSnapshot**(): [`PerformanceSnapshot`](../interfaces/PerformanceSnapshot.md)
 
-Defined in: [src/managers/StatsManager.ts:791](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L791)
+Defined in: [src/managers/StatsManager.ts:791](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L791)
 
 Get comprehensive performance snapshot
 
@@ -345,7 +345,7 @@ Get comprehensive performance snapshot
 
 > **getStats**(): `object`
 
-Defined in: [src/managers/StatsManager.ts:316](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L316)
+Defined in: [src/managers/StatsManager.ts:316](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L316)
 
 Get current statistics
 
@@ -391,7 +391,7 @@ Get current statistics
 
 > **incrementCounter**(`label`, `amount`): `void`
 
-Defined in: [src/managers/StatsManager.ts:1201](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1201)
+Defined in: [src/managers/StatsManager.ts:1201](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1201)
 
 Increment a counter by a specified amount
 
@@ -419,7 +419,7 @@ Amount to increment (default: 1)
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/StatsManager.ts:197](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L197)
+Defined in: [src/managers/StatsManager.ts:197](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L197)
 
 Initialize the manager
 
@@ -437,7 +437,7 @@ Initialize the manager
 
 > **initializeBabylonInstrumentation**(`scene`, `engine`): `void`
 
-Defined in: [src/managers/StatsManager.ts:228](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L228)
+Defined in: [src/managers/StatsManager.ts:228](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L228)
 
 Initialize Babylon.js instrumentation
 Should be called after scene and engine are created
@@ -462,7 +462,7 @@ Should be called after scene and engine are created
 
 > **measure**\<`T`\>(`label`, `fn`): `T`
 
-Defined in: [src/managers/StatsManager.ts:641](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L641)
+Defined in: [src/managers/StatsManager.ts:641](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L641)
 
 Measure synchronous code execution
 
@@ -492,7 +492,7 @@ Measure synchronous code execution
 
 > **measureAsync**\<`T`\>(`label`, `fn`): `Promise`\<`T`\>
 
-Defined in: [src/managers/StatsManager.ts:663](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L663)
+Defined in: [src/managers/StatsManager.ts:663](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L663)
 
 Measure async code execution
 
@@ -522,7 +522,7 @@ Measure async code execution
 
 > **reportDetailed**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:930](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L930)
+Defined in: [src/managers/StatsManager.ts:930](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L930)
 
 Report detailed performance data to console
 
@@ -536,7 +536,7 @@ Report detailed performance data to console
 
 > **reset**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:295](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L295)
+Defined in: [src/managers/StatsManager.ts:295](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L295)
 
 Reset all counters
 
@@ -550,7 +550,7 @@ Reset all counters
 
 > **resetAllCounters**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:1302](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1302)
+Defined in: [src/managers/StatsManager.ts:1302](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1302)
 
 Reset all counters to 0
 
@@ -564,7 +564,7 @@ Reset all counters to 0
 
 > **resetCounter**(`label`): `void`
 
-Defined in: [src/managers/StatsManager.ts:1286](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1286)
+Defined in: [src/managers/StatsManager.ts:1286](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1286)
 
 Reset a specific counter to 0
 
@@ -586,7 +586,7 @@ Counter identifier
 
 > **resetMeasurements**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:719](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L719)
+Defined in: [src/managers/StatsManager.ts:719](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L719)
 
 Reset detailed measurements (keep BabylonJS instrumentation running)
 
@@ -600,7 +600,7 @@ Reset detailed measurements (keep BabylonJS instrumentation running)
 
 > **setCounter**(`label`, `value`): `void`
 
-Defined in: [src/managers/StatsManager.ts:1249](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L1249)
+Defined in: [src/managers/StatsManager.ts:1249](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L1249)
 
 Set a counter to a specific value
 
@@ -628,7 +628,7 @@ Value to set
 
 > **startFrameProfiling**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:498](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L498)
+Defined in: [src/managers/StatsManager.ts:498](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L498)
 
 Start profiling a new frame
 Should be called at the beginning of each frame
@@ -643,7 +643,7 @@ Should be called at the beginning of each frame
 
 > **startLayoutSession**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:860](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L860)
+Defined in: [src/managers/StatsManager.ts:860](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L860)
 
 Start tracking a layout session
 
@@ -657,7 +657,7 @@ Start tracking a layout session
 
 > **startMeasurement**(`label`): `void`
 
-Defined in: [src/managers/StatsManager.ts:685](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L685)
+Defined in: [src/managers/StatsManager.ts:685](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L685)
 
 Start manual timing
 
@@ -677,7 +677,7 @@ Start manual timing
 
 > **step**(): `void`
 
-Defined in: [src/managers/StatsManager.ts:280](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L280)
+Defined in: [src/managers/StatsManager.ts:280](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L280)
 
 Increment update counter
 
@@ -691,7 +691,7 @@ Increment update counter
 
 > **toString**(): `string`
 
-Defined in: [src/managers/StatsManager.ts:341](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L341)
+Defined in: [src/managers/StatsManager.ts:341](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L341)
 
 Generate a human-readable statistics report
 
@@ -705,7 +705,7 @@ Generate a human-readable statistics report
 
 > **updateCacheStats**(`hits`, `misses`): `void`
 
-Defined in: [src/managers/StatsManager.ts:264](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L264)
+Defined in: [src/managers/StatsManager.ts:264](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L264)
 
 Update cache statistics
 
@@ -729,7 +729,7 @@ Update cache statistics
 
 > **updateCounts**(`nodeCount`, `edgeCount`): `void`
 
-Defined in: [src/managers/StatsManager.ts:272](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/StatsManager.ts#L272)
+Defined in: [src/managers/StatsManager.ts:272](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L272)
 
 Update node/edge counts
 

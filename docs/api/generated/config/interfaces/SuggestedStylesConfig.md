@@ -2,7 +2,7 @@
 
 # Interface: SuggestedStylesConfig
 
-Defined in: [src/config/SuggestedStyles.ts:120](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L120)
+Defined in: [src/config/SuggestedStyles.ts:120](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L120)
 
 Complete suggested styles configuration from an algorithm
 
@@ -12,7 +12,7 @@ Complete suggested styles configuration from an algorithm
 
 > `optional` **category**: `"path"` \| `"node-metric"` \| `"edge-metric"` \| `"grouping"` \| `"hierarchy"`
 
-Defined in: [src/config/SuggestedStyles.ts:126](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L126)
+Defined in: [src/config/SuggestedStyles.ts:126](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L126)
 
 Category of visualization for grouping/filtering
 
@@ -22,7 +22,7 @@ Category of visualization for grouping/filtering
 
 > `optional` **description**: `string`
 
-Defined in: [src/config/SuggestedStyles.ts:124](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L124)
+Defined in: [src/config/SuggestedStyles.ts:124](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L124)
 
 Overall description of the visualization strategy
 
@@ -32,6 +32,6 @@ Overall description of the visualization strategy
 
 > **layers**: [`SuggestedStyleLayer`](SuggestedStyleLayer.md)[]
 
-Defined in: [src/config/SuggestedStyles.ts:122](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L122)
+Defined in: [src/config/SuggestedStyles.ts:122](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L122)
 
 Array of style layers to apply

@@ -264,4 +264,21 @@ export abstract class DataSource {
 
         return null;
     }
+
+    /**
+     * Get all registered data source types.
+     *
+     * @returns Array of registered data source type names
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const types = DataSource.getRegisteredTypes();
+     * console.log('Available data sources:', types);
+     * // ['csv', 'gexf', 'gml', 'graphml', 'json', 'pajek']
+     * ```
+     */
+    static getRegisteredTypes(): string[] {
+        return Array.from(dataSourceRegistry.keys()).sort();
+    }
 }

@@ -2,7 +2,7 @@
 
 # Interface: QueueableManager
 
-Defined in: [src/managers/interfaces.ts:24](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L24)
+Defined in: [src/managers/interfaces.ts:24](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L24)
 
 Interface for managers that can queue operations
 
@@ -16,7 +16,7 @@ Interface for managers that can queue operations
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/interfaces.ts:18](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L18)
+Defined in: [src/managers/interfaces.ts:18](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L18)
 
 Dispose of all resources held by the manager
 
@@ -34,7 +34,7 @@ Dispose of all resources held by the manager
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/interfaces.ts:13](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L13)
+Defined in: [src/managers/interfaces.ts:13](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L13)
 
 Initialize the manager
 
@@ -52,7 +52,7 @@ Initialize the manager
 
 > `optional` **queueOperation**(`category`, `fn`): `string`
 
-Defined in: [src/managers/interfaces.ts:31](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/interfaces.ts#L31)
+Defined in: [src/managers/interfaces.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/interfaces.ts#L31)
 
 Queue an operation for execution
 

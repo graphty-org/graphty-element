@@ -2,7 +2,7 @@
 
 # Interface: OperationContext
 
-Defined in: [src/managers/OperationQueueManager.ts:21](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L21)
+Defined in: [src/managers/OperationQueueManager.ts:21](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L21)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/managers/OperationQueueManager.ts:21](https://github.com/grapht
 
 > **id**: `string`
 
-Defined in: [src/managers/OperationQueueManager.ts:24](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L24)
+Defined in: [src/managers/OperationQueueManager.ts:24](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L24)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/managers/OperationQueueManager.ts:24](https://github.com/grapht
 
 > **progress**: [`ProgressContext`](ProgressContext.md)
 
-Defined in: [src/managers/OperationQueueManager.ts:23](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L23)
+Defined in: [src/managers/OperationQueueManager.ts:23](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L23)
 
 ***
 
@@ -26,4 +26,4 @@ Defined in: [src/managers/OperationQueueManager.ts:23](https://github.com/grapht
 
 > **signal**: `AbortSignal`
 
-Defined in: [src/managers/OperationQueueManager.ts:22](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L22)
+Defined in: [src/managers/OperationQueueManager.ts:22](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L22)

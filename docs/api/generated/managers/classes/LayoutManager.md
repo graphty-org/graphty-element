@@ -2,7 +2,7 @@
 
 # Class: LayoutManager
 
-Defined in: [src/managers/LayoutManager.ts:29](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L29)
+Defined in: [src/managers/LayoutManager.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L29)
 
 Manages layout engines and their lifecycle
 Coordinates layout updates and transitions
@@ -17,7 +17,7 @@ Coordinates layout updates and transitions
 
 > **new LayoutManager**(`eventManager`, `dataManager`, `styles`): `LayoutManager`
 
-Defined in: [src/managers/LayoutManager.ts:45](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L45)
+Defined in: [src/managers/LayoutManager.ts:45](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L45)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [src/managers/LayoutManager.ts:45](https://github.com/graphty-org/gr
 
 > `optional` **layoutEngine**: [`LayoutEngine`](../../layout/LayoutEngine/classes/LayoutEngine.md)
 
-Defined in: [src/managers/LayoutManager.ts:30](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L30)
+Defined in: [src/managers/LayoutManager.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L30)
 
 ## Accessors
 
@@ -53,7 +53,7 @@ Defined in: [src/managers/LayoutManager.ts:30](https://github.com/graphty-org/gr
 
 > **get** **edges**(): `Iterable`\<[`Edge`](../../Edge/classes/Edge.md)\>
 
-Defined in: [src/managers/LayoutManager.ts:267](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L267)
+Defined in: [src/managers/LayoutManager.ts:267](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L267)
 
 Get edges from layout engine
 
@@ -69,7 +69,7 @@ Get edges from layout engine
 
 > **get** **isSettled**(): `boolean`
 
-Defined in: [src/managers/LayoutManager.ts:242](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L242)
+Defined in: [src/managers/LayoutManager.ts:242](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L242)
 
 Check if layout has settled
 
@@ -85,7 +85,7 @@ Check if layout has settled
 
 > **get** **layoutType**(): `string` \| `undefined`
 
-Defined in: [src/managers/LayoutManager.ts:274](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L274)
+Defined in: [src/managers/LayoutManager.ts:274](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L274)
 
 Get current layout type
 
@@ -101,7 +101,7 @@ Get current layout type
 
 > **get** **nodes**(): `Iterable`\<[`Node`](../../Node/classes/Node.md)\>
 
-Defined in: [src/managers/LayoutManager.ts:260](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L260)
+Defined in: [src/managers/LayoutManager.ts:260](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L260)
 
 Get nodes from layout engine
 
@@ -117,7 +117,7 @@ Get nodes from layout engine
 
 > **get** **running**(): `boolean`
 
-Defined in: [src/managers/LayoutManager.ts:34](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L34)
+Defined in: [src/managers/LayoutManager.ts:34](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L34)
 
 ##### Returns
 
@@ -127,7 +127,7 @@ Defined in: [src/managers/LayoutManager.ts:34](https://github.com/graphty-org/gr
 
 > **set** **running**(`value`): `void`
 
-Defined in: [src/managers/LayoutManager.ts:38](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L38)
+Defined in: [src/managers/LayoutManager.ts:38](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L38)
 
 ##### Parameters
 
@@ -145,7 +145,7 @@ Defined in: [src/managers/LayoutManager.ts:38](https://github.com/graphty-org/gr
 
 > **applyTemplateLayout**(`layoutType?`, `layoutOptions?`): `Promise`\<`void`\>
 
-Defined in: [src/managers/LayoutManager.ts:320](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L320)
+Defined in: [src/managers/LayoutManager.ts:320](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L320)
 
 Apply layout from style template if specified
 
@@ -169,7 +169,7 @@ Apply layout from style template if specified
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/LayoutManager.ts:70](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L70)
+Defined in: [src/managers/LayoutManager.ts:70](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L70)
 
 Dispose of all resources held by the manager
 
@@ -187,7 +187,7 @@ Dispose of all resources held by the manager
 
 > **getEdgePath**(`edge`): \[`number`, `number`, `number`\][] \| `undefined`
 
-Defined in: [src/managers/LayoutManager.ts:231](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L231)
+Defined in: [src/managers/LayoutManager.ts:231](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L231)
 
 Get edge path from layout engine
 
@@ -207,7 +207,7 @@ Get edge path from layout engine
 
 > **getNodePosition**(`node`): \[`number`, `number`, `number`\] \| `undefined`
 
-Defined in: [src/managers/LayoutManager.ts:219](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L219)
+Defined in: [src/managers/LayoutManager.ts:219](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L219)
 
 Get node position from layout engine
 
@@ -227,7 +227,7 @@ Get node position from layout engine
 
 > **getStats**(): `object`
 
-Defined in: [src/managers/LayoutManager.ts:364](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L364)
+Defined in: [src/managers/LayoutManager.ts:364](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L364)
 
 Get layout statistics
 
@@ -261,7 +261,7 @@ Get layout statistics
 
 > **hasLayoutEngine**(): `boolean`
 
-Defined in: [src/managers/LayoutManager.ts:386](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L386)
+Defined in: [src/managers/LayoutManager.ts:386](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L386)
 
 Check if layout engine is currently set
 
@@ -275,7 +275,7 @@ Check if layout engine is currently set
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/LayoutManager.ts:65](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L65)
+Defined in: [src/managers/LayoutManager.ts:65](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L65)
 
 Initialize the manager
 
@@ -293,7 +293,7 @@ Initialize the manager
 
 > **setGraphContext**(`context`): `void`
 
-Defined in: [src/managers/LayoutManager.ts:54](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L54)
+Defined in: [src/managers/LayoutManager.ts:54](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L54)
 
 Set the GraphContext for error reporting
 
@@ -313,7 +313,7 @@ Set the GraphContext for error reporting
 
 > **setLayout**(`type`, `opts`): `Promise`\<`void`\>
 
-Defined in: [src/managers/LayoutManager.ts:203](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L203)
+Defined in: [src/managers/LayoutManager.ts:203](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L203)
 
 Public method for setting layout
 This goes through the queue when called from Graph
@@ -338,7 +338,7 @@ This goes through the queue when called from Graph
 
 > **step**(): `void`
 
-Defined in: [src/managers/LayoutManager.ts:210](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L210)
+Defined in: [src/managers/LayoutManager.ts:210](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L210)
 
 Step the layout engine forward
 
@@ -352,7 +352,7 @@ Step the layout engine forward
 
 > **updateLayoutDimension**(`twoD`): `Promise`\<`void`\>
 
-Defined in: [src/managers/LayoutManager.ts:281](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L281)
+Defined in: [src/managers/LayoutManager.ts:281](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L281)
 
 Update layout dimension when 2D/3D mode changes
 
@@ -372,7 +372,7 @@ Update layout dimension when 2D/3D mode changes
 
 > **updatePositions**(`nodes`): `Promise`\<`void`\>
 
-Defined in: [src/managers/LayoutManager.ts:394](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L394)
+Defined in: [src/managers/LayoutManager.ts:394](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L394)
 
 Update positions for newly added nodes
 This is called when nodes are added to an existing layout
@@ -393,7 +393,7 @@ This is called when nodes are added to an existing layout
 
 > **updateStyles**(`styles`): `void`
 
-Defined in: [src/managers/LayoutManager.ts:61](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LayoutManager.ts#L61)
+Defined in: [src/managers/LayoutManager.ts:61](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LayoutManager.ts#L61)
 
 Update the styles reference when a new style template is loaded
 

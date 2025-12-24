@@ -34,20 +34,35 @@ export type {
     StyleLayerType,
     StyleSchema,
     StyleSchemaV1,
+    // View mode types
+    ViewMode,
+    // XR configuration types
+    XRConfig,
+    XRInputConfig,
+    XRModeConfig,
+    XRTeleportationConfig,
+    XRUIConfig,
 } from "./src/config/index";
+
+// XR partial config type (for setting XR options)
+export type {PartialXRConfig} from "./src/config/xr-config-schema";
 
 // Style configuration values and helpers
 export {
     CalculatedStyle,
     colorToHex,
+    DEFAULT_VIEW_MODE,
     defaultEdgeStyle,
     defaultNodeStyle,
     defaultRichTextLabelStyle,
+    defaultXRConfig,
     EdgeStyle,
+    isViewMode,
     NodeStyle,
     RichTextStyle,
     StyleHelpers,
     StyleTemplate,
+    VIEW_MODE_VALUES,
 } from "./src/config/index";
 
 // Suggested styles API
@@ -101,6 +116,7 @@ export type {
     DataLoadingErrorSummaryEvent,
     DataLoadingProgressEvent,
     EdgeAddEvent,
+    EdgeClickEvent,
     EdgeEvent,
     EdgeEventType,
     EdgeGenericEvent,
@@ -115,9 +131,13 @@ export type {
     GraphLayoutInitializedEvent,
     GraphSettledEvent,
     NodeAddEvent,
+    NodeClickEvent,
+    NodeDragEndEvent,
+    NodeDragStartEvent,
     NodeEvent,
     NodeEventType,
     NodeGenericEvent,
+    NodeHoverEvent,
 } from "./src/events";
 
 // =============================================================================
@@ -135,9 +155,11 @@ export {
     AlgorithmManager,
     DataManager,
     EventManager,
+    InputManager,
     LayoutManager,
     OperationQueueManager,
     RenderManager,
+    SelectionManager,
     StatsManager,
     StyleManager,
     UpdateManager,
@@ -145,6 +167,11 @@ export {
 
 // GraphContext for custom node/edge implementations
 export type {GraphContext, GraphContextConfig} from "./src/managers/index";
+
+// =============================================================================
+// Operation Queue Types
+// =============================================================================
+export type {QueueableOptions, RunAlgorithmOptions} from "./src/utils/queue-migration";
 
 // =============================================================================
 // Constants
@@ -164,6 +191,9 @@ export type {
     ScreenshotResult,
 } from "./src/screenshot/types";
 
+// Capability check for screenshot support
+export type {CapabilityCheck} from "./src/screenshot/capability-check";
+
 // =============================================================================
 // Video capture exports
 // =============================================================================
@@ -173,6 +203,9 @@ export type {
     AnimationResult,
     CameraWaypoint,
 } from "./src/video/VideoCapture";
+
+// Video capture estimation
+export type {CaptureEstimate} from "./src/video/estimation";
 
 // Camera presets
 export {BUILTIN_PRESETS} from "./src/camera/presets";
@@ -225,6 +258,37 @@ export type {
     VercelProviderType,
 } from "./src/ai/providers";
 export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/providers";
+
+// AI Manager and Controller exports
+export type {AiControllerOptions, ExecutionResult} from "./src/ai/AiController";
+export {AiController} from "./src/ai/AiController";
+export type {AiManagerConfig, KeyPersistenceConfig} from "./src/ai/AiManager";
+export {AiManager} from "./src/ai/AiManager";
+
+// AI Status exports
+export type {
+    AiStage,
+    AiState,
+    AiStatus,
+    StatusChangeCallback,
+    ToolCallStatus,
+    ToolCallStatusType,
+} from "./src/ai/AiStatus";
+export {AiStatusManager} from "./src/ai/AiStatus";
+
+// AI Key Management exports
+export type {PersistenceConfig} from "./src/ai/keys";
+export {ApiKeyManager} from "./src/ai/keys";
+
+// AI Voice Input exports
+export type {InputAdapter, InputCallback, InputOptions} from "./src/ai/input";
+export {TextInputAdapter} from "./src/ai/input/TextInputAdapter";
+export type {VoiceStartCallback} from "./src/ai/input/VoiceInputAdapter";
+export {VoiceInputAdapter} from "./src/ai/input/VoiceInputAdapter";
+
+// AI Command exports
+export {CommandRegistry} from "./src/ai/commands/CommandRegistry";
+export type {CommandContext, CommandExample, CommandResult, GraphCommand} from "./src/ai/commands/types";
 
 // =============================================================================
 // Colorblind Simulation Utilities

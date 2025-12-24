@@ -2,7 +2,7 @@
 
 # Interface: SuggestedStyleLayerMetadata
 
-Defined in: [src/config/SuggestedStyles.ts:96](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L96)
+Defined in: [src/config/SuggestedStyles.ts:96](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L96)
 
 Metadata for a suggested style layer
 
@@ -22,7 +22,7 @@ const metadata: SuggestedStyleLayerMetadata = {
 
 > `optional` **description**: `string`
 
-Defined in: [src/config/SuggestedStyles.ts:100](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L100)
+Defined in: [src/config/SuggestedStyles.ts:100](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L100)
 
 Optional description of what this style visualizes
 
@@ -32,7 +32,7 @@ Optional description of what this style visualizes
 
 > **name**: `string`
 
-Defined in: [src/config/SuggestedStyles.ts:98](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L98)
+Defined in: [src/config/SuggestedStyles.ts:98](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L98)
 
 Human-readable name for this style layer
 
@@ -42,6 +42,6 @@ Human-readable name for this style layer
 
 > `optional` **priority**: `number`
 
-Defined in: [src/config/SuggestedStyles.ts:102](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L102)
+Defined in: [src/config/SuggestedStyles.ts:102](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L102)
 
 Priority for ordering when multiple algorithms suggest styles (higher = applied later)

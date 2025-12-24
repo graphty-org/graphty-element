@@ -2,7 +2,7 @@
 
 # Class: LifecycleManager
 
-Defined in: [src/managers/LifecycleManager.ts:16](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L16)
+Defined in: [src/managers/LifecycleManager.ts:16](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L16)
 
 Manages the lifecycle of all other managers
 Ensures proper initialization order and cleanup
@@ -17,7 +17,7 @@ Ensures proper initialization order and cleanup
 
 > **new LifecycleManager**(`managers`, `eventManager`, `initOrder`): `LifecycleManager`
 
-Defined in: [src/managers/LifecycleManager.ts:21](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L21)
+Defined in: [src/managers/LifecycleManager.ts:21](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L21)
 
 #### Parameters
 
@@ -43,7 +43,7 @@ Defined in: [src/managers/LifecycleManager.ts:21](https://github.com/graphty-org
 
 > **addManager**(`name`, `manager`, `position?`): `void`
 
-Defined in: [src/managers/LifecycleManager.ts:229](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L229)
+Defined in: [src/managers/LifecycleManager.ts:229](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L229)
 
 Add a new manager to the lifecycle
 TODO: This should only be done before init() is called
@@ -72,7 +72,7 @@ TODO: This should only be done before init() is called
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/LifecycleManager.ts:142](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L142)
+Defined in: [src/managers/LifecycleManager.ts:142](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L142)
 
 Dispose of all resources held by the manager
 
@@ -90,7 +90,7 @@ Dispose of all resources held by the manager
 
 > **getManager**(`name`): [`Manager`](../interfaces/Manager.md) \| `undefined`
 
-Defined in: [src/managers/LifecycleManager.ts:246](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L246)
+Defined in: [src/managers/LifecycleManager.ts:246](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L246)
 
 Get a manager by name
 
@@ -110,7 +110,7 @@ Get a manager by name
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/LifecycleManager.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L27)
+Defined in: [src/managers/LifecycleManager.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L27)
 
 Initialize the manager
 
@@ -128,7 +128,7 @@ Initialize the manager
 
 > **isInitialized**(): `boolean`
 
-Defined in: [src/managers/LifecycleManager.ts:221](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L221)
+Defined in: [src/managers/LifecycleManager.ts:221](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L221)
 
 Check if all managers are initialized
 
@@ -142,7 +142,7 @@ Check if all managers are initialized
 
 > **startGraph**(`updateCallback`): `void`
 
-Defined in: [src/managers/LifecycleManager.ts:114](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/LifecycleManager.ts#L114)
+Defined in: [src/managers/LifecycleManager.ts:114](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/LifecycleManager.ts#L114)
 
 Start the graph system after initialization
 This coordinates starting the render loop and other post-init setup

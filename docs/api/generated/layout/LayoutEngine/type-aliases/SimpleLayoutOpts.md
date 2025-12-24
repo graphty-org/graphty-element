@@ -4,4 +4,4 @@
 
 > **SimpleLayoutOpts** = `Partial`\<[`SimpleLayoutConfigType`](SimpleLayoutConfigType.md)\>
 
-Defined in: [src/layout/LayoutEngine.ts:151](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/layout/LayoutEngine.ts#L151)
+Defined in: [src/layout/LayoutEngine.ts:151](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L151)

@@ -2,7 +2,7 @@
 
 # Class: Edge
 
-Defined in: [src/Edge.ts:41](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L41)
+Defined in: [src/Edge.ts:41](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L41)
 
 ## Constructors
 
@@ -10,7 +10,7 @@ Defined in: [src/Edge.ts:41](https://github.com/graphty-org/graphty-element/blob
 
 > **new Edge**(`graph`, `srcNodeId`, `dstNodeId`, `styleId`, `data`, `opts`): `Edge`
 
-Defined in: [src/Edge.ts:85](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L85)
+Defined in: [src/Edge.ts:85](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L85)
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Defined in: [src/Edge.ts:85](https://github.com/graphty-org/graphty-element/blob
 
 > **algorithmResults**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/Edge.ts:50](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L50)
+Defined in: [src/Edge.ts:50](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L50)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/Edge.ts:50](https://github.com/graphty-org/graphty-element/blob
 
 > **arrowHeadText**: `RichTextLabel` \| `null` = `null`
 
-Defined in: [src/Edge.ts:59](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L59)
+Defined in: [src/Edge.ts:59](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L59)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/Edge.ts:59](https://github.com/graphty-org/graphty-element/blob
 
 > **arrowMesh**: `AbstractMesh` \| `null` = `null`
 
-Defined in: [src/Edge.ts:53](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L53)
+Defined in: [src/Edge.ts:53](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L53)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [src/Edge.ts:53](https://github.com/graphty-org/graphty-element/blob
 
 > **arrowTailMesh**: `AbstractMesh` \| `null` = `null`
 
-Defined in: [src/Edge.ts:54](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L54)
+Defined in: [src/Edge.ts:54](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L54)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [src/Edge.ts:54](https://github.com/graphty-org/graphty-element/blob
 
 > **arrowTailText**: `RichTextLabel` \| `null` = `null`
 
-Defined in: [src/Edge.ts:60](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L60)
+Defined in: [src/Edge.ts:60](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L60)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [src/Edge.ts:60](https://github.com/graphty-org/graphty-element/blob
 
 > **changeManager**: `ChangeManager`
 
-Defined in: [src/Edge.ts:65](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L65)
+Defined in: [src/Edge.ts:65](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L65)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [src/Edge.ts:65](https://github.com/graphty-org/graphty-element/blob
 
 > **data**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/Edge.ts:49](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L49)
+Defined in: [src/Edge.ts:49](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L49)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [src/Edge.ts:49](https://github.com/graphty-org/graphty-element/blob
 
 > **dstId**: [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
-Defined in: [src/Edge.ts:45](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L45)
+Defined in: [src/Edge.ts:45](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L45)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [src/Edge.ts:45](https://github.com/graphty-org/graphty-element/blob
 
 > **dstNode**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/Edge.ts:47](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L47)
+Defined in: [src/Edge.ts:47](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L47)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [src/Edge.ts:47](https://github.com/graphty-org/graphty-element/blob
 
 > **id**: `string`
 
-Defined in: [src/Edge.ts:46](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L46)
+Defined in: [src/Edge.ts:46](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L46)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [src/Edge.ts:46](https://github.com/graphty-org/graphty-element/blob
 
 > **label**: `RichTextLabel` \| `null` = `null`
 
-Defined in: [src/Edge.ts:58](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L58)
+Defined in: [src/Edge.ts:58](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L58)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [src/Edge.ts:58](https://github.com/graphty-org/graphty-element/blob
 
 > **mesh**: `AbstractMesh` \| `PatternedLineMesh`
 
-Defined in: [src/Edge.ts:52](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L52)
+Defined in: [src/Edge.ts:52](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L52)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [src/Edge.ts:52](https://github.com/graphty-org/graphty-element/blob
 
 > **opts**: `EdgeOpts`
 
-Defined in: [src/Edge.ts:43](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L43)
+Defined in: [src/Edge.ts:43](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L43)
 
 ***
 
@@ -152,7 +152,7 @@ Defined in: [src/Edge.ts:43](https://github.com/graphty-org/graphty-element/blob
 
 > **parentGraph**: [`GraphContext`](../../managers/interfaces/GraphContext.md) \| [`Graph`](../../Graph/classes/Graph.md)
 
-Defined in: [src/Edge.ts:42](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L42)
+Defined in: [src/Edge.ts:42](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L42)
 
 ***
 
@@ -160,7 +160,7 @@ Defined in: [src/Edge.ts:42](https://github.com/graphty-org/graphty-element/blob
 
 > **ray**: `Ray`
 
-Defined in: [src/Edge.ts:57](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L57)
+Defined in: [src/Edge.ts:57](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L57)
 
 ***
 
@@ -168,7 +168,7 @@ Defined in: [src/Edge.ts:57](https://github.com/graphty-org/graphty-element/blob
 
 > **srcId**: [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
-Defined in: [src/Edge.ts:44](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L44)
+Defined in: [src/Edge.ts:44](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L44)
 
 ***
 
@@ -176,7 +176,7 @@ Defined in: [src/Edge.ts:44](https://github.com/graphty-org/graphty-element/blob
 
 > **srcNode**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/Edge.ts:48](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L48)
+Defined in: [src/Edge.ts:48](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L48)
 
 ***
 
@@ -184,7 +184,7 @@ Defined in: [src/Edge.ts:48](https://github.com/graphty-org/graphty-element/blob
 
 > **styleId**: [`EdgeStyleId`](../../Styles/type-aliases/EdgeStyleId.md)
 
-Defined in: [src/Edge.ts:55](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L55)
+Defined in: [src/Edge.ts:55](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L55)
 
 ***
 
@@ -192,7 +192,7 @@ Defined in: [src/Edge.ts:55](https://github.com/graphty-org/graphty-element/blob
 
 > **styleUpdates**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/Edge.ts:51](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L51)
+Defined in: [src/Edge.ts:51](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L51)
 
 ## Methods
 
@@ -200,7 +200,7 @@ Defined in: [src/Edge.ts:51](https://github.com/graphty-org/graphty-element/blob
 
 > **addCalculatedStyle**(`cv`): `void`
 
-Defined in: [src/Edge.ts:218](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L218)
+Defined in: [src/Edge.ts:218](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L218)
 
 #### Parameters
 
@@ -218,7 +218,7 @@ Defined in: [src/Edge.ts:218](https://github.com/graphty-org/graphty-element/blo
 
 > **getInterceptPoints**(): `InterceptPoint`
 
-Defined in: [src/Edge.ts:799](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L799)
+Defined in: [src/Edge.ts:799](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L799)
 
 #### Returns
 
@@ -230,7 +230,7 @@ Defined in: [src/Edge.ts:799](https://github.com/graphty-org/graphty-element/blo
 
 > **transformArrowCap**(): `EdgeLine`
 
-Defined in: [src/Edge.ts:550](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L550)
+Defined in: [src/Edge.ts:550](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L550)
 
 #### Returns
 
@@ -242,7 +242,7 @@ Defined in: [src/Edge.ts:550](https://github.com/graphty-org/graphty-element/blo
 
 > **transformEdgeMesh**(`srcPoint`, `dstPoint`): `void`
 
-Defined in: [src/Edge.ts:532](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L532)
+Defined in: [src/Edge.ts:532](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L532)
 
 #### Parameters
 
@@ -264,7 +264,7 @@ Defined in: [src/Edge.ts:532](https://github.com/graphty-org/graphty-element/blo
 
 > **update**(): `void`
 
-Defined in: [src/Edge.ts:222](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L222)
+Defined in: [src/Edge.ts:222](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L222)
 
 #### Returns
 
@@ -276,7 +276,7 @@ Defined in: [src/Edge.ts:222](https://github.com/graphty-org/graphty-element/blo
 
 > `static` **updateRays**(`g`): `void`
 
-Defined in: [src/Edge.ts:497](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L497)
+Defined in: [src/Edge.ts:497](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L497)
 
 #### Parameters
 
@@ -294,7 +294,7 @@ Defined in: [src/Edge.ts:497](https://github.com/graphty-org/graphty-element/blo
 
 > **updateStyle**(`styleId`): `void`
 
-Defined in: [src/Edge.ts:336](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Edge.ts#L336)
+Defined in: [src/Edge.ts:336](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Edge.ts#L336)
 
 #### Parameters
 

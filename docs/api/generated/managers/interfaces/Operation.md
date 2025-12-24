@@ -2,7 +2,7 @@
 
 # Interface: Operation
 
-Defined in: [src/managers/OperationQueueManager.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L27)
+Defined in: [src/managers/OperationQueueManager.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L27)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/managers/OperationQueueManager.ts:27](https://github.com/grapht
 
 > `optional` **abortController**: `AbortController`
 
-Defined in: [src/managers/OperationQueueManager.ts:31](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L31)
+Defined in: [src/managers/OperationQueueManager.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L31)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/managers/OperationQueueManager.ts:31](https://github.com/grapht
 
 > **category**: [`OperationCategory`](../type-aliases/OperationCategory.md)
 
-Defined in: [src/managers/OperationQueueManager.ts:29](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L29)
+Defined in: [src/managers/OperationQueueManager.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L29)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/managers/OperationQueueManager.ts:29](https://github.com/grapht
 
 > **execute**: (`context`) => `void` \| `Promise`\<`void`\>
 
-Defined in: [src/managers/OperationQueueManager.ts:30](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L30)
+Defined in: [src/managers/OperationQueueManager.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L30)
 
 #### Parameters
 
@@ -44,7 +44,7 @@ Defined in: [src/managers/OperationQueueManager.ts:30](https://github.com/grapht
 
 > **id**: `string`
 
-Defined in: [src/managers/OperationQueueManager.ts:28](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L28)
+Defined in: [src/managers/OperationQueueManager.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L28)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [src/managers/OperationQueueManager.ts:28](https://github.com/grapht
 
 > `optional` **metadata**: `OperationMetadata`
 
-Defined in: [src/managers/OperationQueueManager.ts:32](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L32)
+Defined in: [src/managers/OperationQueueManager.ts:32](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L32)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/managers/OperationQueueManager.ts:32](https://github.com/grapht
 
 > `optional` **reject**: (`reason?`) => `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:34](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L34)
+Defined in: [src/managers/OperationQueueManager.ts:34](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L34)
 
 #### Parameters
 
@@ -78,7 +78,7 @@ Defined in: [src/managers/OperationQueueManager.ts:34](https://github.com/grapht
 
 > `optional` **resolve**: (`value`) => `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:33](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L33)
+Defined in: [src/managers/OperationQueueManager.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L33)
 
 #### Parameters
 

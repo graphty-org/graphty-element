@@ -132,7 +132,7 @@ export interface SelectionChangedEvent {
 }
 
 // node events
-export type NodeEvent = NodeGenericEvent | NodeAddEvent;
+export type NodeEvent = NodeGenericEvent | NodeAddEvent | NodeClickEvent | NodeHoverEvent | NodeDragStartEvent | NodeDragEndEvent;
 
 export interface NodeGenericEvent {
     type: "node-update-after" | "node-update-before";
@@ -145,8 +145,49 @@ export interface NodeAddEvent {
     metadata: object;
 }
 
+/**
+ * Emitted when a node is clicked.
+ * @since 1.5.0
+ */
+export interface NodeClickEvent {
+    type: "node-click";
+    node: Node;
+    data: Record<string, unknown>;
+    event: PointerEvent;
+}
+
+/**
+ * Emitted when the pointer enters a node (hover start).
+ * @since 1.5.0
+ */
+export interface NodeHoverEvent {
+    type: "node-hover";
+    node: Node;
+    data: Record<string, unknown>;
+}
+
+/**
+ * Emitted when a node drag operation starts.
+ * @since 1.5.0
+ */
+export interface NodeDragStartEvent {
+    type: "node-drag-start";
+    node: Node;
+    position: {x: number, y: number, z: number};
+}
+
+/**
+ * Emitted when a node drag operation ends.
+ * @since 1.5.0
+ */
+export interface NodeDragEndEvent {
+    type: "node-drag-end";
+    node: Node;
+    position: {x: number, y: number, z: number};
+}
+
 // edge events
-export type EdgeEvent = EdgeGenericEvent | EdgeAddEvent;
+export type EdgeEvent = EdgeGenericEvent | EdgeAddEvent | EdgeClickEvent;
 
 export interface EdgeGenericEvent {
     type: "edge-update-after" | "edge-update-before";
@@ -158,6 +199,17 @@ export interface EdgeAddEvent {
     srcNodeId: NodeIdType;
     dstNodeId: NodeIdType;
     metadata: object;
+}
+
+/**
+ * Emitted when an edge is clicked.
+ * @since 1.5.0
+ */
+export interface EdgeClickEvent {
+    type: "edge-click";
+    edge: Edge;
+    data: Record<string, unknown>;
+    event: PointerEvent;
 }
 
 // AI events (Phase 7)

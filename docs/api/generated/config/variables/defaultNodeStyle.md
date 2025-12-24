@@ -4,4 +4,4 @@
 
 > `const` **defaultNodeStyle**: [`NodeStyleConfig`](../type-aliases/NodeStyleConfig.md)
 
-Defined in: [src/config/NodeStyle.ts:68](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/NodeStyle.ts#L68)
+Defined in: [src/config/NodeStyle.ts:68](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/NodeStyle.ts#L68)

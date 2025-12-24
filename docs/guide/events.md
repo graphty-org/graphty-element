@@ -16,9 +16,11 @@ Graphty uses an event-driven architecture. Subscribe to events for user interact
 | `selection-changed` | Node selected/deselected | `{ node, previousNode }` |
 | `camera-state-changed` | Camera moved | `{ state }` |
 | `style-changed` | Styles updated | `{ layers }` |
-| `node-click` | User clicked node | `{ node, event }` |
-| `node-hover` | Mouse entered node | `{ node }` |
-| `edge-click` | User clicked edge | `{ edge, event }` |
+| `node-click` | User clicked node | `{ node, data, event }` |
+| `node-hover` | Mouse entered node | `{ node, data }` |
+| `node-drag-start` | Started dragging node | `{ node, position }` |
+| `node-drag-end` | Finished dragging node | `{ node, position }` |
+| `edge-click` | User clicked edge | `{ edge, data, event }` |
 | `error` | Error occurred | `{ error, context }` |
 
 ## JavaScript API
@@ -43,6 +45,15 @@ graph.on('node-click', ({ node }) => {
 // Node hover
 graph.on('node-hover', ({ node }) => {
   console.log('Hovering:', node.id);
+});
+
+// Node drag events
+graph.on('node-drag-start', ({ node, position }) => {
+  console.log('Started dragging:', node.id, 'at', position);
+});
+
+graph.on('node-drag-end', ({ node, position }) => {
+  console.log('Finished dragging:', node.id, 'at', position);
 });
 
 // Selection changed
@@ -145,6 +156,19 @@ graph.on('selection-changed', ({ node }) => {
   if (!node) {
     hideDetailsPanel();
   }
+});
+```
+
+### Track Node Dragging
+
+```typescript
+graph.on('node-drag-start', ({ node, position }) => {
+  console.log(`Started dragging ${node.id} at`, position);
+});
+
+graph.on('node-drag-end', ({ node, position }) => {
+  console.log(`Dropped ${node.id} at`, position);
+  // Save new position or trigger layout update
 });
 ```
 

@@ -2,7 +2,7 @@
 
 # Interface: XRModeConfig
 
-Defined in: [src/config/XRConfig.ts:43](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L43)
+Defined in: [src/config/XRConfig.ts:43](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L43)
 
 Configuration for VR or AR mode
 
@@ -12,7 +12,7 @@ Configuration for VR or AR mode
 
 > **enabled**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:48](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L48)
+Defined in: [src/config/XRConfig.ts:48](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L48)
 
 Enable this XR mode
 
@@ -28,7 +28,7 @@ true
 
 > `optional` **optionalFeatures**: `string`[]
 
-Defined in: [src/config/XRConfig.ts:61](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L61)
+Defined in: [src/config/XRConfig.ts:61](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L61)
 
 Optional WebXR features to request
 
@@ -50,7 +50,7 @@ Optional WebXR features to request
 
 > **referenceSpaceType**: `XRReferenceSpaceType`
 
-Defined in: [src/config/XRConfig.ts:54](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L54)
+Defined in: [src/config/XRConfig.ts:54](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L54)
 
 Reference space type for WebXR session
 

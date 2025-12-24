@@ -2,7 +2,7 @@
 
 # Class: Styles
 
-Defined in: [src/Styles.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L27)
+Defined in: [src/Styles.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L27)
 
 ## Constructors
 
@@ -10,7 +10,7 @@ Defined in: [src/Styles.ts:27](https://github.com/graphty-org/graphty-element/bl
 
 > **new Styles**(`config`): `Styles`
 
-Defined in: [src/Styles.ts:37](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L37)
+Defined in: [src/Styles.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L37)
 
 #### Parameters
 
@@ -200,7 +200,7 @@ View mode controls how the graph is rendered and displayed.
 
 > `readonly` **config**: `object`
 
-Defined in: [src/Styles.ts:28](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L28)
+Defined in: [src/Styles.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L28)
 
 #### behavior
 
@@ -388,7 +388,7 @@ View mode controls how the graph is rendered and displayed.
 
 > **get** **layers**(): readonly `object`[]
 
-Defined in: [src/Styles.ts:33](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L33)
+Defined in: [src/Styles.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L33)
 
 ##### Returns
 
@@ -400,7 +400,7 @@ readonly `object`[]
 
 > **addLayer**(`layer`): `void`
 
-Defined in: [src/Styles.ts:93](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L93)
+Defined in: [src/Styles.ts:93](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L93)
 
 #### Parameters
 
@@ -2084,7 +2084,7 @@ Defined in: [src/Styles.ts:93](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **default**(): `Styles`
 
-Defined in: [src/Styles.ts:86](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L86)
+Defined in: [src/Styles.ts:86](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L86)
 
 #### Returns
 
@@ -2096,7 +2096,7 @@ Defined in: [src/Styles.ts:86](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromJson**(`json`): `Styles`
 
-Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L57)
+Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L57)
 
 #### Parameters
 
@@ -2114,7 +2114,7 @@ Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromObject**(`obj`): `Styles`
 
-Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L62)
+Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L62)
 
 #### Parameters
 
@@ -2132,7 +2132,7 @@ Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromUrl**(`url`): `Promise`\<`Styles`\>
 
-Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L75)
+Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L75)
 
 #### Parameters
 
@@ -2150,7 +2150,7 @@ Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/bl
 
 > **getCalculatedStylesForEdge**(`data`): `CalculatedValue`[]
 
-Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L153)
+Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L153)
 
 #### Parameters
 
@@ -2168,7 +2168,7 @@ Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/b
 
 > **getCalculatedStylesForNode**(`data`): `CalculatedValue`[]
 
-Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L136)
+Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L136)
 
 #### Parameters
 
@@ -2186,7 +2186,7 @@ Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getEdgeIdForStyle**(`style`): [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
-Defined in: [src/Styles.ts:231](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L231)
+Defined in: [src/Styles.ts:231](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L231)
 
 #### Parameters
 
@@ -3250,7 +3250,7 @@ Defined in: [src/Styles.ts:231](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getNodeIdForStyle**(`style`): [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
-Defined in: [src/Styles.ts:227](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L227)
+Defined in: [src/Styles.ts:227](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L227)
 
 #### Parameters
 
@@ -3822,7 +3822,7 @@ Defined in: [src/Styles.ts:227](https://github.com/graphty-org/graphty-element/b
 
 > **getStyleForEdge**(`data`, `algorithmResults?`): [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
-Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L178)
+Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L178)
 
 #### Parameters
 
@@ -3844,7 +3844,7 @@ Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getStyleForEdgeStyleId**(`id`): `object`
 
-Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L218)
+Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L218)
 
 #### Parameters
 
@@ -4910,7 +4910,7 @@ Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/b
 
 > **getStyleForNode**(`data`, `algorithmResults?`): [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
-Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L111)
+Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L111)
 
 #### Parameters
 
@@ -4932,7 +4932,7 @@ Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getStyleForNodeStyleId**(`id`): `object`
 
-Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L209)
+Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L209)
 
 #### Parameters
 
@@ -5506,7 +5506,7 @@ Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/b
 
 > **insertLayer**(`position`, `layer`): `void`
 
-Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L99)
+Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L99)
 
 #### Parameters
 
@@ -7194,7 +7194,7 @@ Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/bl
 
 > **removeLayersByMetadata**(`predicate`): `boolean`
 
-Defined in: [src/Styles.ts:105](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/Styles.ts#L105)
+Defined in: [src/Styles.ts:105](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L105)
 
 #### Parameters
 

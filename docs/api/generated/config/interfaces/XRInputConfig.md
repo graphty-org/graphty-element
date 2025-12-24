@@ -2,7 +2,7 @@
 
 # Interface: XRInputConfig
 
-Defined in: [src/config/XRConfig.ts:67](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L67)
+Defined in: [src/config/XRConfig.ts:67](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L67)
 
 Configuration for XR input handling
 
@@ -12,7 +12,7 @@ Configuration for XR input handling
 
 > **controllers**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:78](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L78)
+Defined in: [src/config/XRConfig.ts:78](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L78)
 
 Enable controller input
 
@@ -28,7 +28,7 @@ true
 
 > `optional` **enableZAmplificationInDesktop**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:103](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L103)
+Defined in: [src/config/XRConfig.ts:103](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L103)
 
 Enable Z-axis amplification in desktop mode
 
@@ -44,7 +44,7 @@ false
 
 > **handTracking**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:72](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L72)
+Defined in: [src/config/XRConfig.ts:72](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L72)
 
 Enable hand tracking
 
@@ -60,7 +60,7 @@ true
 
 > **nearInteraction**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:84](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L84)
+Defined in: [src/config/XRConfig.ts:84](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L84)
 
 Enable near interaction (touching objects with hands)
 
@@ -76,7 +76,7 @@ true
 
 > **physics**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:90](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L90)
+Defined in: [src/config/XRConfig.ts:90](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L90)
 
 Enable physics for hand joints
 
@@ -92,7 +92,7 @@ false
 
 > `optional` **zAxisAmplification**: `number`
 
-Defined in: [src/config/XRConfig.ts:97](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/XRConfig.ts#L97)
+Defined in: [src/config/XRConfig.ts:97](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L97)
 
 Z-axis movement amplification factor in XR mode
 Multiplies Z-axis delta to make depth manipulation more practical

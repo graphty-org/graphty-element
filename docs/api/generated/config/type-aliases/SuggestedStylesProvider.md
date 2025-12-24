@@ -4,7 +4,7 @@
 
 > **SuggestedStylesProvider** = () => [`SuggestedStylesConfig`](../interfaces/SuggestedStylesConfig.md)
 
-Defined in: [src/config/SuggestedStyles.ts:132](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/config/SuggestedStyles.ts#L132)
+Defined in: [src/config/SuggestedStyles.ts:132](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L132)
 
 Type for algorithm static method that provides suggested styles
 

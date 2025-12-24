@@ -2,7 +2,7 @@
 
 # Abstract Class: DataSource
 
-Defined in: [src/data/DataSource.ts:23](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L23)
+Defined in: [src/data/DataSource.ts:23](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L23)
 
 ## Constructors
 
@@ -10,7 +10,7 @@ Defined in: [src/data/DataSource.ts:23](https://github.com/graphty-org/graphty-e
 
 > **new DataSource**(`errorLimit`, `chunkSize`): `DataSource`
 
-Defined in: [src/data/DataSource.ts:32](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L32)
+Defined in: [src/data/DataSource.ts:32](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L32)
 
 #### Parameters
 
@@ -32,7 +32,7 @@ Defined in: [src/data/DataSource.ts:32](https://github.com/graphty-org/graphty-e
 
 > `readonly` `static` **DEFAULT\_CHUNK\_SIZE**: `1000` = `1000`
 
-Defined in: [src/data/DataSource.ts:25](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L25)
+Defined in: [src/data/DataSource.ts:25](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L25)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/data/DataSource.ts:25](https://github.com/graphty-org/graphty-e
 
 > **edgeSchema**: `$ZodObject`\<`Readonly`\<`Readonly`\<\{\[`k`: `string`\]: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>; \}\>\>, `$ZodObjectConfig`\> \| `null` = `null`
 
-Defined in: [src/data/DataSource.ts:27](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L27)
+Defined in: [src/data/DataSource.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L27)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/data/DataSource.ts:27](https://github.com/graphty-org/graphty-e
 
 > **nodeSchema**: `$ZodObject`\<`Readonly`\<`Readonly`\<\{\[`k`: `string`\]: `$ZodType`\<`unknown`, `unknown`, `$ZodTypeInternals`\<`unknown`, `unknown`\>\>; \}\>\>, `$ZodObjectConfig`\> \| `null` = `null`
 
-Defined in: [src/data/DataSource.ts:28](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L28)
+Defined in: [src/data/DataSource.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L28)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/data/DataSource.ts:28](https://github.com/graphty-org/graphty-e
 
 > `readonly` `static` **type**: `string`
 
-Defined in: [src/data/DataSource.ts:24](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L24)
+Defined in: [src/data/DataSource.ts:24](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L24)
 
 ## Accessors
 
@@ -66,7 +66,7 @@ Defined in: [src/data/DataSource.ts:24](https://github.com/graphty-org/graphty-e
 
 > **get** **type**(): `string`
 
-Defined in: [src/data/DataSource.ts:248](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L248)
+Defined in: [src/data/DataSource.ts:248](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L248)
 
 ##### Returns
 
@@ -78,7 +78,7 @@ Defined in: [src/data/DataSource.ts:248](https://github.com/graphty-org/graphty-
 
 > **dataValidator**(`schema`, `obj`): `Promise`\<`boolean`\>
 
-Defined in: [src/data/DataSource.ts:231](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L231)
+Defined in: [src/data/DataSource.ts:231](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L231)
 
 Validate data against schema
 Returns false if validation fails (and adds error to aggregator)
@@ -104,7 +104,7 @@ Returns true if validation succeeds
 
 > `static` **get**(`type`, `opts`): `DataSource` \| `null`
 
-Defined in: [src/data/DataSource.ts:259](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L259)
+Defined in: [src/data/DataSource.ts:259](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L259)
 
 #### Parameters
 
@@ -126,7 +126,7 @@ Defined in: [src/data/DataSource.ts:259](https://github.com/graphty-org/graphty-
 
 > **getData**(): `AsyncGenerator`\<[`DataSourceChunk`](../interfaces/DataSourceChunk.md), `void`, `unknown`\>
 
-Defined in: [src/data/DataSource.ts:185](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L185)
+Defined in: [src/data/DataSource.ts:185](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L185)
 
 #### Returns
 
@@ -138,7 +138,7 @@ Defined in: [src/data/DataSource.ts:185](https://github.com/graphty-org/graphty-
 
 > **getErrorAggregator**(): `ErrorAggregator`
 
-Defined in: [src/data/DataSource.ts:181](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L181)
+Defined in: [src/data/DataSource.ts:181](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L181)
 
 Get the error aggregator for this data source
 
@@ -148,11 +148,39 @@ Get the error aggregator for this data source
 
 ***
 
+### getRegisteredTypes()
+
+> `static` **getRegisteredTypes**(): `string`[]
+
+Defined in: [src/data/DataSource.ts:281](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L281)
+
+Get all registered data source types.
+
+#### Returns
+
+`string`[]
+
+Array of registered data source type names
+
+#### Since
+
+1.5.0
+
+#### Example
+
+```typescript
+const types = DataSource.getRegisteredTypes();
+console.log('Available data sources:', types);
+// ['csv', 'gexf', 'gml', 'graphml', 'json', 'pajek']
+```
+
+***
+
 ### register()
 
 > `static` **register**\<`T`\>(`cls`): `T`
 
-Defined in: [src/data/DataSource.ts:252](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L252)
+Defined in: [src/data/DataSource.ts:252](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L252)
 
 #### Type Parameters
 
@@ -176,7 +204,7 @@ Defined in: [src/data/DataSource.ts:252](https://github.com/graphty-org/graphty-
 
 > `abstract` **sourceFetchData**(): `AsyncGenerator`\<[`DataSourceChunk`](../interfaces/DataSourceChunk.md), `void`, `unknown`\>
 
-Defined in: [src/data/DataSource.ts:38](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/data/DataSource.ts#L38)
+Defined in: [src/data/DataSource.ts:38](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/data/DataSource.ts#L38)
 
 #### Returns
 

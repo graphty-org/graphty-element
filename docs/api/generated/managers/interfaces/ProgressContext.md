@@ -2,7 +2,7 @@
 
 # Interface: ProgressContext
 
-Defined in: [src/managers/OperationQueueManager.ts:15](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L15)
+Defined in: [src/managers/OperationQueueManager.ts:15](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L15)
 
 ## Methods
 
@@ -10,7 +10,7 @@ Defined in: [src/managers/OperationQueueManager.ts:15](https://github.com/grapht
 
 > **setMessage**(`message`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:17](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L17)
+Defined in: [src/managers/OperationQueueManager.ts:17](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L17)
 
 #### Parameters
 
@@ -28,7 +28,7 @@ Defined in: [src/managers/OperationQueueManager.ts:17](https://github.com/grapht
 
 > **setPhase**(`phase`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:18](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L18)
+Defined in: [src/managers/OperationQueueManager.ts:18](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L18)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [src/managers/OperationQueueManager.ts:18](https://github.com/grapht
 
 > **setProgress**(`percent`): `void`
 
-Defined in: [src/managers/OperationQueueManager.ts:16](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/OperationQueueManager.ts#L16)
+Defined in: [src/managers/OperationQueueManager.ts:16](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/OperationQueueManager.ts#L16)
 
 #### Parameters
 

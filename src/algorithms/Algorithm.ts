@@ -331,4 +331,22 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
         return algorithms.sort();
     }
+
+    /**
+     * Get all registered algorithm types.
+     * This method is provided for API consistency with DataSource.
+     *
+     * @returns Array of algorithm keys in "namespace:type" format
+     * @since 1.5.0
+     *
+     * @example
+     * ```typescript
+     * const types = Algorithm.getRegisteredTypes();
+     * console.log('Available algorithms:', types);
+     * // ['graphty:betweenness', 'graphty:closeness', 'graphty:degree', ...]
+     * ```
+     */
+    static getRegisteredTypes(): string[] {
+        return this.getRegisteredAlgorithms();
+    }
 }

@@ -2,7 +2,7 @@
 
 # Class: EventManager
 
-Defined in: [src/managers/EventManager.ts:29](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L29)
+Defined in: [src/managers/EventManager.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L29)
 
 Centralized event management for the Graph system
 Handles all graph, node, and edge events with type safety
@@ -27,13 +27,13 @@ Handles all graph, node, and edge events with type safety
 
 #### Get Signature
 
-> **get** **onGraphError**(): `Observable`\<`GraphErrorEvent`\>
+> **get** **onGraphError**(): `Observable`\<[`GraphErrorEvent`](../../events/interfaces/GraphErrorEvent.md)\>
 
-Defined in: [src/managers/EventManager.ts:40](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L40)
+Defined in: [src/managers/EventManager.ts:40](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L40)
 
 ##### Returns
 
-`Observable`\<`GraphErrorEvent`\>
+`Observable`\<[`GraphErrorEvent`](../../events/interfaces/GraphErrorEvent.md)\>
 
 ***
 
@@ -41,13 +41,13 @@ Defined in: [src/managers/EventManager.ts:40](https://github.com/graphty-org/gra
 
 #### Get Signature
 
-> **get** **onGraphEvent**(): `Observable`\<`GraphEvent`\>
+> **get** **onGraphEvent**(): `Observable`\<[`GraphEvent`](../../events/type-aliases/GraphEvent.md)\>
 
-Defined in: [src/managers/EventManager.ts:36](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L36)
+Defined in: [src/managers/EventManager.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L36)
 
 ##### Returns
 
-`Observable`\<`GraphEvent`\>
+`Observable`\<[`GraphEvent`](../../events/type-aliases/GraphEvent.md)\>
 
 ## Methods
 
@@ -55,7 +55,7 @@ Defined in: [src/managers/EventManager.ts:36](https://github.com/graphty-org/gra
 
 > **addListener**(`type`, `callback`): `symbol`
 
-Defined in: [src/managers/EventManager.ts:274](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L274)
+Defined in: [src/managers/EventManager.ts:274](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L274)
 
 Add a listener for a specific event type
 Returns a symbol that can be used to remove the listener
@@ -64,11 +64,11 @@ Returns a symbol that can be used to remove the listener
 
 ##### type
 
-`EventType`
+[`EventType`](../../events/type-aliases/EventType.md)
 
 ##### callback
 
-`EventCallbackType`
+[`EventCallbackType`](../../events/type-aliases/EventCallbackType.md)
 
 #### Returns
 
@@ -80,7 +80,7 @@ Returns a symbol that can be used to remove the listener
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/EventManager.ts:63](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L63)
+Defined in: [src/managers/EventManager.ts:63](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L63)
 
 Dispose of all resources held by the manager
 
@@ -98,7 +98,7 @@ Dispose of all resources held by the manager
 
 > **emitDataAdded**(`dataType`, `count`, `shouldStartLayout`, `shouldZoomToFit`): `void`
 
-Defined in: [src/managers/EventManager.ts:118](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L118)
+Defined in: [src/managers/EventManager.ts:118](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L118)
 
 #### Parameters
 
@@ -128,7 +128,7 @@ Defined in: [src/managers/EventManager.ts:118](https://github.com/graphty-org/gr
 
 > **emitDataLoadingComplete**(`format`, `nodesLoaded`, `edgesLoaded`, `duration`, `errors`, `warnings`, `success`): `void`
 
-Defined in: [src/managers/EventManager.ts:216](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L216)
+Defined in: [src/managers/EventManager.ts:216](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L216)
 
 #### Parameters
 
@@ -170,7 +170,7 @@ Defined in: [src/managers/EventManager.ts:216](https://github.com/graphty-org/gr
 
 > **emitDataLoadingError**(`error`, `context`, `format`, `details`): `void`
 
-Defined in: [src/managers/EventManager.ts:175](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L175)
+Defined in: [src/managers/EventManager.ts:175](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L175)
 
 #### Parameters
 
@@ -214,7 +214,7 @@ Defined in: [src/managers/EventManager.ts:175](https://github.com/graphty-org/gr
 
 > **emitDataLoadingErrorSummary**(`format`, `totalErrors`, `message`, `detailedReport`, `primaryCategory?`, `suggestion?`): `void`
 
-Defined in: [src/managers/EventManager.ts:196](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L196)
+Defined in: [src/managers/EventManager.ts:196](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L196)
 
 #### Parameters
 
@@ -252,7 +252,7 @@ Defined in: [src/managers/EventManager.ts:196](https://github.com/graphty-org/gr
 
 > **emitDataLoadingProgress**(`format`, `bytesProcessed`, `totalBytes`, `nodesLoaded`, `edgesLoaded`, `chunksProcessed`): `void`
 
-Defined in: [src/managers/EventManager.ts:154](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L154)
+Defined in: [src/managers/EventManager.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L154)
 
 #### Parameters
 
@@ -290,17 +290,17 @@ Defined in: [src/managers/EventManager.ts:154](https://github.com/graphty-org/gr
 
 > **emitEdgeEvent**(`type`, `eventData`): `void`
 
-Defined in: [src/managers/EventManager.ts:263](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L263)
+Defined in: [src/managers/EventManager.ts:263](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L263)
 
 #### Parameters
 
 ##### type
 
-`"edge-update-after"` | `"edge-update-before"` | `"edge-add-before"`
+`"edge-update-after"` | `"edge-update-before"` | `"edge-add-before"` | `"edge-click"`
 
 ##### eventData
 
-`Omit`\<`EdgeEvent`, `"type"`\>
+`Omit`\<[`EdgeEvent`](../../events/type-aliases/EdgeEvent.md), `"type"`\>
 
 #### Returns
 
@@ -312,7 +312,7 @@ Defined in: [src/managers/EventManager.ts:263](https://github.com/graphty-org/gr
 
 > **emitGraphDataLoaded**(`graph`, `chunksLoaded`, `dataSourceType`): `void`
 
-Defined in: [src/managers/EventManager.ts:102](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L102)
+Defined in: [src/managers/EventManager.ts:102](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L102)
 
 #### Parameters
 
@@ -338,7 +338,7 @@ Defined in: [src/managers/EventManager.ts:102](https://github.com/graphty-org/gr
 
 > **emitGraphError**(`graph`, `error`, `context`, `details?`): `void`
 
-Defined in: [src/managers/EventManager.ts:86](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L86)
+Defined in: [src/managers/EventManager.ts:86](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L86)
 
 #### Parameters
 
@@ -368,7 +368,7 @@ Defined in: [src/managers/EventManager.ts:86](https://github.com/graphty-org/gra
 
 > **emitGraphEvent**(`type`, `data`): `void`
 
-Defined in: [src/managers/EventManager.ts:147](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L147)
+Defined in: [src/managers/EventManager.ts:147](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L147)
 
 #### Parameters
 
@@ -390,7 +390,7 @@ Defined in: [src/managers/EventManager.ts:147](https://github.com/graphty-org/gr
 
 > **emitGraphSettled**(`graph`): `void`
 
-Defined in: [src/managers/EventManager.ts:78](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L78)
+Defined in: [src/managers/EventManager.ts:78](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L78)
 
 #### Parameters
 
@@ -408,7 +408,7 @@ Defined in: [src/managers/EventManager.ts:78](https://github.com/graphty-org/gra
 
 > **emitLayoutInitialized**(`layoutType`, `shouldZoomToFit`): `void`
 
-Defined in: [src/managers/EventManager.ts:134](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L134)
+Defined in: [src/managers/EventManager.ts:134](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L134)
 
 #### Parameters
 
@@ -430,17 +430,17 @@ Defined in: [src/managers/EventManager.ts:134](https://github.com/graphty-org/gr
 
 > **emitNodeEvent**(`type`, `eventData`): `void`
 
-Defined in: [src/managers/EventManager.ts:256](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L256)
+Defined in: [src/managers/EventManager.ts:256](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L256)
 
 #### Parameters
 
 ##### type
 
-`"node-update-after"` | `"node-update-before"` | `"node-add-before"`
+`"node-update-after"` | `"node-update-before"` | `"node-add-before"` | `"node-click"` | `"node-hover"` | `"node-drag-start"` | `"node-drag-end"`
 
 ##### eventData
 
-`Omit`\<`NodeEvent`, `"type"`\>
+`Omit`\<[`NodeEvent`](../../events/type-aliases/NodeEvent.md), `"type"`\>
 
 #### Returns
 
@@ -452,7 +452,7 @@ Defined in: [src/managers/EventManager.ts:256](https://github.com/graphty-org/gr
 
 > **emitSelectionChanged**(`previousNode`, `currentNode`): `void`
 
-Defined in: [src/managers/EventManager.ts:240](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L240)
+Defined in: [src/managers/EventManager.ts:240](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L240)
 
 #### Parameters
 
@@ -474,7 +474,7 @@ Defined in: [src/managers/EventManager.ts:240](https://github.com/graphty-org/gr
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/EventManager.ts:58](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L58)
+Defined in: [src/managers/EventManager.ts:58](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L58)
 
 Initialize the manager
 
@@ -492,7 +492,7 @@ Initialize the manager
 
 > **listenerCount**(): `number`
 
-Defined in: [src/managers/EventManager.ts:371](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L371)
+Defined in: [src/managers/EventManager.ts:371](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L371)
 
 Get the total number of registered listeners
 
@@ -506,7 +506,7 @@ Get the total number of registered listeners
 
 > **once**(`type`, `callback`): `symbol`
 
-Defined in: [src/managers/EventManager.ts:378](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L378)
+Defined in: [src/managers/EventManager.ts:378](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L378)
 
 Add a one-time listener that automatically removes itself after firing
 
@@ -514,11 +514,11 @@ Add a one-time listener that automatically removes itself after firing
 
 ##### type
 
-`EventType`
+[`EventType`](../../events/type-aliases/EventType.md)
 
 ##### callback
 
-`EventCallbackType`
+[`EventCallbackType`](../../events/type-aliases/EventCallbackType.md)
 
 #### Returns
 
@@ -530,7 +530,7 @@ Add a one-time listener that automatically removes itself after firing
 
 > **removeListener**(`id`): `boolean`
 
-Defined in: [src/managers/EventManager.ts:357](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L357)
+Defined in: [src/managers/EventManager.ts:357](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L357)
 
 Remove a listener by its ID
 
@@ -548,9 +548,9 @@ Remove a listener by its ID
 
 ### waitFor()
 
-> **waitFor**(`type`, `timeout?`): `Promise`\<`GraphEvent` \| `NodeEvent` \| `EdgeEvent` \| `AiEvent`\>
+> **waitFor**(`type`, `timeout?`): `Promise`\<[`NodeEvent`](../../events/type-aliases/NodeEvent.md) \| [`GraphEvent`](../../events/type-aliases/GraphEvent.md) \| [`EdgeEvent`](../../events/type-aliases/EdgeEvent.md) \| [`AiEvent`](../../events/type-aliases/AiEvent.md)\>
 
-Defined in: [src/managers/EventManager.ts:390](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L390)
+Defined in: [src/managers/EventManager.ts:390](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L390)
 
 Wait for a specific event to occur
 Returns a promise that resolves with the event
@@ -559,7 +559,7 @@ Returns a promise that resolves with the event
 
 ##### type
 
-`EventType`
+[`EventType`](../../events/type-aliases/EventType.md)
 
 ##### timeout?
 
@@ -567,7 +567,7 @@ Returns a promise that resolves with the event
 
 #### Returns
 
-`Promise`\<`GraphEvent` \| `NodeEvent` \| `EdgeEvent` \| `AiEvent`\>
+`Promise`\<[`NodeEvent`](../../events/type-aliases/NodeEvent.md) \| [`GraphEvent`](../../events/type-aliases/GraphEvent.md) \| [`EdgeEvent`](../../events/type-aliases/EdgeEvent.md) \| [`AiEvent`](../../events/type-aliases/AiEvent.md)\>
 
 ***
 
@@ -575,7 +575,7 @@ Returns a promise that resolves with the event
 
 > **withRetry**\<`T`\>(`operation`, `context`, `graph`, `details?`): `Promise`\<`T`\>
 
-Defined in: [src/managers/EventManager.ts:413](https://github.com/graphty-org/graphty-element/blob/c034ecab4c84a40f5a8a7d05e28d58c492b693ae/src/managers/EventManager.ts#L413)
+Defined in: [src/managers/EventManager.ts:413](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/EventManager.ts#L413)
 
 Execute an async operation with automatic retry on failure
 Emits error events for each failure
