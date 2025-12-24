@@ -140,7 +140,9 @@ export default defineConfig({
                     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
                     storybookTest({
                         configDir: path.join(dirname, ".storybook"),
-                        storybookUrl: "http://dev.ato.ms:9026",
+                        // Use STORYBOOK_URL env var for flexibility across worktrees and CI
+                        // Default to localhost:9026 for CI compatibility
+                        storybookUrl: process.env.STORYBOOK_URL || "http://localhost:9026",
                     }),
                 ],
                 resolve: {
