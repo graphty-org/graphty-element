@@ -51,7 +51,8 @@ jobs:
           path: storybook-static/
           retention-days: 1
 
-  # Sharded test jobs - run in parallel
+  # Sharded test jobs - run in parallel, collect coverage
+  # Target: each shard completes in ~2 minutes or less
   test:
     name: Test (${{ matrix.shard }})
     needs: build
@@ -59,16 +60,67 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [default, browser, storybook, visual]
+        shard:
+          - default
+          - browser-1
+          - browser-2
+          - browser-3
+          - browser-4
+          - browser-5
+          - storybook-1
+          - storybook-2
+          - storybook-3
+          - storybook-4
+          - visual
         include:
+          # Default tests (Node.js, no browser needed)
           - shard: default
-            test-command: npx vitest run --project=default
-          - shard: browser
-            test-command: npx vitest run --project=browser --project=interactions
-          - shard: storybook
-            test-command: npx vitest run --project=storybook
+            test-command: vitest run --project=default --reporter=blob --coverage
+            needs-browser: false
+            needs-storybook: false
+          # Browser tests split into 5 shards (~2 min each)
+          - shard: browser-1
+            test-command: vitest run --project=browser --project=interactions --shard=1/5 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: false
+          - shard: browser-2
+            test-command: vitest run --project=browser --project=interactions --shard=2/5 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: false
+          - shard: browser-3
+            test-command: vitest run --project=browser --project=interactions --shard=3/5 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: false
+          - shard: browser-4
+            test-command: vitest run --project=browser --project=interactions --shard=4/5 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: false
+          - shard: browser-5
+            test-command: vitest run --project=browser --project=interactions --shard=5/5 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: false
+          # Storybook tests split into 4 shards (~2 min each)
+          - shard: storybook-1
+            test-command: vitest run --project=storybook --shard=1/4 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: true
+          - shard: storybook-2
+            test-command: vitest run --project=storybook --shard=2/4 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: true
+          - shard: storybook-3
+            test-command: vitest run --project=storybook --shard=3/4 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: true
+          - shard: storybook-4
+            test-command: vitest run --project=storybook --shard=4/4 --reporter=blob --coverage
+            needs-browser: true
+            needs-storybook: true
+          # Visual regression (Chromatic)
           - shard: visual
             test-command: npx chromatic
+            needs-browser: false
+            needs-storybook: true
 
     steps:
       - name: Checkout code
@@ -94,18 +146,26 @@ jobs:
           path: dist/
 
       - name: Download Storybook artifacts
-        if: matrix.shard == 'storybook' || matrix.shard == 'visual'
+        if: matrix.needs-storybook
         uses: actions/download-artifact@v4
         with:
           name: storybook-static
           path: storybook-static/
 
+      - name: Cache Playwright browsers
+        if: matrix.needs-browser
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browsers
-        if: matrix.shard != 'default'
+        if: matrix.needs-browser && steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium
 
       - name: Start Storybook server
-        if: matrix.shard == 'storybook'
+        if: matrix.needs-storybook && matrix.shard != 'visual'
         run: |
           npx http-server storybook-static -p 9026 &
           sleep 3
@@ -114,6 +174,14 @@ jobs:
         run: ${{ matrix.test-command }}
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+      - name: Upload blob reports for coverage merge
+        if: matrix.shard != 'visual'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: .vitest-reports/
+          retention-days: 1
 
   # Aggregate test results - gate for downstream jobs
   test-complete:
@@ -132,10 +200,10 @@ jobs:
             echo "should-release=false" >> $GITHUB_OUTPUT
           fi
 
-  # Coverage job - runs on master only, after all tests pass
+  # Coverage job - merges coverage from test shards and publishes
   coverage:
-    name: Generate and Publish Coverage
-    needs: test-complete
+    name: Merge and Publish Coverage
+    needs: test
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
@@ -153,28 +221,15 @@ jobs:
         env:
           HUSKY: 0
 
-      - name: Download build artifacts
+      - name: Download all blob reports
         uses: actions/download-artifact@v4
         with:
-          name: build-dist
-          path: dist/
+          pattern: blob-report-*
+          path: .vitest-reports
+          merge-multiple: true
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium
-
-      - name: Download Storybook artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: storybook-static
-          path: storybook-static/
-
-      - name: Start Storybook server
-        run: |
-          npx http-server storybook-static -p 9026 &
-          sleep 3
-
-      - name: Generate coverage
-        run: npm run coverage
+      - name: Merge coverage reports
+        run: npx vitest --merge-reports --coverage.reporter=lcov --coverage.reporter=json-summary
 
       - name: Publish to Coveralls
         uses: coverallsapp/github-action@v2
