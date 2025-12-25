@@ -175,13 +175,21 @@ jobs:
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
-      - name: Upload blob reports for coverage merge
+      - name: Upload blob reports for test merge
         if: ${{ !cancelled() && matrix.shard != 'visual' }}
         uses: actions/upload-artifact@v4
         with:
           name: blob-report-${{ matrix.shard }}
           path: .vitest-reports/*
           include-hidden-files: true
+          retention-days: 1
+
+      - name: Upload coverage report
+        if: ${{ !cancelled() && matrix.shard != 'visual' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.shard }}
+          path: coverage/lcov.info
           retention-days: 1
 
   # Aggregate test results - gate for downstream jobs
@@ -229,13 +237,27 @@ jobs:
           path: .vitest-reports
           merge-multiple: true
 
+      - name: Merge test reports
+        run: npx vitest --merge-reports
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports
+
       - name: Merge coverage reports
-        run: npx vitest --merge-reports --coverage.reporter=lcov --coverage.reporter=json-summary
+        run: |
+          mkdir -p coverage
+          # Concatenate all lcov.info files into one
+          find coverage-reports -name 'lcov.info' -exec cat {} + > coverage/lcov.info
+          echo "Merged coverage file size: $(wc -l < coverage/lcov.info) lines"
 
       - name: Publish to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage/lcov.info
 
   # Deploy Storybook to GitHub Pages
   storybook:
