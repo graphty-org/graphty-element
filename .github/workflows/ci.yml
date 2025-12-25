@@ -75,45 +75,45 @@ jobs:
         include:
           # Default tests (Node.js, no browser needed)
           - shard: default
-            test-command: vitest run --project=default --reporter=blob --coverage
+            test-command: npx vitest run --project=default --reporter=blob --coverage
             needs-browser: false
             needs-storybook: false
           # Browser tests split into 5 shards (~2 min each)
           - shard: browser-1
-            test-command: vitest run --project=browser --project=interactions --shard=1/5 --reporter=blob --coverage
+            test-command: npx vitest run --project=browser --project=interactions --shard=1/5 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: false
           - shard: browser-2
-            test-command: vitest run --project=browser --project=interactions --shard=2/5 --reporter=blob --coverage
+            test-command: npx vitest run --project=browser --project=interactions --shard=2/5 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: false
           - shard: browser-3
-            test-command: vitest run --project=browser --project=interactions --shard=3/5 --reporter=blob --coverage
+            test-command: npx vitest run --project=browser --project=interactions --shard=3/5 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: false
           - shard: browser-4
-            test-command: vitest run --project=browser --project=interactions --shard=4/5 --reporter=blob --coverage
+            test-command: npx vitest run --project=browser --project=interactions --shard=4/5 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: false
           - shard: browser-5
-            test-command: vitest run --project=browser --project=interactions --shard=5/5 --reporter=blob --coverage
+            test-command: npx vitest run --project=browser --project=interactions --shard=5/5 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: false
           # Storybook tests split into 4 shards (~2 min each)
           - shard: storybook-1
-            test-command: vitest run --project=storybook --shard=1/4 --reporter=blob --coverage
+            test-command: npx vitest run --project=storybook --shard=1/4 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: true
           - shard: storybook-2
-            test-command: vitest run --project=storybook --shard=2/4 --reporter=blob --coverage
+            test-command: npx vitest run --project=storybook --shard=2/4 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: true
           - shard: storybook-3
-            test-command: vitest run --project=storybook --shard=3/4 --reporter=blob --coverage
+            test-command: npx vitest run --project=storybook --shard=3/4 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: true
           - shard: storybook-4
-            test-command: vitest run --project=storybook --shard=4/4 --reporter=blob --coverage
+            test-command: npx vitest run --project=storybook --shard=4/4 --reporter=blob --coverage
             needs-browser: true
             needs-storybook: true
           # Visual regression (Chromatic)
