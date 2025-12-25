@@ -23,11 +23,11 @@ const config: StorybookConfig = {
         const os = await import("os");
 
         // SSL configuration via environment variables or default paths
-        // Environment variables: SSL_KEY_PATH, SSL_CERT_PATH
+        // Environment variables: HTTPS_KEY_PATH, HTTPS_CERT_PATH
         // Default paths: ~/ssl/atoms.key, ~/ssl/STAR_ato_ms.crt
         const sslDir = path.join(os.homedir(), "ssl");
-        const sslKeyPath = process.env.SSL_KEY_PATH ?? path.join(sslDir, "atoms.key");
-        const sslCertPath = process.env.SSL_CERT_PATH ?? path.join(sslDir, "STAR_ato_ms.crt");
+        const sslKeyPath = process.env.HTTPS_KEY_PATH ?? path.join(sslDir, "atoms.key");
+        const sslCertPath = process.env.HTTPS_CERT_PATH ?? path.join(sslDir, "STAR_ato_ms.crt");
 
         // Check if SSL files exist before trying to use them
         const sslKeyExists = fs.existsSync(sslKeyPath);
