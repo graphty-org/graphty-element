@@ -1,6 +1,8 @@
 import {createHash} from "crypto";
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function testStoryConsistency(page, storyId) {
     console.log(`\nTesting consistency of ${storyId}...`);
 
@@ -10,7 +12,7 @@ async function testStoryConsistency(page, storyId) {
         console.log(`  Taking screenshot ${i + 1}/3...`);
 
         // Navigate to story
-        await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+        await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
         await page.waitForSelector("graphty-element", {timeout: 15000});
 
         // Wait for Storybook play function to complete (if any)

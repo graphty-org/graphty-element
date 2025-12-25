@@ -62,15 +62,21 @@ export type {
     LlmProvider,
     LlmResponse,
     Message,
+    ProgressCallback,
     ProviderOptions,
     ProviderType,
     StreamCallbacks,
     ToolCall,
     ToolDefinition,
     VercelProviderType,
+    WebLlmModelInfo,
 } from "./providers";
 export {
     createProvider,
+    // Async factory for WebLLM (Safari-compatible)
+    createWebLlmProvider,
+    // Async getter for WebLlmProvider class (Safari-compatible)
+    getWebLlmProviderClass,
     MockLlmProvider,
     VercelAiProvider,
 } from "./providers";

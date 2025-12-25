@@ -267,14 +267,24 @@ export type {
     LlmProvider,
     LlmResponse,
     Message,
+    ProgressCallback,
     ProviderOptions,
     ProviderType,
     StreamCallbacks,
     ToolCall,
     ToolDefinition,
     VercelProviderType,
+    WebLlmModelInfo,
 } from "./src/ai/index";
-export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/index";
+export {
+    createProvider,
+    // Async factory for WebLLM (Safari-compatible, loads module on demand)
+    createWebLlmProvider,
+    // Async getter for WebLlmProvider class (Safari-compatible, loads module on demand)
+    getWebLlmProviderClass,
+    MockLlmProvider,
+    VercelAiProvider,
+} from "./src/ai/index";
 
 // AI Key Management
 export type {PersistenceConfig} from "./src/ai/index";

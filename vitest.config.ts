@@ -140,9 +140,8 @@ export default defineConfig({
                     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
                     storybookTest({
                         configDir: path.join(dirname, ".storybook"),
-                        // Use STORYBOOK_URL env var for flexibility across worktrees and CI
-                        // Default to localhost:9026 for CI compatibility
-                        storybookUrl: process.env.STORYBOOK_URL || "http://localhost:9026",
+                        // Use STORYBOOK_URL env var or default to Storybook's default port (6006)
+                        storybookUrl: process.env.STORYBOOK_URL ?? "https://localhost:6006",
                     }),
                 ],
                 resolve: {

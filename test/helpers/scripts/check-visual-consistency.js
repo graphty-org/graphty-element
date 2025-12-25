@@ -3,6 +3,8 @@ import {existsSync} from "fs";
 import {mkdir} from "fs/promises";
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function ensureDir(dir) {
     if (!existsSync(dir)) {
         await mkdir(dir, {recursive: true});
@@ -11,7 +13,7 @@ async function ensureDir(dir) {
 
 async function getStoriesFromIndex(page) {
     // Navigate to index.json to get story list
-    const response = await page.goto("http://dev.ato.ms:9025/index.json");
+    const response = await page.goto(`${STORYBOOK_URL}/index.json`);
     const index = await response.json();
 
     const stories = [];
@@ -29,7 +31,7 @@ async function getStoriesFromIndex(page) {
 }
 
 async function captureStoryScreenshot(page, storyId, outputPath) {
-    await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+    await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
 
     // Wait for graphty-element to exist
     await page.waitForSelector("graphty-element", {timeout: 10000});

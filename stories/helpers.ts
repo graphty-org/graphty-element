@@ -455,7 +455,7 @@ export const renderFn = (args: RenderArg1, storyConfig: RenderArg2): Element => 
 
 /**
  * Decorator that enables remote logging for XR debugging.
- * Logs are sent to the XR demo server at https://dev.ato.ms:9077/log
+ * Logs are sent to the server specified in VITE_REMOTE_LOG_URL env var (default: https://localhost:9077/log)
  * Start the server with: npm run dev:xr
  *
  * Usage:
@@ -487,7 +487,8 @@ function enableRemoteLoggingInBrowser(): void {
 
     (window as unknown as {__remoteLoggingEnabled?: boolean}).__remoteLoggingEnabled = true;
 
-    const SERVER_URL = "https://dev.ato.ms:9077/log";
+    // Use VITE_REMOTE_LOG_URL env var or fall back to localhost
+    const SERVER_URL = (import.meta.env.VITE_REMOTE_LOG_URL as string | undefined) ?? "https://localhost:9077/log";
     const SESSION_ID = `storybook-${Date.now().toString(36)}`;
     const LOG_BUFFER: {time: string, level: string, message: string}[] = [];
     let flushTimer: ReturnType<typeof setTimeout> | null = null;

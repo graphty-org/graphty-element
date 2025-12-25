@@ -1,5 +1,7 @@
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function main() {
     const browser = await chromium.launch({headless: true});
     const page = await browser.newPage();
@@ -15,7 +17,7 @@ async function main() {
 
     console.log("Testing with minimal working configuration...");
 
-    await page.goto("http://dev.ato.ms:9025");
+    await page.goto(STORYBOOK_URL);
     await page.waitForTimeout(2000);
 
     // Try the absolute minimal case to see if the issue is with our template structure

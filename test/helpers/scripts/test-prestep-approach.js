@@ -1,6 +1,8 @@
 import {createHash} from "crypto";
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function preStepLayout(page, steps = 500) {
     return await page.evaluate(async(stepCount) => {
         const graphty = document.querySelector("graphty-element");
@@ -55,8 +57,8 @@ async function testStory(page, storyId) {
     console.log(`\nTesting ${storyId} with pre-stepping...`);
 
     // Navigate to story
-    console.log(`  Navigating to: http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
-    await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+    console.log(`  Navigating to: ${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
+    await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
     await page.waitForSelector("graphty-element", {timeout: 15000});
     console.log("  Found graphty-element");
     await page.waitForTimeout(5000);

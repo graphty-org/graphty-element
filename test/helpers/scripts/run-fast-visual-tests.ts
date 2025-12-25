@@ -3,6 +3,8 @@
 // @ts-expect-error - Playwright is optional dependency
 import {chromium} from "@playwright/test";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 /**
  * Ultra-fast visual test runner that reuses browser context
  * Achieves 5x+ speedup by eliminating startup overhead
@@ -40,7 +42,7 @@ async function runFastVisualTests(): Promise<void> {
         // console.time(`  ${test.name}`);
 
         // Navigate to story
-        await page.goto(`http://dev.ato.ms:9025/iframe.html?viewMode=story&id=${test.id}`, {
+        await page.goto(`${STORYBOOK_URL}/iframe.html?viewMode=story&id=${test.id}`, {
             waitUntil: "domcontentloaded",
         });
 

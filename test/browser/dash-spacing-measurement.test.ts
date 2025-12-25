@@ -14,7 +14,8 @@ describe("Dash Pattern Spacing", () => {
 
         try {
             // Navigate to the dash pattern story
-            await page.goto("http://dev.ato.ms:9025/iframe.html?id=styles-edge-patterns--dash&viewMode=story");
+            const storybookUrl = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+            await page.goto(`${storybookUrl}/iframe.html?id=styles-edge-patterns--dash&viewMode=story`);
 
             // Wait for the graph to render
             await page.waitForTimeout(2000);
