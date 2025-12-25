@@ -142,7 +142,7 @@ export default defineConfig({
                         configDir: path.join(dirname, ".storybook"),
                         // Use STORYBOOK_URL env var for flexibility across worktrees and CI
                         // Default to localhost:9026 for CI compatibility
-                        storybookUrl: process.env.STORYBOOK_URL || "http://localhost:9026",
+                        storybookUrl: process.env.STORYBOOK_URL ?? "http://localhost:9026",
                     }),
                 ],
                 resolve: {
