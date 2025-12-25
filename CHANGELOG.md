@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/graphty-org/graphty-element/compare/v1.4.4...v1.4.5) (2025-12-25)
+
+
+### Bug Fixes
+
+* fix webllm dynamic import, change default server / port for dev ([323d568](https://github.com/graphty-org/graphty-element/commit/323d568c7e4a7ed9ec7365ff4717885f0939aafc))
+
 ## [1.4.4](https://github.com/graphty-org/graphty-element/compare/v1.4.3...v1.4.4) (2025-12-23)
 
 
