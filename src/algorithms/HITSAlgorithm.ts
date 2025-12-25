@@ -177,7 +177,11 @@ export class HITSAlgorithm extends Algorithm<HITSOptions> {
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the HITS algorithm on the graph
+     *
+     * Computes authority and hub scores for all nodes using mutual recursion.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

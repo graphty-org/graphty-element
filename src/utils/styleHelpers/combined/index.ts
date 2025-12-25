@@ -33,13 +33,11 @@ export interface EdgeStyle {
 /**
  * Combine color and size based on the same metric
  * Higher values = brighter color + larger size
- *
  * @param value - Normalized value (0-1)
  * @param colorPalette - Color palette function (default: viridis)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Combined node style
- *
  * @example
  * // PageRank: high rank = bright yellow + large
  * colorAndSize(0.9) // { color: "#fde724", size: 4.6 }
@@ -60,13 +58,11 @@ export function colorAndSize(
 /**
  * Combine color and opacity - useful for layered visualizations
  * Higher values = brighter color + more opaque
- *
  * @param value - Normalized value (0-1)
  * @param colorPalette - Color palette function (default: viridis)
  * @param minOpacity - Minimum opacity (default: 0.1)
  * @param maxOpacity - Maximum opacity (default: 1.0)
  * @returns Combined node style
- *
  * @example
  * colorAndOpacity(0.8) // { color: "#b5de2b", opacity: 0.82 }
  */
@@ -85,14 +81,12 @@ export function colorAndOpacity(
 /**
  * Size and opacity without color change
  * Useful when color represents categories but size shows importance
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @param minOpacity - Minimum opacity (default: 0.3)
  * @param maxOpacity - Maximum opacity (default: 1.0)
  * @returns Combined node style
- *
  * @example
  * // Community nodes: same color, different importance
  * sizeAndOpacity(0.9) // { size: 4.6, opacity: 0.97 }
@@ -113,7 +107,6 @@ export function sizeAndOpacity(
 /**
  * All three dimensions: color, size, and opacity
  * Maximum expressiveness for showing importance
- *
  * @param value - Normalized value (0-1)
  * @param colorPalette - Color palette function (default: viridis)
  * @param minSize - Minimum size (default: 1)
@@ -121,7 +114,6 @@ export function sizeAndOpacity(
  * @param minOpacity - Minimum opacity (default: 0.2)
  * @param maxOpacity - Maximum opacity (default: 1.0)
  * @returns Combined node style
- *
  * @example
  * // Maximum emphasis on high-importance nodes
  * fullSpectrum(0.95) // { color: "#fde724", size: 4.8, opacity: 0.98 }
@@ -145,14 +137,12 @@ export function fullSpectrum(
 /**
  * Category color + importance size
  * Color shows group, size shows importance within group
- *
  * @param categoryId - Category identifier
  * @param importanceValue - Importance value (0-1)
  * @param categoricalPalette - Categorical palette function (default: okabeIto)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Combined node style
- *
  * @example
  * // Community 2, high importance
  * categoryAndImportance(2, 0.9) // { color: "#009E73", size: 4.6 }
@@ -172,14 +162,12 @@ export function categoryAndImportance(
 
 /**
  * Diverging color + size for above/below average with emphasis
- *
  * @param value - Normalized value (0-1)
  * @param midpoint - Midpoint value (default: 0.5)
  * @param divergingPalette - Diverging palette function (default: purpleGreen)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Combined node style
- *
  * @example
  * // Above average (green) and large
  * divergingWithSize(0.8) // { color: "#91cf60", size: 4.2 }
@@ -201,13 +189,11 @@ export function divergingWithSize(
 
 /**
  * Edge color and width for flow visualization
- *
  * @param value - Normalized flow value (0-1)
  * @param colorPalette - Color palette function (default: viridis)
  * @param minWidth - Minimum width (default: 0.2)
  * @param maxWidth - Maximum width (default: 20)
  * @returns Combined edge style
- *
  * @example
  * // High flow: bright color + thick edge
  * edgeFlow(0.9) // { color: "#fde724", width: 18.04 }
@@ -226,7 +212,6 @@ export function edgeFlow(
 
 /**
  * Edge color, width, and opacity for complex flow networks
- *
  * @param value - Normalized flow value (0-1)
  * @param colorPalette - Color palette function (default: viridis)
  * @param minWidth - Minimum width (default: 0.5)
@@ -234,7 +219,6 @@ export function edgeFlow(
  * @param minOpacity - Minimum opacity (default: 0.1)
  * @param maxOpacity - Maximum opacity (default: 1.0)
  * @returns Combined edge style
- *
  * @example
  * edgeFlowFull(0.95) // { color: "#fde724", width: 4.775, opacity: 0.955 }
  */

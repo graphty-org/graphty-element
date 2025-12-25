@@ -4,7 +4,7 @@
 
 > **SafeParseResult**\<`T`\> = \{ `data`: `T`; `success`: `true`; \} \| \{ `error`: `z.ZodError`; `success`: `false`; \}
 
-Defined in: [src/config/OptionsSchema.ts:133](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L133)
+Defined in: [src/config/OptionsSchema.ts:137](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L137)
 
 Result type for safe parsing
 

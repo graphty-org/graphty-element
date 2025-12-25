@@ -24,6 +24,11 @@ export class XRPivotCameraController {
     private scene: Scene;
     private frameCount = 0;
 
+    /**
+     * Creates a new XRPivotCameraController instance.
+     * @param scene - The Babylon.js scene
+     * @param xr - The WebXR experience instance
+     */
     constructor(scene: Scene, xr: WebXRDefaultExperience) {
         this.scene = scene;
         this.xr = xr;
@@ -176,6 +181,7 @@ export class XRPivotCameraController {
     /**
      * Get the pivot TransformNode.
      * Can be used to parent scene objects that should move with the camera.
+     * @returns The pivot TransformNode
      */
     get pivot(): TransformNode {
         return this.pivotController.pivot;
@@ -183,6 +189,7 @@ export class XRPivotCameraController {
 
     /**
      * Get the PivotController instance for direct manipulation.
+     * @returns The pivot controller instance
      */
     getPivotController(): PivotController {
         return this.pivotController;
@@ -190,6 +197,7 @@ export class XRPivotCameraController {
 
     /**
      * Get the XRInputHandler instance.
+     * @returns The XR input handler instance
      */
     getInputHandler(): XRInputHandler {
         return this.inputHandler;

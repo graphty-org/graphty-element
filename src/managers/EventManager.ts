@@ -33,10 +33,18 @@ export class EventManager implements Manager {
     private edgeObservable = new Observable<EdgeEvent>();
 
     // Expose for testing and advanced usage
+    /**
+     * Gets the graph event observable for direct subscription
+     * @returns Observable for graph events
+     */
     get onGraphEvent(): Observable<GraphEvent> {
         return this.graphObservable;
     }
 
+    /**
+     * Gets the graph error observable for direct subscription
+     * @returns Observable for graph error events
+     */
     get onGraphError(): Observable<GraphErrorEvent> {
         return this.graphObservable as Observable<GraphErrorEvent>;
     }
@@ -55,11 +63,18 @@ export class EventManager implements Manager {
     private errorRetryCount = 3;
     private errorRetryDelay = 1000; // ms
 
+    /**
+     * Initializes the event manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // EventManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Disposes of the event manager and cleans up all resources
+     */
     dispose(): void {
         // Clear all observers
         for (const {observable, observer} of this.observers.values()) {
@@ -75,6 +90,10 @@ export class EventManager implements Manager {
 
     // Graph Events
 
+    /**
+     * Emits a graph settled event when the graph layout has stabilized
+     * @param graph - Graph instance that has settled
+     */
     emitGraphSettled(graph: Graph): void {
         const event: GraphSettledEvent = {
             type: "graph-settled",
@@ -83,6 +102,13 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a graph error event
+     * @param graph - Graph or GraphContext instance where the error occurred
+     * @param error - Error object
+     * @param context - Error context category
+     * @param details - Additional error details
+     */
     emitGraphError(
         graph: Graph | GraphContext | null,
         error: Error,
@@ -99,6 +125,12 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a data loaded event when data has been loaded from a source
+     * @param graph - Graph or GraphContext instance
+     * @param chunksLoaded - Number of data chunks loaded
+     * @param dataSourceType - Type of data source used
+     */
     emitGraphDataLoaded(
         graph: Graph | GraphContext,
         chunksLoaded: number,
@@ -115,6 +147,13 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a data added event when nodes or edges are added
+     * @param dataType - Type of data added (nodes or edges)
+     * @param count - Number of items added
+     * @param shouldStartLayout - Whether layout should be started
+     * @param shouldZoomToFit - Whether to zoom to fit the data
+     */
     emitDataAdded(
         dataType: "nodes" | "edges",
         count: number,
@@ -131,6 +170,11 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a layout initialized event when a layout is ready
+     * @param layoutType - Type of layout that was initialized
+     * @param shouldZoomToFit - Whether to zoom to fit after initialization
+     */
     emitLayoutInitialized(
         layoutType: string,
         shouldZoomToFit: boolean,
@@ -144,6 +188,11 @@ export class EventManager implements Manager {
     }
 
     // Generic graph event emitter for internal events
+    /**
+     * Emits a generic graph event for custom internal events
+     * @param type - Event type identifier
+     * @param data - Event data payload
+     */
     emitGraphEvent(type: string, data: Record<string, unknown>): void {
         const event = {type, ... data} as GraphGenericEvent;
         this.graphObservable.notifyObservers(event);
@@ -151,6 +200,15 @@ export class EventManager implements Manager {
 
     // Data Loading Events
 
+    /**
+     * Emits a data loading progress event during data import
+     * @param format - Data format being loaded
+     * @param bytesProcessed - Number of bytes processed so far
+     * @param totalBytes - Total bytes to process (if known)
+     * @param nodesLoaded - Number of nodes loaded so far
+     * @param edgesLoaded - Number of edges loaded so far
+     * @param chunksProcessed - Number of data chunks processed
+     */
     emitDataLoadingProgress(
         format: string,
         bytesProcessed: number,
@@ -172,6 +230,17 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a data loading error event when an error occurs during import
+     * @param error - Error object
+     * @param context - Error context category
+     * @param format - Data format being loaded
+     * @param details - Error details
+     * @param details.line - Line number where error occurred
+     * @param details.nodeId - Node ID related to error
+     * @param details.edgeId - Edge ID related to error
+     * @param details.canContinue - Whether loading can continue after this error
+     */
     emitDataLoadingError(
         error: Error,
         context: DataLoadingErrorEvent["context"],
@@ -193,6 +262,15 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a summary of all data loading errors after import completes
+     * @param format - Data format that was loaded
+     * @param totalErrors - Total number of errors encountered
+     * @param message - Summary message describing errors
+     * @param detailedReport - Detailed error report
+     * @param primaryCategory - Primary error category
+     * @param suggestion - Suggested fix for the errors
+     */
     emitDataLoadingErrorSummary(
         format: string,
         totalErrors: number,
@@ -213,6 +291,16 @@ export class EventManager implements Manager {
         this.graphObservable.notifyObservers(event);
     }
 
+    /**
+     * Emits a data loading complete event when import finishes
+     * @param format - Data format that was loaded
+     * @param nodesLoaded - Number of nodes loaded
+     * @param edgesLoaded - Number of edges loaded
+     * @param duration - Time taken to load in milliseconds
+     * @param errors - Number of errors encountered
+     * @param warnings - Number of warnings encountered
+     * @param success - Whether loading was successful
+     */
     emitDataLoadingComplete(
         format: string,
         nodesLoaded: number,
@@ -237,6 +325,11 @@ export class EventManager implements Manager {
 
     // Selection Events
 
+    /**
+     * Emits a selection changed event when node selection changes
+     * @param previousNode - Previously selected node (or null)
+     * @param currentNode - Currently selected node (or null)
+     */
     emitSelectionChanged(
         previousNode: SelectionChangedEvent["previousNode"],
         currentNode: SelectionChangedEvent["currentNode"],
@@ -253,6 +346,11 @@ export class EventManager implements Manager {
 
     // Node Events
 
+    /**
+     * Emits a node event
+     * @param type - Node event type
+     * @param eventData - Event data (excluding type field)
+     */
     emitNodeEvent(type: NodeEvent["type"], eventData: Omit<NodeEvent, "type">): void {
         const event = {type, ... eventData} as NodeEvent;
         this.nodeObservable.notifyObservers(event);
@@ -260,6 +358,11 @@ export class EventManager implements Manager {
 
     // Edge Events
 
+    /**
+     * Emits an edge event
+     * @param type - Edge event type
+     * @param eventData - Event data (excluding type field)
+     */
     emitEdgeEvent(type: EdgeEvent["type"], eventData: Omit<EdgeEvent, "type">): void {
         const event = {type, ... eventData} as EdgeEvent;
         this.edgeObservable.notifyObservers(event);
@@ -270,6 +373,9 @@ export class EventManager implements Manager {
     /**
      * Add a listener for a specific event type
      * Returns a symbol that can be used to remove the listener
+     * @param type - Event type to listen for
+     * @param callback - Callback function to invoke when event occurs
+     * @returns Symbol ID that can be used to remove the listener
      */
     addListener(type: EventType, callback: EventCallbackType): symbol {
         const id = Symbol("event-listener");
@@ -353,6 +459,8 @@ export class EventManager implements Manager {
 
     /**
      * Remove a listener by its ID
+     * @param id - Symbol ID returned from addListener
+     * @returns True if listener was removed, false if not found
      */
     removeListener(id: symbol): boolean {
         const entry = this.observers.get(id);
@@ -367,6 +475,7 @@ export class EventManager implements Manager {
 
     /**
      * Get the total number of registered listeners
+     * @returns Number of active listeners
      */
     listenerCount(): number {
         return this.observers.size;
@@ -374,6 +483,9 @@ export class EventManager implements Manager {
 
     /**
      * Add a one-time listener that automatically removes itself after firing
+     * @param type - Event type to listen for
+     * @param callback - Callback function to invoke when event occurs
+     * @returns Symbol ID that can be used to remove the listener
      */
     once(type: EventType, callback: EventCallbackType): symbol {
         const id = this.addListener(type, (event) => {
@@ -386,6 +498,9 @@ export class EventManager implements Manager {
     /**
      * Wait for a specific event to occur
      * Returns a promise that resolves with the event
+     * @param type - Event type to wait for
+     * @param timeout - Optional timeout in milliseconds
+     * @returns Promise that resolves with the event or rejects on timeout
      */
     waitFor(type: EventType, timeout?: number): Promise<GraphEvent | NodeEvent | EdgeEvent | import("../events").AiEvent> {
         return new Promise((resolve, reject) => {
@@ -409,6 +524,11 @@ export class EventManager implements Manager {
     /**
      * Execute an async operation with automatic retry on failure
      * Emits error events for each failure
+     * @param operation - Async operation to execute
+     * @param context - Error context category
+     * @param graph - Graph or GraphContext instance
+     * @param details - Additional error details
+     * @returns Promise that resolves with operation result or rejects after all retries fail
      */
     async withRetry<T>(
         operation: () => Promise<T>,

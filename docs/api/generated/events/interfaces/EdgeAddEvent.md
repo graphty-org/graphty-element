@@ -2,7 +2,7 @@
 
 # Interface: EdgeAddEvent
 
-Defined in: [src/events.ts:197](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L197)
+Defined in: [src/events.ts:197](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L197)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:197](https://github.com/graphty-org/graphty-element/b
 
 > **dstNodeId**: `string` \| `number`
 
-Defined in: [src/events.ts:200](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L200)
+Defined in: [src/events.ts:200](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L200)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/events.ts:200](https://github.com/graphty-org/graphty-element/b
 
 > **metadata**: `object`
 
-Defined in: [src/events.ts:201](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L201)
+Defined in: [src/events.ts:201](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L201)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:201](https://github.com/graphty-org/graphty-element/b
 
 > **srcNodeId**: `string` \| `number`
 
-Defined in: [src/events.ts:199](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L199)
+Defined in: [src/events.ts:199](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L199)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [src/events.ts:199](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"edge-add-before"`
 
-Defined in: [src/events.ts:198](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L198)
+Defined in: [src/events.ts:198](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L198)

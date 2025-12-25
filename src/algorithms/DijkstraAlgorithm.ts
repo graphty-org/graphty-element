@@ -46,6 +46,12 @@ export interface DijkstraOptions extends Record<string, unknown> {
     bidirectional: boolean;
 }
 
+/**
+ * Dijkstra's algorithm for finding shortest paths
+ *
+ * Computes shortest paths from a source node to all other nodes using
+ * non-negative edge weights. Supports bidirectional search optimization.
+ */
 export class DijkstraAlgorithm extends Algorithm<DijkstraOptions> {
     static namespace = "graphty";
     static type = "dijkstra";
@@ -123,7 +129,10 @@ export class DijkstraAlgorithm extends Algorithm<DijkstraOptions> {
 
     /**
      * Configure the algorithm with source and optional target nodes
-     *
+     * @param options - Configuration options
+     * @param options.source - The source node for shortest path computation
+     * @param options.target - The target node (optional)
+     * @returns This algorithm instance for chaining
      * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
     configure(options: {source: number | string, target?: number | string}): this {
@@ -131,7 +140,11 @@ export class DijkstraAlgorithm extends Algorithm<DijkstraOptions> {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes Dijkstra's algorithm on the graph
+     *
+     * Computes shortest path distances and highlights the path from source to target.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());
@@ -181,6 +194,8 @@ export class DijkstraAlgorithm extends Algorithm<DijkstraOptions> {
 
     /**
      * Get set of edge keys that are part of the path
+     * @param path - Array of node IDs representing the path
+     * @returns Set of edge keys in "srcId:dstId" format
      */
     private getPathEdges(path: (number | string)[]): Set<string> {
         const edges = new Set<string>();

@@ -7,6 +7,8 @@
 
 /**
  * Convert hex color to RGB components
+ * @param hex - Hex color string (e.g., "#FF0000" or "FF0000")
+ * @returns Tuple of RGB values [r, g, b] where each component is 0-255
  */
 function hexToRgb(hex: string): [number, number, number] {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -19,6 +21,10 @@ function hexToRgb(hex: string): [number, number, number] {
 
 /**
  * Convert RGB to hex color
+ * @param r - Red component (0-255)
+ * @param g - Green component (0-255)
+ * @param b - Blue component (0-255)
+ * @returns Hex color string (e.g., "#FF0000")
  */
 function rgbToHex(r: number, g: number, b: number): string {
     const toHex = (n: number): string => {
@@ -30,6 +36,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 
 /**
  * Convert RGB to linear RGB (remove gamma correction)
+ * @param value - sRGB component value (0-255)
+ * @returns Linear RGB value (0-1)
  */
 function toLinear(value: number): number {
     const v = value / 255;
@@ -38,6 +46,8 @@ function toLinear(value: number): number {
 
 /**
  * Convert linear RGB back to sRGB (apply gamma correction)
+ * @param value - Linear RGB value (0-1)
+ * @returns sRGB component value (0-255)
  */
 function toSrgb(value: number): number {
     return value <= 0.0031308 ? ((value * 12.92) * 255) : ((1.055 * Math.pow(value, 1 / 2.4)) - 0.055) * 255;
@@ -46,6 +56,8 @@ function toSrgb(value: number): number {
 /**
  * Simulate protanopia (red-green colorblindness, missing L cones)
  * Affects ~1% of males
+ * @param hex - Input hex color string
+ * @returns Simulated color as hex string showing how it appears to someone with protanopia
  */
 export function simulateProtanopia(hex: string): string {
     const [r, g, b] = hexToRgb(hex);
@@ -67,6 +79,8 @@ export function simulateProtanopia(hex: string): string {
 /**
  * Simulate deuteranopia (red-green colorblindness, missing M cones)
  * Affects ~5% of males
+ * @param hex - Input hex color string
+ * @returns Simulated color as hex string showing how it appears to someone with deuteranopia
  */
 export function simulateDeuteranopia(hex: string): string {
     const [r, g, b] = hexToRgb(hex);
@@ -88,6 +102,8 @@ export function simulateDeuteranopia(hex: string): string {
 /**
  * Simulate tritanopia (blue-yellow colorblindness, missing S cones)
  * Affects ~0.01% of people
+ * @param hex - Input hex color string
+ * @returns Simulated color as hex string showing how it appears to someone with tritanopia
  */
 export function simulateTritanopia(hex: string): string {
     const [r, g, b] = hexToRgb(hex);
@@ -108,6 +124,8 @@ export function simulateTritanopia(hex: string): string {
 
 /**
  * Convert color to grayscale (luminance)
+ * @param hex - Input hex color string
+ * @returns Grayscale version of the color as hex string
  */
 export function toGrayscale(hex: string): string {
     const [r, g, b] = hexToRgb(hex);
@@ -125,6 +143,9 @@ export function toGrayscale(hex: string): string {
  * - 1-2 = Perceptible through close observation
  * - 2-10 = Perceptible at a glance
  * - > 10 = Colors are very different
+ * @param hex1 - First hex color string to compare
+ * @param hex2 - Second hex color string to compare
+ * @returns Perceptual difference value (0-100+ scale)
  */
 export function colorDifference(hex1: string, hex2: string): number {
     const [r1, g1, b1] = hexToRgb(hex1);
@@ -142,6 +163,10 @@ export function colorDifference(hex1: string, hex2: string): number {
 /**
  * Check if two colors are distinguishable in grayscale
  * Useful for print-friendliness testing
+ * @param hex1 - First hex color string to compare
+ * @param hex2 - Second hex color string to compare
+ * @param threshold - Minimum difference threshold for distinguishability (default: 10)
+ * @returns True if colors are distinguishable in grayscale
  */
 export function areDistinguishableInGrayscale(hex1: string, hex2: string, threshold = 10): boolean {
     const gray1 = toGrayscale(hex1);
@@ -152,6 +177,9 @@ export function areDistinguishableInGrayscale(hex1: string, hex2: string, thresh
 /**
  * Test if a color palette is colorblind-safe
  * Returns true if all colors remain distinguishable under common colorblindness types
+ * @param colors - Array of hex color strings to test
+ * @param threshold - Minimum difference threshold for distinguishability (default: 10)
+ * @returns Object with boolean flags for each colorblindness type indicating if palette is safe
  */
 export function isPaletteSafe(colors: string[], threshold = 10): {
     protanopia: boolean;

@@ -42,6 +42,8 @@ const EdgeStyleParamsSchema = z.object({
  * Convert simplified node style params to internal NodeStyleConfig structure.
  * Parses through the NodeStyle schema to ensure proper color transformation
  * (e.g., CSS color names like "red" are converted to hex "#FF0000").
+ * @param params - Node style parameters to convert
+ * @returns Converted node style configuration
  */
 function convertNodeStyle(params: z.infer<typeof NodeStyleParamsSchema>): {enabled: boolean} & Record<string, unknown> {
     // Build a raw style object
@@ -103,6 +105,8 @@ function convertNodeStyle(params: z.infer<typeof NodeStyleParamsSchema>): {enabl
  * Convert simplified edge style params to internal EdgeStyleConfig structure.
  * Parses through the EdgeStyle schema to ensure proper color transformation
  * (e.g., CSS color names like "green" are converted to hex "#00FF00").
+ * @param params - Edge style parameters to convert
+ * @returns Converted edge style configuration
  */
 function convertEdgeStyle(params: z.infer<typeof EdgeStyleParamsSchema>): {enabled: boolean} & Record<string, unknown> {
     // Build a raw style object
@@ -152,6 +156,8 @@ const MATCH_ALL_SELECTORS = new Set(["", "*", "all", "*.*", "true"]);
 
 /**
  * Check if a selector should match all items.
+ * @param selector - The selector string to check
+ * @returns True if selector matches all items
  */
 function isMatchAllSelector(selector: string): boolean {
     return !selector || MATCH_ALL_SELECTORS.has(selector.toLowerCase().trim());
@@ -159,7 +165,6 @@ function isMatchAllSelector(selector: string): boolean {
 
 /**
  * Find nodes matching a JMESPath selector.
- *
  * @param graph - The graph instance
  * @param selector - JMESPath expression for matching nodes
  * @returns Array of matching node IDs
@@ -204,7 +209,6 @@ function findMatchingNodeIds(graph: Graph, selector: string): string[] {
 
 /**
  * Find edges matching a JMESPath selector.
- *
  * @param graph - The graph instance
  * @param selector - JMESPath expression for matching edges
  * @returns Array of matching edge IDs

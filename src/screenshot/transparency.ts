@@ -8,8 +8,11 @@ export interface BackgroundState {
 }
 
 /**
- * Enables transparent background for screenshot capture
- * Saves the current state and disables all background layers
+ * Enables transparent background for screenshot capture.
+ * Saves the current state and disables all background layers.
+ * @param scene - The Babylon.js scene to modify
+ * @param skybox - The skybox mesh to disable, or null if none
+ * @returns The saved background state for later restoration
  */
 export function enableTransparentBackground(
     scene: Scene,
@@ -37,6 +40,9 @@ export function enableTransparentBackground(
 
 /**
  * Restores the background state after screenshot capture
+ * @param scene - The Babylon.js scene to restore
+ * @param skybox - The skybox mesh to restore, or null if none
+ * @param state - The background state to restore from
  */
 export function restoreBackground(
     scene: Scene,

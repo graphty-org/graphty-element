@@ -19,9 +19,26 @@ export interface RenderOptions {
     textOutlineJoin: CanvasLineJoin;
 }
 
+/**
+ * Renders styled text segments to a canvas
+ */
 export class RichTextRenderer {
+    /**
+     * Creates a new rich text renderer
+     * @param options - Rendering configuration options
+     */
     constructor(private readonly options: RenderOptions) {}
 
+    /**
+     * Draws styled text segments to a canvas
+     * @param ctx - Canvas rendering context
+     * @param parsedContent - Parsed text segments to render
+     * @param contentArea - Content area dimensions
+     * @param contentArea.x - X position of content area
+     * @param contentArea.y - Y position of content area
+     * @param contentArea.width - Width of content area
+     * @param contentArea.height - Height of content area
+     */
     drawText(
         ctx: CanvasRenderingContext2D,
         parsedContent: TextSegment[][],

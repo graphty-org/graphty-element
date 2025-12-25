@@ -16,6 +16,10 @@ export class TextInputAdapter implements InputAdapter {
     private _isActive = false;
     private callbacks: InputCallback[] = [];
 
+    /**
+     * Get whether text input is currently active.
+     * @returns True if accepting input
+     */
     get isActive(): boolean {
         return this._isActive;
     }

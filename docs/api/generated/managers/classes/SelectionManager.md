@@ -2,7 +2,7 @@
 
 # Class: SelectionManager
 
-Defined in: [src/managers/SelectionManager.ts:51](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L51)
+Defined in: [src/managers/SelectionManager.ts:51](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L51)
 
 Manages node selection state within the graph.
 
@@ -22,13 +22,17 @@ Features:
 
 > **new SelectionManager**(`eventManager`): `SelectionManager`
 
-Defined in: [src/managers/SelectionManager.ts:57](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L57)
+Defined in: [src/managers/SelectionManager.ts:61](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L61)
+
+Creates a new selection manager
 
 #### Parameters
 
 ##### eventManager
 
 [`EventManager`](EventManager.md)
+
+Event manager for emitting selection events
 
 #### Returns
 
@@ -40,7 +44,7 @@ Defined in: [src/managers/SelectionManager.ts:57](https://github.com/graphty-org
 
 > **deselect**(): `void`
 
-Defined in: [src/managers/SelectionManager.ts:162](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L162)
+Defined in: [src/managers/SelectionManager.ts:172](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L172)
 
 Deselect the currently selected node.
 Emits a selection-changed event if a node was selected.
@@ -55,9 +59,9 @@ Emits a selection-changed event if a node was selected.
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/SelectionManager.ts:66](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L66)
+Defined in: [src/managers/SelectionManager.ts:76](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L76)
 
-Dispose of all resources held by the manager
+Dispose the selection manager and clear selection
 
 #### Returns
 
@@ -73,7 +77,7 @@ Dispose of all resources held by the manager
 
 > **getSelectedNode**(): [`Node`](../../Node/classes/Node.md) \| `null`
 
-Defined in: [src/managers/SelectionManager.ts:95](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L95)
+Defined in: [src/managers/SelectionManager.ts:107](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L107)
 
 Get the currently selected node.
 
@@ -89,7 +93,7 @@ The selected node, or null if nothing is selected.
 
 > **getSelectionStyleLayer**(): `object`
 
-Defined in: [src/managers/SelectionManager.ts:181](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L181)
+Defined in: [src/managers/SelectionManager.ts:190](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L190)
 
 Get the selection style layer.
 This layer can be modified to customize the appearance of selected nodes.
@@ -1774,9 +1778,9 @@ The selection style layer configuration.
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/SelectionManager.ts:62](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L62)
+Defined in: [src/managers/SelectionManager.ts:69](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L69)
 
-Initialize the manager
+Initialize the selection manager
 
 #### Returns
 
@@ -1792,7 +1796,7 @@ Initialize the manager
 
 > **isSelected**(`node`): `boolean`
 
-Defined in: [src/managers/SelectionManager.ts:104](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L104)
+Defined in: [src/managers/SelectionManager.ts:116](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L116)
 
 Check if a specific node is currently selected.
 
@@ -1816,7 +1820,7 @@ True if the node is selected, false otherwise.
 
 > **onNodeRemoved**(`node`): `void`
 
-Defined in: [src/managers/SelectionManager.ts:210](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L210)
+Defined in: [src/managers/SelectionManager.ts:217](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L217)
 
 Handle node removal.
 Should be called when a node is removed from the graph.
@@ -1840,7 +1844,7 @@ The node being removed.
 
 > **select**(`node`): `void`
 
-Defined in: [src/managers/SelectionManager.ts:115](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L115)
+Defined in: [src/managers/SelectionManager.ts:126](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L126)
 
 Select a node.
 If another node is currently selected, it will be deselected first.
@@ -1864,7 +1868,7 @@ The node to select.
 
 > **selectById**(`nodeId`): `boolean`
 
-Defined in: [src/managers/SelectionManager.ts:143](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L143)
+Defined in: [src/managers/SelectionManager.ts:153](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L153)
 
 Select a node by its ID.
 Requires DataManager to be set via setDataManager().
@@ -1889,7 +1893,7 @@ True if the node was found and selected, false if not found.
 
 > **setDataManager**(`dataManager`): `void`
 
-Defined in: [src/managers/SelectionManager.ts:79](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L79)
+Defined in: [src/managers/SelectionManager.ts:90](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L90)
 
 Set the DataManager reference.
 Required for selectById() functionality.
@@ -1899,6 +1903,8 @@ Required for selectById() functionality.
 ##### dataManager
 
 [`DataManager`](DataManager.md)
+
+The data manager instance
 
 #### Returns
 
@@ -1910,7 +1916,7 @@ Required for selectById() functionality.
 
 > **setSelectionStyleLayer**(`layer`): `void`
 
-Defined in: [src/managers/SelectionManager.ts:191](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L191)
+Defined in: [src/managers/SelectionManager.ts:199](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L199)
 
 Update the selection style layer.
 Use this to customize the appearance of selected nodes.
@@ -3599,7 +3605,7 @@ The new selection style layer configuration.
 
 > **setStyleManager**(`styleManager`): `void`
 
-Defined in: [src/managers/SelectionManager.ts:87](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/SelectionManager.ts#L87)
+Defined in: [src/managers/SelectionManager.ts:99](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/SelectionManager.ts#L99)
 
 Set the StyleManager reference.
 Required for triggering style updates when selection changes.
@@ -3609,6 +3615,8 @@ Required for triggering style updates when selection changes.
 ##### styleManager
 
 [`StyleManager`](StyleManager.md)
+
+The style manager instance
 
 #### Returns
 

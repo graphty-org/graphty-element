@@ -25,6 +25,9 @@ export class NodeEffects {
     /**
      * Check if a HighlightLayer has been disposed.
      * HighlightLayer doesn't have an isDisposed property, so we check if it's still in the scene.
+     * @param layer - The highlight layer to check
+     * @param scene - The Babylon.js scene
+     * @returns True if the layer has been disposed
      */
     private static isLayerDisposed(layer: HighlightLayer, scene: Scene): boolean {
         return !scene.effectLayers.includes(layer);
@@ -33,6 +36,8 @@ export class NodeEffects {
     /**
      * Get or create the HighlightLayer for selection outlines.
      * The layer is stored on scene.metadata for reuse.
+     * @param scene - The Babylon.js scene
+     * @returns The highlight layer for the scene
      */
     private static getOrCreateHighlightLayer(scene: Scene): HighlightLayer {
         // Check if layer already exists on scene metadata
@@ -59,7 +64,6 @@ export class NodeEffects {
      * Apply outline effect to a mesh based on the style configuration.
      * If the style has an outline effect, the mesh is added to the HighlightLayer.
      * If not, the mesh is removed from the HighlightLayer.
-     *
      * @param mesh The mesh to apply the effect to
      * @param effect The effect configuration from the node style
      */
@@ -99,6 +103,7 @@ export class NodeEffects {
     /**
      * Remove a mesh from the highlight layer.
      * Should be called when disposing a node.
+     * @param mesh - The mesh to remove from highlighting
      */
     static removeFromHighlight(mesh: AbstractMesh): void {
         const scene = mesh.getScene();
@@ -110,6 +115,8 @@ export class NodeEffects {
 
     /**
      * Extract a color string from a color configuration.
+     * @param color - Color configuration object or string
+     * @returns Extracted color string or undefined
      */
     private static extractColorValue(color: unknown): string | undefined {
         if (typeof color === "string") {
@@ -129,6 +136,7 @@ export class NodeEffects {
     /**
      * Dispose the highlight layer for a scene.
      * Should be called when the graph is disposed.
+     * @param scene - The Babylon.js scene
      */
     static disposeHighlightLayer(scene: Scene): void {
         const existingLayer = scene.metadata?.highlightLayer as HighlightLayer | undefined;

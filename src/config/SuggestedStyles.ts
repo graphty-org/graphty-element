@@ -1,5 +1,5 @@
 /**
- * @fileoverview Suggested Styles API for Algorithm Visualization
+ * @file Suggested Styles API for Algorithm Visualization
  *
  * This module provides the type definitions for the Suggested Styles feature,
  * which allows algorithms to automatically provide visually meaningful default
@@ -75,7 +75,6 @@
  * - `grouping`: Categorical data (communities, clusters)
  * - `path`: Path highlighting (shortest path, MST)
  * - `hierarchy`: Tree/hierarchy visualization
- *
  * @module SuggestedStyles
  */
 
@@ -83,7 +82,6 @@ import type {AppliedEdgeStyleConfig, AppliedNodeStyleConfig} from "./StyleTempla
 
 /**
  * Metadata for a suggested style layer
- *
  * @example
  * ```typescript
  * const metadata: SuggestedStyleLayerMetadata = {

@@ -4,6 +4,10 @@ import {Observable} from "@babylonjs/core/Misc/observable";
 
 import {DeviceType, KeyboardInfo, MouseButton, PointerInfo, TouchPoint, WheelInfo} from "./types";
 
+/**
+ * Input system that integrates with Babylon.js scene observables.
+ * Translates Babylon.js pointer and keyboard events to a unified input interface.
+ */
 export class BabylonInputSystem {
     public onPointerMove = new Observable<PointerInfo>();
     public onPointerDown = new Observable<PointerInfo>();
@@ -21,6 +25,10 @@ export class BabylonInputSystem {
     private pointerStates = new Map<MouseButton, boolean>();
     private activeTouches = new Map<number, TouchPoint>();
 
+    /**
+     * Creates a new BabylonInputSystem instance
+     * @param scene - The Babylon.js scene to attach to
+     */
     constructor(scene: Scene) {
         this.scene = scene;
         this.setupObservers();
@@ -154,10 +162,19 @@ export class BabylonInputSystem {
     }
 
     // State queries
+    /**
+     * Get the current pointer position
+     * @returns Current pointer position as Vector2
+     */
     public getPointerPosition(): Vector2 {
         return this.pointerPosition.clone();
     }
 
+    /**
+     * Check if a pointer button is currently pressed
+     * @param button - Optional specific button to check, or any button if omitted
+     * @returns True if the button is pressed
+     */
     public isPointerDown(button?: MouseButton): boolean {
         if (button === undefined) {
             return Array.from(this.pointerStates.values()).some((state) => state);
@@ -166,11 +183,19 @@ export class BabylonInputSystem {
         return this.pointerStates.get(button) ?? false;
     }
 
+    /**
+     * Get all currently active touch points
+     * @returns Array of active touch points
+     */
     public getActiveTouches(): TouchPoint[] {
         return Array.from(this.activeTouches.values());
     }
 
     // Lifecycle
+    /**
+     * Attach the input system to an HTML element for touch events
+     * @param element - The HTML element to attach touch listeners to
+     */
     public attach(element: HTMLElement): void {
         this.element = element;
 
@@ -181,6 +206,9 @@ export class BabylonInputSystem {
         this.element.addEventListener("touchcancel", this.handleTouchEnd, {passive: false});
     }
 
+    /**
+     * Detach the input system and remove event listeners
+     */
     public detach(): void {
         if (this.element) {
             this.element.removeEventListener("touchstart", this.handleTouchStart);
@@ -195,6 +223,9 @@ export class BabylonInputSystem {
         this.activeTouches.clear();
     }
 
+    /**
+     * Dispose of the input system and clean up all resources
+     */
     public dispose(): void {
         this.detach();
 

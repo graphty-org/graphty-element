@@ -1,5 +1,5 @@
 /**
- * @fileoverview Utility for converting graphty-element Graph to @graphty/algorithms Graph format
+ * @file Utility for converting graphty-element Graph to @graphty/algorithms Graph format
  */
 
 import {Graph as AlgorithmGraph} from "@graphty/algorithms";
@@ -27,7 +27,6 @@ export interface GraphConverterOptions {
 
 /**
  * Convert a graphty-element Graph to @graphty/algorithms Graph format
- *
  * @param g - The graphty-element Graph instance
  * @param options - Conversion options
  * @returns A new AlgorithmGraph instance
@@ -79,7 +78,6 @@ export function toAlgorithmGraph(g: Graph, options: GraphConverterOptions = {}):
 /**
  * Convert a graphty-element Graph to adjacency map format
  * Used by algorithms like labelPropagation and leiden that expect Map<string, Map<string, number>>
- *
  * @param g - The graphty-element Graph instance
  * @param options - Conversion options
  * @returns An adjacency map where outer map keys are node IDs, inner maps are neighbor -> weight

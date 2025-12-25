@@ -13,7 +13,6 @@ export interface GeneratedCert {
 /**
  * Generate a self-signed certificate for HTTPS.
  * The certificate is valid for localhost and common local development hostnames.
- *
  * @param hostname - Optional hostname to include in the certificate (default: localhost)
  * @returns Object containing PEM-encoded certificate and private key
  */
@@ -65,7 +64,6 @@ export function generateSelfSignedCert(hostname = "localhost"): GeneratedCert {
 
 /**
  * Check if certificate files exist and are readable.
- *
  * @param certPath - Path to the certificate file
  * @param keyPath - Path to the private key file
  * @returns true if both files exist and are readable
@@ -85,7 +83,6 @@ export function certFilesExist(certPath: string, keyPath: string): boolean {
 
 /**
  * Read certificate and key from files.
- *
  * @param certPath - Path to the certificate file
  * @param keyPath - Path to the private key file
  * @returns Object containing PEM-encoded certificate and private key

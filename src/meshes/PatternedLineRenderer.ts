@@ -9,7 +9,6 @@
  * - ALL geometries MUST use XZ plane (Y=0) for proper billboarding
  * - Uses FilledArrowRenderer shader for tangent billboarding
  * - Batched camera updates for performance
- *
  * @remarks
  * This implements Phases 1-4 of mesh-based-patterned-lines.md
  * - Phase 1: Discrete patterns (dot, star, dash, diamond) with billboarding
@@ -46,6 +45,15 @@ export class ContinuousPatternMesh {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata: any = {};
 
+    /**
+     * Creates a new continuous pattern mesh wrapper
+     * @param mesh - The Babylon.js mesh
+     * @param pattern - The pattern type
+     * @param width - Line width
+     * @param color - Line color
+     * @param opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
+     */
     constructor(
         mesh: Mesh,
         pattern: PatternType,
@@ -62,6 +70,11 @@ export class ContinuousPatternMesh {
         this.scene = scene;
     }
 
+    /**
+     * Updates the continuous pattern mesh geometry and position
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
+     */
     update(start: Vector3, end: Vector3): void {
         const direction = end.subtract(start);
         const lineLength = direction.length();
@@ -91,6 +104,9 @@ export class ContinuousPatternMesh {
         FilledArrowRenderer.setLineDirection(this.mesh, normalizedDir);
     }
 
+    /**
+     * Disposes the mesh and cleans up resources
+     */
     dispose(): void {
         this.mesh.dispose();
     }
@@ -177,7 +193,10 @@ export const PATTERN_DEFINITIONS: Record<PatternType, PatternDefinition> = {
 // RENDERER CLASS
 // ==========================================
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Utility class with static state for shader registration
+/**
+ * Static utility class for creating mesh-based pattern geometries for line visualization
+ */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PatternedLineRenderer {
     private static activeMaterials = new Set<ShaderMaterial>();
     private static cameraCallbackRegistered = false;
@@ -185,7 +204,15 @@ export class PatternedLineRenderer {
     /**
      * Create a PatternedLineMesh instance
      * Note: start/end are already adjusted by Edge.transformArrowCap() for node surfaces and arrows
-     * @param is2DMode Optional flag to apply 2D materials instead of 3D shader (default false)
+     * @param pattern - The pattern type to render
+     * @param start - Starting point of the line (already adjusted)
+     * @param end - Ending point of the line (already adjusted)
+     * @param width - Line width
+     * @param color - Line color
+     * @param opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
+     * @param is2DMode - Optional flag to apply 2D materials instead of 3D shader (default false)
+     * @returns A PatternedLineMesh instance
      */
     static create(
         pattern: PatternType,
@@ -214,6 +241,15 @@ export class PatternedLineRenderer {
      * Create connected pattern using repeating segment meshes with ZERO spacing
      * Used for patterns like zigzag that need seamless tiling
      * Uses same efficient approach as discrete patterns (dot/star/etc) but with spacing=0
+     * @param pattern - The pattern type to render
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
+     * @param width - Line width
+     * @param color - Line color
+     * @param opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
+     * @param is2DMode - Whether to use 2D mode rendering
+     * @returns A PatternedLineMesh instance
      */
     static createContinuousMesh(
         pattern: PatternType,
@@ -233,8 +269,15 @@ export class PatternedLineRenderer {
     /**
      * Create a single pattern mesh with appropriate geometry and shader
      * Phase 3: Now accepts shapeType parameter for alternating patterns and is2DMode flag
-     * @param segmentLength Optional segment length for connected patterns (for exact fit per edge)
-     * @param is2DMode Optional flag to apply 2D materials instead of 3D shader (default false)
+     * @param pattern - The pattern type to render
+     * @param width - Line width
+     * @param color - Line color
+     * @param opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
+     * @param shapeType - Optional specific shape type for alternating patterns
+     * @param segmentLength - Optional segment length for connected patterns (for exact fit per edge)
+     * @param is2DMode - Optional flag to apply 2D materials instead of 3D shader (default false)
+     * @returns The created pattern mesh
      */
     static createPatternMesh(
         pattern: PatternType,
@@ -333,10 +376,9 @@ export class PatternedLineRenderer {
     /**
      * Create geometry for connected patterns (zigzag, sinewave) pre-scaled to width
      * Segment length can be adjusted per edge for exact fit
-     *
-     * @param pattern Pattern type (zigzag or sinewave)
-     * @param width Desired visual width (scales amplitude/thickness, not X-length)
-     * @param segmentLength X-length of one pattern period (defaults to 0.75)
+     * @param pattern - Pattern type (zigzag or sinewave)
+     * @param width - Desired visual width (scales amplitude/thickness, not X-length)
+     * @param segmentLength - X-length of one pattern period (defaults to 0.75)
      * @returns VertexData with specified segment length and amplitude/thickness proportional to width
      */
     private static createConnectedSegmentGeometry(
@@ -360,6 +402,8 @@ export class PatternedLineRenderer {
 
     /**
      * Get geometry for a pattern type
+     * @param pattern - The pattern type
+     * @returns VertexData for the pattern
      */
     private static getGeometryForPattern(pattern: PatternType): VertexData {
         switch (pattern) {
@@ -389,6 +433,8 @@ export class PatternedLineRenderer {
     /**
      * Get geometry for a specific shape type
      * Phase 3: Enables alternating patterns (e.g., dash-dot)
+     * @param shapeType - The shape type
+     * @returns VertexData for the shape
      */
     private static getGeometryForShapeType(
         shapeType: "circle" | "star" | "box" | "diamond" | "sinewave-segment" | "zigzag-segment",
@@ -419,6 +465,8 @@ export class PatternedLineRenderer {
     /**
      * Create circle geometry in XZ plane (Y=0)
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
+     * @param segments - Number of segments in the circle
+     * @returns VertexData for a circle
      */
     private static createCircleGeometry(segments = 32): VertexData {
         const positions: number[] = [0, 0, 0]; // Center
@@ -447,6 +495,10 @@ export class PatternedLineRenderer {
     /**
      * Create star geometry in XZ plane (Y=0)
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
+     * @param points - Number of star points
+     * @param innerRadius - Inner radius of the star
+     * @param outerRadius - Outer radius of the star
+     * @returns VertexData for a star
      */
     private static createStarGeometry(
         points = 5,
@@ -482,6 +534,8 @@ export class PatternedLineRenderer {
      * Create box geometry in XZ plane (Y=0)
      * Elongated rectangle for dashes
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
+     * @param aspectRatio - Aspect ratio (length/width)
+     * @returns VertexData for a box
      */
     private static createBoxGeometry(aspectRatio = 1.0): VertexData {
         const length = 1.0;
@@ -523,6 +577,7 @@ export class PatternedLineRenderer {
     /**
      * Create diamond geometry in XZ plane (Y=0)
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
+     * @returns VertexData for a diamond
      */
     private static createDiamondGeometry(): VertexData {
         const length = 1.0;
@@ -568,7 +623,6 @@ export class PatternedLineRenderer {
      * IMPORTANT: For seamless tiling, each segment must contain exactly 1 complete wave period.
      * This ensures that when segments are placed end-to-end at 0.75 unit intervals,
      * the wave pattern continues smoothly without discontinuities.
-     *
      * @param segmentLength - Length of one segment (default 1.0, typically 0.75 for tiling)
      * @param amplitude - Wave amplitude (default 0.3)
      * @param periods - Number of complete sine wave periods per segment (should be 1.0 for seamless tiling)
@@ -628,7 +682,6 @@ export class PatternedLineRenderer {
     /**
      * Create continuous zigzag geometry for the full line length (ZERO spacing)
      * Generates a seamless zigzag pattern along the entire X axis
-     *
      * @param lineLength - Total length of the line
      * @returns VertexData with positions and indices for continuous quad strip
      */
@@ -724,7 +777,6 @@ export class PatternedLineRenderer {
     /**
      * Create continuous sinewave geometry for the full line length (ZERO spacing)
      * Generates a seamless sinewave pattern along the entire X axis
-     *
      * @param lineLength - Total length of the line
      * @returns VertexData with positions and indices for continuous quad strip
      */
@@ -764,7 +816,6 @@ export class PatternedLineRenderer {
      * Create zigzag segment geometry in XZ plane (Y=0)
      * Creates a quad strip following a zigzag pattern for seamless connection
      * Face normal points in ±Y direction, maps to shader's "up" vector (toward camera)
-     *
      * @param segmentLength - Length of one segment (X-direction), default 1.0
      * @param amplitude - Perpendicular amplitude (Z-direction peak height), default 0.5
      * @param thickness - Line thickness (quad strip width), default 0.05
@@ -820,9 +871,9 @@ export class PatternedLineRenderer {
      * Returns the actual mesh extent perpendicular to the line (the visual height)
      *
      * IMPORTANT: Returns the actual geometric extent (max - min), NOT 2 × radius
-     *
-     * @param pattern Pattern type
-     * @param shapeType Optional specific shape type (for alternating patterns)
+     * @param pattern - Pattern type
+     * @param shapeType - Optional specific shape type (for alternating patterns)
+     * @returns The perpendicular diameter of the geometry
      */
     static getGeometryDiameter(
         pattern: PatternType,
@@ -866,6 +917,8 @@ export class PatternedLineRenderer {
 
     /**
      * Get the default shape type for a pattern
+     * @param pattern - The pattern type
+     * @returns The default shape type for the pattern
      */
     private static getDefaultShapeType(
         pattern: PatternType,
@@ -894,6 +947,7 @@ export class PatternedLineRenderer {
     /**
      * Register camera position update callback
      * Updates all pattern materials in one batch per frame
+     * @param scene - Babylon.js scene
      */
     private static registerCameraCallback(scene: Scene): void {
         if (this.cameraCallbackRegistered) {

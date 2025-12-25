@@ -106,13 +106,13 @@ describe("ViewMode API", () => {
             await graph.operationQueue.waitForCompletion();
 
             assert.strictEqual(graph.getViewMode(), "3d");
-            assert.isFalse(graph.is2D());
+            assert.isFalse(graph.getViewMode() === "2d");
 
             await graph.setViewMode("2d");
             await graph.operationQueue.waitForCompletion();
 
             assert.strictEqual(graph.getViewMode(), "2d");
-            assert.isTrue(graph.is2D());
+            assert.isTrue(graph.getViewMode() === "2d");
         });
 
         it("should switch from 2D to 3D", async() => {
@@ -124,13 +124,13 @@ describe("ViewMode API", () => {
             await graph.operationQueue.waitForCompletion();
 
             assert.strictEqual(graph.getViewMode(), "2d");
-            assert.isTrue(graph.is2D());
+            assert.isTrue(graph.getViewMode() === "2d");
 
             await graph.setViewMode("3d");
             await graph.operationQueue.waitForCompletion();
 
             assert.strictEqual(graph.getViewMode(), "3d");
-            assert.isFalse(graph.is2D());
+            assert.isFalse(graph.getViewMode() === "2d");
         });
 
         it("should not change if setting same mode", async() => {
@@ -142,19 +142,19 @@ describe("ViewMode API", () => {
         });
 
         it("should sync twoD property when viewMode changes", async() => {
-            assert.isFalse(graph.is2D(), "Should start in 3D");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D");
 
             await graph.setViewMode("2d");
             await graph.operationQueue.waitForCompletion();
 
-            assert.isTrue(graph.is2D(), "is2D() should be true when viewMode is '2d'");
+            assert.isTrue(graph.getViewMode() === "2d", "is2D() should be true when viewMode is '2d'");
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- Testing backward compatibility
             assert.isTrue(graph.styles.config.graph.twoD, "twoD config should be true");
 
             await graph.setViewMode("3d");
             await graph.operationQueue.waitForCompletion();
 
-            assert.isFalse(graph.is2D(), "is2D() should be false when viewMode is '3d'");
+            assert.isFalse(graph.getViewMode() === "2d", "is2D() should be false when viewMode is '3d'");
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- Testing backward compatibility
             assert.isFalse(graph.styles.config.graph.twoD, "twoD config should be false");
         });
@@ -252,7 +252,7 @@ describe("ViewMode API", () => {
             await graph.operationQueue.waitForCompletion();
 
             assert.strictEqual(graph.getViewMode(), "2d");
-            assert.isTrue(graph.is2D());
+            assert.isTrue(graph.getViewMode() === "2d");
         });
 
         it("should prioritize viewMode over twoD in style template", async() => {
@@ -275,7 +275,7 @@ describe("ViewMode API", () => {
 
             // Should work but convert to viewMode internally
             assert.strictEqual(graph.getViewMode(), "2d");
-            assert.isTrue(graph.is2D());
+            assert.isTrue(graph.getViewMode() === "2d");
         });
 
         it("should switch modes when style template changes viewMode", async() => {

@@ -2,7 +2,7 @@
 
 # Interface: GraphDataLoadedEvent
 
-Defined in: [src/events.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L36)
+Defined in: [src/events.ts:36](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L36)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:36](https://github.com/graphty-org/graphty-element/bl
 
 > **details**: `object`
 
-Defined in: [src/events.ts:39](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L39)
+Defined in: [src/events.ts:39](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L39)
 
 #### chunksLoaded
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:39](https://github.com/graphty-org/graphty-element/bl
 
 > **graph**: [`Graph`](../../Graph/classes/Graph.md)
 
-Defined in: [src/events.ts:38](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L38)
+Defined in: [src/events.ts:38](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L38)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [src/events.ts:38](https://github.com/graphty-org/graphty-element/bl
 
 > **type**: `"data-loaded"`
 
-Defined in: [src/events.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L37)
+Defined in: [src/events.ts:37](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L37)

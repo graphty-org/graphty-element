@@ -33,12 +33,20 @@ export class FixedLayout extends SimpleLayoutEngine {
     config: FixedLayoutConfigType;
     scalingFactor = 1;
 
+    /**
+     * Create a fixed layout engine
+     * @param opts - Configuration options including dimensions
+     */
     constructor(opts: FixedLayoutOpts = {}) {
         super(opts);
         this.config = FixedLayoutConfig.parse(opts);
         // Use default scaling factor from parent class
     }
 
+    /**
+     * Add a node and apply its fixed position immediately
+     * @param n - The node to add
+     */
     override addNode(n: import("../Node.js").Node): void {
         super.addNode(n);
         // For fixed layout, apply position immediately when node is added
@@ -49,6 +57,9 @@ export class FixedLayout extends SimpleLayoutEngine {
         }
     }
 
+    /**
+     * Read positions from node data and apply them directly
+     */
     doLayout(): void {
         this.stale = false;
         // Read positions from node data

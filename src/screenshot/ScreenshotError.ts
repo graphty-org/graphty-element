@@ -48,7 +48,17 @@ export enum ScreenshotErrorCode {
     PRESET_NOT_FOUND = "PRESET_NOT_FOUND",
 }
 
+/**
+ * Custom error class for screenshot and video capture failures.
+ * Provides error codes and optional details for debugging.
+ */
 export class ScreenshotError extends Error {
+    /**
+     * Creates a new ScreenshotError
+     * @param message - Human-readable error message
+     * @param code - Error code for programmatic handling
+     * @param details - Optional additional error details
+     */
     constructor(
         message: string,
         public code: ScreenshotErrorCode,

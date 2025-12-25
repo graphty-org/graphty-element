@@ -26,7 +26,6 @@ export interface HistogramBin {
 
 /**
  * Truncate a string to a maximum length, adding ellipsis if truncated.
- *
  * @param str - The string to truncate
  * @param maxLength - Maximum length before truncation (default 100)
  * @returns The truncated string with '...' appended if it was truncated
@@ -41,7 +40,6 @@ export function truncateString(str: string, maxLength = 100): string {
 
 /**
  * Safely access a nested property using dot notation.
- *
  * @param obj - The object to access
  * @param path - Dot-notation path (e.g., "data.type")
  * @returns The value at the path, or undefined if not found
@@ -67,7 +65,6 @@ export function getNestedProperty(obj: unknown, path: string): unknown {
 
 /**
  * Recursively truncate all string values in an object.
- *
  * @param obj - The object to process
  * @param maxLength - Maximum length for string values (default 100)
  * @returns A new object with truncated string values
@@ -99,7 +96,6 @@ export function truncateObjectStrings<T>(obj: T, maxLength = 100): T {
 
 /**
  * Calculate statistics for an array of numeric values.
- *
  * @param values - Array of numbers to analyze
  * @returns Statistics object with min, max, avg, median, count
  */
@@ -126,7 +122,6 @@ export function calculateStatistics(values: number[]): NumericStatistics {
 
 /**
  * Generate a histogram from numeric values.
- *
  * @param values - Array of numbers to analyze
  * @param binCount - Number of bins to create (default 5)
  * @returns Array of histogram bins
@@ -181,7 +176,6 @@ export function generateHistogram(values: number[], binCount = 5): HistogramBin[
 
 /**
  * Format a range string for histogram display.
- *
  * @param min - Minimum value
  * @param max - Maximum value
  * @returns Formatted range string
@@ -200,7 +194,6 @@ function formatRange(min: number, max: number): string {
 
 /**
  * Determine the type of a value.
- *
  * @param value - Value to analyze
  * @returns Type string
  */
@@ -227,7 +220,6 @@ export function getValueType(value: unknown): "string" | "number" | "boolean" | 
 
 /**
  * Collect all values for a property from a collection of items.
- *
  * @param items - Collection of items to extract values from
  * @param propertyPath - Dot-notation path to the property
  * @returns Array of values and null count
@@ -253,7 +245,6 @@ export function collectPropertyValues(
 
 /**
  * Analyze the dominant type of a collection of values.
- *
  * @param values - Array of values to analyze
  * @returns The dominant type or "mixed" if multiple types
  */
@@ -285,7 +276,6 @@ export function analyzeDominantType(values: unknown[]): "string" | "number" | "b
 
 /**
  * Get all available property names from a collection of items.
- *
  * @param items - Collection of items to extract property names from
  * @param maxDepth - Maximum nesting depth to explore (default 3)
  * @returns Array of property paths
@@ -305,7 +295,6 @@ export function getAvailableProperties(
 
 /**
  * Recursively collect property paths from an object.
- *
  * @param obj - Object to explore
  * @param prefix - Current property path prefix
  * @param properties - Set to add property paths to

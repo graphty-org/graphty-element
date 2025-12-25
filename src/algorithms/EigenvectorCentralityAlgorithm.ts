@@ -159,7 +159,11 @@ export class EigenvectorCentralityAlgorithm extends Algorithm<EigenvectorCentral
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the eigenvector centrality algorithm on the graph
+     *
+     * Computes eigenvector centrality scores for all nodes using power iteration.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

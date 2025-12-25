@@ -7,7 +7,6 @@
  * - Configurable log levels (silent, error, warn, info, debug, trace)
  * - Console and remote sinks for output
  * - TypeScript-first design with full type safety
- *
  * @example
  * ```typescript
  * import { GraphtyLogger, LogLevel } from "graphty-element";
@@ -24,7 +23,6 @@
  * const logger = GraphtyLogger.getLogger(["graphty", "layout"]);
  * logger.info("Layout started", { nodeCount: 100 });
  * ```
- *
  * @example URL Parameters
  * ```
  * // Enable all logging
@@ -42,7 +40,6 @@
  * // Enable remote logging to a server
  * ?graphty-element-logging=true&graphty-element-remote-log=https://localhost:9080
  * ```
- *
  * @module logging
  */
 

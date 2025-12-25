@@ -17,7 +17,6 @@ const MAX_PROPERTY_NAME_LENGTH = 50;
 
 /**
  * Format a schema summary as markdown for inclusion in system prompts.
- *
  * @param schema - The schema summary to format
  * @returns Formatted markdown string
  */
@@ -46,6 +45,8 @@ export function formatSchemaForPrompt(schema: SchemaSummary): string {
 
 /**
  * Format the header section with graph counts.
+ * @param schema - Schema summary to format
+ * @returns Formatted header text
  */
 function formatHeader(schema: SchemaSummary): string {
     return `## Data Schema
@@ -55,6 +56,8 @@ function formatHeader(schema: SchemaSummary): string {
 
 /**
  * Format node properties section.
+ * @param properties - Node property summaries
+ * @returns Formatted node properties text
  */
 function formatNodeProperties(properties: PropertySummary[]): string {
     const lines = ["### Node Properties"];
@@ -68,6 +71,8 @@ function formatNodeProperties(properties: PropertySummary[]): string {
 
 /**
  * Format edge properties section.
+ * @param properties - Edge property summaries
+ * @returns Formatted edge properties text
  */
 function formatEdgeProperties(properties: PropertySummary[]): string {
     const lines = ["### Edge Properties"];
@@ -81,6 +86,8 @@ function formatEdgeProperties(properties: PropertySummary[]): string {
 
 /**
  * Format a single property as a markdown line.
+ * @param prop - Property summary to format
+ * @returns Formatted property line
  */
 function formatProperty(prop: PropertySummary): string {
     const name = truncateName(prop.name);
@@ -93,6 +100,8 @@ function formatProperty(prop: PropertySummary): string {
 
 /**
  * Format the type string for a property.
+ * @param prop - Property summary
+ * @returns Formatted type string
  */
 function formatType(prop: PropertySummary): string {
     if (prop.type === "array" && prop.itemType) {
@@ -104,6 +113,8 @@ function formatType(prop: PropertySummary): string {
 
 /**
  * Format additional details for a property (enum values, range, format).
+ * @param prop - Property summary
+ * @returns Formatted details string
  */
 function formatDetails(prop: PropertySummary): string {
     const details: string[] = [];
@@ -133,6 +144,8 @@ function formatDetails(prop: PropertySummary): string {
 
 /**
  * Format enum values, truncating if there are too many.
+ * @param values - Enum values to format
+ * @returns Formatted enum values string
  */
 function formatEnumValues(values: string[]): string {
     if (values.length <= MAX_ENUM_VALUES_DISPLAYED) {
@@ -147,6 +160,8 @@ function formatEnumValues(values: string[]): string {
 
 /**
  * Truncate property name if too long.
+ * @param name - Property name
+ * @returns Truncated name if needed
  */
 function truncateName(name: string): string {
     if (name.length <= MAX_PROPERTY_NAME_LENGTH) {

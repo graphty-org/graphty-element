@@ -2,7 +2,7 @@
 
 # Class: StyleManager
 
-Defined in: [src/managers/StyleManager.ts:11](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L11)
+Defined in: [src/managers/StyleManager.ts:11](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L11)
 
 Manages graph styling, wrapping the Styles class with additional caching
 and event-driven updates.
@@ -17,7 +17,9 @@ and event-driven updates.
 
 > **new StyleManager**(`eventManager`, `styles?`): `StyleManager`
 
-Defined in: [src/managers/StyleManager.ts:17](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L17)
+Defined in: [src/managers/StyleManager.ts:22](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L22)
+
+Creates a new style manager
 
 #### Parameters
 
@@ -25,9 +27,13 @@ Defined in: [src/managers/StyleManager.ts:17](https://github.com/graphty-org/gra
 
 [`EventManager`](EventManager.md)
 
+Event manager for emitting style events
+
 ##### styles?
 
 [`Styles`](../../Styles/classes/Styles.md)
+
+Optional initial styles configuration
 
 #### Returns
 
@@ -39,13 +45,15 @@ Defined in: [src/managers/StyleManager.ts:17](https://github.com/graphty-org/gra
 
 > **addLayer**(`layer`): `void`
 
-Defined in: [src/managers/StyleManager.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L108)
+Defined in: [src/managers/StyleManager.ts:133](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L133)
 
 Add a new style layer
 
 #### Parameters
 
 ##### layer
+
+The style layer to add
 
 ###### edge?
 
@@ -1725,7 +1733,7 @@ Add a new style layer
 
 > **clearCache**(): `void`
 
-Defined in: [src/managers/StyleManager.ts:164](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L164)
+Defined in: [src/managers/StyleManager.ts:195](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L195)
 
 Clear the style cache
 
@@ -1739,9 +1747,9 @@ Clear the style cache
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/StyleManager.ts:34](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L34)
+Defined in: [src/managers/StyleManager.ts:45](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L45)
 
-Dispose of all resources held by the manager
+Dispose the style manager and clear caches
 
 #### Returns
 
@@ -1757,7 +1765,7 @@ Dispose of all resources held by the manager
 
 > **getCalculatedStylesForNode**(`data`): `CalculatedValue`[]
 
-Defined in: [src/managers/StyleManager.ts:67](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L67)
+Defined in: [src/managers/StyleManager.ts:84](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L84)
 
 Get calculated styles for a node
 
@@ -1767,9 +1775,13 @@ Get calculated styles for a node
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data
+
 #### Returns
 
 `CalculatedValue`[]
+
+Array of calculated values for this node
 
 ***
 
@@ -1777,7 +1789,7 @@ Get calculated styles for a node
 
 > **getStyleForEdge**(`data`, `algorithmResults?`): [`EdgeStyleId`](../../Styles/type-aliases/EdgeStyleId.md)
 
-Defined in: [src/managers/StyleManager.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L75)
+Defined in: [src/managers/StyleManager.ts:95](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L95)
 
 Get style ID for an edge, with caching
 
@@ -1787,13 +1799,19 @@ Get style ID for an edge, with caching
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Edge data for style matching
+
 ##### algorithmResults?
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Optional algorithm results for style matching
+
 #### Returns
 
 [`EdgeStyleId`](../../Styles/type-aliases/EdgeStyleId.md)
+
+The computed edge style ID
 
 ***
 
@@ -1801,7 +1819,7 @@ Get style ID for an edge, with caching
 
 > `static` **getStyleForEdgeStyleId**(`id`): `object`
 
-Defined in: [src/managers/StyleManager.ts:101](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L101)
+Defined in: [src/managers/StyleManager.ts:125](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L125)
 
 Get edge style configuration by ID
 
@@ -1811,9 +1829,13 @@ Get edge style configuration by ID
 
 [`EdgeStyleId`](../../Styles/type-aliases/EdgeStyleId.md)
 
+The edge style ID
+
 #### Returns
 
 `object`
+
+Edge style configuration
 
 ##### arrowHead?
 
@@ -2869,7 +2891,7 @@ Get edge style configuration by ID
 
 > **getStyleForNode**(`data`, `algorithmResults?`): [`NodeStyleId`](../../Styles/type-aliases/NodeStyleId.md)
 
-Defined in: [src/managers/StyleManager.ts:48](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L48)
+Defined in: [src/managers/StyleManager.ts:63](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L63)
 
 Get style ID for a node, with caching
 
@@ -2879,13 +2901,19 @@ Get style ID for a node, with caching
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data for style matching
+
 ##### algorithmResults?
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Optional algorithm results for style matching
+
 #### Returns
 
 [`NodeStyleId`](../../Styles/type-aliases/NodeStyleId.md)
+
+The computed node style ID
 
 ***
 
@@ -2893,7 +2921,7 @@ Get style ID for a node, with caching
 
 > `static` **getStyleForNodeStyleId**(`id`): `object`
 
-Defined in: [src/managers/StyleManager.ts:94](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L94)
+Defined in: [src/managers/StyleManager.ts:116](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L116)
 
 Get node style configuration by ID
 
@@ -2903,9 +2931,13 @@ Get node style configuration by ID
 
 [`NodeStyleId`](../../Styles/type-aliases/NodeStyleId.md)
 
+The node style ID
+
 #### Returns
 
 `object`
+
+Node style configuration
 
 ##### effect?
 
@@ -3469,7 +3501,7 @@ Get node style configuration by ID
 
 > **getStyles**(): [`Styles`](../../Styles/classes/Styles.md)
 
-Defined in: [src/managers/StyleManager.ts:41](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L41)
+Defined in: [src/managers/StyleManager.ts:53](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L53)
 
 Get the underlying Styles instance
 
@@ -3477,15 +3509,17 @@ Get the underlying Styles instance
 
 [`Styles`](../../Styles/classes/Styles.md)
 
+The Styles instance
+
 ***
 
 ### init()
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/StyleManager.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L30)
+Defined in: [src/managers/StyleManager.ts:38](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L38)
 
-Initialize the manager
+Initialize the style manager
 
 #### Returns
 
@@ -3501,7 +3535,7 @@ Initialize the manager
 
 > **insertLayer**(`position`, `layer`): `void`
 
-Defined in: [src/managers/StyleManager.ts:117](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L117)
+Defined in: [src/managers/StyleManager.ts:144](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L144)
 
 Insert a style layer at a specific position
 
@@ -3511,7 +3545,11 @@ Insert a style layer at a specific position
 
 `number`
 
+Position to insert at (0-based index)
+
 ##### layer
+
+The style layer to insert
 
 ###### edge?
 
@@ -5191,7 +5229,7 @@ Insert a style layer at a specific position
 
 > **loadStylesFromObject**(`obj`): `void`
 
-Defined in: [src/managers/StyleManager.ts:137](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L137)
+Defined in: [src/managers/StyleManager.ts:166](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L166)
 
 Load styles from an object
 
@@ -5200,6 +5238,8 @@ Load styles from an object
 ##### obj
 
 `object`
+
+Object containing style configuration
 
 #### Returns
 
@@ -5211,7 +5251,7 @@ Load styles from an object
 
 > **loadStylesFromUrl**(`url`): `Promise`\<`void`\>
 
-Defined in: [src/managers/StyleManager.ts:146](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L146)
+Defined in: [src/managers/StyleManager.ts:176](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L176)
 
 Load styles from a URL
 
@@ -5220,6 +5260,8 @@ Load styles from a URL
 ##### url
 
 `string`
+
+URL to load styles from
 
 #### Returns
 
@@ -5231,7 +5273,7 @@ Load styles from a URL
 
 > **removeLayersByMetadata**(`predicate`): `void`
 
-Defined in: [src/managers/StyleManager.ts:126](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L126)
+Defined in: [src/managers/StyleManager.ts:154](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L154)
 
 Remove style layers matching a metadata predicate
 
@@ -5240,6 +5282,8 @@ Remove style layers matching a metadata predicate
 ##### predicate
 
 (`metadata`) => `boolean`
+
+Function to test layer metadata
 
 #### Returns
 
@@ -5251,7 +5295,7 @@ Remove style layers matching a metadata predicate
 
 > **setCacheEnabled**(`enabled`): `void`
 
-Defined in: [src/managers/StyleManager.ts:172](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L172)
+Defined in: [src/managers/StyleManager.ts:204](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L204)
 
 Enable or disable caching
 
@@ -5260,6 +5304,8 @@ Enable or disable caching
 ##### enabled
 
 `boolean`
+
+Whether to enable caching
 
 #### Returns
 
@@ -5271,7 +5317,7 @@ Enable or disable caching
 
 > **updateStyles**(`newStyles`): `void`
 
-Defined in: [src/managers/StyleManager.ts:155](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StyleManager.ts#L155)
+Defined in: [src/managers/StyleManager.ts:186](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StyleManager.ts#L186)
 
 Update the styles configuration
 
@@ -5280,6 +5326,8 @@ Update the styles configuration
 ##### newStyles
 
 [`Styles`](../../Styles/classes/Styles.md)
+
+New Styles instance to use
 
 #### Returns
 

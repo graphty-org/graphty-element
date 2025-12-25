@@ -1,6 +1,5 @@
 /**
  * Logging sinks for graphty-element.
- *
  * @module logging/sinks
  */
 

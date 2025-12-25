@@ -21,6 +21,10 @@ export class PivotController {
     // Frame counter for throttled logging
     private frameCount = 0;
 
+    /**
+     * Creates a new PivotController instance.
+     * @param scene - The Babylon.js scene to create the pivot in
+     */
     constructor(scene: Scene) {
         this.pivot = new TransformNode("xrPivot", scene);
         this.pivot.position = Vector3.Zero();
@@ -31,7 +35,6 @@ export class PivotController {
     /**
      * Rotate the pivot by yaw (Y-axis) and pitch (X-axis) deltas.
      * Uses local space rotation.
-     *
      * @param yawDelta - Rotation around Y-axis in radians
      * @param pitchDelta - Rotation around X-axis in radians
      */
@@ -71,7 +74,6 @@ export class PivotController {
     /**
      * Rotate the pivot around an arbitrary axis.
      * Used for two-hand gesture rotation in XR.
-     *
      * @param axis - The axis to rotate around (will be normalized)
      * @param angle - The rotation angle in radians
      */
@@ -96,7 +98,6 @@ export class PivotController {
 
     /**
      * Spin the pivot around the Z-axis (roll).
-     *
      * @param delta - The rotation angle in radians
      */
     spin(delta: number): void {
@@ -108,7 +109,6 @@ export class PivotController {
     /**
      * Zoom by scaling the pivot uniformly.
      * Factor is clamped to prevent extreme zooming.
-     *
      * @param factor - Scale factor (> 1 zooms out, < 1 zooms in)
      */
     zoom(factor: number): void {
@@ -135,7 +135,6 @@ export class PivotController {
 
     /**
      * Pan (translate) the pivot by a delta vector.
-     *
      * @param delta - The translation vector
      */
     pan(delta: Vector3): void {
@@ -158,7 +157,6 @@ export class PivotController {
     /**
      * Pan relative to the current view direction.
      * Uses accumulated yaw to calculate view-relative movement.
-     *
      * @param right - Movement along view's right vector
      * @param forward - Movement along view's forward vector
      */

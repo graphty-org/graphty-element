@@ -95,14 +95,14 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we're in 3D mode with potential non-zero Z positions
-            assert.isFalse(graph.is2D(), "Should start in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D mode");
 
             // Switch to 2D mode
             await graph.setStyleTemplate(STYLE_2D);
             await graph.operationQueue.waitForCompletion();
 
             // Verify Z positions are flattened
-            assert.isTrue(graph.is2D(), "Should be in 2D mode after switch");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode after switch");
             for (const node of graph.getNodes()) {
                 assert.closeTo(
                     node.mesh.position.z,
@@ -175,7 +175,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify Z positions are restored
-            assert.isFalse(graph.is2D(), "Should be in 3D mode after restoration");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode after restoration");
             for (const node of graph.getNodes()) {
                 const originalZ = originalZPositions.get(node.id);
                 assert.isDefined(originalZ, `Should have original Z for node ${node.id}`);
@@ -197,7 +197,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we're in 2D mode
-            assert.isTrue(graph.is2D(), "Should start in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should start in 2D mode");
 
             // Verify all Z positions are 0
             for (const node of graph.getNodes()) {
@@ -209,7 +209,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify Z positions stay at 0 since there were no previous 3D values
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
             for (const node of graph.getNodes()) {
                 // No original Z values to restore, so positions should remain at 0
                 assert.closeTo(
@@ -317,7 +317,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify all nodes have Z=0
-            assert.isTrue(graph.is2D(), "Should start in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should start in 2D mode");
             for (const node of graph.getNodes()) {
                 assert.closeTo(node.mesh.position.z, 0, 0.01);
             }
@@ -325,7 +325,7 @@ describe("2D/3D Mode Switching", () => {
             // Switch to 3D
             await graph.setStyleTemplate(STYLE_3D);
             await graph.operationQueue.waitForCompletion();
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             // Z should still be 0 (no previous 3D values)
             for (const node of graph.getNodes()) {
@@ -337,7 +337,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Z should remain 0
-            assert.isTrue(graph.is2D(), "Should be back in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be back in 2D mode");
             for (const node of graph.getNodes()) {
                 assert.closeTo(
                     node.mesh.position.z,
@@ -377,7 +377,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Final state should be 3D with restored Z positions
-            assert.isFalse(graph.is2D(), "Should be in 3D mode after rapid switches");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode after rapid switches");
             for (const node of graph.getNodes()) {
                 const originalZ = originalZPositions.get(node.id);
                 if (originalZ === undefined) {
@@ -402,7 +402,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.setStyleTemplate(STYLE_2D);
             await graph.operationQueue.waitForCompletion();
 
-            assert.isTrue(graph.is2D(), "Should be in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode");
             assert.equal(graph.getNodeCount(), 0, "Should have no nodes");
 
             // Add nodes in 2D mode
@@ -425,7 +425,7 @@ describe("2D/3D Mode Switching", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Z should remain 0 (these nodes never had 3D positions)
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
             for (const node of graph.getNodes()) {
                 assert.closeTo(
                     node.mesh.position.z,

@@ -13,6 +13,8 @@ export interface ConsoleSinkOptions {
 
 /**
  * Default formatter for log records.
+ * @param record - The log record to format
+ * @returns Formatted log message string
  */
 function defaultFormatter(record: LogRecord): string {
     const parts: string[] = [];
@@ -34,6 +36,8 @@ function defaultFormatter(record: LogRecord): string {
 
 /**
  * Get the console method for a log level.
+ * @param level - The log level
+ * @returns The appropriate console method name
  */
 function getConsoleMethod(level: LogLevel): "error" | "warn" | "info" | "debug" | "log" {
     switch (level) {
@@ -53,7 +57,6 @@ function getConsoleMethod(level: LogLevel): "error" | "warn" | "info" | "debug" 
 
 /**
  * Create a console sink for logging to the browser console.
- *
  * @param options - Sink configuration options
  * @returns A Sink that writes to the console
  */

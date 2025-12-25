@@ -2,7 +2,7 @@
 
 # Interface: AiVoiceStartEvent
 
-Defined in: [src/events.ts:287](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L287)
+Defined in: [src/events.ts:287](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L287)
 
 Emitted when voice input starts
 
@@ -12,4 +12,4 @@ Emitted when voice input starts
 
 > **type**: `"ai-voice-start"`
 
-Defined in: [src/events.ts:288](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L288)
+Defined in: [src/events.ts:288](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L288)

@@ -72,12 +72,16 @@ export class AiStatusManager {
     private status: AiStatus;
     private listeners = new Set<StatusChangeCallback>();
 
+    /**
+     * Creates a new AiStatusManager instance.
+     */
     constructor() {
         this.status = this.createInitialStatus();
     }
 
     /**
      * Get the current status (read-only reference).
+     * @returns Current status object
      */
     get current(): Readonly<AiStatus> {
         return this.status;
@@ -85,6 +89,7 @@ export class AiStatusManager {
 
     /**
      * Create initial status state.
+     * @returns Initial status object
      */
     private createInitialStatus(): AiStatus {
         return {

@@ -2,7 +2,7 @@
 
 # Interface: AlgorithmStatics
 
-Defined in: [src/algorithms/Algorithm.ts:19](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L19)
+Defined in: [src/algorithms/Algorithm.ts:19](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L19)
 
 Interface for Algorithm class static members
 Exported for use in type annotations when referencing algorithm classes
@@ -13,7 +13,7 @@ Exported for use in type annotations when referencing algorithm classes
 
 > **namespace**: `string`
 
-Defined in: [src/algorithms/Algorithm.ts:21](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L21)
+Defined in: [src/algorithms/Algorithm.ts:21](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L21)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [src/algorithms/Algorithm.ts:21](https://github.com/graphty-org/grap
 
 > **optionsSchema**: `OptionsSchema`
 
-Defined in: [src/algorithms/Algorithm.ts:22](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L22)
+Defined in: [src/algorithms/Algorithm.ts:22](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L22)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [src/algorithms/Algorithm.ts:22](https://github.com/graphty-org/grap
 
 > `optional` **suggestedStyles**: [`SuggestedStylesProvider`](../../../config/type-aliases/SuggestedStylesProvider.md)
 
-Defined in: [src/algorithms/Algorithm.ts:23](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L23)
+Defined in: [src/algorithms/Algorithm.ts:23](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L23)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [src/algorithms/Algorithm.ts:23](https://github.com/graphty-org/grap
 
 > **type**: `string`
 
-Defined in: [src/algorithms/Algorithm.ts:20](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L20)
+Defined in: [src/algorithms/Algorithm.ts:20](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L20)
 
 ***
 
@@ -45,7 +45,7 @@ Defined in: [src/algorithms/Algorithm.ts:20](https://github.com/graphty-org/grap
 
 > `optional` **zodOptionsSchema**: [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/algorithms/Algorithm.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L31)
+Defined in: [src/algorithms/Algorithm.ts:31](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L31)
 
 NEW: Zod-based options schema for unified validation and UI metadata
 
@@ -55,7 +55,7 @@ NEW: Zod-based options schema for unified validation and UI metadata
 
 > **getOptionsSchema**(): `OptionsSchema`
 
-Defined in: [src/algorithms/Algorithm.ts:25](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L25)
+Defined in: [src/algorithms/Algorithm.ts:25](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L25)
 
 #### Returns
 
@@ -71,7 +71,7 @@ Use getZodOptionsSchema() instead
 
 > **getSuggestedStyles**(): [`SuggestedStylesConfig`](../../../config/interfaces/SuggestedStylesConfig.md) \| `null`
 
-Defined in: [src/algorithms/Algorithm.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L29)
+Defined in: [src/algorithms/Algorithm.ts:29](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L29)
 
 #### Returns
 
@@ -83,7 +83,7 @@ Defined in: [src/algorithms/Algorithm.ts:29](https://github.com/graphty-org/grap
 
 > **getZodOptionsSchema**(): [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/algorithms/Algorithm.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L33)
+Defined in: [src/algorithms/Algorithm.ts:33](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L33)
 
 Get the Zod-based options schema for this algorithm
 
@@ -97,7 +97,7 @@ Get the Zod-based options schema for this algorithm
 
 > **hasOptions**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L27)
+Defined in: [src/algorithms/Algorithm.ts:27](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L27)
 
 #### Returns
 
@@ -113,7 +113,7 @@ Use hasZodOptions() instead
 
 > **hasSuggestedStyles**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L28)
+Defined in: [src/algorithms/Algorithm.ts:28](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L28)
 
 #### Returns
 
@@ -125,7 +125,7 @@ Defined in: [src/algorithms/Algorithm.ts:28](https://github.com/graphty-org/grap
 
 > **hasZodOptions**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:35](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L35)
+Defined in: [src/algorithms/Algorithm.ts:35](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L35)
 
 Check if this algorithm has a Zod-based options schema
 

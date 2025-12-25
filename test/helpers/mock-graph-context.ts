@@ -286,6 +286,7 @@ export function createMockGraphContext(options: MockGraphContextOptions = {}): G
 
         // Mode check
         is2D: () => currentTwoD,
+        getViewMode: () => currentTwoD ? "2d" : "3d",
 
         // XR methods
         getXRHelper: () => xrHelperMock,

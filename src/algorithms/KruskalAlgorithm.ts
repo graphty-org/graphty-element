@@ -1,5 +1,5 @@
 /**
- * @fileoverview Kruskal's Minimum Spanning Tree Algorithm wrapper
+ * @file Kruskal's Minimum Spanning Tree Algorithm wrapper
  *
  * This algorithm finds the minimum spanning tree of an undirected graph
  * using Kruskal's algorithm. It marks edges that are part of the MST
@@ -12,6 +12,9 @@ import {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ *
+ */
 export class KruskalAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "kruskal";
@@ -53,7 +56,11 @@ export class KruskalAlgorithm extends Algorithm {
         category: "path",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes Kruskal's algorithm on the graph
+     *
+     * Computes the minimum spanning tree by processing edges in order of weight.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const edges = Array.from(g.getDataManager().edges.values());

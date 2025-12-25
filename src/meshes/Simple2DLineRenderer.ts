@@ -17,7 +17,6 @@ export class Simple2DLineRenderer {
      *
      * Creates a simple rectangle in the XY plane, positioned at the midpoint
      * and rotated to align with the line direction.
-     *
      * @param start - Start position of the line
      * @param end - End position of the line
      * @param width - Width of the line in world units
@@ -76,7 +75,6 @@ export class Simple2DLineRenderer {
      * Update line positions
      *
      * Updates the mesh position, scaling, and rotation when line endpoints change.
-     *
      * @param mesh - Mesh to update
      * @param start - New start position
      * @param end - New end position
@@ -105,7 +103,6 @@ export class Simple2DLineRenderer {
      * Create a unit rectangle (1x1) centered at the origin in the XY plane
      *
      * This geometry will be scaled and rotated to match the line's length and direction.
-     *
      * @param mesh - Mesh to apply geometry to
      */
     private static createUnitRectangle(mesh: Mesh): void {

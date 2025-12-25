@@ -18,12 +18,21 @@ export class LifecycleManager implements Manager {
     private initializing = false;
     private logger: Logger = GraphtyLogger.getLogger(["graphty", "lifecycle"]);
 
+    /**
+     * Creates a new lifecycle manager for coordinating manager initialization and disposal
+     * @param managers - Map of manager names to manager instances
+     * @param eventManager - Event manager for emitting lifecycle events
+     * @param initOrder - Array of manager names defining initialization order
+     */
     constructor(
         private managers: Map<string, Manager>,
         private eventManager: EventManager,
         private initOrder: string[],
     ) {}
 
+    /**
+     * Initialize all managers in the specified order
+     */
     async init(): Promise<void> {
         if (this.initialized || this.initializing) {
             return;
@@ -110,6 +119,7 @@ export class LifecycleManager implements Manager {
     /**
      * Start the graph system after initialization
      * This coordinates starting the render loop and other post-init setup
+     * @param updateCallback - Callback function to execute on each render frame
      */
     startGraph(updateCallback: () => void): void {
         if (!this.initialized) {
@@ -139,6 +149,9 @@ export class LifecycleManager implements Manager {
         }
     }
 
+    /**
+     * Dispose all managers in reverse initialization order
+     */
     dispose(): void {
         if (!this.initialized) {
             return;
@@ -189,6 +202,7 @@ export class LifecycleManager implements Manager {
 
     /**
      * Clean up managers that were initialized before the given manager failed
+     * @param failedManager - Name of the manager that failed to initialize
      */
     private cleanup(failedManager: string): void {
         const failedIndex = this.initOrder.indexOf(failedManager);
@@ -217,6 +231,7 @@ export class LifecycleManager implements Manager {
 
     /**
      * Check if all managers are initialized
+     * @returns True if initialization is complete, false otherwise
      */
     isInitialized(): boolean {
         return this.initialized;
@@ -225,6 +240,9 @@ export class LifecycleManager implements Manager {
     /**
      * Add a new manager to the lifecycle
      * TODO: This should only be done before init() is called
+     * @param name - Unique name for the manager
+     * @param manager - Manager instance to add
+     * @param position - Optional position in initialization order (defaults to end)
      */
     addManager(name: string, manager: Manager, position?: number): void {
         if (this.initialized || this.initializing) {
@@ -242,6 +260,8 @@ export class LifecycleManager implements Manager {
 
     /**
      * Get a manager by name
+     * @param name - Name of the manager to retrieve
+     * @returns The manager instance or undefined if not found
      */
     getManager(name: string): Manager | undefined {
         return this.managers.get(name);

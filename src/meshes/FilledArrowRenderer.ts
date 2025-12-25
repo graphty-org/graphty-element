@@ -139,6 +139,7 @@ void main() {
      * Register the shared camera position update callback
      * This callback updates ALL arrow materials at once, instead of having one callback per material.
      * This dramatically improves performance when rendering many arrows.
+     * @param scene - The Babylon.js scene to register the callback on
      */
     private static registerCameraCallback(scene: Scene): void {
         if (this.cameraCallbackRegistered) {
@@ -173,9 +174,9 @@ void main() {
      *
      * Geometry is in XY plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
-     *
-     * @param inverted If true, arrow points backward
-     * @param scene Babylon.js scene
+     * @param inverted - If true, arrow points backward
+     * @param scene - Babylon.js scene
+     * @returns Created triangle arrow mesh
      */
     static createTriangle(
         inverted: boolean,
@@ -221,8 +222,8 @@ void main() {
      *
      * Geometry is in XY plane with diamond shape
      * Uses normalized dimensions - actual sizing handled by shader
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created diamond arrow mesh
      */
     static createDiamond(scene: Scene): Mesh {
         const mesh = new Mesh("filled-diamond-arrow", scene);
@@ -271,8 +272,8 @@ void main() {
      *
      * Geometry is in XZ plane as a perfect square
      * Uses normalized dimensions - actual sizing handled by shader
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created box arrow mesh
      */
     static createBox(scene: Scene): Mesh {
         const mesh = new Mesh("filled-box-arrow", scene);
@@ -323,9 +324,9 @@ void main() {
      * Geometry is in XZ plane as a circle (Y=0)
      * Uses normalized dimensions - actual sizing handled by shader
      * Follows the same pattern as all other filled arrows (normal, diamond, box)
-     *
-     * @param scene Babylon.js scene
-     * @param segments Number of segments for circle smoothness (default: 32)
+     * @param scene - Babylon.js scene
+     * @param segments - Number of segments for circle smoothness (default: 32)
+     * @returns Created circle arrow mesh
      */
     static createCircle(scene: Scene, segments = 32): Mesh {
         const mesh = new Mesh("filled-circle-arrow", scene);
@@ -372,8 +373,8 @@ void main() {
      * Geometry is in XZ plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
      * V-shape: Triangle with middle baseline point pushed 2/3 toward tip
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created vee arrow mesh
      */
     static createVee(scene: Scene): Mesh {
         const mesh = new Mesh("filled-vee-arrow", scene);
@@ -429,8 +430,8 @@ void main() {
      *
      * Geometry is in XZ plane as a 3:1 rectangle (wide and shallow)
      * Uses normalized dimensions - actual sizing handled by shader
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created tee arrow mesh
      */
     static createTee(scene: Scene): Mesh {
         const mesh = new Mesh("filled-tee-arrow", scene);
@@ -481,8 +482,8 @@ void main() {
      * Geometry is in XZ plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
      * Half-vee: One side of the V-shape
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created half-open arrow mesh
      */
     static createHalfOpen(scene: Scene): Mesh {
         const mesh = new Mesh("filled-half-open-arrow", scene);
@@ -533,8 +534,8 @@ void main() {
      * Geometry is in XZ plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
      * V-shape: Triangle with middle baseline point pushed 2/3 toward tip
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created crow arrow mesh
      */
     static createCrow(scene: Scene): Mesh {
         const mesh = new Mesh("filled-crow-arrow", scene);
@@ -609,8 +610,8 @@ void main() {
      * Geometry is in XZ plane pointing towards +X axis
      * Uses normalized dimensions - actual sizing handled by shader
      * Creates a single hollow shape with clean corners using inner/outer vertices
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created open normal arrow mesh
      */
     static createOpenNormal(scene: Scene): Mesh {
         const mesh = new Mesh("filled-open-normal-arrow", scene);
@@ -696,9 +697,9 @@ void main() {
      * Geometry is in XZ plane as a circle (Y=0)
      * Uses normalized dimensions - actual sizing handled by shader
      * Creates a hollow circle with clean edges using inner/outer vertices (same pattern as open-normal and open-diamond)
-     *
-     * @param scene Babylon.js scene
-     * @param segments Number of segments for circle smoothness (default: 32)
+     * @param scene - Babylon.js scene
+     * @param segments - Number of segments for circle smoothness (default: 32)
+     * @returns Created open circle arrow mesh
      */
     static createOpenCircle(scene: Scene, segments = 32): Mesh {
         const mesh = new Mesh("filled-open-circle-arrow", scene);
@@ -761,8 +762,8 @@ void main() {
      * Geometry is in XZ plane
      * Uses normalized dimensions - actual sizing handled by shader
      * Creates a single hollow shape with clean corners using inner/outer vertices
-     *
-     * @param scene Babylon.js scene
+     * @param scene - Babylon.js scene
+     * @returns Created open diamond arrow mesh
      */
     static createOpenDiamond(scene: Scene): Mesh {
         const mesh = new Mesh("filled-open-diamond-arrow", scene);
@@ -862,10 +863,10 @@ void main() {
      *
      * Uses tangent billboarding: arrow aligns with line direction in screen space.
      * lineDirection is passed as a uniform (set via setLineDirection method).
-     *
-     * @param mesh Mesh to apply shader to
-     * @param options Styling options
-     * @param scene Babylon.js scene
+     * @param mesh - Mesh to apply shader to
+     * @param options - Styling options
+     * @param scene - Babylon.js scene
+     * @returns Mesh with shader material applied
      */
     static applyShader(mesh: Mesh, options: FilledArrowOptions, scene: Scene): Mesh {
         this.registerShaders();
@@ -928,9 +929,8 @@ void main() {
     /**
      * Set the line direction for a filled arrow mesh
      * This should be called every frame when the edge updates
-     *
-     * @param mesh Filled arrow mesh
-     * @param direction Line direction vector (normalized)
+     * @param mesh - Filled arrow mesh
+     * @param direction - Line direction vector (normalized)
      */
     static setLineDirection(mesh: Mesh, direction: Vector3): void {
         if (mesh.material) {
@@ -944,7 +944,6 @@ void main() {
      *
      * This method reuses the same geometry creation logic as 3D arrows
      * but applies a 2D StandardMaterial instead of billboarded ShaderMaterial.
-     *
      * @param type - Arrow type (normal, diamond, box, dot, vee, tee, etc.)
      * @param length - Arrow length in world units
      * @param width - Arrow width in world units
@@ -984,7 +983,6 @@ void main() {
      *
      * This extracts geometry creation from the existing create* methods
      * to enable reuse between 2D and 3D arrow creation.
-     *
      * @param type - Arrow type
      * @param scene - Babylon.js scene
      * @returns VertexData for the arrow geometry

@@ -57,6 +57,12 @@ export interface DFSOptions extends Record<string, unknown> {
     preOrder: boolean;
 }
 
+/**
+ * Depth-First Search (DFS) algorithm for graph traversal
+ *
+ * Performs a depth-first traversal from a source node, computing discovery time,
+ * finish time, and predecessor relationships for each reachable node.
+ */
 export class DFSAlgorithm extends Algorithm<DFSOptions> {
     static namespace = "graphty";
     static type = "dfs";
@@ -127,7 +133,9 @@ export class DFSAlgorithm extends Algorithm<DFSOptions> {
 
     /**
      * Configure the algorithm with source node
-     *
+     * @param options - Configuration options
+     * @param options.source - The source node to start DFS from
+     * @returns This algorithm instance for chaining
      * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
     configure(options: {source: number | string}): this {
@@ -135,7 +143,11 @@ export class DFSAlgorithm extends Algorithm<DFSOptions> {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the DFS algorithm on the graph
+     *
+     * Computes discovery time, finish time, and predecessor information for all reachable nodes.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const dm = g.getDataManager();

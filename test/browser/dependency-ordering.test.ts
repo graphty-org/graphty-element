@@ -307,7 +307,7 @@ describe("Dependency Ordering", () => {
         verifyNodeMeshShapes("sphere");
         verifyCircularLayoutGeometry();
         // Skip material check in 2D mode as mesh materials may differ
-        if (!skipMaterialCheck && !graph.is2D()) {
+        if (!skipMaterialCheck && graph.getViewMode() !== "2d") {
             verifyNodeMeshMaterials("#4CAF50");
         }
     }

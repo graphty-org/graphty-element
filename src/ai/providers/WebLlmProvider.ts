@@ -130,6 +130,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Check if WebGPU is available in the current browser.
+     * @returns Promise resolving to true if WebGPU is available
      */
     static async isWebGPUAvailable(): Promise<boolean> {
         if (typeof navigator === "undefined") {
@@ -156,6 +157,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Get list of available models for WebLLM.
+     * @returns Array of available model information
      */
     static getAvailableModels(): WebLlmModelInfo[] {
         return Array.from(AVAILABLE_MODELS);
@@ -163,6 +165,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Configure the provider with options.
+     * @param options - Provider configuration options
      */
     configure(options: ProviderOptions): void {
         if (options.model) {
@@ -180,6 +183,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Check if the provider is initialized.
+     * @returns True if initialized
      */
     get isInitialized(): boolean {
         return this.initialized;
@@ -187,6 +191,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Check if the provider is ready to generate responses.
+     * @returns True if ready
      */
     get isReady(): boolean {
         return this.ready;
@@ -194,6 +199,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Check if mock mode is enabled.
+     * @returns True if in mock mode
      */
     get isMockMode(): boolean {
         return this.mockMode;
@@ -220,6 +226,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Register a progress callback for initialization.
+     * @param callback - Function to call with progress updates
      */
     onProgress(callback: ProgressCallback): void {
         this.progressCallbacks.add(callback);
@@ -227,6 +234,7 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Remove a progress callback.
+     * @param callback - Callback function to remove
      */
     offProgress(callback: ProgressCallback): void {
         this.progressCallbacks.delete(callback);
@@ -234,6 +242,8 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Emit progress to all registered callbacks (used for testing).
+     * @param progress - Progress value (0-1)
+     * @param text - Progress message text
      */
     simulateProgress(progress: number, text: string): void {
         this.emitProgress(progress, text);
@@ -241,6 +251,8 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Emit progress to all registered callbacks.
+     * @param progress - Progress value (0-1)
+     * @param text - Progress message text
      */
     private emitProgress(progress: number, text: string): void {
         for (const callback of this.progressCallbacks) {
@@ -300,6 +312,11 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Generate a response from the LLM.
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param options - Generation options
+     * @param options.signal - Optional abort signal
+     * @returns Promise resolving to LLM response
      */
     async generate(
         messages: Message[],
@@ -360,6 +377,10 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Generate a streaming response from the LLM.
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param callbacks - Streaming callbacks for text and tool calls
+     * @param signal - Optional abort signal
      */
     async generateStream(
         messages: Message[],
@@ -458,6 +479,7 @@ export class WebLlmProvider implements LlmProvider {
     /**
      * Validate the API key.
      * For WebLLM, no API key is needed, so this always returns true.
+     * @returns Promise resolving to true
      */
     validateApiKey(): Promise<boolean> {
         return Promise.resolve(true);
@@ -487,6 +509,8 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Convert our Message format to OpenAI format.
+     * @param messages - Messages to convert
+     * @returns Array of OpenAI formatted messages
      */
     private convertMessages(messages: Message[]): OpenAiMessage[] {
         /* eslint-disable camelcase */
@@ -526,6 +550,8 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Convert our ToolDefinition format to OpenAI function format.
+     * @param tools - Tool definitions to convert
+     * @returns Array of OpenAI formatted tool objects
      */
     private convertTools(tools: ToolDefinition[]): Record<string, unknown>[] {
         return tools.map((t) => ({
@@ -540,6 +566,8 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Convert OpenAI response format to our LlmResponse format.
+     * @param response - OpenAI response to convert
+     * @returns Converted LLM response
      */
     private convertResponse(response: OpenAiResponse): LlmResponse {
         const choice = response.choices?.[0];
@@ -578,6 +606,9 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Generate a mock response for testing.
+     * @param messages - Conversation messages
+     * @param tools - Available tools
+     * @returns Mock LLM response
      */
     private generateMock(messages: Message[], tools: ToolDefinition[]): LlmResponse {
         // Find the last user message
@@ -600,6 +631,10 @@ export class WebLlmProvider implements LlmProvider {
 
     /**
      * Generate a mock streaming response for testing.
+     * @param messages - Conversation messages
+     * @param tools - Available tools
+     * @param callbacks - Streaming callbacks for text and tool calls
+     * @param signal - Optional abort signal
      */
     private async generateStreamMock(
         messages: Message[],

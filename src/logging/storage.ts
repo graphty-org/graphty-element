@@ -26,7 +26,6 @@ interface StoredConfig {
  * This allows logging settings to persist across page navigations
  * within the same browser session, so developers don't need to
  * re-add URL parameters on every page load.
- *
  * @param config - The logging configuration to save
  */
 export function saveLoggingConfig(config: LoggerConfig): void {
@@ -56,7 +55,6 @@ export function saveLoggingConfig(config: LoggerConfig): void {
 
 /**
  * Load logging configuration from sessionStorage.
- *
  * @returns The stored logging configuration, or null if none is stored
  */
 export function loadLoggingConfig(): LoggerConfig | null {

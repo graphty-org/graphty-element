@@ -8,6 +8,13 @@ export interface CapabilityCheck {
     estimatedMemoryMB: number;
 }
 
+/**
+ * Checks if a screenshot can be captured with the given options.
+ * Validates dimensions, format support, and provides warnings for large screenshots.
+ * @param canvas - The HTML canvas element to capture
+ * @param options - Screenshot configuration options
+ * @returns Capability check result with support status, warnings, and memory estimate
+ */
 export async function canCaptureScreenshot(
     canvas: HTMLCanvasElement,
     options: ScreenshotOptions,

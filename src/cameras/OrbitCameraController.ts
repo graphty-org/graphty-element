@@ -14,6 +14,10 @@ export interface OrbitConfig {
     inertiaDamping: number;
 }
 
+/**
+ * Controls a 3D orbit camera with pivot-based rotation and distance-based zoom.
+ * Provides trackball-style rotation and keyboard/touch controls.
+ */
 export class OrbitCameraController {
     public scene: Scene;
     public camera: UniversalCamera;
@@ -26,11 +30,18 @@ export class OrbitCameraController {
     /**
      * Expose pivot TransformNode for compatibility with existing code.
      * This is the underlying pivot from PivotController.
+     * @returns The pivot TransformNode used for rotation
      */
     public get pivot(): TransformNode {
         return this.pivotController.pivot;
     }
 
+    /**
+     * Creates a new OrbitCameraController instance.
+     * @param canvas - The canvas element to attach the camera to
+     * @param scene - The Babylon.js scene
+     * @param config - Configuration options for the orbit camera
+     */
     constructor(canvas: Element, scene: Scene, config: OrbitConfig) {
         this.canvasElement = canvas;
         this.config = config;
@@ -55,6 +66,8 @@ export class OrbitCameraController {
     /**
      * Rotate the scene by dx (yaw) and dy (pitch) amounts.
      * Delegates to PivotController for consistent rotation behavior.
+     * @param dx - Horizontal rotation delta in pixels
+     * @param dy - Vertical rotation delta in pixels
      */
     public rotate(dx: number, dy: number): void {
         // Delegate to PivotController
@@ -69,6 +82,7 @@ export class OrbitCameraController {
     /**
      * Spin the scene around the Z-axis (roll).
      * Delegates to PivotController for consistent rotation behavior.
+     * @param dz - Rotation delta around Z-axis in radians
      */
     public spin(dz: number): void {
         this.pivotController.spin(dz);
@@ -79,6 +93,7 @@ export class OrbitCameraController {
      * Zoom by adjusting camera distance.
      * Note: This uses camera-distance based zoom (not scale-based like XR).
      * This feels more natural for desktop interaction.
+     * @param delta - Distance delta to adjust camera by
      */
     public zoom(delta: number): void {
         this.cameraDistance = Scalar.Clamp(
@@ -106,6 +121,8 @@ export class OrbitCameraController {
     /**
      * Zoom the camera to fit a bounding box in view.
      * Positions the pivot at the center and adjusts camera distance.
+     * @param min - The minimum corner of the bounding box
+     * @param max - The maximum corner of the bounding box
      */
     public zoomToBoundingBox(min: Vector3, max: Vector3): void {
         const center = min.add(max).scale(0.5);

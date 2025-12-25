@@ -118,7 +118,6 @@ function queueLog(level: string, args: unknown[]): void {
 /**
  * Enable remote logging.
  * Hooks into console.log/warn/error/info and sends to the specified server.
- *
  * @param serverUrl - The URL to POST logs to (e.g., "https://dev.ato.ms:9077/log")
  * @param sessionPrefix - Prefix for session ID (defaults to "graphty")
  */
@@ -187,6 +186,7 @@ export function disableRemoteLogging(): void {
 
 /**
  * Check if remote logging is enabled.
+ * @returns True if remote logging is currently active
  */
 export function isRemoteLoggingEnabled(): boolean {
     return state.enabled;

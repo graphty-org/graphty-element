@@ -16,10 +16,8 @@ import {interpolatePalette} from "./interpolation";
  * Viridis gradient - matplotlib default, perceptually uniform
  * Maps continuous values [0,1] to colors from deep purple to bright yellow
  * ✅ Colorblind-safe ✅ Print-friendly ✅ Perceptually uniform
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * viridis(0.0) // "#440154" (deep purple)
  * viridis(0.5) // "#1f9e89" (teal)
@@ -33,10 +31,8 @@ export function viridis(value: number): string {
  * Plasma gradient - warm alternative to viridis
  * Maps continuous values [0,1] to colors from deep blue to bright yellow
  * ✅ Colorblind-safe ✅ Perceptually uniform
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * plasma(0.0) // "#0d0887" (deep blue)
  * plasma(0.5) // "#db5c68" (pink-red)
@@ -50,10 +46,8 @@ export function plasma(value: number): string {
  * Inferno gradient - dark, dramatic progression
  * Maps continuous values [0,1] to colors from near black to bright yellow
  * ✅ Colorblind-safe ✅ Perceptually uniform
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * inferno(0.0) // "#000004" (near black)
  * inferno(0.5) // "#a52c60" (red)
@@ -67,10 +61,8 @@ export function inferno(value: number): string {
  * Blues gradient - single-hue progression
  * Maps continuous values [0,1] to colors from very light blue to deep blue
  * ✅ Colorblind-safe (blue is universally safe) ✅ Print-friendly
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * blues(0.0) // "#f7fbff" (very light blue)
  * blues(0.5) // "#6baed6" (medium blue)
@@ -84,10 +76,8 @@ export function blues(value: number): string {
  * Greens gradient - single-hue progression
  * Maps continuous values [0,1] to colors from very light green to dark green
  * Use for: Growth, positive metrics
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * greens(0.0) // "#f7fcf5" (very light green)
  * greens(0.5) // "#74c476" (medium green)
@@ -101,10 +91,8 @@ export function greens(value: number): string {
  * Oranges gradient - single-hue progression
  * Maps continuous values [0,1] to colors from very light orange to dark orange
  * Use for: Heat, activity, energy
- *
  * @param value - Continuous value (0-1)
  * @returns Hex color string
- *
  * @example
  * oranges(0.0) // "#fff5eb" (very light orange)
  * oranges(0.5) // "#fd8d3c" (medium orange)

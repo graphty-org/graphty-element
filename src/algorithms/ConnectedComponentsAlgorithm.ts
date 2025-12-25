@@ -4,6 +4,9 @@ import type {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ *
+ */
 export class ConnectedComponentsAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "connected-components";
@@ -32,7 +35,11 @@ export class ConnectedComponentsAlgorithm extends Algorithm {
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the connected components algorithm on the graph
+     *
+     * Identifies connected components and assigns each node to a component.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

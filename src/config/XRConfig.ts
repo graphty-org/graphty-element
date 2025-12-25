@@ -11,29 +11,29 @@ import type {XRReferenceSpaceType} from "../xr/XRSessionManager";
  */
 export interface XRUIConfig {
     /**
-   * Enable or disable the XR UI buttons
-   * @default true
-   */
+     * Enable or disable the XR UI buttons
+     * @default true
+     */
     enabled: boolean;
 
     /**
-   * Position of the XR buttons on screen
-   * @default "bottom-left"
-   */
+     * Position of the XR buttons on screen
+     * @default "bottom-left"
+     */
     position: "bottom-left" | "bottom-right" | "top-left" | "top-right";
 
     /**
-   * Duration in milliseconds to show "not available" message
-   * Set to 0 to keep message visible permanently
-   * @default 5000
-   */
+     * Duration in milliseconds to show "not available" message
+     * Set to 0 to keep message visible permanently
+     * @default 5000
+     */
     unavailableMessageDuration: number;
 
     /**
-   * Show "VR / AR NOT AVAILABLE" warning when XR is not available
-   * When false, no message is displayed if AR/VR aren't available
-   * @default false
-   */
+     * Show "VR / AR NOT AVAILABLE" warning when XR is not available
+     * When false, no message is displayed if AR/VR aren't available
+     * @default false
+     */
     showAvailabilityWarning: boolean;
 }
 
@@ -42,22 +42,22 @@ export interface XRUIConfig {
  */
 export interface XRModeConfig {
     /**
-   * Enable this XR mode
-   * @default true
-   */
+     * Enable this XR mode
+     * @default true
+     */
     enabled: boolean;
 
     /**
-   * Reference space type for WebXR session
-   * @default "local-floor"
-   */
+     * Reference space type for WebXR session
+     * @default "local-floor"
+     */
     referenceSpaceType: XRReferenceSpaceType;
 
     /**
-   * Optional WebXR features to request
-   * @example ["hand-tracking", "hit-test"]
-   * @default []
-   */
+     * Optional WebXR features to request
+     * @example ["hand-tracking", "hit-test"]
+     * @default []
+     */
     optionalFeatures?: string[];
 }
 
@@ -66,40 +66,40 @@ export interface XRModeConfig {
  */
 export interface XRInputConfig {
     /**
-   * Enable hand tracking
-   * @default true
-   */
+     * Enable hand tracking
+     * @default true
+     */
     handTracking: boolean;
 
     /**
-   * Enable controller input
-   * @default true
-   */
+     * Enable controller input
+     * @default true
+     */
     controllers: boolean;
 
     /**
-   * Enable near interaction (touching objects with hands)
-   * @default true
-   */
+     * Enable near interaction (touching objects with hands)
+     * @default true
+     */
     nearInteraction: boolean;
 
     /**
-   * Enable physics for hand joints
-   * @default false
-   */
+     * Enable physics for hand joints
+     * @default false
+     */
     physics: boolean;
 
     /**
-   * Z-axis movement amplification factor in XR mode
-   * Multiplies Z-axis delta to make depth manipulation more practical
-   * @default 10.0
-   */
+     * Z-axis movement amplification factor in XR mode
+     * Multiplies Z-axis delta to make depth manipulation more practical
+     * @default 10.0
+     */
     zAxisAmplification?: number;
 
     /**
-   * Enable Z-axis amplification in desktop mode
-   * @default false
-   */
+     * Enable Z-axis amplification in desktop mode
+     * @default false
+     */
     enableZAmplificationInDesktop?: boolean;
 }
 
@@ -108,15 +108,15 @@ export interface XRInputConfig {
  */
 export interface XRTeleportationConfig {
     /**
-   * Enable teleportation feature
-   * @default false
-   */
+     * Enable teleportation feature
+     * @default false
+     */
     enabled: boolean;
 
     /**
-   * Duration of teleportation animation in milliseconds
-   * @default 200
-   */
+     * Duration of teleportation animation in milliseconds
+     * @default 200
+     */
     easeTime: number;
 }
 
@@ -125,34 +125,34 @@ export interface XRTeleportationConfig {
  */
 export interface XRConfig {
     /**
-   * Enable XR features globally
-   * @default true
-   */
+     * Enable XR features globally
+     * @default true
+     */
     enabled: boolean;
 
     /**
-   * UI button configuration
-   */
+     * UI button configuration
+     */
     ui: XRUIConfig;
 
     /**
-   * VR mode configuration
-   */
+     * VR mode configuration
+     */
     vr: XRModeConfig;
 
     /**
-   * AR mode configuration
-   */
+     * AR mode configuration
+     */
     ar: XRModeConfig;
 
     /**
-   * Input handling configuration
-   */
+     * Input handling configuration
+     */
     input: XRInputConfig;
 
     /**
-   * Teleportation configuration
-   */
+     * Teleportation configuration
+     */
     teleportation: XRTeleportationConfig;
 }
 

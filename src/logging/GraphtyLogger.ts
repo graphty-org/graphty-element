@@ -15,6 +15,7 @@ import {LOG_LEVEL_TO_NAME, type LoggerConfig, LogLevel, type LogRecord, type Sin
 /**
  * Create a simple console sink for LogTape without CSS styling.
  * Our messages are already formatted, so we just pass them through.
+ * @returns A LogTape sink that writes to the console
  */
 function createSimpleConsoleSink(): LogTapeSink {
     return (record) => {
@@ -107,6 +108,8 @@ let remoteLogUrl: string | undefined;
 
 /**
  * Create a category key from a category array.
+ * @param category - Hierarchical category path
+ * @returns A dot-separated string key
  */
 function categoryKey(category: string[]): string {
     return category.join(".");
@@ -114,6 +117,10 @@ function categoryKey(category: string[]): string {
 
 /**
  * Format log output with timestamp and category.
+ * @param category - Hierarchical category path
+ * @param level - Log level
+ * @param message - Log message
+ * @returns Formatted log message string
  */
 function formatLogMessage(category: string[], level: LogLevel, message: string): string {
     const config = getLoggingConfig();
@@ -135,6 +142,7 @@ function formatLogMessage(category: string[], level: LogLevel, message: string):
 
 /**
  * Dispatch a log record to all registered custom sinks.
+ * @param record - The log record to dispatch
  */
 function dispatchToSinks(record: LogRecord): void {
     for (const sink of sinkRegistry.values()) {
@@ -149,6 +157,9 @@ function dispatchToSinks(record: LogRecord): void {
 
 /**
  * Create a Logger wrapper that checks module enablement and formats output.
+ * @param category - Hierarchical category path
+ * @param logTapeLogger - The underlying LogTape logger instance
+ * @returns A wrapped Logger instance with filtering and formatting
  */
 function createLoggerWrapper(category: string[], logTapeLogger: LogTapeLogger): Logger {
     const makeLogFn = (level: LogLevel, logTapeMethod: (msg: string, data?: Record<string, unknown>) => void) => {
@@ -252,7 +263,6 @@ export interface GraphtyLoggerConfig extends LoggerConfig {
 
 /**
  * Configure the logging system.
- *
  * @param config - Logger configuration
  */
 async function configureGraphtyLogging(config: GraphtyLoggerConfig): Promise<void> {
@@ -308,7 +318,6 @@ async function configureGraphtyLogging(config: GraphtyLoggerConfig): Promise<voi
 
 /**
  * Add a custom sink to the logger.
- *
  * @param sink - The sink to add
  */
 function addSink(sink: Sink): void {
@@ -317,7 +326,6 @@ function addSink(sink: Sink): void {
 
 /**
  * Remove a sink by name.
- *
  * @param name - The name of the sink to remove
  * @returns true if the sink was removed, false if it didn't exist
  */
@@ -327,7 +335,6 @@ function removeSink(name: string): boolean {
 
 /**
  * Get all registered sinks.
- *
  * @returns Array of registered sinks
  */
 function getSinks(): Sink[] {
@@ -349,7 +356,6 @@ async function flushSinks(): Promise<void> {
 
 /**
  * Get a logger for the specified category.
- *
  * @param category - Hierarchical category path, e.g., ["graphty", "layout", "ngraph"]
  * @returns Logger instance for the category
  */
@@ -374,7 +380,6 @@ function getGraphtyLogger(category: string[]): Logger {
 
 /**
  * Check if logging is enabled.
- *
  * @returns true if logging is enabled
  */
 function isLoggingEnabled(): boolean {

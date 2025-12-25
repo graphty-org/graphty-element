@@ -72,6 +72,9 @@ export const SpringLayoutConfig = z.strictObject({
 export type SpringLayoutConfigType = z.infer<typeof SpringLayoutConfig>;
 export type SpringLayoutOpts = Partial<SpringLayoutConfigType>;
 
+/**
+ * Spring layout engine using Fruchterman-Reingold force-directed algorithm
+ */
 export class SpringLayout extends SimpleLayoutEngine {
     static type = "spring";
     static maxDimensions = 3;
@@ -79,15 +82,27 @@ export class SpringLayout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: SpringLayoutConfigType;
 
+    /**
+     * Create a spring layout engine
+     * @param opts - Configuration options including spring constant and iterations
+     */
     constructor(opts: SpringLayoutOpts) {
         super(opts);
         this.config = SpringLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for spring layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions using spring-based force simulation
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

@@ -43,6 +43,9 @@ export const MultipartiteLayoutConfig = z.strictObject({
 export type MultipartiteLayoutConfigType = z.infer<typeof MultipartiteLayoutConfig>;
 export type MultipartiteLayoutOpts = Partial<MultipartiteLayoutConfigType>;
 
+/**
+ * Multipartite layout engine for graphs with multiple node partitions
+ */
 export class MultipartiteLayout extends SimpleLayoutEngine {
     static type = "multipartite";
     static maxDimensions = 2;
@@ -50,11 +53,20 @@ export class MultipartiteLayout extends SimpleLayoutEngine {
     scalingFactor = 40;
     config: MultipartiteLayoutConfigType;
 
+    /**
+     * Create a multipartite layout engine
+     * @param opts - Configuration options including subset keys and alignment
+     */
     constructor(opts: MultipartiteLayoutOpts) {
         super(opts);
         this.config = MultipartiteLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for multipartite layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Empty object for 2D, null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Multipartite only supports 2D
         if (dimension > this.maxDimensions) {
@@ -65,6 +77,9 @@ export class MultipartiteLayout extends SimpleLayoutEngine {
         return {};
     }
 
+    /**
+     * Compute node positions for multipartite graph
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

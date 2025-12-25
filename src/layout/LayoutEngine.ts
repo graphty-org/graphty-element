@@ -30,6 +30,9 @@ export interface LayoutEngineStatics {
     hasZodOptions(): boolean;
 }
 
+/**
+ * Base class for all layout engines
+ */
 export abstract class LayoutEngine {
     static type: string;
     static maxDimensions: number;
@@ -59,22 +62,39 @@ export abstract class LayoutEngine {
     abstract get edges(): Iterable<Edge>;
     abstract get isSettled(): boolean;
 
+    /**
+     * Add multiple nodes to the layout engine
+     * @param nodes - Array of nodes to add
+     */
     addNodes(nodes: Node[]): void {
         for (const n of nodes) {
             this.addNode(n);
         }
     }
 
+    /**
+     * Add multiple edges to the layout engine
+     * @param edges - Array of edges to add
+     */
     addEdges(edges: Edge[]): void {
         for (const e of edges) {
             this.addEdge(e);
         }
     }
 
+    /**
+     * Get the type identifier for this layout engine
+     * @returns The layout engine type string
+     */
     get type(): string {
         return (this.constructor as typeof LayoutEngine).type;
     }
 
+    /**
+     * Register a layout engine class in the global registry
+     * @param cls - The layout engine class to register
+     * @returns The registered class for chaining
+     */
     static register<T extends LayoutEngineClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
@@ -82,6 +102,12 @@ export abstract class LayoutEngine {
         return cls;
     }
 
+    /**
+     * Get a layout engine instance by type
+     * @param type - The layout engine type identifier
+     * @param opts - Configuration options for the layout engine
+     * @returns A new layout engine instance or null if type not found
+     */
     static get(type: string, opts: object = {}): LayoutEngine | null {
         const SourceClass = layoutEngineRegistry.get(type);
         if (SourceClass) {
@@ -91,6 +117,11 @@ export abstract class LayoutEngine {
         return null;
     }
 
+    /**
+     * Get dimension-specific options for this layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object for the dimension or null if unsupported
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Check if this layout supports the requested dimension
         if (dimension > this.maxDimensions) {
@@ -102,6 +133,12 @@ export abstract class LayoutEngine {
         return {};
     }
 
+    /**
+     * Get dimension-specific options for a layout by type
+     * @param type - The layout engine type identifier
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object for the dimension or null if type not found or unsupported
+     */
     static getOptionsForDimensionByType(type: string, dimension: 2 | 3): object | null {
         const SourceClass = layoutEngineRegistry.get(type);
         if (!SourceClass) {
@@ -113,7 +150,6 @@ export abstract class LayoutEngine {
 
     /**
      * Get the Zod-based options schema for this layout
-     *
      * @returns The options schema, or an empty object if no schema defined
      */
     static getZodOptionsSchema(): OptionsSchema {
@@ -122,7 +158,6 @@ export abstract class LayoutEngine {
 
     /**
      * Check if this layout has a Zod-based options schema
-     *
      * @returns true if the layout has options defined
      */
     static hasZodOptions(): boolean {
@@ -131,6 +166,7 @@ export abstract class LayoutEngine {
 
     /**
      * Get a list of all registered layout types
+     * @returns Array of registered layout type identifiers
      */
     static getRegisteredTypes(): string[] {
         return Array.from(layoutEngineRegistry.keys());
@@ -138,6 +174,8 @@ export abstract class LayoutEngine {
 
     /**
      * Get a layout class by type
+     * @param type - The layout engine type identifier
+     * @returns The layout engine class or null if not found
      */
     static getClass(type: string): (LayoutEngineClass & LayoutEngineStatics) | null {
         return layoutEngineRegistry.get(type) as (LayoutEngineClass & LayoutEngineStatics) | null ?? null;
@@ -150,6 +188,9 @@ export const SimpleLayoutConfig = z.looseObject({
 export type SimpleLayoutConfigType = z.infer<typeof SimpleLayoutConfig>;
 export type SimpleLayoutOpts = Partial<SimpleLayoutConfigType>;
 
+/**
+ * Base class for simple static layout engines that compute positions synchronously
+ */
 export abstract class SimpleLayoutEngine extends LayoutEngine {
     static type: string;
     protected _nodes: Node[] = [];
@@ -158,12 +199,21 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     positions: Record<string | number, number[]> = {};
     scalingFactor = 100;
 
+    /**
+     * Create a simple layout engine
+     * @param opts - Configuration options including scalingFactor
+     */
     constructor(opts: SimpleLayoutOpts = {}) {
         super();
         const config = SimpleLayoutConfig.parse(opts);
         this.scalingFactor = config.scalingFactor;
     }
 
+    /**
+     * Get dimension-specific options for simple layouts
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter or null if unsupported
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Check if this layout supports the requested dimension
         if (dimension > this.maxDimensions) {
@@ -175,19 +225,39 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     }
 
     // basic functionality
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async init(): Promise<void> {}
 
+    /**
+     * Initialize the layout engine
+     *
+     * Simple layouts compute positions synchronously and don't require initialization.
+     */
+    async init(): Promise<void> {
+        // No-op for simple layouts
+    }
+
+    /**
+     * Add a node to the layout and mark positions as stale
+     * @param n - The node to add
+     */
     addNode(n: Node): void {
         this._nodes.push(n);
         this.stale = true;
     };
 
+    /**
+     * Add an edge to the layout and mark positions as stale
+     * @param e - The edge to add
+     */
     addEdge(e: Edge): void {
         this._edges.push(e);
         this.stale = true;
     };
 
+    /**
+     * Get the position of a node, computing layout if stale
+     * @param n - The node to get position for
+     * @returns The node's position coordinates
+     */
     getNodePosition(n: Node): Position {
         if (this.stale) {
             this.doLayout();
@@ -196,9 +266,21 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
         return posToCoords(this.positions[n.id], this.scalingFactor);
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    setNodePosition(): void {};
+    /**
+     * Set node position
+     *
+     * Simple layouts are static and recompute all positions from scratch,
+     * so individual position setting is not supported.
+     */
+    setNodePosition(): void {
+        // No-op for simple layouts
+    };
 
+    /**
+     * Get the position of an edge based on its endpoints
+     * @param e - The edge to get position for
+     * @returns The edge's source and destination positions
+     */
     getEdgePosition(e: Edge): EdgePosition{
         if (this.stale) {
             this.doLayout();
@@ -211,20 +293,47 @@ export abstract class SimpleLayoutEngine extends LayoutEngine {
     };
 
     // for animated layouts
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    step(): void {};
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    pin(): void{};
+    /**
+     * Step the layout animation
+     *
+     * Simple layouts are static and don't animate, so stepping has no effect.
+     */
+    step(): void {
+        // No-op for simple layouts
+    };
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    unpin(): void {};
+    /**
+     * Pin a node in place
+     *
+     * Simple layouts are static and don't support interactive node pinning.
+     */
+    pin(): void{
+        // No-op for simple layouts
+    };
+
+    /**
+     * Unpin a node
+     *
+     * Simple layouts are static and don't support interactive node pinning.
+     */
+    unpin(): void {
+        // No-op for simple layouts
+    };
 
     // properties
+    /**
+     * Get all nodes in the layout
+     * @returns Iterable of nodes
+     */
     get nodes(): Iterable<Node> {
         return this._nodes;
     };
 
+    /**
+     * Get all edges in the layout
+     * @returns Iterable of edges
+     */
     get edges(): Iterable<Edge> {
         return this._edges;
     };

@@ -2,7 +2,7 @@
 
 # Interface: NodeClickEvent
 
-Defined in: [src/events.ts:152](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L152)
+Defined in: [src/events.ts:152](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L152)
 
 Emitted when a node is clicked.
 
@@ -16,7 +16,7 @@ Emitted when a node is clicked.
 
 > **data**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/events.ts:155](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L155)
+Defined in: [src/events.ts:155](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L155)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/events.ts:155](https://github.com/graphty-org/graphty-element/b
 
 > **event**: `PointerEvent`
 
-Defined in: [src/events.ts:156](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L156)
+Defined in: [src/events.ts:156](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L156)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/events.ts:156](https://github.com/graphty-org/graphty-element/b
 
 > **node**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/events.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L154)
+Defined in: [src/events.ts:154](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L154)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/events.ts:154](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"node-click"`
 
-Defined in: [src/events.ts:153](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L153)
+Defined in: [src/events.ts:153](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L153)

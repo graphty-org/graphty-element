@@ -20,6 +20,10 @@ interface GestureSession {
     startRotDeg: number;
 }
 
+/**
+ * Handles user input for the 2D camera controller.
+ * Processes mouse, touch, and keyboard input for 2D camera manipulation.
+ */
 export class InputController {
     private keyState: Record<string, boolean> = {};
     private gestureSession: GestureSession | null = null;
@@ -42,6 +46,12 @@ export class InputController {
         this.keyState[e.key] = false;
     };
 
+    /**
+     * Creates a new InputController instance.
+     * @param cam - The 2D camera controller to manipulate
+     * @param canvas - The HTML canvas element to attach input listeners to
+     * @param config - Configuration options for 2D camera controls
+     */
     constructor(
         private cam: TwoDCameraController,
         private canvas: HTMLCanvasElement,
@@ -168,6 +178,10 @@ export class InputController {
         });
     }
 
+    /**
+     * Enables input handling by attaching event listeners.
+     * Idempotent - can be called multiple times safely.
+     */
     public enable(): void {
         if (this.enabled) {
             return;
@@ -183,6 +197,10 @@ export class InputController {
         this.setupTouch();
     }
 
+    /**
+     * Disables input handling by removing event listeners.
+     * Idempotent - can be called multiple times safely.
+     */
     public disable(): void {
         if (!this.enabled) {
             return;
@@ -214,6 +232,10 @@ export class InputController {
         this.gestureSession = null;
     }
 
+    /**
+     * Applies keyboard input to camera velocity for inertia-based movement.
+     * Processes WASD and arrow key presses.
+     */
     public applyKeyboardInertia(): void {
         if (!this.enabled) {
             return;
@@ -255,6 +277,10 @@ export class InputController {
         }
     }
 
+    /**
+     * Updates camera based on keyboard input and applies inertia.
+     * Should be called each frame in the render loop.
+     */
     public update(): void {
         this.applyKeyboardInertia();
         this.cam.applyInertia();

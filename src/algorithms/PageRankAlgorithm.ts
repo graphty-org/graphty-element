@@ -74,6 +74,12 @@ export interface PageRankOptions extends PageRankSchemaOptions, Record<string, u
     personalization?: Map<NodeId, number> | null;
 }
 
+/**
+ * PageRank algorithm for measuring node importance
+ *
+ * Computes the PageRank score for each node based on the graph's link structure.
+ * Supports weighted edges, personalization, and delta optimization.
+ */
 export class PageRankAlgorithm extends Algorithm<PageRankOptions> {
     static namespace = "graphty";
     static type = "pagerank";
@@ -89,7 +95,6 @@ export class PageRankAlgorithm extends Algorithm<PageRankOptions> {
 
     /**
      * LEGACY: Old-style options schema for backward compatibility
-     *
      * @deprecated Use zodOptionsSchema instead. This will be removed in a future version.
      */
     static optionsSchema: OptionsSchema = {
@@ -142,6 +147,11 @@ export class PageRankAlgorithm extends Algorithm<PageRankOptions> {
      */
     private zodOptions: PageRankSchemaOptions;
 
+    /**
+     * Creates a new PageRank algorithm instance
+     * @param g - The graph to run the algorithm on
+     * @param options - Optional configuration options
+     */
     constructor(g: Graph, options?: Partial<PageRankOptions>) {
         super(g, options);
         // Use new Zod-based validation for schema options
@@ -172,7 +182,11 @@ export class PageRankAlgorithm extends Algorithm<PageRankOptions> {
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the PageRank algorithm on the graph
+     *
+     * Computes PageRank scores for all nodes using the power iteration method.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

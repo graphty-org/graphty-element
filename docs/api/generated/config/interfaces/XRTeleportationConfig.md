@@ -2,7 +2,7 @@
 
 # Interface: XRTeleportationConfig
 
-Defined in: [src/config/XRConfig.ts:109](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L109)
+Defined in: [src/config/XRConfig.ts:109](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L109)
 
 Configuration for XR teleportation
 
@@ -12,7 +12,7 @@ Configuration for XR teleportation
 
 > **easeTime**: `number`
 
-Defined in: [src/config/XRConfig.ts:120](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L120)
+Defined in: [src/config/XRConfig.ts:120](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L120)
 
 Duration of teleportation animation in milliseconds
 
@@ -28,7 +28,7 @@ Duration of teleportation animation in milliseconds
 
 > **enabled**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:114](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L114)
+Defined in: [src/config/XRConfig.ts:114](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L114)
 
 Enable teleportation feature
 

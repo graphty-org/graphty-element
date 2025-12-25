@@ -9,7 +9,6 @@
  * - Uses FilledArrowRenderer shader for billboarding
  * - Adaptive mesh density (add/remove meshes as line length changes)
  * - Proven 35x faster than thin instances for position updates
- *
  * @remarks
  * This class implements Phases 1-4 of mesh-based-patterned-lines.md
  * - Phase 1: Basic infrastructure with discrete patterns
@@ -28,6 +27,9 @@ import {
     type PatternType,
 } from "./PatternedLineRenderer";
 
+/**
+ * Manages pattern meshes for a single edge line with adaptive mesh density
+ */
 export class PatternedLineMesh {
     meshes: Mesh[] = []; // Individual pattern meshes in world space
     pattern: PatternType;
@@ -55,6 +57,17 @@ export class PatternedLineMesh {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     material: any = null;
 
+    /**
+     * Creates a new patterned line mesh
+     * @param pattern - The pattern type to render
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
+     * @param width - Line width
+     * @param color - Line color
+     * @param opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
+     * @param is2DMode - Whether to use 2D mode rendering
+     */
     constructor(
         pattern: PatternType,
         start: Vector3,
@@ -78,6 +91,8 @@ export class PatternedLineMesh {
     /**
      * Update pattern mesh positions when line endpoints change
      * Called every frame by Edge.update() during physics simulation
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
      */
     update(start: Vector3, end: Vector3): void {
         const newLength = Vector3.Distance(start, end);
@@ -113,6 +128,7 @@ export class PatternedLineMesh {
      * Clip the last segment to fit exactly to line end
      * Uses shader-based clipping instead of mesh scaling (only in 3D mode)
      * All segments use identical 0.75 geometry (for instancing)
+     * @param lineLength - Total length of the line
      */
     private clipLastSegment(lineLength: number): void {
         // Clipping only applies to 3D mode (uses shader uniforms)
@@ -154,6 +170,8 @@ export class PatternedLineMesh {
     /**
      * Create initial pattern meshes based on line length
      * Phase 3: Updated to handle alternating patterns
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
      */
     private createInitialMeshes(start: Vector3, end: Vector3): void {
         const length = Vector3.Distance(start, end);
@@ -184,6 +202,8 @@ export class PatternedLineMesh {
     /**
      * Check if mesh count needs adjustment based on line length change
      * Uses hysteresis (±1 mesh) to prevent thrashing
+     * @param newLength - New length of the line
+     * @returns True if mesh count needs adjustment
      */
     private needsMeshCountAdjustment(newLength: number): boolean {
         const patternDef = PATTERN_DEFINITIONS[this.pattern];
@@ -196,6 +216,7 @@ export class PatternedLineMesh {
     /**
      * Add or remove meshes to match optimal count
      * Phase 3: Updated to handle alternating patterns when adding meshes
+     * @param newLength - New length of the line
      */
     private adjustMeshCount(newLength: number): void {
         const patternDef = PATTERN_DEFINITIONS[this.pattern];
@@ -223,6 +244,9 @@ export class PatternedLineMesh {
     /**
      * Calculate mesh positions along the line
      * Supports both discrete patterns (with spacing) and connected patterns (seamless)
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
+     * @returns Array of positions for each pattern mesh
      */
     private calculatePositions(start: Vector3, end: Vector3): Vector3[] {
         const patternDef = PATTERN_DEFINITIONS[this.pattern];
@@ -242,6 +266,10 @@ export class PatternedLineMesh {
      *  - start = ray intersection with source node surface
      *  - end = destination surface minus arrow length
      * DO NOT subtract nodeRadius or arrowLength again!
+     * @param start - Starting point of the line (already adjusted for node surface)
+     * @param end - Ending point of the line (already adjusted for arrow)
+     * @param _patternDef - Pattern definition (unused, reserved for future use)
+     * @returns Array of positions for each pattern mesh
      */
     private calculateDiscretePositions(
         start: Vector3,
@@ -317,6 +345,10 @@ export class PatternedLineMesh {
      *
      * All segments use FIXED 0.75 geometry (for instancing).
      * Last segment is scaled in X-direction to fit exactly (see scaleLastSegment).
+     * @param start - Starting point of the line
+     * @param end - Ending point of the line
+     * @param _patternDef - Pattern definition (unused, reserved for future use)
+     * @returns Array of positions for each pattern mesh
      */
     private calculateConnectedPositions(
         start: Vector3,
@@ -357,6 +389,7 @@ export class PatternedLineMesh {
      * For diamonds/waves/zigzags:
      *   - Geometry has diameter 1.0 in both directions
      *   - Rendered size = 1.0 × (width / 1.0) = width
+     * @returns The rendered mesh size parallel to the line
      */
     private getRenderedMeshSize(): number {
         const patternDef = PATTERN_DEFINITIONS[this.pattern];
@@ -387,6 +420,9 @@ export class PatternedLineMesh {
     /**
      * Calculate optimal number of meshes for current line length
      * Algorithm: first/last meshes touch boundaries, interior meshes evenly distributed
+     * @param lineLength - Length of the line
+     * @param patternDef - Pattern definition containing spacing configuration
+     * @returns Optimal number of meshes for the line
      */
     private calculateOptimalMeshCount(
         lineLength: number,
@@ -435,6 +471,7 @@ export class PatternedLineMesh {
      * Create a single pattern mesh
      * Phase 3: Updated to handle alternating patterns via mesh index
      * @param meshIndex - Index of the mesh in the sequence (for alternating patterns)
+     * @returns The created pattern mesh
      */
     private createPatternMesh(meshIndex: number): Mesh {
         const patternDef = PATTERN_DEFINITIONS[this.pattern];

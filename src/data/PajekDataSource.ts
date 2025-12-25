@@ -19,11 +19,19 @@ interface ParsedEdge {
     directed: boolean;
 }
 
+/**
+ * Data source for loading graph data from Pajek NET format files.
+ * Supports vertices, edges (arcs), and undirected edges with coordinates and weights.
+ */
 export class PajekDataSource extends DataSource {
     static readonly type = "pajek";
 
     private config: PajekDataSourceConfig;
 
+    /**
+     * Creates a new PajekDataSource instance.
+     * @param config - Configuration options for Pajek parsing and data loading
+     */
     constructor(config: PajekDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
@@ -33,6 +41,10 @@ export class PajekDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses Pajek NET format data into graph chunks.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         // Get Pajek content
         const content = await this.getContent();

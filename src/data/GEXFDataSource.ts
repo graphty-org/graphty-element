@@ -12,11 +12,19 @@ interface GEXFAttribute {
     type: string;
 }
 
+/**
+ * Data source for loading graph data from GEXF (Graph Exchange XML Format) files.
+ * Supports node and edge attributes, attribute types, and dynamic graphs.
+ */
 export class GEXFDataSource extends DataSource {
     static readonly type = "gexf";
 
     private config: GEXFDataSourceConfig;
 
+    /**
+     * Creates a new GEXFDataSource instance.
+     * @param config - Configuration options for GEXF parsing and data loading
+     */
     constructor(config: GEXFDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
@@ -26,6 +34,10 @@ export class GEXFDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses GEXF format data into graph chunks.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
     // Get XML content
         const xmlContent = await this.getContent();

@@ -2,7 +2,7 @@
 
 # Interface: GraphContextConfig
 
-Defined in: [src/managers/GraphContext.ts:103](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L103)
+Defined in: [src/managers/GraphContext.ts:103](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L103)
 
 Configuration options accessible through GraphContext
 
@@ -12,7 +12,7 @@ Configuration options accessible through GraphContext
 
 > `optional` **enableDetailedProfiling**: `boolean`
 
-Defined in: [src/managers/GraphContext.ts:114](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L114)
+Defined in: [src/managers/GraphContext.ts:114](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L114)
 
 Enable detailed performance profiling
 Adds hierarchical timing and advanced statistics
@@ -24,7 +24,7 @@ Default: false (use existing StatsManager only)
 
 > `optional` **pinOnDrag**: `boolean`
 
-Defined in: [src/managers/GraphContext.ts:107](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L107)
+Defined in: [src/managers/GraphContext.ts:107](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L107)
 
 Whether to pin nodes when dragged
 
@@ -34,6 +34,6 @@ Whether to pin nodes when dragged
 
 > `optional` **xr**: [`XRConfig`](../../config/interfaces/XRConfig.md)
 
-Defined in: [src/managers/GraphContext.ts:119](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L119)
+Defined in: [src/managers/GraphContext.ts:119](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L119)
 
 XR (VR/AR) configuration

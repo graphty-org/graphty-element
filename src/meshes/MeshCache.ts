@@ -8,11 +8,23 @@ import type {NodeStyleId} from "../Styles";
 
 type MeshCreatorFn = () => Mesh;
 
+/**
+ * Cache for mesh instances to improve rendering performance
+ *
+ * Stores base meshes and creates instances on demand to avoid recreating
+ * identical geometries. Tracks cache hits and misses for performance monitoring.
+ */
 export class MeshCache {
     meshCacheMap = new Map<string | NodeStyleId, Mesh>();
     hits = 0;
     misses = 0;
 
+    /**
+     * Get or create a cached mesh instance
+     * @param name - Cache key for the mesh
+     * @param creator - Function to create the mesh if not cached
+     * @returns Instanced mesh from cache or newly created
+     */
     get(name: string | NodeStyleId, creator: MeshCreatorFn): InstancedMesh {
         let mesh = this.meshCacheMap.get(name);
         if (mesh) {
@@ -35,11 +47,17 @@ export class MeshCache {
         return mesh.createInstance(`${name}`);
     }
 
+    /**
+     * Reset cache statistics (hits and misses)
+     */
     reset(): void {
         this.hits = 0;
         this.misses = 0;
     }
 
+    /**
+     * Clear all cached meshes and reset statistics
+     */
     clear(): void {
         for (const mesh of this.meshCacheMap.values()) {
             mesh.dispose();
@@ -48,6 +66,10 @@ export class MeshCache {
         this.reset();
     }
 
+    /**
+     * Get the number of cached meshes
+     * @returns Count of cached meshes
+     */
     size(): number {
         return this.meshCacheMap.size;
     }

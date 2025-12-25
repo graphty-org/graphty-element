@@ -69,7 +69,7 @@ describe("Video Capture - 2D Orthographic Camera", () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Verify 2D mode is active
-        assert.isTrue(graph.is2D(), "Graph should be in 2D mode");
+        assert.isTrue(graph.getViewMode() === "2d", "Graph should be in 2D mode");
     });
 
     afterEach(() => {
@@ -177,7 +177,7 @@ describe("Video Capture - 2D Animated Camera", () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Verify 2D mode is active
-        assert.isTrue(graph.is2D(), "Graph should be in 2D mode");
+        assert.isTrue(graph.getViewMode() === "2d", "Graph should be in 2D mode");
     });
 
     afterEach(() => {
@@ -360,7 +360,7 @@ describe("Video Capture - 2D Camera Preservation", () => {
 
     test("2D mode is maintained during video capture", async() => {
         // Verify 2D mode before capture
-        assert.isTrue(graph.is2D(), "Graph should be in 2D mode before capture");
+        assert.isTrue(graph.getViewMode() === "2d", "Graph should be in 2D mode before capture");
 
         const result = await graph.captureAnimation({
             duration: 500,
@@ -369,7 +369,7 @@ describe("Video Capture - 2D Camera Preservation", () => {
         });
 
         // Verify 2D mode after capture
-        assert.isTrue(graph.is2D(), "Graph should remain in 2D mode after capture");
+        assert.isTrue(graph.getViewMode() === "2d", "Graph should remain in 2D mode after capture");
         assert.ok(result.blob instanceof Blob);
     });
 

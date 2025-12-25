@@ -2,7 +2,7 @@
 
 # Class: RenderManager
 
-Defined in: [src/managers/RenderManager.ts:39](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L39)
+Defined in: [src/managers/RenderManager.ts:39](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L39)
 
 Manages Babylon.js scene, engine, and render loop
 
@@ -16,7 +16,9 @@ Manages Babylon.js scene, engine, and render loop
 
 > **new RenderManager**(`canvas`, `eventManager`, `config`): `RenderManager`
 
-Defined in: [src/managers/RenderManager.ts:49](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L49)
+Defined in: [src/managers/RenderManager.ts:55](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L55)
+
+Creates a new render manager for Babylon.js scene and rendering
 
 #### Parameters
 
@@ -24,13 +26,19 @@ Defined in: [src/managers/RenderManager.ts:49](https://github.com/graphty-org/gr
 
 `HTMLCanvasElement`
 
+HTML canvas element for rendering
+
 ##### eventManager
 
 [`EventManager`](EventManager.md)
 
+Event manager for emitting render events
+
 ##### config
 
 [`RenderManagerConfig`](../interfaces/RenderManagerConfig.md) = `{}`
+
+Optional render configuration
 
 #### Returns
 
@@ -42,7 +50,7 @@ Defined in: [src/managers/RenderManager.ts:49](https://github.com/graphty-org/gr
 
 > **camera**: `CameraManager`
 
-Defined in: [src/managers/RenderManager.ts:42](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L42)
+Defined in: [src/managers/RenderManager.ts:42](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L42)
 
 ***
 
@@ -50,7 +58,7 @@ Defined in: [src/managers/RenderManager.ts:42](https://github.com/graphty-org/gr
 
 > **engine**: `Engine` \| `WebGPUEngine`
 
-Defined in: [src/managers/RenderManager.ts:40](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L40)
+Defined in: [src/managers/RenderManager.ts:40](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L40)
 
 ***
 
@@ -58,7 +66,7 @@ Defined in: [src/managers/RenderManager.ts:40](https://github.com/graphty-org/gr
 
 > **graphRoot**: `TransformNode`
 
-Defined in: [src/managers/RenderManager.ts:43](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L43)
+Defined in: [src/managers/RenderManager.ts:43](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L43)
 
 ***
 
@@ -66,7 +74,7 @@ Defined in: [src/managers/RenderManager.ts:43](https://github.com/graphty-org/gr
 
 > **scene**: `Scene`
 
-Defined in: [src/managers/RenderManager.ts:41](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L41)
+Defined in: [src/managers/RenderManager.ts:41](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L41)
 
 ## Methods
 
@@ -74,9 +82,9 @@ Defined in: [src/managers/RenderManager.ts:41](https://github.com/graphty-org/gr
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/RenderManager.ts:131](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L131)
+Defined in: [src/managers/RenderManager.ts:143](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L143)
 
-Dispose of all resources held by the manager
+Dispose the render manager and clean up resources
 
 #### Returns
 
@@ -92,13 +100,15 @@ Dispose of all resources held by the manager
 
 > **getRenderStats**(): `object`
 
-Defined in: [src/managers/RenderManager.ts:219](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L219)
+Defined in: [src/managers/RenderManager.ts:234](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L234)
 
 Get current render statistics
 
 #### Returns
 
 `object`
+
+Current FPS and active mesh count
 
 ##### activeMeshes
 
@@ -114,9 +124,9 @@ Get current render statistics
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/RenderManager.ts:101](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L101)
+Defined in: [src/managers/RenderManager.ts:110](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L110)
 
-Initialize the manager
+Initialize the render manager and Babylon.js engine
 
 #### Returns
 
@@ -132,7 +142,7 @@ Initialize the manager
 
 > **setBackgroundColor**(`color`): `void`
 
-Defined in: [src/managers/RenderManager.ts:202](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L202)
+Defined in: [src/managers/RenderManager.ts:216](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L216)
 
 Update the background color
 
@@ -141,6 +151,8 @@ Update the background color
 ##### color
 
 `string`
+
+Hex color string (e.g., "#FFFFFF")
 
 #### Returns
 
@@ -152,7 +164,7 @@ Update the background color
 
 > **startRenderLoop**(`updateCallback`): `void`
 
-Defined in: [src/managers/RenderManager.ts:149](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L149)
+Defined in: [src/managers/RenderManager.ts:162](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L162)
 
 Start the render loop with the provided update callback
 
@@ -161,6 +173,8 @@ Start the render loop with the provided update callback
 ##### updateCallback
 
 () => `void`
+
+Function to call before each render frame
 
 #### Returns
 
@@ -172,7 +186,7 @@ Start the render loop with the provided update callback
 
 > **stopRenderLoop**(): `void`
 
-Defined in: [src/managers/RenderManager.ts:189](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/RenderManager.ts#L189)
+Defined in: [src/managers/RenderManager.ts:202](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/RenderManager.ts#L202)
 
 Stop the render loop
 

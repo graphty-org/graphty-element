@@ -17,11 +17,19 @@ export interface CSVDataSourceConfig extends BaseDataSourceConfig {
     edgeURL?: string;
 }
 
+/**
+ * Data source for loading graph data from CSV files.
+ * Supports edge lists, adjacency lists, and paired node/edge files.
+ */
 export class CSVDataSource extends DataSource {
     static readonly type = "csv";
 
     private config: CSVDataSourceConfig;
 
+    /**
+     * Creates a new CSVDataSource instance.
+     * @param config - Configuration options for CSV parsing and data loading
+     */
     constructor(config: CSVDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = {
@@ -36,6 +44,11 @@ export class CSVDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses CSV data into graph chunks.
+     * Automatically detects CSV variant (edge list, adjacency list, or paired files).
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         // Handle paired files first
         if (
@@ -183,13 +196,13 @@ export class CSVDataSource extends DataSource {
     /**
      * Create an edge from CSV row data
      * Returns null if source or target is missing (and logs error)
-     *
-     * @param src Source node ID (will be converted to string)
-     * @param dst Target node ID (will be converted to string)
-     * @param row Full row data for additional properties
-     * @param sourceColName Name of source column (for error messages)
-     * @param targetColName Name of target column (for error messages)
-     * @param rowIndex Row index (for error messages)
+     * @param src - Source node ID (will be converted to string)
+     * @param dst - Target node ID (will be converted to string)
+     * @param row - Full row data for additional properties
+     * @param sourceColName - Name of source column (for error messages)
+     * @param targetColName - Name of target column (for error messages)
+     * @param rowIndex - Row index (for error messages)
+     * @returns Edge data object or null if invalid
      */
     private createEdge(
         src: unknown,

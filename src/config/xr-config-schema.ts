@@ -25,162 +25,160 @@ export const xrConfigSchema = z
         enabled: z.boolean().default(true),
 
         /**
-     * XR UI button configuration
-     */
+         * XR UI button configuration
+         */
         ui: z
             .object({
                 /**
-         * Show VR/AR entry buttons
-         * @default true
-         */
+                 * Show VR/AR entry buttons
+                 * @default true
+                 */
                 enabled: z.boolean().default(true),
 
                 /**
-         * Button position on screen
-         * @default "bottom-right"
-         */
+                 * Button position on screen
+                 * @default "bottom-right"
+                 */
                 position: z
                     .enum(["bottom-left", "bottom-right", "top-left", "top-right"])
                     .default("bottom-right"),
 
                 /**
-         * Duration to show "not available" message (ms)
-         * @default 5000
-         */
+                 * Duration to show "not available" message (ms)
+                 * @default 5000
+                 */
                 unavailableMessageDuration: z.number().positive().default(5000),
 
                 /**
-         * Show "VR / AR NOT AVAILABLE" warning when XR is not available
-         * When false, no message is displayed if AR/VR aren't available
-         * @default false
-         */
+                 * Show "VR / AR NOT AVAILABLE" warning when XR is not available
+                 * When false, no message is displayed if AR/VR aren't available
+                 * @default false
+                 */
                 showAvailabilityWarning: z.boolean().default(false),
             })
             .default({}),
 
         /**
-     * VR mode configuration
-     */
+         * VR mode configuration
+         */
         vr: z
             .object({
                 /**
-         * Enable VR mode
-         * @default true
-         */
+                 * Enable VR mode
+                 * @default true
+                 */
                 enabled: z.boolean().default(true),
 
                 /**
-         * WebXR reference space type for VR
-         * - "local": Seated/standing experience, no room bounds
-         * - "local-floor": Floor-level origin, no room bounds
-         * - "bounded-floor": Room-scale with bounds
-         * - "unbounded": Unlimited tracking space
-         * @default "local-floor"
-         */
+                 * WebXR reference space type for VR
+                 * - "local": Seated/standing experience, no room bounds
+                 * - "local-floor": Floor-level origin, no room bounds
+                 * - "bounded-floor": Room-scale with bounds
+                 * - "unbounded": Unlimited tracking space
+                 * @default "local-floor"
+                 */
                 referenceSpaceType: z
                     .enum(["local", "local-floor", "bounded-floor", "unbounded"])
                     .default("local-floor"),
 
                 /**
-         * Optional WebXR features to request
-         * @default []
-         */
+                 * Optional WebXR features to request
+                 * @default []
+                 */
                 optionalFeatures: z.array(z.string()).default([]),
             })
             .default({}),
 
         /**
-     * AR mode configuration
-     */
+         * AR mode configuration
+         */
         ar: z
             .object({
                 /**
-         * Enable AR mode
-         * @default true
-         */
+                 * Enable AR mode
+                 * @default true
+                 */
                 enabled: z.boolean().default(true),
 
                 /**
-         * WebXR reference space type for AR
-         * @default "local-floor"
-         */
+                 * WebXR reference space type for AR
+                 * @default "local-floor"
+                 */
                 referenceSpaceType: z
                     .enum(["local", "local-floor", "bounded-floor", "unbounded"])
                     .default("local-floor"),
 
                 /**
-         * Optional WebXR features to request
-         * @default ["hit-test"]
-         */
+                 * Optional WebXR features to request
+                 * @default ["hit-test"]
+                 */
                 optionalFeatures: z.array(z.string()).default(["hit-test"]),
             })
             .default({}),
 
         /**
-     * XR input and interaction configuration
-     */
+         * XR input and interaction configuration
+         */
         input: z
             .object({
                 /**
-         * Enable hand tracking
-         * @default true
-         */
+                 * Enable hand tracking
+                 * @default true
+                 */
                 handTracking: z.boolean().default(true),
 
                 /**
-         * Enable motion controllers
-         * @default true
-         */
+                 * Enable motion controllers
+                 * @default true
+                 */
                 controllers: z.boolean().default(true),
 
                 /**
-         * Enable near interaction (touch/grab)
-         * @default true
-         */
+                 * Enable near interaction (touch/grab)
+                 * @default true
+                 */
                 nearInteraction: z.boolean().default(true),
 
                 /**
-         * Enable physics-based interactions
-         * @default false
-         */
+                 * Enable physics-based interactions
+                 * @default false
+                 */
                 physics: z.boolean().default(false),
 
                 /**
-         * Z-axis movement amplification factor
-         * Multiplies Z-axis delta during drag to make depth manipulation practical in VR
-         *
-         * Example: With zAxisAmplification = 10, moving controller 0.1 units in Z
-         * will move the node 1.0 units in Z
-         *
-         * @default 10.0
-         */
+                 * Z-axis movement amplification factor
+                 * Multiplies Z-axis delta during drag to make depth manipulation practical in VR
+                 *
+                 * Example: With zAxisAmplification = 10, moving controller 0.1 units in Z
+                 * will move the node 1.0 units in Z
+                 * @default 10.0
+                 */
                 zAxisAmplification: z.number().positive().default(10.0),
 
                 /**
-         * Enable Z-axis amplification in desktop mode
-         * Normally amplification only applies in XR mode, but this can enable it for desktop too
-         *
-         * @default false
-         */
+                 * Enable Z-axis amplification in desktop mode
+                 * Normally amplification only applies in XR mode, but this can enable it for desktop too
+                 * @default false
+                 */
                 enableZAmplificationInDesktop: z.boolean().default(false),
             })
             .default({}),
 
         /**
-     * Teleportation configuration
-     */
+         * Teleportation configuration
+         */
         teleportation: z
             .object({
                 /**
-         * Enable teleportation system
-         * @default false
-         */
+                 * Enable teleportation system
+                 * @default false
+                 */
                 enabled: z.boolean().default(false),
 
                 /**
-         * Teleportation animation duration (ms)
-         * @default 200
-         */
+                 * Teleportation animation duration (ms)
+                 * @default 200
+                 */
                 easeTime: z.number().positive().default(200),
             })
             .default({}),

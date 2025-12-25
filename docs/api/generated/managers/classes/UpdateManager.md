@@ -2,7 +2,7 @@
 
 # Class: UpdateManager
 
-Defined in: [src/managers/UpdateManager.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L37)
+Defined in: [src/managers/UpdateManager.ts:37](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L37)
 
 Manages the update loop logic for the graph
 Coordinates updates across nodes, edges, layout, and camera
@@ -17,7 +17,9 @@ Coordinates updates across nodes, edges, layout, and camera
 
 > **new UpdateManager**(`eventManager`, `statsManager`, `layoutManager`, `dataManager`, `styleManager`, `camera`, `graphContext`, `config`): `UpdateManager`
 
-Defined in: [src/managers/UpdateManager.ts:46](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L46)
+Defined in: [src/managers/UpdateManager.ts:57](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L57)
+
+Creates a new update manager
 
 #### Parameters
 
@@ -25,33 +27,49 @@ Defined in: [src/managers/UpdateManager.ts:46](https://github.com/graphty-org/gr
 
 [`EventManager`](EventManager.md)
 
+Event manager for emitting update events
+
 ##### statsManager
 
 [`StatsManager`](StatsManager.md)
+
+Stats manager for performance tracking
 
 ##### layoutManager
 
 [`LayoutManager`](LayoutManager.md)
 
+Layout manager for graph layout
+
 ##### dataManager
 
 [`DataManager`](DataManager.md)
+
+Data manager for nodes and edges
 
 ##### styleManager
 
 [`StyleManager`](StyleManager.md)
 
+Style manager for styling
+
 ##### camera
 
 `CameraManager`
+
+Camera manager for view control
 
 ##### graphContext
 
 [`GraphContext`](../interfaces/GraphContext.md)
 
+Graph context for accessing shared resources
+
 ##### config
 
 [`UpdateManagerConfig`](../interfaces/UpdateManagerConfig.md) = `{}`
+
+Optional configuration
 
 #### Returns
 
@@ -65,7 +83,7 @@ Defined in: [src/managers/UpdateManager.ts:46](https://github.com/graphty-org/gr
 
 > **get** **zoomToFitCompleted**(): `boolean`
 
-Defined in: [src/managers/UpdateManager.ts:371](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L371)
+Defined in: [src/managers/UpdateManager.ts:409](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L409)
 
 Check if zoom to fit has been completed
 
@@ -73,13 +91,15 @@ Check if zoom to fit has been completed
 
 `boolean`
 
+True if zoom to fit has completed at least once
+
 ## Methods
 
 ### disableZoomToFit()
 
 > **disableZoomToFit**(): `void`
 
-Defined in: [src/managers/UpdateManager.ts:89](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L89)
+Defined in: [src/managers/UpdateManager.ts:107](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L107)
 
 Disable zoom to fit
 
@@ -93,9 +113,9 @@ Disable zoom to fit
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/UpdateManager.ts:68](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L68)
+Defined in: [src/managers/UpdateManager.ts:86](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L86)
 
-Dispose of all resources held by the manager
+Dispose the update manager
 
 #### Returns
 
@@ -111,7 +131,7 @@ Dispose of all resources held by the manager
 
 > **enableZoomToFit**(): `void`
 
-Defined in: [src/managers/UpdateManager.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L75)
+Defined in: [src/managers/UpdateManager.ts:93](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L93)
 
 Enable zoom to fit on next update
 
@@ -125,7 +145,7 @@ Enable zoom to fit on next update
 
 > **getRenderFrameCount**(): `number`
 
-Defined in: [src/managers/UpdateManager.ts:103](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L103)
+Defined in: [src/managers/UpdateManager.ts:123](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L123)
 
 Get the current render frame count
 
@@ -133,19 +153,23 @@ Get the current render frame count
 
 `number`
 
+Total number of frames rendered
+
 ***
 
 ### init()
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/UpdateManager.ts:63](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L63)
+Defined in: [src/managers/UpdateManager.ts:78](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L78)
 
-Initialize the manager
+Initialize the update manager
 
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when initialization is complete
 
 #### Implementation of
 
@@ -157,7 +181,7 @@ Initialize the manager
 
 > **isZoomToFitEnabled**(): `boolean`
 
-Defined in: [src/managers/UpdateManager.ts:96](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L96)
+Defined in: [src/managers/UpdateManager.ts:115](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L115)
 
 Get current zoom to fit state
 
@@ -165,13 +189,15 @@ Get current zoom to fit state
 
 `boolean`
 
+True if zoom to fit is enabled
+
 ***
 
 ### renderFixedFrames()
 
 > **renderFixedFrames**(`count`): `void`
 
-Defined in: [src/managers/UpdateManager.ts:111](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L111)
+Defined in: [src/managers/UpdateManager.ts:132](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L132)
 
 Render a fixed number of frames (for testing)
 This ensures deterministic rendering similar to Babylon.js testing approach
@@ -181,6 +207,8 @@ This ensures deterministic rendering similar to Babylon.js testing approach
 ##### count
 
 `number`
+
+Number of frames to render
 
 #### Returns
 
@@ -192,7 +220,9 @@ This ensures deterministic rendering similar to Babylon.js testing approach
 
 > **update**(): `void`
 
-Defined in: [src/managers/UpdateManager.ts:122](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L122)
+Defined in: [src/managers/UpdateManager.ts:146](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L146)
+
+Update the graph for the current frame
 
 #### Returns
 
@@ -204,7 +234,7 @@ Defined in: [src/managers/UpdateManager.ts:122](https://github.com/graphty-org/g
 
 > **updateConfig**(`config`): `void`
 
-Defined in: [src/managers/UpdateManager.ts:378](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/UpdateManager.ts#L378)
+Defined in: [src/managers/UpdateManager.ts:417](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/UpdateManager.ts#L417)
 
 Update configuration
 
@@ -213,6 +243,8 @@ Update configuration
 ##### config
 
 `Partial`\<[`UpdateManagerConfig`](../interfaces/UpdateManagerConfig.md)\>
+
+Partial configuration to merge
 
 #### Returns
 

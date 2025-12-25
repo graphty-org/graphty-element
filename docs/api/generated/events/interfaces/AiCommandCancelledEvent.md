@@ -2,7 +2,7 @@
 
 # Interface: AiCommandCancelledEvent
 
-Defined in: [src/events.ts:258](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L258)
+Defined in: [src/events.ts:258](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L258)
 
 Emitted when an AI command is cancelled
 
@@ -12,7 +12,7 @@ Emitted when an AI command is cancelled
 
 > **input**: `string`
 
-Defined in: [src/events.ts:260](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L260)
+Defined in: [src/events.ts:260](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L260)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [src/events.ts:260](https://github.com/graphty-org/graphty-element/b
 
 > **reason**: `"user"` \| `"timeout"`
 
-Defined in: [src/events.ts:261](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L261)
+Defined in: [src/events.ts:261](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L261)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [src/events.ts:261](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"ai-command-cancelled"`
 
-Defined in: [src/events.ts:259](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L259)
+Defined in: [src/events.ts:259](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L259)

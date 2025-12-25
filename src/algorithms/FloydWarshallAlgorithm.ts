@@ -5,6 +5,9 @@ import type {Graph} from "../Graph";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ *
+ */
 export class FloydWarshallAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "floyd-warshall";
@@ -31,7 +34,11 @@ export class FloydWarshallAlgorithm extends Algorithm {
         category: "path",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Floyd-Warshall algorithm on the graph
+     *
+     * Computes shortest path distances between all pairs of nodes.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const dm = g.getDataManager();

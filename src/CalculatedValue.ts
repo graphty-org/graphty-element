@@ -17,15 +17,27 @@ import {AdHocData, StyleHelpers} from "./config";
 
 // type CalculatedValueData = CalculatedValueNodeData | CalculatedValueEdgeData;
 
+/**
+ * Expression function type that accepts StyleHelpers and variable arguments.
+ */
+type ExpressionFunction = (styleHelpers: typeof StyleHelpers, ... args: unknown[]) => unknown;
+
+/**
+ * Represents a calculated value that computes outputs based on input data.
+ */
 export class CalculatedValue {
     inputs: string[];
     output: string;
     expr: string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    exprFn: Function;
+    exprFn: ExpressionFunction;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    constructor(inputs: string[], output: string, expr: string | Function) {
+    /**
+     * Creates a new calculated value instance.
+     * @param inputs - Array of input property paths to extract from data
+     * @param output - Output property path where result will be stored
+     * @param expr - Expression string or function to compute the output
+     */
+    constructor(inputs: string[], output: string, expr: string | ((... args: unknown[]) => unknown)) {
         this.inputs = inputs;
         this.output = output;
 
@@ -52,9 +64,14 @@ export class CalculatedValue {
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
         this.exprFn = Function("StyleHelpers", "...args", isBlockStatement ?
             `const arguments = args; ${trimmedExpr}` :
-            `const arguments = args; return (${expr});`);
+            `const arguments = args; return (${expr});`) as ExpressionFunction;
     }
 
+    /**
+     * Executes the calculated value expression with the provided data.
+     * @param data - Data object containing inputs and where output will be stored
+     * @param schema - Optional Zod schema for validating the computed result
+     */
     run(data: AdHocData, schema?: z4.$ZodType): void {
         // TODO: inputs can be: style.*, data.*, algorithm.*
         const args = this.inputs.map((i) => deepGet(data, i));

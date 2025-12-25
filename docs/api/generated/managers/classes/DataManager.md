@@ -2,7 +2,7 @@
 
 # Class: DataManager
 
-Defined in: [src/managers/DataManager.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L31)
+Defined in: [src/managers/DataManager.ts:31](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L31)
 
 Manages all data operations for nodes and edges
 Handles CRUD operations, caching, and data source loading
@@ -17,7 +17,9 @@ Handles CRUD operations, caching, and data source loading
 
 > **new DataManager**(`eventManager`, `styles`): `DataManager`
 
-Defined in: [src/managers/DataManager.ts:59](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L59)
+Defined in: [src/managers/DataManager.ts:64](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L64)
+
+Creates an instance of DataManager
 
 #### Parameters
 
@@ -25,9 +27,13 @@ Defined in: [src/managers/DataManager.ts:59](https://github.com/graphty-org/grap
 
 [`EventManager`](EventManager.md)
 
+Event manager for emitting data events
+
 ##### styles
 
 [`Styles`](../../Styles/classes/Styles.md)
+
+Styles instance for applying styles to data
 
 #### Returns
 
@@ -39,7 +45,7 @@ Defined in: [src/managers/DataManager.ts:59](https://github.com/graphty-org/grap
 
 > **edgeCache**: [`EdgeMap`](../../Edge/classes/EdgeMap.md)
 
-Defined in: [src/managers/DataManager.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L36)
+Defined in: [src/managers/DataManager.ts:36](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L36)
 
 ***
 
@@ -47,7 +53,7 @@ Defined in: [src/managers/DataManager.ts:36](https://github.com/graphty-org/grap
 
 > **edges**: `Map`\<`string` \| `number`, [`Edge`](../../Edge/classes/Edge.md)\>
 
-Defined in: [src/managers/DataManager.ts:34](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L34)
+Defined in: [src/managers/DataManager.ts:34](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L34)
 
 ***
 
@@ -55,7 +61,7 @@ Defined in: [src/managers/DataManager.ts:34](https://github.com/graphty-org/grap
 
 > `optional` **graphResults**: [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/managers/DataManager.ts:40](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L40)
+Defined in: [src/managers/DataManager.ts:40](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L40)
 
 ***
 
@@ -63,7 +69,7 @@ Defined in: [src/managers/DataManager.ts:40](https://github.com/graphty-org/grap
 
 > **meshCache**: `MeshCache`
 
-Defined in: [src/managers/DataManager.ts:43](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L43)
+Defined in: [src/managers/DataManager.ts:43](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L43)
 
 ***
 
@@ -71,7 +77,7 @@ Defined in: [src/managers/DataManager.ts:43](https://github.com/graphty-org/grap
 
 > **nodeCache**: `Map`\<[`NodeIdType`](../../Node/type-aliases/NodeIdType.md), [`Node`](../../Node/classes/Node.md)\>
 
-Defined in: [src/managers/DataManager.ts:35](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L35)
+Defined in: [src/managers/DataManager.ts:35](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L35)
 
 ***
 
@@ -79,7 +85,7 @@ Defined in: [src/managers/DataManager.ts:35](https://github.com/graphty-org/grap
 
 > **nodes**: `Map`\<`string` \| `number`, [`Node`](../../Node/classes/Node.md)\>
 
-Defined in: [src/managers/DataManager.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L33)
+Defined in: [src/managers/DataManager.ts:33](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L33)
 
 ## Methods
 
@@ -87,7 +93,9 @@ Defined in: [src/managers/DataManager.ts:33](https://github.com/graphty-org/grap
 
 > **addDataFromSource**(`type`, `opts`): `Promise`\<`void`\>
 
-Defined in: [src/managers/DataManager.ts:388](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L388)
+Defined in: [src/managers/DataManager.ts:459](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L459)
+
+Loads data from a registered data source
 
 #### Parameters
 
@@ -95,9 +103,13 @@ Defined in: [src/managers/DataManager.ts:388](https://github.com/graphty-org/gra
 
 `string`
 
+Data source type identifier
+
 ##### opts
 
 `object` = `{}`
+
+Options to pass to the data source
 
 #### Returns
 
@@ -109,7 +121,9 @@ Defined in: [src/managers/DataManager.ts:388](https://github.com/graphty-org/gra
 
 > **addEdge**(`edge`, `srcIdPath?`, `dstIdPath?`): `void`
 
-Defined in: [src/managers/DataManager.ts:298](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L298)
+Defined in: [src/managers/DataManager.ts:342](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L342)
+
+Adds a single edge to the graph
 
 #### Parameters
 
@@ -117,13 +131,19 @@ Defined in: [src/managers/DataManager.ts:298](https://github.com/graphty-org/gra
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Edge data object
+
 ##### srcIdPath?
 
 `string`
 
+JMESPath expression to extract source node ID from data
+
 ##### dstIdPath?
 
 `string`
+
+JMESPath expression to extract destination node ID from data
 
 #### Returns
 
@@ -135,7 +155,9 @@ Defined in: [src/managers/DataManager.ts:298](https://github.com/graphty-org/gra
 
 > **addEdges**(`edges`, `srcIdPath?`, `dstIdPath?`): `void`
 
-Defined in: [src/managers/DataManager.ts:302](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L302)
+Defined in: [src/managers/DataManager.ts:352](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L352)
+
+Adds multiple edges to the graph
 
 #### Parameters
 
@@ -143,13 +165,19 @@ Defined in: [src/managers/DataManager.ts:302](https://github.com/graphty-org/gra
 
 `Record`\<`string` \| `number`, `unknown`\>[]
 
+Array of edge data objects
+
 ##### srcIdPath?
 
 `string`
 
+JMESPath expression to extract source node ID from data
+
 ##### dstIdPath?
 
 `string`
+
+JMESPath expression to extract destination node ID from data
 
 #### Returns
 
@@ -161,7 +189,9 @@ Defined in: [src/managers/DataManager.ts:302](https://github.com/graphty-org/gra
 
 > **addNode**(`node`, `idPath?`): `void`
 
-Defined in: [src/managers/DataManager.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L154)
+Defined in: [src/managers/DataManager.ts:177](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L177)
+
+Adds a single node to the graph
 
 #### Parameters
 
@@ -169,9 +199,13 @@ Defined in: [src/managers/DataManager.ts:154](https://github.com/graphty-org/gra
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data object
+
 ##### idPath?
 
 `string`
+
+JMESPath expression to extract node ID from data
 
 #### Returns
 
@@ -183,7 +217,9 @@ Defined in: [src/managers/DataManager.ts:154](https://github.com/graphty-org/gra
 
 > **addNodes**(`nodes`, `idPath?`): `void`
 
-Defined in: [src/managers/DataManager.ts:158](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L158)
+Defined in: [src/managers/DataManager.ts:186](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L186)
+
+Adds multiple nodes to the graph
 
 #### Parameters
 
@@ -191,9 +227,13 @@ Defined in: [src/managers/DataManager.ts:158](https://github.com/graphty-org/gra
 
 `Record`\<`string` \| `number`, `unknown`\>[]
 
+Array of node data objects
+
 ##### idPath?
 
 `string`
+
+JMESPath expression to extract node ID from data
 
 #### Returns
 
@@ -205,7 +245,7 @@ Defined in: [src/managers/DataManager.ts:158](https://github.com/graphty-org/gra
 
 > **applyStylesToExistingEdges**(): `void`
 
-Defined in: [src/managers/DataManager.ts:98](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L98)
+Defined in: [src/managers/DataManager.ts:104](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L104)
 
 Apply styles to all existing edges
 
@@ -219,7 +259,7 @@ Apply styles to all existing edges
 
 > **applyStylesToExistingNodes**(): `void`
 
-Defined in: [src/managers/DataManager.ts:79](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L79)
+Defined in: [src/managers/DataManager.ts:85](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L85)
 
 Apply styles to all existing nodes
 
@@ -233,7 +273,7 @@ Apply styles to all existing nodes
 
 > **clear**(): `void`
 
-Defined in: [src/managers/DataManager.ts:520](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L520)
+Defined in: [src/managers/DataManager.ts:591](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L591)
 
 Clear all data
 
@@ -247,9 +287,9 @@ Clear all data
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/DataManager.ts:138](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L138)
+Defined in: [src/managers/DataManager.ts:156](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L156)
 
-Dispose of all resources held by the manager
+Disposes of the data manager and cleans up all resources
 
 #### Returns
 
@@ -265,11 +305,15 @@ Dispose of all resources held by the manager
 
 > **getEdge**(`edgeId`): [`Edge`](../../Edge/classes/Edge.md) \| `undefined`
 
-Defined in: [src/managers/DataManager.ts:360](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L360)
+Defined in: [src/managers/DataManager.ts:415](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L415)
+
+Gets an edge by its ID
 
 #### Parameters
 
 ##### edgeId
+
+Edge identifier
 
 `string` | `number`
 
@@ -277,13 +321,17 @@ Defined in: [src/managers/DataManager.ts:360](https://github.com/graphty-org/gra
 
 [`Edge`](../../Edge/classes/Edge.md) \| `undefined`
 
+Edge instance or undefined if not found
+
 ***
 
 ### getEdgeBetween()
 
 > **getEdgeBetween**(`srcNodeId`, `dstNodeId`): [`Edge`](../../Edge/classes/Edge.md) \| `undefined`
 
-Defined in: [src/managers/DataManager.ts:364](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L364)
+Defined in: [src/managers/DataManager.ts:425](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L425)
+
+Gets an edge between two nodes
 
 #### Parameters
 
@@ -291,13 +339,19 @@ Defined in: [src/managers/DataManager.ts:364](https://github.com/graphty-org/gra
 
 [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
+Source node identifier
+
 ##### dstNodeId
 
 [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
+Destination node identifier
+
 #### Returns
 
 [`Edge`](../../Edge/classes/Edge.md) \| `undefined`
+
+Edge instance or undefined if not found
 
 ***
 
@@ -305,7 +359,9 @@ Defined in: [src/managers/DataManager.ts:364](https://github.com/graphty-org/gra
 
 > **getNode**(`nodeId`): [`Node`](../../Node/classes/Node.md) \| `undefined`
 
-Defined in: [src/managers/DataManager.ts:272](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L272)
+Defined in: [src/managers/DataManager.ts:305](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L305)
+
+Gets a node by its ID
 
 #### Parameters
 
@@ -313,9 +369,13 @@ Defined in: [src/managers/DataManager.ts:272](https://github.com/graphty-org/gra
 
 [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
+Node identifier
+
 #### Returns
 
 [`Node`](../../Node/classes/Node.md) \| `undefined`
+
+Node instance or undefined if not found
 
 ***
 
@@ -323,13 +383,15 @@ Defined in: [src/managers/DataManager.ts:272](https://github.com/graphty-org/gra
 
 > **getStats**(): `object`
 
-Defined in: [src/managers/DataManager.ts:549](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L549)
+Defined in: [src/managers/DataManager.ts:621](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L621)
 
 Get statistics about the data
 
 #### Returns
 
 `object`
+
+Object containing node count, edge count, and cached mesh count
 
 ##### cachedMeshes
 
@@ -349,13 +411,15 @@ Get statistics about the data
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/DataManager.ts:133](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L133)
+Defined in: [src/managers/DataManager.ts:148](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L148)
 
-Initialize the manager
+Initializes the data manager
 
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when initialization is complete
 
 #### Implementation of
 
@@ -367,11 +431,15 @@ Initialize the manager
 
 > **removeEdge**(`edgeId`): `boolean`
 
-Defined in: [src/managers/DataManager.ts:368](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L368)
+Defined in: [src/managers/DataManager.ts:434](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L434)
+
+Removes an edge from the graph
 
 #### Parameters
 
 ##### edgeId
+
+Edge identifier to remove
 
 `string` | `number`
 
@@ -379,13 +447,17 @@ Defined in: [src/managers/DataManager.ts:368](https://github.com/graphty-org/gra
 
 `boolean`
 
+True if the edge was removed, false if not found
+
 ***
 
 ### removeNode()
 
 > **removeNode**(`nodeId`): `boolean`
 
-Defined in: [src/managers/DataManager.ts:276](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L276)
+Defined in: [src/managers/DataManager.ts:314](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L314)
+
+Removes a node from the graph
 
 #### Parameters
 
@@ -393,9 +465,13 @@ Defined in: [src/managers/DataManager.ts:276](https://github.com/graphty-org/gra
 
 [`NodeIdType`](../../Node/type-aliases/NodeIdType.md)
 
+Node identifier to remove
+
 #### Returns
 
 `boolean`
+
+True if the node was removed, false if not found
 
 ***
 
@@ -403,7 +479,7 @@ Defined in: [src/managers/DataManager.ts:276](https://github.com/graphty-org/gra
 
 > **setGraphContext**(`context`): `void`
 
-Defined in: [src/managers/DataManager.ts:120](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L120)
+Defined in: [src/managers/DataManager.ts:127](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L127)
 
 Set the GraphContext for creating nodes and edges
 
@@ -412,6 +488,8 @@ Set the GraphContext for creating nodes and edges
 ##### context
 
 [`GraphContext`](../interfaces/GraphContext.md)
+
+GraphContext instance to use for node/edge creation
 
 #### Returns
 
@@ -423,11 +501,15 @@ Set the GraphContext for creating nodes and edges
 
 > **setLayoutEngine**(`engine`): `void`
 
-Defined in: [src/managers/DataManager.ts:129](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L129)
+Defined in: [src/managers/DataManager.ts:140](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L140)
+
+Set the layout engine reference for managing node and edge positions
 
 #### Parameters
 
 ##### engine
+
+Layout engine instance or undefined to clear
 
 [`LayoutEngine`](../../layout/LayoutEngine/classes/LayoutEngine.md) | `undefined`
 
@@ -441,7 +523,7 @@ Defined in: [src/managers/DataManager.ts:129](https://github.com/graphty-org/gra
 
 > **startLabelAnimations**(): `void`
 
-Defined in: [src/managers/DataManager.ts:540](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L540)
+Defined in: [src/managers/DataManager.ts:611](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L611)
 
 Start label animations for all nodes
 Called when layout has settled
@@ -456,7 +538,7 @@ Called when layout has settled
 
 > **updateStyles**(`styles`): `void`
 
-Defined in: [src/managers/DataManager.ts:69](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/DataManager.ts#L69)
+Defined in: [src/managers/DataManager.ts:75](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/DataManager.ts#L75)
 
 Update the styles reference when styles change
 
@@ -465,6 +547,8 @@ Update the styles reference when styles change
 ##### styles
 
 [`Styles`](../../Styles/classes/Styles.md)
+
+New styles instance to use
 
 #### Returns
 

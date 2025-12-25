@@ -24,16 +24,27 @@ export interface StylesOpts {
 export type NodeStyleId = number & {__brand: "NodeStyleId"};
 export type EdgeStyleId = number & {__brand: "EdgeStyleId"};
 
+/**
+ * Manages style layers and computes styles for nodes and edges.
+ */
 export class Styles {
     readonly config: StyleSchemaV1;
     #layers: StyleLayerType[];
     #emptyNodeStyle: NodeStyleConfig;
     #emptyEdgeStyle: EdgeStyleConfig;
 
+    /**
+     * Gets the read-only array of style layers.
+     * @returns Array of style layers
+     */
     get layers(): readonly StyleLayerType[] {
         return this.#layers;
     }
 
+    /**
+     * Creates a new Styles instance from a style configuration.
+     * @param config - Style schema configuration
+     */
     constructor(config: StyleSchemaV1) {
         this.config = config;
         this.#layers = config.layers;
@@ -54,11 +65,21 @@ export class Styles {
         }
     }
 
+    /**
+     * Creates a Styles instance from a JSON string.
+     * @param json - JSON string containing style configuration
+     * @returns New Styles instance
+     */
     static fromJson(json: string): Styles {
         const o = JSON.parse(json);
         return this.fromObject(o);
     }
 
+    /**
+     * Creates a Styles instance from a plain object.
+     * @param obj - Object containing style configuration
+     * @returns New Styles instance
+     */
     static fromObject(obj: object): Styles {
         const config = StyleTemplate.parse(obj);
         // if (!config.graphtyTemplate) {
@@ -72,6 +93,11 @@ export class Styles {
         return new Styles(config);
     }
 
+    /**
+     * Fetches and creates a Styles instance from a URL.
+     * @param url - URL to fetch style configuration from
+     * @returns Promise resolving to new Styles instance
+     */
     static async fromUrl(url: string): Promise<Styles> {
         const response = await fetch(url);
         if (!response.body) {
@@ -83,6 +109,10 @@ export class Styles {
         return Styles.fromObject(data);
     }
 
+    /**
+     * Creates a default Styles instance with minimal configuration.
+     * @returns New default Styles instance
+     */
     static default(): Styles {
         return Styles.fromObject({
             graphtyTemplate: true,
@@ -90,24 +120,44 @@ export class Styles {
         });
     }
 
+    /**
+     * Adds a new style layer to the end of the layer stack.
+     * @param layer - Style layer to add
+     */
     addLayer(layer: StyleLayerType): void {
         this.#layers.push(layer);
 
         // TODO: recalculate
     }
 
+    /**
+     * Inserts a style layer at a specific position in the layer stack.
+     * @param position - Index position to insert the layer
+     * @param layer - Style layer to insert
+     */
     insertLayer(position: number, layer: StyleLayerType): void {
         this.#layers.splice(position, 0, layer);
 
         // TODO: recalculate
     }
 
+    /**
+     * Removes style layers matching a metadata predicate.
+     * @param predicate - Function to test layer metadata for removal
+     * @returns True if any layers were removed
+     */
     removeLayersByMetadata(predicate: (metadata: unknown) => boolean): boolean {
         const originalLength = this.#layers.length;
         this.#layers = this.#layers.filter((layer) => !predicate(layer.metadata));
         return this.#layers.length !== originalLength;
     }
 
+    /**
+     * Computes the merged style for a node by applying matching layers.
+     * @param data - Node data for selector matching
+     * @param algorithmResults - Optional algorithm results for selector matching
+     * @returns Style ID for the computed node style
+     */
     getStyleForNode(data: AdHocData, algorithmResults?: AdHocData): NodeStyleId {
         // Combine data and algorithmResults for selector matching
         const combinedData = algorithmResults ?
@@ -133,6 +183,11 @@ export class Styles {
         return Styles.getNodeIdForStyle(mergedStyle);
     }
 
+    /**
+     * Retrieves calculated style values for a node from matching layers.
+     * @param data - Node data for selector matching
+     * @returns Array of calculated values to apply to the node
+     */
     getCalculatedStylesForNode(data: AdHocData): CalculatedValue[] {
         const ret: CalculatedValue[] = [];
         for (const layer of this.layers) {
@@ -150,6 +205,11 @@ export class Styles {
         return ret;
     }
 
+    /**
+     * Retrieves calculated style values for an edge from matching layers.
+     * @param data - Edge data for selector matching
+     * @returns Array of calculated values to apply to the edge
+     */
     getCalculatedStylesForEdge(data: AdHocData): CalculatedValue[] {
         const ret: CalculatedValue[] = [];
         for (const layer of this.layers) {
@@ -175,6 +235,12 @@ export class Styles {
         return ret;
     }
 
+    /**
+     * Computes the merged style for an edge by applying matching layers.
+     * @param data - Edge data for selector matching
+     * @param algorithmResults - Optional algorithm results for selector matching
+     * @returns Style ID for the computed edge style
+     */
     getStyleForEdge(data: AdHocData, algorithmResults?: AdHocData): EdgeStyleId {
         // Combine data and algorithmResults for selector matching
         const combinedData = algorithmResults ?
@@ -206,6 +272,11 @@ export class Styles {
         return Styles.getEdgeIdForStyle(mergedStyle);
     }
 
+    /**
+     * Retrieves the node style configuration for a given style ID.
+     * @param id - Node style identifier
+     * @returns Node style configuration
+     */
     static getStyleForNodeStyleId(id: NodeStyleId): NodeStyleConfig {
         const ret = nodeStyleMap.get(id);
         if (!ret) {
@@ -215,6 +286,11 @@ export class Styles {
         return ret;
     }
 
+    /**
+     * Retrieves the edge style configuration for a given style ID.
+     * @param id - Edge style identifier
+     * @returns Edge style configuration
+     */
     static getStyleForEdgeStyleId(id: EdgeStyleId): EdgeStyleConfig {
         const ret = edgeStyleMap.get(id);
         if (!ret) {
@@ -224,10 +300,20 @@ export class Styles {
         return ret;
     }
 
+    /**
+     * Gets or creates a style ID for a node style configuration.
+     * @param style - Node style configuration
+     * @returns Node style identifier
+     */
     static getNodeIdForStyle(style: NodeStyleConfig): NodeStyleId {
         return styleToId(nodeStyleMap, style);
     }
 
+    /**
+     * Gets or creates a style ID for an edge style configuration.
+     * @param style - Edge style configuration
+     * @returns Edge style identifier
+     */
     static getEdgeIdForStyle(style: EdgeStyleConfig): EdgeStyleId {
         return styleToId(edgeStyleMap, style);
     }

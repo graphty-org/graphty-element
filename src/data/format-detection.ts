@@ -130,6 +130,11 @@ function detectXMLFormat(content: string): FormatType | null {
     return null;
 }
 
+/**
+ * Gets detailed information about a specific graph data format.
+ * @param format - The format type identifier
+ * @returns FormatInfo object with format details
+ */
 export function getFormatInfo(format: FormatType): FormatInfo {
     return FORMAT_INFO[format];
 }

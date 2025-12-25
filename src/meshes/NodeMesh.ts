@@ -31,7 +31,14 @@ interface ColorObject {
     opacity?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+/**
+ * Factory class for creating node meshes with various shapes
+ *
+ * Supports multiple 3D shapes including primitives (box, sphere, cylinder),
+ * polyhedra (tetrahedron, octahedron, etc.), and custom shapes. Handles
+ * material creation, caching, and 2D/3D rendering modes.
+ */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Static factory class for node mesh creation
 export class NodeMesh {
     private static shapeCreators = new Map<string, ShapeCreator>();
 
@@ -77,6 +84,14 @@ export class NodeMesh {
         NodeMesh.registerShapeCreator("elongated_pentagonal_cupola", (size, scene) => NodeMesh.createPolyhedron(PolyhedronType.ELONGATED_PENTAGONAL_CUPOLA, size, scene));
     }
 
+    /**
+     * Create a node mesh with caching
+     * @param cache - Mesh cache for reusing geometry
+     * @param options - Node mesh options including styleId and size
+     * @param createOptions - Creation options for shape, texture, and effects
+     * @param scene - Babylon.js scene
+     * @returns Created or cached node mesh
+     */
     static create(
         cache: MeshCache,
         options: NodeMeshOptions,
@@ -98,6 +113,13 @@ export class NodeMesh {
         });
     }
 
+    /**
+     * Create a node mesh without using cache
+     * @param options - Node mesh options including styleId and size
+     * @param createOptions - Creation options for shape, texture, and effects
+     * @param scene - Babylon.js scene
+     * @returns Created node mesh
+     */
     static createMeshWithoutCache(
         options: NodeMeshOptions,
         createOptions: NodeMeshCreateOptions,
@@ -157,6 +179,11 @@ export class NodeMesh {
         return undefined;
     }
 
+    /**
+     * Register a custom shape creator function
+     * @param type - Shape type identifier
+     * @param creator - Function to create the mesh for this shape
+     */
     static registerShapeCreator(type: string, creator: ShapeCreator): void {
         this.shapeCreators.set(type, creator);
     }

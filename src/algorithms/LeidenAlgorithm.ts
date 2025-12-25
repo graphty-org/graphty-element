@@ -59,6 +59,9 @@ export interface LeidenOptions extends Record<string, unknown> {
     threshold: number;
 }
 
+/**
+ *
+ */
 export class LeidenAlgorithm extends Algorithm<LeidenOptions> {
     static namespace = "graphty";
     static type = "leiden";
@@ -128,7 +131,11 @@ export class LeidenAlgorithm extends Algorithm<LeidenOptions> {
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Leiden algorithm on the graph
+     *
+     * Detects communities using an improved modularity optimization method.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

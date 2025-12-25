@@ -2,7 +2,7 @@
 
 # Interface: GraphErrorEvent
 
-Defined in: [src/events.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L28)
+Defined in: [src/events.ts:28](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L28)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:28](https://github.com/graphty-org/graphty-element/bl
 
 > **context**: `"xr"` \| `"layout"` \| `"init"` \| `"data-loading"` \| `"algorithm"` \| `"other"`
 
-Defined in: [src/events.ts:32](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L32)
+Defined in: [src/events.ts:32](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L32)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/events.ts:32](https://github.com/graphty-org/graphty-element/bl
 
 > `optional` **details**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/events.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L33)
+Defined in: [src/events.ts:33](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L33)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:33](https://github.com/graphty-org/graphty-element/bl
 
 > **error**: `Error`
 
-Defined in: [src/events.ts:31](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L31)
+Defined in: [src/events.ts:31](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L31)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/events.ts:31](https://github.com/graphty-org/graphty-element/bl
 
 > **graph**: [`Graph`](../../Graph/classes/Graph.md) \| `null`
 
-Defined in: [src/events.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L30)
+Defined in: [src/events.ts:30](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L30)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [src/events.ts:30](https://github.com/graphty-org/graphty-element/bl
 
 > **type**: `"error"`
 
-Defined in: [src/events.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L29)
+Defined in: [src/events.ts:29](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L29)

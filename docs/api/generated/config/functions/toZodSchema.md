@@ -4,7 +4,7 @@
 
 > **toZodSchema**\<`S`\>(`optionsSchema`): `ZodObject`\<\{ \[K in string \| number \| symbol\]: S\[K\]\["schema"\] \}\>
 
-Defined in: [src/config/OptionsSchema.ts:99](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L99)
+Defined in: [src/config/OptionsSchema.ts:101](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L101)
 
 Extract just the Zod object schema for validation
 
@@ -23,6 +23,10 @@ allowing standard Zod parsing/validation.
 
 `S`
 
+Options schema to convert
+
 ## Returns
 
 `ZodObject`\<\{ \[K in string \| number \| symbol\]: S\[K\]\["schema"\] \}\>
+
+Zod object schema for validation

@@ -56,6 +56,11 @@ export class DataManager implements Manager {
         dstIdPath?: string;
     }[] = [];
 
+    /**
+     * Creates an instance of DataManager
+     * @param eventManager - Event manager for emitting data events
+     * @param styles - Styles instance for applying styles to data
+     */
     constructor(
         private eventManager: EventManager,
         private styles: Styles,
@@ -65,6 +70,7 @@ export class DataManager implements Manager {
 
     /**
      * Update the styles reference when styles change
+     * @param styles - New styles instance to use
      */
     updateStyles(styles: Styles): void {
         this.styles = styles;
@@ -116,6 +122,7 @@ export class DataManager implements Manager {
 
     /**
      * Set the GraphContext for creating nodes and edges
+     * @param context - GraphContext instance to use for node/edge creation
      */
     setGraphContext(context: GraphContext): void {
         this.graphContext = context;
@@ -126,15 +133,26 @@ export class DataManager implements Manager {
      */
     private layoutEngine?: LayoutEngine;
 
+    /**
+     * Set the layout engine reference for managing node and edge positions
+     * @param engine - Layout engine instance or undefined to clear
+     */
     setLayoutEngine(engine: LayoutEngine | undefined): void {
         this.layoutEngine = engine;
     }
 
+    /**
+     * Initializes the data manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // DataManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Disposes of the data manager and cleans up all resources
+     */
     dispose(): void {
         // Clear all collections
         this.nodes.clear();
@@ -151,10 +169,20 @@ export class DataManager implements Manager {
 
     // Node operations
 
+    /**
+     * Adds a single node to the graph
+     * @param node - Node data object
+     * @param idPath - JMESPath expression to extract node ID from data
+     */
     addNode(node: AdHocData, idPath?: string): void {
         this.addNodes([node], idPath);
     }
 
+    /**
+     * Adds multiple nodes to the graph
+     * @param nodes - Array of node data objects
+     * @param idPath - JMESPath expression to extract node ID from data
+     */
     addNodes(nodes: Record<string | number, unknown>[], idPath?: string): void {
         this.logger.debug("Adding nodes", {count: nodes.length});
 
@@ -269,10 +297,20 @@ export class DataManager implements Manager {
         this.bufferedEdges = stillBuffered;
     }
 
+    /**
+     * Gets a node by its ID
+     * @param nodeId - Node identifier
+     * @returns Node instance or undefined if not found
+     */
     getNode(nodeId: NodeIdType): Node | undefined {
         return this.nodes.get(nodeId);
     }
 
+    /**
+     * Removes a node from the graph
+     * @param nodeId - Node identifier to remove
+     * @returns True if the node was removed, false if not found
+     */
     removeNode(nodeId: NodeIdType): boolean {
         const node = this.nodes.get(nodeId);
         if (!node) {
@@ -295,10 +333,22 @@ export class DataManager implements Manager {
 
     // Edge operations
 
+    /**
+     * Adds a single edge to the graph
+     * @param edge - Edge data object
+     * @param srcIdPath - JMESPath expression to extract source node ID from data
+     * @param dstIdPath - JMESPath expression to extract destination node ID from data
+     */
     addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string): void {
         this.addEdges([edge], srcIdPath, dstIdPath);
     }
 
+    /**
+     * Adds multiple edges to the graph
+     * @param edges - Array of edge data objects
+     * @param srcIdPath - JMESPath expression to extract source node ID from data
+     * @param dstIdPath - JMESPath expression to extract destination node ID from data
+     */
     addEdges(edges: Record<string | number, unknown>[], srcIdPath?: string, dstIdPath?: string): void {
         this.logger.debug("Adding edges", {count: edges.length});
 
@@ -357,14 +407,30 @@ export class DataManager implements Manager {
         }
     }
 
+    /**
+     * Gets an edge by its ID
+     * @param edgeId - Edge identifier
+     * @returns Edge instance or undefined if not found
+     */
     getEdge(edgeId: string | number): Edge | undefined {
         return this.edges.get(edgeId);
     }
 
+    /**
+     * Gets an edge between two nodes
+     * @param srcNodeId - Source node identifier
+     * @param dstNodeId - Destination node identifier
+     * @returns Edge instance or undefined if not found
+     */
     getEdgeBetween(srcNodeId: NodeIdType, dstNodeId: NodeIdType): Edge | undefined {
         return this.edgeCache.get(srcNodeId, dstNodeId);
     }
 
+    /**
+     * Removes an edge from the graph
+     * @param edgeId - Edge identifier to remove
+     * @returns True if the edge was removed, false if not found
+     */
     removeEdge(edgeId: string | number): boolean {
         const edge = this.edges.get(edgeId);
         if (!edge) {
@@ -385,6 +451,11 @@ export class DataManager implements Manager {
 
     // Data source operations
 
+    /**
+     * Loads data from a registered data source
+     * @param type - Data source type identifier
+     * @param opts - Options to pass to the data source
+     */
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
         this.logger.info("Loading data source", {type, options: opts});
 
@@ -545,6 +616,7 @@ export class DataManager implements Manager {
 
     /**
      * Get statistics about the data
+     * @returns Object containing node count, edge count, and cached mesh count
      */
     getStats(): {
         nodeCount: number;

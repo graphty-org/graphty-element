@@ -96,6 +96,11 @@ export class XRInputHandler {
     private frameCount = 0;
     private scene: Scene; // Reference to scene for onBeforeRenderObservable and picking
 
+    /**
+     * Creates a new XRInputHandler instance.
+     * @param pivotController - The pivot controller to manipulate based on input
+     * @param xr - The WebXR experience instance
+     */
     constructor(pivotController: PivotController, xr: WebXRDefaultExperience) {
         this.pivotController = pivotController;
         this.xr = xr;
@@ -172,6 +177,7 @@ export class XRInputHandler {
 
     /**
      * Add controller to gesture tracking.
+     * @param controller - The XR input source to add for gesture tracking
      */
     private addGestureController(controller: WebXRInputSource): void {
         const {uniqueId} = controller;
@@ -188,6 +194,7 @@ export class XRInputHandler {
 
     /**
      * Remove controller from gesture tracking.
+     * @param controller - The XR input source to remove from gesture tracking
      */
     private removeGestureController(controller: WebXRInputSource): void {
         const {uniqueId} = controller;
@@ -607,6 +614,8 @@ export class XRInputHandler {
     /**
      * Get hand state from controller trigger OR hand tracking.
      * Priority: Controller trigger first (squeeze triggers), then hand tracking.
+     * @param handedness - Which hand to get state for ('left' or 'right')
+     * @returns Hand state including position, rotation, and pinch info, or null if unavailable
      */
     private getHandState(handedness: "left" | "right"): HandState | null {
         // PATH 1: Try controller trigger first
@@ -735,6 +744,7 @@ export class XRInputHandler {
 
     /**
      * Check if input handling is enabled.
+     * @returns True if enabled, false otherwise
      */
     isEnabled(): boolean {
         return this.enabled;
@@ -742,6 +752,7 @@ export class XRInputHandler {
 
     /**
      * Get reference to pivot controller (for testing).
+     * @returns The pivot controller instance
      */
     getPivotController(): PivotController {
         return this.pivotController;
@@ -804,6 +815,8 @@ export class XRInputHandler {
 
     /**
      * Try to start dragging a node if the controller is pointing at one.
+     * @param handedness - Which hand is attempting to drag ('left' or 'right')
+     * @param handPosition - The world position of the hand
      */
     private tryStartNodeDrag(handedness: "left" | "right", handPosition: Vector3): void {
         // Find the controller for this hand
@@ -907,6 +920,7 @@ export class XRInputHandler {
      * 4. Add to current node position
      *
      * This approach correctly handles pivot rotation changes during drag.
+     * @param currentHandPosition - The current world position of the dragging hand
      */
     private updateNodeDrag(currentHandPosition: Vector3): void {
         if (!this.draggedNodeHandler || !this.lastDragHandPosition) {
@@ -963,6 +977,8 @@ export class XRInputHandler {
      * When the pivot rotates, the user's view rotates with it.
      * The user's "forward" direction in their view corresponds to a rotated direction in world space.
      * So we rotate the XR movement by the pivot's rotation to match the user's perspective.
+     * @param delta - The movement delta in XR space
+     * @returns The transformed delta in scene space
      */
     private transformDeltaToSceneSpace(delta: Vector3): Vector3 {
         const pivotRotation = this.pivotController.pivot.rotationQuaternion;
@@ -994,6 +1010,10 @@ export class XRInputHandler {
     /**
      * Find the NodeDragHandler associated with a mesh.
      * Nodes store their dragHandler reference in mesh.metadata.graphNode.
+     * @param mesh - The mesh to find a drag handler for
+     * @param mesh.name - The mesh name
+     * @param mesh.metadata - The mesh metadata containing node reference
+     * @returns The drag handler if found, null otherwise
      */
     private findDragHandlerForMesh(mesh: {name: string, metadata?: unknown}): NodeDragHandler | null {
         // Check mesh.metadata.graphNode for node reference
@@ -1017,6 +1037,7 @@ export class XRInputHandler {
     /**
      * Check if currently dragging a node.
      * Used to suppress gesture processing while dragging.
+     * @returns True if currently dragging a node, false otherwise
      */
     isDragging(): boolean {
         return this.isDraggingNode;

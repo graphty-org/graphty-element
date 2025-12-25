@@ -2,7 +2,7 @@
 
 # Interface: SelectionChangedEvent
 
-Defined in: [src/events.ts:126](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L126)
+Defined in: [src/events.ts:126](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L126)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:126](https://github.com/graphty-org/graphty-element/b
 
 > **currentNode**: [`Node`](../../Node/classes/Node.md) \| `null`
 
-Defined in: [src/events.ts:129](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L129)
+Defined in: [src/events.ts:129](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L129)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/events.ts:129](https://github.com/graphty-org/graphty-element/b
 
 > **currentNodeId**: `string` \| `number` \| `null`
 
-Defined in: [src/events.ts:131](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L131)
+Defined in: [src/events.ts:131](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L131)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:131](https://github.com/graphty-org/graphty-element/b
 
 > **previousNode**: [`Node`](../../Node/classes/Node.md) \| `null`
 
-Defined in: [src/events.ts:128](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L128)
+Defined in: [src/events.ts:128](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L128)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/events.ts:128](https://github.com/graphty-org/graphty-element/b
 
 > **previousNodeId**: `string` \| `number` \| `null`
 
-Defined in: [src/events.ts:130](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L130)
+Defined in: [src/events.ts:130](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L130)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [src/events.ts:130](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"selection-changed"`
 
-Defined in: [src/events.ts:127](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L127)
+Defined in: [src/events.ts:127](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L127)

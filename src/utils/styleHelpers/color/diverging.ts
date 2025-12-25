@@ -13,11 +13,9 @@ import {interpolatePalette} from "./interpolation";
  * Purple-Green diverging gradient (Paul Tol)
  * Maps values to colors with purple (low) ← white (midpoint) → green (high)
  * ✅ Colorblind-safe ✅ No red-green
- *
  * @param value - Value to map (0-1)
  * @param midpoint - Midpoint value (default: 0.5)
  * @returns Hex color string
- *
  * @example
  * purpleGreen(0.0) // "#762a83" (purple - low)
  * purpleGreen(0.5) // "#f7f7f7" (white - midpoint)
@@ -35,11 +33,9 @@ export function purpleGreen(value: number, midpoint = 0.5): string {
  * Blue-Orange diverging gradient (ColorBrewer)
  * Maps values to colors with blue (low) ← white (midpoint) → orange (high)
  * ✅ Colorblind-safe ✅ High contrast
- *
  * @param value - Value to map (0-1)
  * @param midpoint - Midpoint value (default: 0.5)
  * @returns Hex color string
- *
  * @example
  * blueOrange(0.0) // "#2166ac" (deep blue - low)
  * blueOrange(0.5) // "#f7f7f7" (white - midpoint)
@@ -55,11 +51,9 @@ export function blueOrange(value: number, midpoint = 0.5): string {
  * Maps values to colors with red (low) ← white (midpoint) → blue (high)
  * ⚠️ Not colorblind-safe (red-green vision issues)
  * Use ONLY when temperature metaphor is critical
- *
  * @param value - Value to map (0-1)
  * @param midpoint - Midpoint value (default: 0.5)
  * @returns Hex color string
- *
  * @example
  * redBlue(0.0) // "#67001f" (deep red - low)
  * redBlue(0.5) // "#f7f7f7" (white - midpoint)
@@ -73,7 +67,6 @@ export function redBlue(value: number, midpoint = 0.5): string {
 /**
  * Normalize a value around a custom midpoint
  * Ensures the midpoint maps to 0.5 in the normalized space
- *
  * @param value - Original value (0-1)
  * @param midpoint - Midpoint value (0-1)
  * @returns Normalized value (0-1)

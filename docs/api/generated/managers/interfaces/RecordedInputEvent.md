@@ -2,7 +2,7 @@
 
 # Interface: RecordedInputEvent
 
-Defined in: [src/managers/InputManager.ts:18](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L18)
+Defined in: [src/managers/InputManager.ts:18](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/InputManager.ts#L18)
 
 Recorded input event structure
 
@@ -12,7 +12,7 @@ Recorded input event structure
 
 > **data**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/managers/InputManager.ts:21](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L21)
+Defined in: [src/managers/InputManager.ts:21](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/InputManager.ts#L21)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [src/managers/InputManager.ts:21](https://github.com/graphty-org/gra
 
 > **timestamp**: `number`
 
-Defined in: [src/managers/InputManager.ts:19](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L19)
+Defined in: [src/managers/InputManager.ts:19](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/InputManager.ts#L19)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [src/managers/InputManager.ts:19](https://github.com/graphty-org/gra
 
 > **type**: `string`
 
-Defined in: [src/managers/InputManager.ts:20](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/InputManager.ts#L20)
+Defined in: [src/managers/InputManager.ts:20](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/InputManager.ts#L20)

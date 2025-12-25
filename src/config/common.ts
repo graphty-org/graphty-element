@@ -13,6 +13,11 @@ export type Brand<T, B extends string> = T & {readonly __brand: B};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AdHocData<KeyType extends string | number = string> = Brand<Record<KeyType, any>, "AdHocData">;
 
+/**
+ * Converts a color string to hexadecimal format.
+ * @param s - Color string to convert
+ * @returns Hexadecimal color string or undefined if invalid
+ */
 export function colorToHex(s: string): string | undefined {
     const color = new Color(s);
     let hex = color.to("srgb").toString({format: "hex"}).toUpperCase();

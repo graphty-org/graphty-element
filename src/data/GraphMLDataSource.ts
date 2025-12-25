@@ -47,11 +47,19 @@ interface YFilesPolyLineEdge {
     };
 }
 
+/**
+ * Data source for loading graph data from GraphML files.
+ * Supports GraphML format with yFiles extensions for node shapes and edge styles.
+ */
 export class GraphMLDataSource extends DataSource {
     static readonly type = "graphml";
 
     private config: GraphMLDataSourceConfig;
 
+    /**
+     * Creates a new GraphMLDataSource instance.
+     * @param config - Configuration options for GraphML parsing and data loading
+     */
     constructor(config: GraphMLDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
@@ -61,6 +69,10 @@ export class GraphMLDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses GraphML format data into graph chunks.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         // Get XML content
         const xmlContent = await this.getContent();
@@ -272,6 +284,8 @@ export class GraphMLDataSource extends DataSource {
 
     /**
      * Maps yFiles shape types to Graphty shape types
+     * @param yfilesShape - yFiles shape type identifier
+     * @returns Corresponding Graphty shape type
      */
     private mapYFilesShape(yfilesShape: string): string {
         const shapeMap: Record<string, string> = {
@@ -291,6 +305,8 @@ export class GraphMLDataSource extends DataSource {
 
     /**
      * Normalizes color to standard hex format (#RRGGBB)
+     * @param color - Color value in any format
+     * @returns Normalized hex color string
      */
     private normalizeColor(color: string): string {
         const hexPattern = /^#[0-9A-Fa-f]{6}$/;
@@ -316,6 +332,8 @@ export class GraphMLDataSource extends DataSource {
 
     /**
      * Parses yFiles ShapeNode data and extracts visual properties
+     * @param shapeNode - yFiles ShapeNode data structure
+     * @returns Object containing extracted node properties
      */
     private parseYFilesShapeNode(shapeNode: YFilesShapeNode): Record<string, unknown> {
         const properties: Record<string, unknown> = {};
@@ -384,6 +402,8 @@ export class GraphMLDataSource extends DataSource {
 
     /**
      * Parses yFiles PolyLineEdge data and extracts visual properties
+     * @param polyLineEdge - yFiles PolyLineEdge data structure
+     * @returns Object containing extracted edge properties
      */
     private parseYFilesPolyLineEdge(polyLineEdge: YFilesPolyLineEdge): Record<string, unknown> {
         const properties: Record<string, unknown> = {};

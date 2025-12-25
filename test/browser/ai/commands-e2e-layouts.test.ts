@@ -180,7 +180,7 @@ describe("AI Layout Commands - All Layout Types", () => {
                 toolCalls: [{id: "1", name: "setDimension", arguments: {dimension: "2d"}}],
             });
             await graph.aiCommand("2d");
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
 
             // Apply circular layout
             provider.setResponse("circular", {
@@ -198,7 +198,7 @@ describe("AI Layout Commands - All Layout Types", () => {
             const provider = getProvider();
 
             // Ensure we're in 3D (default)
-            assert.strictEqual(graph.is2D(), false);
+            assert.strictEqual(graph.getViewMode() === "2d", false);
 
             // Apply spiral layout
             provider.setResponse("spiral", {
@@ -230,7 +230,7 @@ describe("AI Layout Commands - All Layout Types", () => {
             const result = await graph.aiCommand("2d");
 
             assert.strictEqual(result.success, true);
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
         });
     });
 

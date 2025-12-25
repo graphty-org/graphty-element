@@ -3,7 +3,6 @@
  *
  * Uses @jsonhero/schema-infer for type detection, format detection, and number ranges.
  * Adds enum detection using Capital One's DataProfiler algorithm.
- *
  * @module ai/schema/SchemaExtractor
  */
 
@@ -64,6 +63,8 @@ class EnumTracker {
 
     /**
      * Track a string value for a given property path.
+     * @param path - Property path
+     * @param value - String value to track
      */
     trackValue(path: string, value: string): void {
         if (!this.values.has(path)) {
@@ -79,6 +80,9 @@ class EnumTracker {
 
     /**
      * Recursively track string values from an object.
+     * @param obj - Object to track values from
+     * @param prefix - Property path prefix
+     * @param depth - Current recursion depth
      */
     trackObject(obj: Record<string, unknown>, prefix = "", depth = 0): void {
         if (depth >= this.options.maxDepth) {
@@ -109,6 +113,8 @@ class EnumTracker {
      * 2. Its unique ratio <= enumMaxUniqueRatio (default: 20%)
      *
      * AND all values are <= enumMaxStringLength characters (default: 64)
+     * @param path - Property path to analyze
+     * @returns Enum analysis result with isEnum flag and optional values
      */
     getEnumAnalysis(path: string): {isEnum: boolean, values?: string[]} {
         const values = this.values.get(path);
@@ -146,6 +152,11 @@ export class SchemaExtractor {
     private graph: Graph;
     private options: Required<SchemaExtractorOptions>;
 
+    /**
+     * Creates a new SchemaExtractor instance.
+     * @param graph - The graph to extract schema from
+     * @param options - Optional extraction options
+     */
     constructor(graph: Graph, options: SchemaExtractorOptions = {}) {
         this.graph = graph;
         this.options = {... DEFAULT_OPTIONS, ... options};
@@ -182,6 +193,8 @@ export class SchemaExtractor {
 
     /**
      * Extract schema from a collection of data objects.
+     * @param items - Array of data objects to extract schema from
+     * @returns Array of property summaries
      */
     private extractFromCollection(items: Record<string, unknown>[]): PropertySummary[] {
         if (items.length === 0) {
@@ -218,6 +231,9 @@ export class SchemaExtractor {
 
     /**
      * Merge schema-infer results with enum detection results.
+     * @param schema - Inferred schema from schema-infer
+     * @param enumTracker - Enum tracker with detected categorical values
+     * @returns Array of merged property summaries
      */
     private mergeResults(
         schema: InferredSchema,
@@ -242,6 +258,13 @@ export class SchemaExtractor {
 
     /**
      * Recursively extract properties, handling nested objects with dot notation.
+     * @param name - Property name
+     * @param schema - Inferred schema for the property
+     * @param enumTracker - Enum tracker for categorical detection
+     * @param prefix - Path prefix for nested properties
+     * @param isOptional - Whether the property is optional
+     * @param properties - Array to accumulate property summaries
+     * @param depth - Current recursion depth
      */
     private extractProperties(
         name: string,
@@ -298,6 +321,11 @@ export class SchemaExtractor {
 
     /**
      * Convert an InferredSchema to a PropertySummary.
+     * @param fullName - Full property path
+     * @param schema - Inferred schema to convert
+     * @param enumTracker - Enum tracker for categorical detection
+     * @param nullable - Whether the property can be null
+     * @returns Property summary or null if not convertible
      */
     private schemaToSummary(
         fullName: string,
@@ -355,6 +383,8 @@ export class SchemaExtractor {
 
     /**
      * Convert schema-infer type to our PropertyType.
+     * @param schema - Inferred schema to convert type from
+     * @returns Corresponding PropertyType
      */
     private inferredTypeToPropertyType(schema: InferredSchema): PropertyType {
         switch (schema.type) {
@@ -381,6 +411,9 @@ export class SchemaExtractor {
 
     /**
      * Get evenly distributed samples from an array.
+     * @param items - Array to sample from
+     * @param maxSize - Maximum number of samples
+     * @returns Array of evenly distributed samples
      */
     private sampleEvenly<T>(items: T[], maxSize: number): T[] {
         const result: T[] = [];

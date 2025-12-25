@@ -45,6 +45,9 @@ export const CircularLayoutConfig = z.strictObject({
 export type CircularLayoutConfigType = z.infer<typeof CircularLayoutConfig>;
 export type CircularLayoutOpts = Partial<CircularLayoutConfigType>;
 
+/**
+ * Circular layout engine that arranges nodes in a circle
+ */
 export class CircularLayout extends SimpleLayoutEngine {
     static type = "circular";
     static maxDimensions = 3;
@@ -57,15 +60,27 @@ export class CircularLayout extends SimpleLayoutEngine {
     scalingFactor = 80;
     config: CircularLayoutConfigType;
 
+    /**
+     * Create a circular layout engine
+     * @param opts - Configuration options including scale and dimensions
+     */
     constructor(opts: CircularLayoutOpts) {
         super(opts);
         this.config = CircularLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for circular layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions in a circular arrangement
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

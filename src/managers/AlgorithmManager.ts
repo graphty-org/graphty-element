@@ -9,16 +9,28 @@ import type {Manager} from "./interfaces";
  * Handles running algorithms from templates and individual algorithm execution
  */
 export class AlgorithmManager implements Manager {
+    /**
+     * Creates an instance of AlgorithmManager
+     * @param eventManager - Event manager for emitting algorithm events
+     * @param graph - Graph instance to run algorithms on
+     */
     constructor(
         private eventManager: EventManager,
         private graph: Graph,
     ) {}
 
+    /**
+     * Initializes the algorithm manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // AlgorithmManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Disposes of the algorithm manager and cleans up resources
+     */
     dispose(): void {
         // No cleanup needed for algorithms
     }
@@ -26,6 +38,7 @@ export class AlgorithmManager implements Manager {
     /**
      * Run algorithms specified in the template configuration
      * Called during initialization if runAlgorithmsOnLoad is true
+     * @param algorithms - Array of algorithm names in "namespace:type" format
      */
     async runAlgorithmsFromTemplate(algorithms: string[]): Promise<void> {
         const errors: Error[] = [];
@@ -116,6 +129,9 @@ export class AlgorithmManager implements Manager {
 
     /**
      * Check if an algorithm exists
+     * @param namespace - Algorithm namespace
+     * @param type - Algorithm type
+     * @returns True if the algorithm exists, false otherwise
      */
     hasAlgorithm(namespace: string, type: string): boolean {
         try {
@@ -129,6 +145,7 @@ export class AlgorithmManager implements Manager {
     /**
      * Get list of available algorithms
      * TODO: This depends on the Algorithm registry implementation
+     * @returns Array of available algorithm names
      */
     getAvailableAlgorithms(): string[] {
         // This would need to be implemented in the Algorithm class

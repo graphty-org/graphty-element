@@ -10,6 +10,12 @@ interface BellmanFordOptions {
     target?: number | string;
 }
 
+/**
+ * Bellman-Ford algorithm for finding shortest paths
+ *
+ * Computes shortest paths from a source node to all other nodes, supporting
+ * negative edge weights and detecting negative cycles.
+ */
 export class BellmanFordAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "bellman-ford";
@@ -69,13 +75,19 @@ export class BellmanFordAlgorithm extends Algorithm {
 
     /**
      * Configure the algorithm with source and optional target nodes
+     * @param options - Configuration options
+     * @returns This algorithm instance for chaining
      */
     configure(options: BellmanFordOptions): this {
         this.options = options;
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Bellman-Ford algorithm on the graph
+     *
+     * Computes shortest path distances and highlights the path from source to target.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const dm = g.getDataManager();
@@ -145,6 +157,10 @@ export class BellmanFordAlgorithm extends Algorithm {
 
     /**
      * Reconstruct the shortest path from predecessors
+     * @param predecessors - Map of node to its predecessor in the shortest path
+     * @param source - The source node
+     * @param target - The target node
+     * @returns Array of node IDs representing the shortest path
      */
     private reconstructPath(
         predecessors: Map<string | number, string | number | null>,
@@ -173,6 +189,8 @@ export class BellmanFordAlgorithm extends Algorithm {
 
     /**
      * Get set of edge keys that are part of the path
+     * @param path - Array of node IDs representing the path
+     * @returns Set of edge keys in "srcId:dstId" format
      */
     private getPathEdges(path: (string | number)[]): Set<string> {
         const edges = new Set<string>();

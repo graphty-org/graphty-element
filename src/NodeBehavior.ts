@@ -52,6 +52,10 @@ export class NodeDragHandler {
     private readonly zAxisAmplification: number;
     private readonly enableZAmplificationInDesktop: boolean;
 
+    /**
+     * Creates a new drag handler for a node.
+     * @param node - The graph node to enable dragging on
+     */
     constructor(node: GraphNode) {
         this.node = node;
         this.scene = node.mesh.getScene();
@@ -75,6 +79,10 @@ export class NodeDragHandler {
     }
 
     // Public API for both desktop and XR
+    /**
+     * Initiates a drag operation for the node.
+     * @param worldPosition - World space position where drag started
+     */
     public onDragStart(worldPosition: Vector3): void {
         // Debug: console.log("🔍 [Drag] Drag Start:", {
         //     nodeId: this.node.id,
@@ -116,6 +124,10 @@ export class NodeDragHandler {
         }
     }
 
+    /**
+     * Updates node position during drag operation.
+     * @param worldPosition - Current world space position of the drag pointer
+     */
     public onDragUpdate(worldPosition: Vector3): void {
         if (!this.dragState.dragging || !this.dragState.dragStartWorldPosition || !this.dragState.dragStartMeshPosition) {
             return;
@@ -154,6 +166,9 @@ export class NodeDragHandler {
         });
     }
 
+    /**
+     * Completes a drag operation and updates node state.
+     */
     public onDragEnd(): void {
         if (!this.dragState.dragging) {
             return;
@@ -205,6 +220,7 @@ export class NodeDragHandler {
      *
      * This bypasses the delta calculation in onDragUpdate() which doesn't account
      * for pivot rotation changes during drag.
+     * @param newPosition - New position to set for the node
      */
     public setPositionDirect(newPosition: Vector3): void {
         if (!this.dragState.dragging) {
@@ -226,6 +242,7 @@ export class NodeDragHandler {
     /**
      * Get the node being dragged.
      * Used by XRInputHandler to access the node's mesh for position calculations.
+     * @returns The graph node associated with this drag handler
      */
     public getNode(): GraphNode {
         return this.node;
@@ -376,6 +393,7 @@ export class NodeDragHandler {
     /**
      * Check if the current pointer interaction qualifies as a click.
      * A click is defined as a short duration interaction with minimal movement.
+     * @returns True if the interaction qualifies as a click
      */
     private isClick(): boolean {
         if (!this.clickState) {
@@ -462,6 +480,9 @@ export class NodeDragHandler {
         return this.node.parentGraph;
     }
 
+    /**
+     * Cleans up event observers and releases resources.
+     */
     public dispose(): void {
         if (this.pointerObserver) {
             this.scene.onPrePointerObservable.remove(this.pointerObserver);
@@ -475,10 +496,16 @@ export class NodeDragHandler {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+/**
+ * Manages node interaction behaviors including dragging and clicking.
+ * This class uses static methods to provide utility functions for node behavior management.
+ */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Static utility class pattern for node behavior management
 export class NodeBehavior {
     /**
      * Add default interaction behaviors to a node
+     * @param node - The graph node to add behaviors to
+     * @param options - Configuration options for node behaviors
      */
     static addDefaultBehaviors(node: GraphNode, options: NodeBehaviorOptions = {}): void {
         node.mesh.isPickable = true;
@@ -495,6 +522,7 @@ export class NodeBehavior {
 
     /**
      * Add click behavior for node expansion
+     * @param node - The graph node to add click behavior to
      */
     private static addClickBehavior(node: GraphNode): void {
         // click behavior setup
@@ -553,6 +581,8 @@ export class NodeBehavior {
 
     /**
      * Helper to get GraphContext from a Node
+     * @param node - The graph node to get context from
+     * @returns The graph context for the node
      */
     private static getContext(node: GraphNode): GraphContext {
         // Check if parentGraph has GraphContext methods

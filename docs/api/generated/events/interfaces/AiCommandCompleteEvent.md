@@ -2,7 +2,7 @@
 
 # Interface: AiCommandCompleteEvent
 
-Defined in: [src/events.ts:243](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L243)
+Defined in: [src/events.ts:243](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L243)
 
 Emitted when an AI command completes successfully
 
@@ -12,7 +12,7 @@ Emitted when an AI command completes successfully
 
 > **duration**: `number`
 
-Defined in: [src/events.ts:246](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L246)
+Defined in: [src/events.ts:246](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L246)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [src/events.ts:246](https://github.com/graphty-org/graphty-element/b
 
 > **result**: `CommandResult`
 
-Defined in: [src/events.ts:245](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L245)
+Defined in: [src/events.ts:245](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L245)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [src/events.ts:245](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"ai-command-complete"`
 
-Defined in: [src/events.ts:244](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L244)
+Defined in: [src/events.ts:244](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L244)

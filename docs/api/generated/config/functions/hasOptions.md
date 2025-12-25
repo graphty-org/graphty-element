@@ -4,7 +4,7 @@
 
 > **hasOptions**(`optionsSchema`): `boolean`
 
-Defined in: [src/config/OptionsSchema.ts:170](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L170)
+Defined in: [src/config/OptionsSchema.ts:179](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L179)
 
 Check if a schema has any configurable options
 
@@ -14,6 +14,10 @@ Check if a schema has any configurable options
 
 [`OptionsSchema`](../type-aliases/OptionsSchema.md)
 
+Options schema to check
+
 ## Returns
 
 `boolean`
+
+True if schema has any options

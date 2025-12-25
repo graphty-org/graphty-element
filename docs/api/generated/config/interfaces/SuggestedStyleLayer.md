@@ -2,7 +2,7 @@
 
 # Interface: SuggestedStyleLayer
 
-Defined in: [src/config/SuggestedStyles.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L108)
+Defined in: [src/config/SuggestedStyles.ts:106](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L106)
 
 A single suggested style layer from an algorithm
 
@@ -12,7 +12,7 @@ A single suggested style layer from an algorithm
 
 > `optional` **edge**: `object`
 
-Defined in: [src/config/SuggestedStyles.ts:112](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L112)
+Defined in: [src/config/SuggestedStyles.ts:110](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L110)
 
 Edge style configuration for this layer
 
@@ -1094,7 +1094,7 @@ Edge style configuration for this layer
 
 > `optional` **metadata**: [`SuggestedStyleLayerMetadata`](SuggestedStyleLayerMetadata.md)
 
-Defined in: [src/config/SuggestedStyles.ts:114](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L114)
+Defined in: [src/config/SuggestedStyles.ts:112](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L112)
 
 Metadata about this style layer
 
@@ -1104,7 +1104,7 @@ Metadata about this style layer
 
 > `optional` **node**: `object`
 
-Defined in: [src/config/SuggestedStyles.ts:110](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L110)
+Defined in: [src/config/SuggestedStyles.ts:108](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L108)
 
 Node style configuration for this layer
 

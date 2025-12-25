@@ -88,6 +88,8 @@ export const captureScreenshot: GraphCommand = {
 
 /**
  * Convert a Blob to a data URL.
+ * @param blob - The blob to convert
+ * @returns Promise resolving to data URL string
  */
 function blobToDataUrl(blob: Blob): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -104,6 +106,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 /**
  * Trigger a file download in the browser.
+ * @param dataUrl - The data URL to download
+ * @param filename - The filename for the download
  */
 function triggerDownload(dataUrl: string, filename: string): void {
     const link = document.createElement("a");

@@ -9,7 +9,7 @@ export default tseslint.config(
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
     tseslint.configs.stylisticTypeChecked,
-    jsdoc.configs["flat/recommended-typescript"],
+    jsdoc.configs["flat/recommended-typescript-error"],
     {
         ignores: [
             "**/dist/**",
@@ -169,27 +169,41 @@ export default tseslint.config(
             ],
         },
     },
-    // JSDoc custom rules - start with warnings to not break CI
+    // JSDoc custom rules - enforce documentation quality in CI
     {
         plugins: {
             jsdoc,
         },
         rules: {
-            // Start with warnings to not break CI
-            "jsdoc/require-description": "warn",
-            "jsdoc/require-param-description": "warn",
-            "jsdoc/require-returns-description": "warn",
+            // Promote to errors for CI enforcement
+            "jsdoc/require-description": "error",
+            "jsdoc/require-param-description": "error",
+            "jsdoc/require-returns-description": "error",
             "jsdoc/no-types": "error", // TypeScript handles types
-            "jsdoc/check-tag-names": ["warn", {
-                definedTags: ["since", "internal"],
+            "jsdoc/check-tag-names": ["error", {
+                definedTags: ["since", "internal", "remarks"],
             }],
-            // Disable require-jsdoc for now - too many existing gaps
-            "jsdoc/require-jsdoc": "off",
+            // Enable require-jsdoc for public APIs
+            "jsdoc/require-jsdoc": ["error", {
+                publicOnly: true,
+                require: {
+                    FunctionDeclaration: true,
+                    MethodDefinition: true,
+                    ClassDeclaration: true,
+                },
+            }],
         },
     },
-    // Disable JSDoc requirements for test files
+    // Algorithm files implement an abstract async run() method but don't always need await
     {
-        files: ["**/*.test.ts", "test/**/*.ts", "test/**/*.js"],
+        files: ["src/algorithms/**/*.ts"],
+        rules: {
+            "@typescript-eslint/require-await": "off",
+        },
+    },
+    // Disable JSDoc requirements for test files, stories, and Storybook config
+    {
+        files: ["**/*.test.ts", "test/**/*.ts", "test/**/*.js", "**/*.stories.ts", ".storybook/**/*.ts", "stories/**/*.ts"],
         rules: {
             "@typescript-eslint/unbound-method": "off", // Allow unbound methods in tests for mock assertions
             "@typescript-eslint/ban-ts-comment": ["error", {
@@ -198,8 +212,16 @@ export default tseslint.config(
                 "ts-expect-error": false, // Allow @ts-expect-error in test files
                 "minimumDescriptionLength": 5,
             }],
+            // Disable all JSDoc rules for test files
             "jsdoc/require-jsdoc": "off",
             "jsdoc/require-description": "off",
+            "jsdoc/require-param": "off",
+            "jsdoc/require-param-description": "off",
+            "jsdoc/require-returns": "off",
+            "jsdoc/require-returns-description": "off",
+            "jsdoc/check-param-names": "off",
+            "jsdoc/check-tag-names": "off",
+            "jsdoc/tag-lines": "off",
         },
     },
 );

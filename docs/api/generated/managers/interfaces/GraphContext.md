@@ -2,7 +2,7 @@
 
 # Interface: GraphContext
 
-Defined in: [src/managers/GraphContext.ts:18](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L18)
+Defined in: [src/managers/GraphContext.ts:18](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L18)
 
 GraphContext provides controlled access to graph services
 This interface allows Node and Edge classes to access required services
@@ -14,7 +14,7 @@ without direct dependency on the Graph class, eliminating circular dependencies
 
 > **getConfig**(): [`GraphContextConfig`](GraphContextConfig.md)
 
-Defined in: [src/managers/GraphContext.ts:62](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L62)
+Defined in: [src/managers/GraphContext.ts:62](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L62)
 
 Get graph-level configuration options
 
@@ -28,7 +28,7 @@ Get graph-level configuration options
 
 > **getDataManager**(): [`DataManager`](../classes/DataManager.md)
 
-Defined in: [src/managers/GraphContext.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L27)
+Defined in: [src/managers/GraphContext.ts:27](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L27)
 
 Get the DataManager for node/edge operations
 
@@ -42,7 +42,7 @@ Get the DataManager for node/edge operations
 
 > `optional` **getEventManager**(): [`EventManager`](../classes/EventManager.md) \| `undefined`
 
-Defined in: [src/managers/GraphContext.ts:97](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L97)
+Defined in: [src/managers/GraphContext.ts:97](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L97)
 
 Get EventManager for emitting events
 Optional method for event emission
@@ -61,7 +61,7 @@ Optional method for event emission
 
 > **getLayoutManager**(): [`LayoutManager`](../classes/LayoutManager.md)
 
-Defined in: [src/managers/GraphContext.ts:32](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L32)
+Defined in: [src/managers/GraphContext.ts:32](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L32)
 
 Get the LayoutManager for layout operations
 
@@ -75,7 +75,7 @@ Get the LayoutManager for layout operations
 
 > **getMeshCache**(): `MeshCache`
 
-Defined in: [src/managers/GraphContext.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L37)
+Defined in: [src/managers/GraphContext.ts:37](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L37)
 
 Get the MeshCache for mesh creation and caching
 
@@ -89,7 +89,7 @@ Get the MeshCache for mesh creation and caching
 
 > **getScene**(): `Scene`
 
-Defined in: [src/managers/GraphContext.ts:42](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L42)
+Defined in: [src/managers/GraphContext.ts:42](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L42)
 
 Get the Babylon.js Scene
 
@@ -103,7 +103,7 @@ Get the Babylon.js Scene
 
 > `optional` **getSelectionManager**(): [`SelectionManager`](../classes/SelectionManager.md) \| `undefined`
 
-Defined in: [src/managers/GraphContext.ts:90](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L90)
+Defined in: [src/managers/GraphContext.ts:90](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L90)
 
 Get SelectionManager for node selection operations
 Optional method for selection functionality
@@ -118,7 +118,7 @@ Optional method for selection functionality
 
 > **getStatsManager**(): [`StatsManager`](../classes/StatsManager.md)
 
-Defined in: [src/managers/GraphContext.ts:47](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L47)
+Defined in: [src/managers/GraphContext.ts:47](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L47)
 
 Get the StatsManager for performance monitoring
 
@@ -132,7 +132,7 @@ Get the StatsManager for performance monitoring
 
 > **getStyleManager**(): [`StyleManager`](../classes/StyleManager.md)
 
-Defined in: [src/managers/GraphContext.ts:22](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L22)
+Defined in: [src/managers/GraphContext.ts:22](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L22)
 
 Get the StyleManager for style operations
 
@@ -146,7 +146,7 @@ Get the StyleManager for style operations
 
 > `optional` **getXRConfig**(): [`XRConfig`](../../config/interfaces/XRConfig.md) \| `undefined`
 
-Defined in: [src/managers/GraphContext.ts:78](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L78)
+Defined in: [src/managers/GraphContext.ts:78](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L78)
 
 Get XR configuration
 Optional method for XR-specific functionality
@@ -161,7 +161,7 @@ Optional method for XR-specific functionality
 
 > `optional` **getXRSessionManager**(): `XRSessionManager` \| `undefined`
 
-Defined in: [src/managers/GraphContext.ts:84](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L84)
+Defined in: [src/managers/GraphContext.ts:84](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L84)
 
 Get XR session manager
 Optional method for XR-specific functionality
@@ -176,7 +176,7 @@ Optional method for XR-specific functionality
 
 > **is2D**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:52](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L52)
+Defined in: [src/managers/GraphContext.ts:52](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L52)
 
 Check if the graph is in 2D mode
 
@@ -190,7 +190,7 @@ Check if the graph is in 2D mode
 
 > **isRunning**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:67](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L67)
+Defined in: [src/managers/GraphContext.ts:67](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L67)
 
 Check if the layout is running
 
@@ -204,7 +204,7 @@ Check if the layout is running
 
 > **needsRayUpdate**(): `boolean`
 
-Defined in: [src/managers/GraphContext.ts:57](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L57)
+Defined in: [src/managers/GraphContext.ts:57](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L57)
 
 Check if ray updates are needed (for edge arrows)
 
@@ -218,7 +218,7 @@ Check if ray updates are needed (for edge arrows)
 
 > **setRunning**(`running`): `void`
 
-Defined in: [src/managers/GraphContext.ts:72](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/GraphContext.ts#L72)
+Defined in: [src/managers/GraphContext.ts:72](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/GraphContext.ts#L72)
 
 Set the running state
 

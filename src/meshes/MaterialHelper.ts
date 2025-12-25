@@ -18,7 +18,6 @@ export class MaterialHelper {
      *
      * Creates a StandardMaterial with flat shading and rotates the mesh
      * to lie in the XY plane (90° rotation around X-axis).
-     *
      * @param mesh - Mesh to apply material to
      * @param color - Hex color string (e.g., "#ff0000")
      * @param opacity - Opacity value 0-1
@@ -59,7 +58,6 @@ export class MaterialHelper {
      *
      * Delegates to FilledArrowRenderer.applyShader() to create a ShaderMaterial
      * with billboarding and screen-space scaling.
-     *
      * @param mesh - Mesh to apply material to
      * @param options - Arrow options (size, color, opacity)
      * @param scene - Babylon.js scene

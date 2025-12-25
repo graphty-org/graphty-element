@@ -2,7 +2,7 @@
 
 # Interface: ConfigurableInfo
 
-Defined in: [src/config/OptionsSchema.ts:235](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L235)
+Defined in: [src/config/OptionsSchema.ts:245](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L245)
 
 Information about a configurable item (algorithm or layout)
 
@@ -12,7 +12,7 @@ Information about a configurable item (algorithm or layout)
 
 > **category**: `"layout"` \| `"algorithm"`
 
-Defined in: [src/config/OptionsSchema.ts:239](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L239)
+Defined in: [src/config/OptionsSchema.ts:249](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L249)
 
 Category: "algorithm" or "layout"
 
@@ -22,7 +22,7 @@ Category: "algorithm" or "layout"
 
 > **hasOptions**: `boolean`
 
-Defined in: [src/config/OptionsSchema.ts:243](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L243)
+Defined in: [src/config/OptionsSchema.ts:253](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L253)
 
 Whether this item has any configurable options
 
@@ -32,7 +32,7 @@ Whether this item has any configurable options
 
 > **optionsSchema**: [`OptionsSchema`](../type-aliases/OptionsSchema.md)
 
-Defined in: [src/config/OptionsSchema.ts:241](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L241)
+Defined in: [src/config/OptionsSchema.ts:251](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L251)
 
 Full options schema with metadata
 
@@ -42,6 +42,6 @@ Full options schema with metadata
 
 > **type**: `string`
 
-Defined in: [src/config/OptionsSchema.ts:237](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L237)
+Defined in: [src/config/OptionsSchema.ts:247](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L247)
 
 Unique type identifier

@@ -16,10 +16,8 @@ import {
  * ✅ Colorblind-safe (all types) ✅ Industry standard
  *
  * Cycles through colors if categoryId > 7
- *
  * @param categoryId - Category identifier (0-7 for unique colors)
  * @returns Hex color string
- *
  * @example
  * okabeIto(0) // "#E69F00" (Orange)
  * okabeIto(1) // "#56B4E9" (Sky Blue)
@@ -35,10 +33,8 @@ export function okabeIto(categoryId: number): string {
  * Paul Tol Vibrant palette - high saturation colors
  * Maps category IDs to distinct colors (7 colors total)
  * ✅ Colorblind-safe ✅ High contrast
- *
  * @param categoryId - Category identifier (0-6 for unique colors)
  * @returns Hex color string
- *
  * @example
  * tolVibrant(0) // "#0077BB" (Blue)
  * tolVibrant(1) // "#33BBEE" (Cyan)
@@ -53,10 +49,8 @@ export function tolVibrant(categoryId: number): string {
  * Paul Tol Muted palette - softer colors
  * Maps category IDs to distinct colors (9 colors total)
  * ✅ Colorblind-safe ✅ More categories
- *
  * @param categoryId - Category identifier (0-8 for unique colors)
  * @returns Hex color string
- *
  * @example
  * tolMuted(0) // "#332288" (Indigo)
  * tolMuted(1) // "#88CCEE" (Cyan)
@@ -71,10 +65,8 @@ export function tolMuted(categoryId: number): string {
  * IBM Carbon palette - modern enterprise design
  * Maps category IDs to distinct colors (5 colors total)
  * Modern enterprise aesthetic
- *
  * @param categoryId - Category identifier (0-4 for unique colors)
  * @returns Hex color string
- *
  * @example
  * carbon(0) // "#6929C4" (Purple)
  * carbon(1) // "#1192E8" (Blue)
@@ -90,10 +82,8 @@ export function carbon(categoryId: number): string {
  * Maps category IDs to distinct colors (8 colors total)
  * ✅ Colorblind-safe (derived from Okabe-Ito)
  * ⚠️ Lower contrast
- *
  * @param categoryId - Category identifier (0-7 for unique colors)
  * @returns Hex color string
- *
  * @example
  * pastel(0) // "#FFD699" (Light orange)
  * pastel(1) // "#A8D8F0" (Light sky blue)

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Utility exports for algorithm implementations
+ * @file Utility exports for algorithm implementations
  */
 
 export * from "./communityUtils";

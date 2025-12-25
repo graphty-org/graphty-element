@@ -4,7 +4,7 @@
 
 > **defineOptions**\<`S`\>(`schema`): `S`
 
-Defined in: [src/config/OptionsSchema.ts:89](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L89)
+Defined in: [src/config/OptionsSchema.ts:89](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L89)
 
 Helper to define options with full type inference
 
@@ -20,9 +20,13 @@ Helper to define options with full type inference
 
 `S`
 
+Options schema definition
+
 ## Returns
 
 `S`
+
+The same schema with full type inference
 
 ## Example
 

@@ -35,6 +35,7 @@ export class MockLlmProvider implements LlmProvider {
 
     /**
      * Configure the provider (no-op for mock, but implements interface).
+     * @param _options - Provider configuration options (unused)
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     configure(_options: ProviderOptions): void {
@@ -42,62 +43,65 @@ export class MockLlmProvider implements LlmProvider {
     }
 
     /**
-   * Set a response to return when the user message contains the given pattern.
-   * @param pattern - String to match in user messages
-   * @param response - Response to return
-   */
+     * Set a response to return when the user message contains the given pattern.
+     * @param pattern - String to match in user messages
+     * @param response - Response to return
+     */
     setResponse(pattern: string, response: LlmResponse): void {
         this.responses.set(pattern.toLowerCase(), response);
     }
 
     /**
-   * Set the default response to return when no pattern matches.
-   * @param response - Default response
-   */
+     * Set the default response to return when no pattern matches.
+     * @param response - Default response
+     */
     setDefaultResponse(response: LlmResponse): void {
         this.defaultResponse = response;
     }
 
     /**
-   * Set an error to throw on next generate/generateStream call.
-   * @param error - Error to throw
-   */
+     * Set an error to throw on next generate/generateStream call.
+     * @param error - Error to throw
+     */
     setError(error: Error): void {
         this.configuredError = error;
     }
 
     /**
-   * Clear any configured error.
-   */
+     * Clear any configured error.
+     */
     clearError(): void {
         this.configuredError = null;
     }
 
     /**
-   * Set a delay (in ms) before returning responses.
-   * @param ms - Delay in milliseconds
-   */
+     * Set a delay (in ms) before returning responses.
+     * @param ms - Delay in milliseconds
+     */
     setDelay(ms: number): void {
         this.delay = ms;
     }
 
     /**
-   * Get the history of all calls made to this provider.
-   */
+     * Get the history of all calls made to this provider.
+     * @returns Array of call records
+     */
     getCallHistory(): CallRecord[] {
         return [... this.callHistory];
     }
 
     /**
-   * Clear the call history.
-   */
+     * Clear the call history.
+     */
     clearCallHistory(): void {
         this.callHistory = [];
     }
 
     /**
-   * Find the response for a given message content.
-   */
+     * Find the response for a given message content.
+     * @param messages - Array of messages to search
+     * @returns Matching response or default response
+     */
     private findResponse(messages: Message[]): LlmResponse {
     // Find the last user message
         const userMessage = [... messages].reverse().find((m) => m.role === "user");
@@ -118,8 +122,13 @@ export class MockLlmProvider implements LlmProvider {
     }
 
     /**
-   * Generate a response (non-streaming).
-   */
+     * Generate a response (non-streaming).
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param options - Generation options
+     * @param options.signal - Optional abort signal
+     * @returns Promise resolving to LLM response
+     */
     async generate(
         messages: Message[],
         tools: ToolDefinition[],
@@ -157,9 +166,13 @@ export class MockLlmProvider implements LlmProvider {
     }
 
     /**
-   * Generate a streaming response.
-   * Simulates streaming by emitting text character by character.
-   */
+     * Generate a streaming response.
+     * Simulates streaming by emitting text character by character.
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param callbacks - Streaming callbacks for text and tool calls
+     * @param signal - Optional abort signal
+     */
     async generateStream(
         messages: Message[],
         tools: ToolDefinition[],
@@ -216,10 +229,10 @@ export class MockLlmProvider implements LlmProvider {
     }
 
     /**
-   * Validate the API key.
-   * For the mock provider, this always returns true unless an error is configured.
-   * @returns Promise resolving to true if valid, false if invalid
-   */
+     * Validate the API key.
+     * For the mock provider, this always returns true unless an error is configured.
+     * @returns Promise resolving to true if valid, false if invalid
+     */
     validateApiKey(): Promise<boolean> {
         if (this.configuredError) {
             const errorMessage = this.configuredError.message.toLowerCase();

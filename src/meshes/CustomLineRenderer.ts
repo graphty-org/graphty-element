@@ -279,6 +279,7 @@ void main(void) {
      * Register the shared resolution update callback
      * This callback updates ALL line materials at once, instead of having one callback per material.
      * This dramatically improves performance when rendering many edges.
+     * @param scene - The Babylon.js scene to register the callback on
      */
     private static registerResolutionCallback(scene: Scene): void {
         // If already registered on this scene, skip
@@ -311,7 +312,6 @@ void main(void) {
 
     /**
      * Calculate evenly-spaced dot positions along a line path
-     *
      * @param points - Path points defining the line
      * @param dotRadius - Radius of each dot in world units
      * @returns Array of Vector3 positions where dots should be placed
@@ -367,7 +367,6 @@ void main(void) {
      *
      * Creates small disc meshes at calculated positions along the line.
      * This approach guarantees perfect circular appearance.
-     *
      * @param options Line configuration (uses points, color, opacity, width)
      * @param scene Babylon.js scene
      * @returns Parent mesh containing all dot disc meshes
@@ -442,7 +441,6 @@ void main(void) {
      * - Each segment has 2 vertices on each side (4 total)
      * - Vertices share positions but have different 'side' attributes
      * - Shader expands vertices perpendicular to line direction
-     *
      * @param points Path points (minimum 2)
      * @returns Line geometry ready for mesh creation
      */
@@ -513,7 +511,6 @@ void main(void) {
      *
      * Creates a smooth wave pattern by interpolating points along the path
      * and offsetting them perpendicular to the line direction.
-     *
      * @param points Path points (minimum 2)
      * @param amplitude Wave amplitude (perpendicular offset)
      * @param frequency Wave frequency (cycles per path length)
@@ -577,7 +574,6 @@ void main(void) {
      * Generate zigzag geometry along a path
      *
      * Creates an angular zigzag pattern by alternating perpendicular offsets.
-     *
      * @param points Path points (minimum 2)
      * @param amplitude Zigzag amplitude (perpendicular offset)
      * @param frequency Zigzag frequency (number of zigs/zags)
@@ -639,6 +635,18 @@ void main(void) {
      * Vertices are positioned along the segment at the specified position
      * Both vertices store segment start/end to ensure consistent perpendicular calculation
      * Shader will offset them perpendicular based on 'side' attribute
+     * @param positions - Array to append vertex position data
+     * @param directions - Array to append vertex direction vectors
+     * @param sides - Array to append side indicators (-1 or +1)
+     * @param distances - Array to append cumulative distances along path
+     * @param uvs - Array to append UV coordinates
+     * @param segmentStarts - Array to append segment start positions
+     * @param segmentEnds - Array to append segment end positions
+     * @param actualPosition - Actual 3D position of this vertex
+     * @param direction - Direction vector for this segment
+     * @param distance - Cumulative distance at this position
+     * @param segmentStart - Start position of the current segment
+     * @param segmentEnd - End position of the current segment
      */
     private static addVertexPair(
         positions: number[],
@@ -675,9 +683,8 @@ void main(void) {
 
     /**
      * Create a custom line mesh
-     *
-     * @param options Line configuration
-     * @param scene Babylon.js scene
+     * @param options - Line configuration
+     * @param scene - Babylon.js scene
      * @returns Mesh with custom line shader
      */
     static create(
@@ -773,6 +780,13 @@ void main(void) {
      * Create a straight line between two points (optimized common case)
      *
      * This is the most common use case for edges in graphs
+     * @param src - Source point position
+     * @param dst - Destination point position
+     * @param width - Line width in pixels
+     * @param color - Line color as hex string
+     * @param scene - Babylon.js scene
+     * @param opacity - Line opacity (0-1)
+     * @returns Mesh representing the straight line
      */
     static createStraightLine(
         src: Vector3,
@@ -798,10 +812,12 @@ void main(void) {
      *
      * This is used for both lines and arrows - they use the SAME shader!
      * Guarantees perfect alignment between lines and arrow heads.
-     *
-     * @param geometry LineGeometry from createLineGeometry() or arrow generators
-     * @param options Styling options (width, color, opacity)
-     * @param scene Babylon.js scene
+     * @param geometry - LineGeometry from createLineGeometry() or arrow generators
+     * @param options - Styling options (width, color, opacity)
+     * @param options.width - Line width in pixels
+     * @param options.color - Line color as hex string
+     * @param options.opacity - Line opacity (0-1)
+     * @param scene - Babylon.js scene
      * @returns Mesh with CustomLineRenderer shader material
      */
     static createFromGeometry(

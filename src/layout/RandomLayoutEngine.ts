@@ -41,6 +41,9 @@ export const RandomLayoutConfig = z.strictObject({
 export type RandomLayoutConfigType = z.infer<typeof RandomLayoutConfig>;
 export type RandomLayoutOpts = Partial<RandomLayoutConfigType>;
 
+/**
+ * Random layout engine that places nodes at random positions
+ */
 export class RandomLayout extends SimpleLayoutEngine {
     static type = "random";
     static maxDimensions = 3;
@@ -48,15 +51,27 @@ export class RandomLayout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: RandomLayoutConfigType;
 
+    /**
+     * Create a random layout engine
+     * @param opts - Configuration options including dimensions and seed
+     */
     constructor(opts: RandomLayoutOpts) {
         super(opts);
         this.config = RandomLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for random layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
 
+    /**
+     * Compute random node positions
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

@@ -101,7 +101,7 @@ describe("Dimension Switch Regression Test", () => {
 
         it("node meshes should remain valid after switching from 3D to 2D", async() => {
             // Verify initial state (3D mode, all meshes valid)
-            assert.strictEqual(graph.is2D(), false, "Should start in 3D mode");
+            assert.strictEqual(graph.getViewMode() === "2d", false, "Should start in 3D mode");
             assert.strictEqual(areAllNodeMeshesValid(), true, "All meshes should be valid in 3D mode");
 
             // Set up mock response for dimension switch
@@ -116,7 +116,7 @@ describe("Dimension Switch Regression Test", () => {
 
             // Verify command succeeded
             assert.strictEqual(result.success, true, `setDimension should succeed: ${result.message}`);
-            assert.strictEqual(graph.is2D(), true, "Should now be in 2D mode");
+            assert.strictEqual(graph.getViewMode() === "2d", true, "Should now be in 2D mode");
 
             // CRITICAL: Verify all node meshes are still valid (not disposed)
             // This is the regression test - before the fix, meshes would be disposed
@@ -142,7 +142,7 @@ describe("Dimension Switch Regression Test", () => {
             });
 
             await graph.aiCommand("switch to 2D");
-            assert.strictEqual(graph.is2D(), true, "Should be in 2D mode");
+            assert.strictEqual(graph.getViewMode() === "2d", true, "Should be in 2D mode");
             assert.strictEqual(areAllNodeMeshesValid(), true, "All meshes should be valid after 2D switch");
 
             // Now switch back to 3D
@@ -155,7 +155,7 @@ describe("Dimension Switch Regression Test", () => {
 
             // Verify command succeeded
             assert.strictEqual(result.success, true, `setDimension should succeed: ${result.message}`);
-            assert.strictEqual(graph.is2D(), false, "Should now be in 3D mode");
+            assert.strictEqual(graph.getViewMode() === "2d", false, "Should now be in 3D mode");
 
             // Verify all node meshes are still valid
             const disposedCount = countDisposedMeshes();

@@ -31,6 +31,12 @@ export class CameraPathAnimator {
     private animations: Animation[] = [];
     private currentAnimatable: ReturnType<Scene["beginAnimation"]> | null = null;
 
+    /**
+     * Creates a new CameraPathAnimator instance
+     * @param camera - The Babylon.js camera to animate
+     * @param scene - The Babylon.js scene containing the camera
+     * @param options - Animation configuration options
+     */
     constructor(camera: Camera, scene: Scene, options: CameraPathAnimatorOptions) {
         this.camera = camera;
         this.scene = scene;
@@ -42,6 +48,8 @@ export class CameraPathAnimator {
     /**
      * Convert user waypoints to Babylon.js Animation objects.
      * Works for both 2D (zoom, pan) and 3D (position, target) cameras.
+     * @param waypoints - Array of camera waypoints defining the animation path
+     * @returns Array of Babylon.js Animation objects
      */
     createCameraAnimations(waypoints: CameraWaypoint[]): Animation[] {
         if (waypoints.length < 2) {
@@ -73,6 +81,9 @@ export class CameraPathAnimator {
 
     /**
      * Create a Vector3 animation for the specified property.
+     * @param property - The camera property to animate (e.g., 'position', 'target')
+     * @param waypoints - Array of camera waypoints
+     * @returns Babylon.js Animation for the Vector3 property
      */
     private createVector3Animation(property: string, waypoints: CameraWaypoint[]): Animation {
         const animation = new Animation(
@@ -96,6 +107,8 @@ export class CameraPathAnimator {
 
     /**
      * Create target animation (for 3D cameras).
+     * @param waypoints - Array of camera waypoints
+     * @returns Babylon.js Animation for the camera target
      */
     private createTargetAnimation(waypoints: CameraWaypoint[]): Animation {
         const animation = new Animation(
@@ -121,6 +134,8 @@ export class CameraPathAnimator {
      * Create zoom animations for 2D orthographic cameras.
      * Returns animations for orthoLeft, orthoRight, orthoTop, orthoBottom.
      * Uses the z position from waypoints as a proxy for zoom level (ortho size).
+     * @param waypoints - Array of camera waypoints
+     * @returns Array of animations for orthographic camera bounds
      */
     private createOrthoZoomAnimations(waypoints: CameraWaypoint[]): Animation[] {
         // Get the camera's current aspect ratio to maintain proportions
@@ -198,6 +213,8 @@ export class CameraPathAnimator {
 
     /**
      * Create pan X animation for 2D cameras.
+     * @param waypoints - Array of camera waypoints
+     * @returns Babylon.js Animation for horizontal panning
      */
     private createPanXAnimation(waypoints: CameraWaypoint[]): Animation {
         const animation = new Animation(
@@ -221,6 +238,8 @@ export class CameraPathAnimator {
 
     /**
      * Create pan Y animation for 2D cameras.
+     * @param waypoints - Array of camera waypoints
+     * @returns Babylon.js Animation for vertical panning
      */
     private createPanYAnimation(waypoints: CameraWaypoint[]): Animation {
         const animation = new Animation(
@@ -245,6 +264,10 @@ export class CameraPathAnimator {
     /**
      * Calculate cumulative timestamp for a waypoint.
      * Waypoints have duration (time to reach from previous), so we need to sum them.
+     * @param timestamp - The timestamp value (unused, kept for interface consistency)
+     * @param waypoints - All waypoints in the path
+     * @param currentWaypoint - The waypoint to calculate frame for
+     * @returns Frame number for the waypoint
      */
     private timestampToFrame(timestamp: number, waypoints: CameraWaypoint[], currentWaypoint: CameraWaypoint): number {
         let cumulativeTime = 0;
@@ -268,6 +291,8 @@ export class CameraPathAnimator {
 
     /**
      * Apply easing function to animation.
+     * @param animation - The Babylon.js animation to modify
+     * @param easing - The easing type to apply
      */
     private applyEasing(animation: Animation, easing: EasingType): void {
         const easingFunction = this.getEasingFunction(easing);
@@ -278,6 +303,8 @@ export class CameraPathAnimator {
 
     /**
      * Get Babylon.js easing function for the specified easing type.
+     * @param easing - The easing type to convert
+     * @returns Babylon.js easing function or null for linear
      */
     private getEasingFunction(easing: EasingType): IEasingFunction | null {
         switch (easing) {
@@ -309,6 +336,8 @@ export class CameraPathAnimator {
 
     /**
      * Convert duration in milliseconds to frame count.
+     * @param durationMs - Duration in milliseconds
+     * @returns Number of frames for the duration
      */
     private durationToFrames(durationMs: number): number {
         return Math.round((durationMs / 1000) * this.fps);
@@ -316,6 +345,7 @@ export class CameraPathAnimator {
 
     /**
      * Get total number of frames for the animation.
+     * @returns Total frame count based on duration and FPS
      */
     getTotalFrames(): number {
         return this.durationToFrames(this.duration);
@@ -326,6 +356,7 @@ export class CameraPathAnimator {
      * Animation runs naturally in the render loop.
      * Includes timeout fallback in case animation callback doesn't fire
      * (e.g., in test environments or when scene isn't actively rendering).
+     * @returns Promise that resolves when animation completes
      */
     async startRealtimeAnimation(): Promise<void> {
         if (this.animations.length === 0) {
@@ -378,6 +409,8 @@ export class CameraPathAnimator {
     /**
      * Manual mode: Get camera state at a specific frame.
      * For guaranteed quality, capture each frame individually.
+     * @param frame - The frame number to evaluate
+     * @returns Camera state (position, target, zoom, pan) for the specified frame
      */
     getCameraStateAtFrame(frame: number): {
         position?: Vector3;
@@ -416,6 +449,9 @@ export class CameraPathAnimator {
 
     /**
      * Evaluate float animation at a specific frame.
+     * @param propertyName - The property name to evaluate
+     * @param frame - The frame number to evaluate at
+     * @returns The interpolated float value or undefined if animation not found
      */
     private evaluateFloatAnimation(propertyName: string, frame: number): number | undefined {
         const animation = this.animations.find((a) => a.targetProperty === propertyName);
@@ -428,6 +464,9 @@ export class CameraPathAnimator {
 
     /**
      * Evaluate Vector3 animation at a specific frame.
+     * @param propertyName - The property name to evaluate
+     * @param frame - The frame number to evaluate at
+     * @returns The interpolated Vector3 value or undefined if animation not found
      */
     private evaluateVector3Animation(propertyName: string, frame: number): Vector3 | undefined {
         const animation = this.animations.find((a) => a.targetProperty === propertyName);
@@ -440,6 +479,7 @@ export class CameraPathAnimator {
 
     /**
      * Get the animations array for external use.
+     * @returns Array of all created animations
      */
     getAnimations(): Animation[] {
         return this.animations;
@@ -447,6 +487,7 @@ export class CameraPathAnimator {
 
     /**
      * Check if this is a 2D camera.
+     * @returns True if camera is in orthographic mode (2D), false for perspective (3D)
      */
     is2DCamera(): boolean {
         return this.camera.mode === Camera.ORTHOGRAPHIC_CAMERA;

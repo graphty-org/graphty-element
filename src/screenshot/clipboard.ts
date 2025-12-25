@@ -10,6 +10,8 @@ export interface ClipboardResult {
  * Copy image to clipboard. Accepts either a Blob or a Promise<Blob>.
  * When using Promise<Blob>, the clipboard write starts immediately (preserving user gesture),
  * and the promise resolves asynchronously.
+ * @param blobOrPromise - Image blob or promise that resolves to a blob
+ * @returns Clipboard operation result with status and any errors
  */
 export async function copyToClipboard(
     blobOrPromise: Blob | Promise<Blob>,

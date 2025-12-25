@@ -8,11 +8,19 @@ interface GMLValue {
     [key: string]: string | number | GMLValue | GMLValue[] | (string | number)[];
 }
 
+/**
+ * Data source for loading graph data from GML (Graph Modeling Language) files.
+ * Supports hierarchical graph structures with typed attributes.
+ */
 export class GMLDataSource extends DataSource {
     static readonly type = "gml";
 
     private config: GMLDataSourceConfig;
 
+    /**
+     * Creates a new GMLDataSource instance.
+     * @param config - Configuration options for GML parsing and data loading
+     */
     constructor(config: GMLDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
@@ -22,6 +30,10 @@ export class GMLDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses GML format data into graph chunks.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
     // Get GML content
         const gmlContent = await this.getContent();

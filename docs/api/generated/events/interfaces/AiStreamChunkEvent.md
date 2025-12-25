@@ -2,7 +2,7 @@
 
 # Interface: AiStreamChunkEvent
 
-Defined in: [src/events.ts:265](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L265)
+Defined in: [src/events.ts:265](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L265)
 
 Emitted during streaming when text chunks arrive (throttled)
 
@@ -12,7 +12,7 @@ Emitted during streaming when text chunks arrive (throttled)
 
 > **accumulated**: `string`
 
-Defined in: [src/events.ts:268](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L268)
+Defined in: [src/events.ts:268](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L268)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [src/events.ts:268](https://github.com/graphty-org/graphty-element/b
 
 > **text**: `string`
 
-Defined in: [src/events.ts:267](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L267)
+Defined in: [src/events.ts:267](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L267)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [src/events.ts:267](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"ai-stream-chunk"`
 
-Defined in: [src/events.ts:266](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L266)
+Defined in: [src/events.ts:266](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L266)

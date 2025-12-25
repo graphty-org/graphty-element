@@ -51,6 +51,9 @@ export const BipartiteLayoutConfig = z.strictObject({
 export type BipartiteLayoutConfigType = z.infer<typeof BipartiteLayoutConfig>;
 export type BipartiteLayoutOpts = Partial<BipartiteLayoutConfigType>;
 
+/**
+ * Bipartite layout engine for graphs with two distinct node sets
+ */
 export class BipartiteLayout extends SimpleLayoutEngine {
     static type = "bipartite";
     static maxDimensions = 2;
@@ -58,11 +61,20 @@ export class BipartiteLayout extends SimpleLayoutEngine {
     scalingFactor = 40;
     config: BipartiteLayoutConfigType;
 
+    /**
+     * Create a bipartite layout engine
+     * @param opts - Configuration options including node partitions and alignment
+     */
     constructor(opts: BipartiteLayoutOpts) {
         super(opts);
         this.config = BipartiteLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for bipartite layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Empty object for 2D, null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Bipartite only supports 2D
         if (dimension > this.maxDimensions) {
@@ -73,6 +85,9 @@ export class BipartiteLayout extends SimpleLayoutEngine {
         return {};
     }
 
+    /**
+     * Compute node positions for bipartite graph
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

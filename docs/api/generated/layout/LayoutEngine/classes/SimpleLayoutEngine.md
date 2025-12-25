@@ -2,7 +2,9 @@
 
 # Abstract Class: SimpleLayoutEngine
 
-Defined in: [src/layout/LayoutEngine.ts:153](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L153)
+Defined in: [src/layout/LayoutEngine.ts:194](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L194)
+
+Base class for simple static layout engines that compute positions synchronously
 
 ## Extends
 
@@ -14,13 +16,17 @@ Defined in: [src/layout/LayoutEngine.ts:153](https://github.com/graphty-org/grap
 
 > **new SimpleLayoutEngine**(`opts`): `SimpleLayoutEngine`
 
-Defined in: [src/layout/LayoutEngine.ts:161](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L161)
+Defined in: [src/layout/LayoutEngine.ts:206](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L206)
+
+Create a simple layout engine
 
 #### Parameters
 
 ##### opts
 
 [`SimpleLayoutOpts`](../type-aliases/SimpleLayoutOpts.md) = `{}`
+
+Configuration options including scalingFactor
 
 #### Returns
 
@@ -36,7 +42,7 @@ Defined in: [src/layout/LayoutEngine.ts:161](https://github.com/graphty-org/grap
 
 > `optional` **config**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/layout/LayoutEngine.ts:36](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L36)
+Defined in: [src/layout/LayoutEngine.ts:39](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L39)
 
 #### Inherited from
 
@@ -48,7 +54,7 @@ Defined in: [src/layout/LayoutEngine.ts:36](https://github.com/graphty-org/graph
 
 > `readonly` **isSettled**: `true` = `true`
 
-Defined in: [src/layout/LayoutEngine.ts:232](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L232)
+Defined in: [src/layout/LayoutEngine.ts:341](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L341)
 
 #### Overrides
 
@@ -60,7 +66,7 @@ Defined in: [src/layout/LayoutEngine.ts:232](https://github.com/graphty-org/grap
 
 > `static` **maxDimensions**: `number`
 
-Defined in: [src/layout/LayoutEngine.ts:35](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L35)
+Defined in: [src/layout/LayoutEngine.ts:38](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L38)
 
 #### Inherited from
 
@@ -72,7 +78,7 @@ Defined in: [src/layout/LayoutEngine.ts:35](https://github.com/graphty-org/graph
 
 > **positions**: `Record`\<`string` \| `number`, `number`[]\> = `{}`
 
-Defined in: [src/layout/LayoutEngine.ts:158](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L158)
+Defined in: [src/layout/LayoutEngine.ts:199](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L199)
 
 ***
 
@@ -80,7 +86,7 @@ Defined in: [src/layout/LayoutEngine.ts:158](https://github.com/graphty-org/grap
 
 > **scalingFactor**: `number` = `100`
 
-Defined in: [src/layout/LayoutEngine.ts:159](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L159)
+Defined in: [src/layout/LayoutEngine.ts:200](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L200)
 
 ***
 
@@ -88,7 +94,7 @@ Defined in: [src/layout/LayoutEngine.ts:159](https://github.com/graphty-org/grap
 
 > **stale**: `boolean` = `true`
 
-Defined in: [src/layout/LayoutEngine.ts:157](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L157)
+Defined in: [src/layout/LayoutEngine.ts:198](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L198)
 
 ***
 
@@ -96,7 +102,7 @@ Defined in: [src/layout/LayoutEngine.ts:157](https://github.com/graphty-org/grap
 
 > `static` **type**: `string`
 
-Defined in: [src/layout/LayoutEngine.ts:154](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L154)
+Defined in: [src/layout/LayoutEngine.ts:195](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L195)
 
 #### Overrides
 
@@ -108,7 +114,7 @@ Defined in: [src/layout/LayoutEngine.ts:154](https://github.com/graphty-org/grap
 
 > `static` `optional` **zodOptionsSchema**: [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/layout/LayoutEngine.ts:44](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L44)
+Defined in: [src/layout/LayoutEngine.ts:47](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L47)
 
 NEW: Zod-based options schema for unified validation and UI metadata
 
@@ -127,11 +133,15 @@ using the new Zod-based schema system.
 
 > **get** **edges**(): `Iterable`\<[`Edge`](../../../Edge/classes/Edge.md)\>
 
-Defined in: [src/layout/LayoutEngine.ts:228](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L228)
+Defined in: [src/layout/LayoutEngine.ts:337](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L337)
+
+Get all edges in the layout
 
 ##### Returns
 
 `Iterable`\<[`Edge`](../../../Edge/classes/Edge.md)\>
+
+Iterable of edges
 
 #### Overrides
 
@@ -145,11 +155,15 @@ Defined in: [src/layout/LayoutEngine.ts:228](https://github.com/graphty-org/grap
 
 > **get** **nodes**(): `Iterable`\<[`Node`](../../../Node/classes/Node.md)\>
 
-Defined in: [src/layout/LayoutEngine.ts:224](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L224)
+Defined in: [src/layout/LayoutEngine.ts:329](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L329)
+
+Get all nodes in the layout
 
 ##### Returns
 
 `Iterable`\<[`Node`](../../../Node/classes/Node.md)\>
+
+Iterable of nodes
 
 #### Overrides
 
@@ -163,11 +177,15 @@ Defined in: [src/layout/LayoutEngine.ts:224](https://github.com/graphty-org/grap
 
 > **get** **type**(): `string`
 
-Defined in: [src/layout/LayoutEngine.ts:74](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L74)
+Defined in: [src/layout/LayoutEngine.ts:89](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L89)
+
+Get the type identifier for this layout engine
 
 ##### Returns
 
 `string`
+
+The layout engine type string
 
 #### Inherited from
 
@@ -179,13 +197,17 @@ Defined in: [src/layout/LayoutEngine.ts:74](https://github.com/graphty-org/graph
 
 > **addEdge**(`e`): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:186](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L186)
+Defined in: [src/layout/LayoutEngine.ts:251](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L251)
+
+Add an edge to the layout and mark positions as stale
 
 #### Parameters
 
 ##### e
 
 [`Edge`](../../../Edge/classes/Edge.md)
+
+The edge to add
 
 #### Returns
 
@@ -201,13 +223,17 @@ Defined in: [src/layout/LayoutEngine.ts:186](https://github.com/graphty-org/grap
 
 > **addEdges**(`edges`): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:68](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L68)
+Defined in: [src/layout/LayoutEngine.ts:79](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L79)
+
+Add multiple edges to the layout engine
 
 #### Parameters
 
 ##### edges
 
 [`Edge`](../../../Edge/classes/Edge.md)[]
+
+Array of edges to add
 
 #### Returns
 
@@ -223,13 +249,17 @@ Defined in: [src/layout/LayoutEngine.ts:68](https://github.com/graphty-org/graph
 
 > **addNode**(`n`): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:181](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L181)
+Defined in: [src/layout/LayoutEngine.ts:242](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L242)
+
+Add a node to the layout and mark positions as stale
 
 #### Parameters
 
 ##### n
 
 [`Node`](../../../Node/classes/Node.md)
+
+The node to add
 
 #### Returns
 
@@ -245,13 +275,17 @@ Defined in: [src/layout/LayoutEngine.ts:181](https://github.com/graphty-org/grap
 
 > **addNodes**(`nodes`): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:62](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L62)
+Defined in: [src/layout/LayoutEngine.ts:69](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L69)
+
+Add multiple nodes to the layout engine
 
 #### Parameters
 
 ##### nodes
 
 [`Node`](../../../Node/classes/Node.md)[]
+
+Array of nodes to add
 
 #### Returns
 
@@ -267,7 +301,7 @@ Defined in: [src/layout/LayoutEngine.ts:62](https://github.com/graphty-org/graph
 
 > `abstract` **doLayout**(): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:234](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L234)
+Defined in: [src/layout/LayoutEngine.ts:343](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L343)
 
 #### Returns
 
@@ -279,7 +313,9 @@ Defined in: [src/layout/LayoutEngine.ts:234](https://github.com/graphty-org/grap
 
 > `static` **get**(`type`, `opts`): [`LayoutEngine`](LayoutEngine.md) \| `null`
 
-Defined in: [src/layout/LayoutEngine.ts:85](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L85)
+Defined in: [src/layout/LayoutEngine.ts:111](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L111)
+
+Get a layout engine instance by type
 
 #### Parameters
 
@@ -287,13 +323,19 @@ Defined in: [src/layout/LayoutEngine.ts:85](https://github.com/graphty-org/graph
 
 `string`
 
+The layout engine type identifier
+
 ##### opts
 
 `object` = `{}`
 
+Configuration options for the layout engine
+
 #### Returns
 
 [`LayoutEngine`](LayoutEngine.md) \| `null`
+
+A new layout engine instance or null if type not found
 
 #### Inherited from
 
@@ -305,7 +347,7 @@ Defined in: [src/layout/LayoutEngine.ts:85](https://github.com/graphty-org/graph
 
 > `static` **getClass**(`type`): `LayoutEngineClass` & [`LayoutEngineStatics`](../interfaces/LayoutEngineStatics.md) \| `null`
 
-Defined in: [src/layout/LayoutEngine.ts:142](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L142)
+Defined in: [src/layout/LayoutEngine.ts:180](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L180)
 
 Get a layout class by type
 
@@ -315,9 +357,13 @@ Get a layout class by type
 
 `string`
 
+The layout engine type identifier
+
 #### Returns
 
 `LayoutEngineClass` & [`LayoutEngineStatics`](../interfaces/LayoutEngineStatics.md) \| `null`
+
+The layout engine class or null if not found
 
 #### Inherited from
 
@@ -329,7 +375,9 @@ Get a layout class by type
 
 > **getEdgePosition**(`e`): [`EdgePosition`](../interfaces/EdgePosition.md)
 
-Defined in: [src/layout/LayoutEngine.ts:202](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L202)
+Defined in: [src/layout/LayoutEngine.ts:284](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L284)
+
+Get the position of an edge based on its endpoints
 
 #### Parameters
 
@@ -337,9 +385,13 @@ Defined in: [src/layout/LayoutEngine.ts:202](https://github.com/graphty-org/grap
 
 [`Edge`](../../../Edge/classes/Edge.md)
 
+The edge to get position for
+
 #### Returns
 
 [`EdgePosition`](../interfaces/EdgePosition.md)
+
+The edge's source and destination positions
 
 #### Overrides
 
@@ -351,7 +403,9 @@ Defined in: [src/layout/LayoutEngine.ts:202](https://github.com/graphty-org/grap
 
 > **getNodePosition**(`n`): [`Position`](../interfaces/Position.md)
 
-Defined in: [src/layout/LayoutEngine.ts:191](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L191)
+Defined in: [src/layout/LayoutEngine.ts:261](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L261)
+
+Get the position of a node, computing layout if stale
 
 #### Parameters
 
@@ -359,9 +413,13 @@ Defined in: [src/layout/LayoutEngine.ts:191](https://github.com/graphty-org/grap
 
 [`Node`](../../../Node/classes/Node.md)
 
+The node to get position for
+
 #### Returns
 
 [`Position`](../interfaces/Position.md)
+
+The node's position coordinates
 
 #### Overrides
 
@@ -373,17 +431,23 @@ Defined in: [src/layout/LayoutEngine.ts:191](https://github.com/graphty-org/grap
 
 > `static` **getOptionsForDimension**(`dimension`): `object` \| `null`
 
-Defined in: [src/layout/LayoutEngine.ts:167](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L167)
+Defined in: [src/layout/LayoutEngine.ts:217](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L217)
+
+Get dimension-specific options for simple layouts
 
 #### Parameters
 
 ##### dimension
+
+The desired dimension (2 or 3)
 
 `2` | `3`
 
 #### Returns
 
 `object` \| `null`
+
+Options object with dim parameter or null if unsupported
 
 #### Overrides
 
@@ -395,7 +459,9 @@ Defined in: [src/layout/LayoutEngine.ts:167](https://github.com/graphty-org/grap
 
 > `static` **getOptionsForDimensionByType**(`type`, `dimension`): `object` \| `null`
 
-Defined in: [src/layout/LayoutEngine.ts:105](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L105)
+Defined in: [src/layout/LayoutEngine.ts:142](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L142)
+
+Get dimension-specific options for a layout by type
 
 #### Parameters
 
@@ -403,13 +469,19 @@ Defined in: [src/layout/LayoutEngine.ts:105](https://github.com/graphty-org/grap
 
 `string`
 
+The layout engine type identifier
+
 ##### dimension
+
+The desired dimension (2 or 3)
 
 `2` | `3`
 
 #### Returns
 
 `object` \| `null`
+
+Options object for the dimension or null if type not found or unsupported
 
 #### Inherited from
 
@@ -421,13 +493,15 @@ Defined in: [src/layout/LayoutEngine.ts:105](https://github.com/graphty-org/grap
 
 > `static` **getRegisteredTypes**(): `string`[]
 
-Defined in: [src/layout/LayoutEngine.ts:135](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L135)
+Defined in: [src/layout/LayoutEngine.ts:171](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L171)
 
 Get a list of all registered layout types
 
 #### Returns
 
 `string`[]
+
+Array of registered layout type identifiers
 
 #### Inherited from
 
@@ -439,7 +513,7 @@ Get a list of all registered layout types
 
 > `static` **getZodOptionsSchema**(): [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/layout/LayoutEngine.ts:119](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L119)
+Defined in: [src/layout/LayoutEngine.ts:155](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L155)
 
 Get the Zod-based options schema for this layout
 
@@ -459,7 +533,7 @@ The options schema, or an empty object if no schema defined
 
 > `static` **hasZodOptions**(): `boolean`
 
-Defined in: [src/layout/LayoutEngine.ts:128](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L128)
+Defined in: [src/layout/LayoutEngine.ts:163](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L163)
 
 Check if this layout has a Zod-based options schema
 
@@ -479,7 +553,11 @@ true if the layout has options defined
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/layout/LayoutEngine.ts:179](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L179)
+Defined in: [src/layout/LayoutEngine.ts:234](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L234)
+
+Initialize the layout engine
+
+Simple layouts compute positions synchronously and don't require initialization.
 
 #### Returns
 
@@ -495,7 +573,11 @@ Defined in: [src/layout/LayoutEngine.ts:179](https://github.com/graphty-org/grap
 
 > **pin**(): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:218](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L218)
+Defined in: [src/layout/LayoutEngine.ts:311](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L311)
+
+Pin a node in place
+
+Simple layouts are static and don't support interactive node pinning.
 
 #### Returns
 
@@ -511,7 +593,9 @@ Defined in: [src/layout/LayoutEngine.ts:218](https://github.com/graphty-org/grap
 
 > `static` **register**\<`T`\>(`cls`): `T`
 
-Defined in: [src/layout/LayoutEngine.ts:78](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L78)
+Defined in: [src/layout/LayoutEngine.ts:98](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L98)
+
+Register a layout engine class in the global registry
 
 #### Type Parameters
 
@@ -525,9 +609,13 @@ Defined in: [src/layout/LayoutEngine.ts:78](https://github.com/graphty-org/graph
 
 `T`
 
+The layout engine class to register
+
 #### Returns
 
 `T`
+
+The registered class for chaining
 
 #### Inherited from
 
@@ -539,7 +627,12 @@ Defined in: [src/layout/LayoutEngine.ts:78](https://github.com/graphty-org/graph
 
 > **setNodePosition**(): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:200](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L200)
+Defined in: [src/layout/LayoutEngine.ts:275](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L275)
+
+Set node position
+
+Simple layouts are static and recompute all positions from scratch,
+so individual position setting is not supported.
 
 #### Returns
 
@@ -555,7 +648,11 @@ Defined in: [src/layout/LayoutEngine.ts:200](https://github.com/graphty-org/grap
 
 > **step**(): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:215](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L215)
+Defined in: [src/layout/LayoutEngine.ts:302](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L302)
+
+Step the layout animation
+
+Simple layouts are static and don't animate, so stepping has no effect.
 
 #### Returns
 
@@ -571,7 +668,11 @@ Defined in: [src/layout/LayoutEngine.ts:215](https://github.com/graphty-org/grap
 
 > **unpin**(): `void`
 
-Defined in: [src/layout/LayoutEngine.ts:221](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L221)
+Defined in: [src/layout/LayoutEngine.ts:320](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L320)
+
+Unpin a node
+
+Simple layouts are static and don't support interactive node pinning.
 
 #### Returns
 

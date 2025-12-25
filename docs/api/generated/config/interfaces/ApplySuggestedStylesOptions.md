@@ -2,7 +2,7 @@
 
 # Interface: ApplySuggestedStylesOptions
 
-Defined in: [src/config/SuggestedStyles.ts:137](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L137)
+Defined in: [src/config/SuggestedStyles.ts:135](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L135)
 
 Options for applying suggested styles
 
@@ -12,7 +12,7 @@ Options for applying suggested styles
 
 > `optional` **enabledStyles**: `string`[]
 
-Defined in: [src/config/SuggestedStyles.ts:145](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L145)
+Defined in: [src/config/SuggestedStyles.ts:143](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L143)
 
 Enable/disable specific suggested styles by name
 
@@ -22,7 +22,7 @@ Enable/disable specific suggested styles by name
 
 > `optional` **layerPrefix**: `string`
 
-Defined in: [src/config/SuggestedStyles.ts:143](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L143)
+Defined in: [src/config/SuggestedStyles.ts:141](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L141)
 
 Prefix for layer names to avoid conflicts
 
@@ -32,7 +32,7 @@ Prefix for layer names to avoid conflicts
 
 > `optional` **mode**: `"replace"` \| `"merge"`
 
-Defined in: [src/config/SuggestedStyles.ts:141](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L141)
+Defined in: [src/config/SuggestedStyles.ts:139](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L139)
 
 Whether to replace existing layers or merge
 
@@ -42,6 +42,6 @@ Whether to replace existing layers or merge
 
 > `optional` **position**: `number` \| `"append"` \| `"prepend"`
 
-Defined in: [src/config/SuggestedStyles.ts:139](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/SuggestedStyles.ts#L139)
+Defined in: [src/config/SuggestedStyles.ts:137](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/SuggestedStyles.ts#L137)
 
 Where to insert the style layers

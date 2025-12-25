@@ -1,5 +1,5 @@
 /**
- * @fileoverview Max Flow Algorithm wrapper
+ * @file Max Flow Algorithm wrapper
  *
  * This algorithm finds the maximum flow from a source to a sink
  * in a flow network using the Ford-Fulkerson method.
@@ -42,6 +42,11 @@ export interface MaxFlowOptions extends Record<string, unknown> {
     sink: string | number | null;
 }
 
+/**
+ * Maximum Flow algorithm using Ford-Fulkerson method
+ *
+ * Computes the maximum flow from a source to a sink node in a flow network.
+ */
 export class MaxFlowAlgorithm extends Algorithm<MaxFlowOptions> {
     static namespace = "graphty";
     static type = "max-flow";
@@ -133,7 +138,10 @@ export class MaxFlowAlgorithm extends Algorithm<MaxFlowOptions> {
 
     /**
      * Configure the algorithm with source and sink nodes
-     *
+     * @param options - Configuration options
+     * @param options.source - The source node for the flow network
+     * @param options.sink - The sink node for the flow network
+     * @returns This algorithm instance for chaining
      * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
     configure(options: {source: string, sink: string}): this {
@@ -141,7 +149,11 @@ export class MaxFlowAlgorithm extends Algorithm<MaxFlowOptions> {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the maximum flow algorithm on the graph
+     *
+     * Computes maximum flow from source to sink and stores flow values on edges.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const edges = Array.from(g.getDataManager().edges.values());

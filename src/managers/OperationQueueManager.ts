@@ -46,6 +46,10 @@ export type OperationCategory =
     | "camera-update" // Update camera position/mode
     | "render-update"; // Update rendering settings
 
+/**
+ * Manages a queue of graph operations with dependency resolution and batching
+ * Ensures operations execute in the correct order based on their dependencies
+ */
 export class OperationQueueManager implements Manager {
     private queue: PQueue;
     private pendingOperations = new Map<string, Operation>();
@@ -126,6 +130,15 @@ export class OperationQueueManager implements Manager {
         "algorithm-run": ["style-apply"],
     };
 
+    /**
+     * Creates a new operation queue manager
+     * @param eventManager - Event manager for emitting operation events
+     * @param options - Queue configuration options
+     * @param options.concurrency - Maximum concurrent operations (default: 1)
+     * @param options.autoStart - Whether to auto-start the queue (default: true)
+     * @param options.intervalCap - Maximum operations per interval
+     * @param options.interval - Time interval in milliseconds
+     */
     constructor(
         private eventManager: EventManager,
         options: {
@@ -168,10 +181,16 @@ export class OperationQueueManager implements Manager {
         });
     }
 
+    /**
+     * Initialize the operation queue manager
+     */
     async init(): Promise<void> {
         // No initialization needed
     }
 
+    /**
+     * Dispose the operation queue and cancel all active operations
+     */
     dispose(): void {
         // Cancel all active operations
         this.activeControllers.forEach((controller) => {
@@ -190,6 +209,10 @@ export class OperationQueueManager implements Manager {
     /**
      * Queue an operation for execution
      * Returns the operation ID
+     * @param category - Category of the operation
+     * @param execute - Function to execute for this operation
+     * @param options - Optional metadata for the operation
+     * @returns The unique operation ID
      */
     queueOperation(
         category: OperationCategory,
@@ -265,6 +288,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Apply obsolescence rules for a new operation
+     * @param newOperation - The new operation to check for obsolescence rules
      */
     private applyObsolescenceRules(newOperation: Operation): void {
         const {metadata} = newOperation;
@@ -431,6 +455,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Sort operations based on category dependencies
+     * @param operations - Array of operations to sort
+     * @returns Sorted array of operations in dependency order
      */
     private sortOperations(operations: Operation[]): Operation[] {
         // Group by category
@@ -490,6 +516,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Execute a single operation
+     * @param operation - The operation to execute
+     * @param context - Execution context with abort signal and progress tracking
      */
     private async executeOperation(operation: Operation, context: OperationContext): Promise<void> {
         // Move from queued to running
@@ -568,6 +596,9 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Create progress context for an operation
+     * @param id - Unique operation ID
+     * @param category - Operation category
+     * @returns Progress context for updating operation progress
      */
     private createProgressContext(id: string, category: OperationCategory): ProgressContext {
         return {
@@ -600,6 +631,9 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Emit progress update event
+     * @param id - Operation ID
+     * @param category - Operation category
+     * @param progress - Current progress state
      */
     private emitProgressUpdate(id: string, category: OperationCategory, progress: OperationProgress): void {
         this.eventManager.emitGraphEvent("operation-progress", {
@@ -614,6 +648,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Handle operation errors
+     * @param operation - The operation that failed
+     * @param error - The error that occurred
      */
     private handleOperationError(operation: Operation, error: unknown): void {
         this.logger.error(
@@ -653,6 +689,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Get queue statistics
+     * @returns Current queue state including pending operations, size, and pause status
      */
     getStats(): {
         pending: number;
@@ -673,6 +710,9 @@ export class OperationQueueManager implements Manager {
         this.queue.pause();
     }
 
+    /**
+     * Resume queue execution after being paused
+     */
     resume(): void {
         this.queue.start();
     }
@@ -706,6 +746,9 @@ export class OperationQueueManager implements Manager {
         this.batchingEnabled = false;
     }
 
+    /**
+     * Enable batching to group operations before execution
+     */
     enableBatching(): void {
         this.batchingEnabled = true;
         // TODO: Operations queued while batching was disabled will be executed
@@ -753,6 +796,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Check if currently in batch mode
+     * @returns True if in batch mode, false otherwise
      */
     isInBatchMode(): boolean {
         return this.batchMode;
@@ -761,6 +805,10 @@ export class OperationQueueManager implements Manager {
     /**
      * Queue an operation and get a promise for its completion
      * Used for batch mode operations
+     * @param category - Category of the operation
+     * @param execute - Function to execute for this operation
+     * @param options - Optional metadata for the operation
+     * @returns Promise that resolves when the operation completes
      */
     queueOperationAsync(
         category: OperationCategory,
@@ -794,6 +842,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Wait for a specific operation to complete
+     * @param id - Operation ID to wait for
      */
     private async waitForOperation(id: string): Promise<void> {
         while (
@@ -807,6 +856,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Get the AbortController for a specific operation
+     * @param operationId - ID of the operation
+     * @returns The AbortController or undefined if not found
      */
     getOperationController(operationId: string): AbortController | undefined {
         return this.activeControllers.get(operationId);
@@ -814,6 +865,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Cancel a specific operation
+     * @param operationId - ID of the operation to cancel
+     * @returns True if the operation was cancelled, false otherwise
      */
     cancelOperation(operationId: string): boolean {
         const controller = this.activeControllers.get(operationId);
@@ -836,6 +889,7 @@ export class OperationQueueManager implements Manager {
      * Mark a category as completed (for satisfying cross-batch dependencies)
      * This is useful when a category's requirements are met through other means
      * (e.g., style-init is satisfied by constructor initialization)
+     * @param category - The operation category to mark as completed
      */
     markCategoryCompleted(category: OperationCategory): void {
         this.completedCategories.add(category);
@@ -845,6 +899,7 @@ export class OperationQueueManager implements Manager {
      * Clear completed status for a category
      * This is useful when a category needs to be re-executed
      * (e.g., setStyleTemplate is called explicitly, overriding initial styles)
+     * @param category - The operation category to clear
      */
     clearCategoryCompleted(category: OperationCategory): void {
         this.completedCategories.delete(category);
@@ -852,6 +907,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Cancel all operations of a specific category
+     * @param category - The operation category to cancel
+     * @returns Number of operations cancelled
      */
     cancelByCategory(category: OperationCategory): number {
         let cancelledCount = 0;
@@ -870,6 +927,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Get current progress for an operation
+     * @param operationId - ID of the operation
+     * @returns Progress information or undefined if not found
      */
     getOperationProgress(operationId: string): OperationProgress | undefined {
         return this.operationProgress.get(operationId);
@@ -877,6 +936,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Get all active operation IDs
+     * @returns Array of active operation IDs
      */
     getActiveOperations(): string[] {
         return Array.from(this.activeControllers.keys());
@@ -884,6 +944,8 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Register a custom trigger for a specific operation category
+     * @param category - Operation category to trigger on
+     * @param trigger - Function that returns trigger configuration or null
      */
     registerTrigger(
         category: OperationCategory,
@@ -905,6 +967,7 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Trigger post-execution operations based on the completed operation
+     * @param operation - The completed operation that may trigger other operations
      */
     private triggerPostExecutionOperations(operation: Operation): void {
         // Check for default triggers
@@ -943,6 +1006,10 @@ export class OperationQueueManager implements Manager {
 
     /**
      * Queue a triggered operation
+     * @param category - Category of the triggered operation
+     * @param sourceMetadata - Metadata from the source operation
+     * @param execute - Optional execution function
+     * @param description - Optional description of the operation
      */
     private async queueTriggeredOperation(
         category: OperationCategory,

@@ -5,12 +5,10 @@
 /**
  * Linear mapping from [0,1] to [minSize, maxSize]
  * Default range: [1, 5]
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Scaled size
- *
  * @example
  * linear(0.0)     // 1
  * linear(0.5)     // 3
@@ -26,14 +24,12 @@ export function linear(value: number, minSize = 1, maxSize = 5): number {
 /**
  * Linear mapping with value clipping
  * Prevents extreme sizes by clipping input value before scaling
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @param clipMin - Minimum value to clip to (default: 0)
  * @param clipMax - Maximum value to clip to (default: 1)
  * @returns Scaled size
- *
  * @example
  * linearClipped(0.95, 1, 5, 0.1, 0.9) // Clips 0.95 to 0.9, then scales
  */
@@ -51,13 +47,11 @@ export function linearClipped(
 /**
  * Logarithmic scaling for power-law distributions
  * Prevents extreme size differences
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @param base - Logarithm base (default: 10)
  * @returns Scaled size
- *
  * @example
  * log(0.5, 1, 5) // Logarithmic scaling
  */
@@ -87,13 +81,11 @@ export function log(value: number, minSize = 1, maxSize = 5, base = 10): number 
 
 /**
  * Logarithmic scaling with offset for zero values
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @param epsilon - Offset for zero values (default: 0.0001)
  * @returns Scaled size
- *
  * @example
  * logSafe(0, 1, 5) // Returns minSize safely
  */
@@ -110,13 +102,11 @@ export function logSafe(
 /**
  * Exponential scaling [0,1] → [minSize, maxSize]
  * Makes high values dramatically larger
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @param exponent - Exponent value (default: 2)
  * @returns Scaled size
- *
  * @example
  * exp(0.5, 1, 5, 2) // Exponential with power 2
  */
@@ -128,12 +118,10 @@ export function exp(value: number, minSize = 1, maxSize = 5, exponent = 2): numb
 
 /**
  * Square scaling (exponent = 2)
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Scaled size
- *
  * @example
  * square(0.5, 1, 5) // → 2
  */
@@ -143,12 +131,10 @@ export function square(value: number, minSize = 1, maxSize = 5): number {
 
 /**
  * Cubic scaling (exponent = 3)
- *
  * @param value - Normalized value (0-1)
  * @param minSize - Minimum size (default: 1)
  * @param maxSize - Maximum size (default: 5)
  * @returns Scaled size
- *
  * @example
  * cubic(0.5, 1, 5) // → 1.5
  */
@@ -158,11 +144,9 @@ export function cubic(value: number, minSize = 1, maxSize = 5): number {
 
 /**
  * Maps continuous [0,1] to discrete size bins
- *
  * @param value - Normalized value (0-1)
  * @param sizes - Array of size values
  * @returns Size from the appropriate bin
- *
  * @example
  * bins(0.3, [1, 2, 3, 4, 5]) // → 2
  */
@@ -184,10 +168,8 @@ export function bins(value: number, sizes: number[]): number {
 
 /**
  * Small/Medium/Large preset (3 bins)
- *
  * @param value - Normalized value (0-1)
  * @returns Size: 1 (small), 2.5 (medium), or 4 (large)
- *
  * @example
  * smallMediumLarge(0.2) // → 1 (small)
  * smallMediumLarge(0.5) // → 2.5 (medium)
@@ -199,10 +181,8 @@ export function smallMediumLarge(value: number): number {
 
 /**
  * Five tiers preset (5 bins)
- *
  * @param value - Normalized value (0-1)
  * @returns Size: 1, 2, 3, 4, or 5
- *
  * @example
  * fiveTiers(0.3) // → 2
  */

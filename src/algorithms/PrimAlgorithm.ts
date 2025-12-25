@@ -1,5 +1,5 @@
 /**
- * @fileoverview Prim's Minimum Spanning Tree Algorithm wrapper
+ * @file Prim's Minimum Spanning Tree Algorithm wrapper
  *
  * This algorithm finds the minimum spanning tree of an undirected graph
  * using Prim's algorithm. It marks edges that are part of the MST
@@ -20,6 +20,12 @@ interface PrimOptions {
     startNode?: number | string;
 }
 
+/**
+ * Prim's algorithm for finding minimum spanning trees
+ *
+ * Computes the minimum spanning tree of an undirected graph by growing
+ * the tree from a starting node.
+ */
 export class PrimAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "prim";
@@ -64,13 +70,19 @@ export class PrimAlgorithm extends Algorithm {
 
     /**
      * Configure the algorithm with an optional start node
+     * @param options - Configuration options
+     * @returns This algorithm instance for chaining
      */
     configure(options: PrimOptions): this {
         this.options = options;
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes Prim's algorithm on the graph
+     *
+     * Computes the minimum spanning tree and marks MST edges.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const edges = Array.from(g.getDataManager().edges.values());

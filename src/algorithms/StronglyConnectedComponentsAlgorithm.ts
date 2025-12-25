@@ -4,6 +4,9 @@ import type {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ *
+ */
 export class StronglyConnectedComponentsAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "scc";
@@ -32,7 +35,11 @@ export class StronglyConnectedComponentsAlgorithm extends Algorithm {
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the strongly connected components algorithm on the graph
+     *
+     * Identifies maximal strongly connected components in a directed graph.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

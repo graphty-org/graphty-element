@@ -4,12 +4,22 @@ import * as z4 from "zod/v4/core";
 import {CalculatedValue} from "./CalculatedValue";
 import {AdHocData} from "./config";
 
+/**
+ * Manages reactive data changes and calculated values.
+ */
 export class ChangeManager {
     readonly watchedInputs = new Map<string, Set<CalculatedValue>>();
     readonly dataObjects: Record<string, AdHocData | undefined> = {};
     readonly calculatedValues = new Set<CalculatedValue>();
     readonly schemas: Record<string, z4.$ZodType | undefined> = {};
 
+    /**
+     * Creates a reactive proxy for data that triggers calculated values on changes.
+     * @param dataType - Type identifier for the data
+     * @param data - Data object to watch for changes
+     * @param schema - Optional Zod schema for validation
+     * @returns Proxied data object that triggers calculated values on changes
+     */
     watch(dataType: string, data: AdHocData, schema?: z4.$ZodType): AdHocData {
         const watchedData = onChange(data, (path, value, prevVal /* applyData */) => {
             // ignore all the intermediate steps of setting a new deep path on
@@ -40,6 +50,13 @@ export class ChangeManager {
         return this.addData(dataType, watchedData, schema);
     }
 
+    /**
+     * Registers a data object with the change manager.
+     * @param dataType - Type identifier for the data
+     * @param data - Data object to register
+     * @param schema - Optional Zod schema for validation
+     * @returns The registered data object
+     */
     addData(dataType: string, data: AdHocData, schema?: z4.$ZodType): AdHocData {
         if (this.dataObjects[dataType] !== undefined) {
             throw new TypeError(`data type: ${dataType} already exists in change manager`);
@@ -53,6 +70,10 @@ export class ChangeManager {
         return data;
     }
 
+    /**
+     * Registers a calculated value to watch for input changes.
+     * @param cv - Calculated value to register
+     */
     addCalculatedValue(cv: CalculatedValue): void {
         this.calculatedValues.add(cv);
 
@@ -68,12 +89,21 @@ export class ChangeManager {
         });
     }
 
+    /**
+     * Registers multiple calculated values at once.
+     * @param cvs - Array of calculated values to register
+     */
     addCalculatedValues(cvs: CalculatedValue[]): void {
         cvs.forEach((cv) => {
             this.addCalculatedValue(cv);
         });
     }
 
+    /**
+     * Loads calculated values, optionally running them immediately.
+     * @param cvs - Array of calculated values to load
+     * @param runImmediately - Whether to execute all calculated values immediately
+     */
     loadCalculatedValues(cvs: CalculatedValue[], runImmediately = false): void {
         this.watchedInputs.clear();
         this.addCalculatedValues(cvs);

@@ -79,6 +79,9 @@ export const ngraphLayoutOptionsSchema = defineOptions({
     },
 });
 
+/**
+ * NGraph force-directed layout engine using ngraph.forcelayout
+ */
 export class NGraphEngine extends LayoutEngine {
     static type = "ngraph";
     static maxDimensions = 3;
@@ -86,6 +89,11 @@ export class NGraphEngine extends LayoutEngine {
     ngraph: NGraph;
     ngraphLayout: NGraphLayout<NGraph>;
 
+    /**
+     * Get dimension-specific options for NGraph layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
@@ -95,6 +103,10 @@ export class NGraphEngine extends LayoutEngine {
     _stepCount = 0;
     _lastMoves: number[] = [];
 
+    /**
+     * Create an NGraph layout engine
+     * @param config - Configuration options for the NGraph simulation
+     */
     constructor(config: object = {}) {
         super();
         this.ngraph = createGraph();
@@ -140,9 +152,19 @@ export class NGraphEngine extends LayoutEngine {
         this.ngraphLayout = ngraphCreateLayout(this.ngraph, ngraphConfig);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async init(): Promise<void> {}
+    /**
+     * Initialize the layout engine
+     *
+     * NGraph layout is initialized in the constructor and doesn't require
+     * additional async initialization.
+     */
+    async init(): Promise<void> {
+        // No-op - NGraph layout is ready after construction
+    }
 
+    /**
+     * Advance the NGraph simulation by one step
+     */
     step(): void {
         const ngraphSettled = this.ngraphLayout.step();
         const {lastMove} = this.ngraphLayout;
@@ -171,10 +193,18 @@ export class NGraphEngine extends LayoutEngine {
                        this._stepCount >= maxSteps;
     }
 
+    /**
+     * Check if the simulation has settled
+     * @returns True if the simulation has settled
+     */
     get isSettled(): boolean {
         return this._settled;
     }
 
+    /**
+     * Add a node to the NGraph simulation
+     * @param n - The node to add
+     */
     addNode(n: Node): void {
         const ngraphNode: NGraphNode = this.ngraph.addNode(n.id, {parentNode: n});
         this.nodeMapping.set(n, ngraphNode);
@@ -183,6 +213,10 @@ export class NGraphEngine extends LayoutEngine {
         this._lastMoves = [];
     }
 
+    /**
+     * Add an edge to the NGraph simulation
+     * @param e - The edge to add
+     */
     addEdge(e: Edge): void {
         const ngraphEdge = this.ngraph.addLink(e.srcId, e.dstId, {parentEdge: this});
         this.edgeMapping.set(e, ngraphEdge);
@@ -191,11 +225,21 @@ export class NGraphEngine extends LayoutEngine {
         this._lastMoves = [];
     }
 
+    /**
+     * Get the current position of a node
+     * @param n - The node to get position for
+     * @returns The node's position coordinates
+     */
     getNodePosition(n: Node): Position {
         const ngraphNode = this._getMappedNode(n);
         return this.ngraphLayout.getNodePosition(ngraphNode.id);
     }
 
+    /**
+     * Set a node's position in the simulation
+     * @param n - The node to set position for
+     * @param newPos - The new position coordinates
+     */
     setNodePosition(n: Node, newPos: Position): void {
         const ngraphNode = this._getMappedNode(n);
         const currPos = this.ngraphLayout.getNodePosition(ngraphNode.id);
@@ -204,6 +248,11 @@ export class NGraphEngine extends LayoutEngine {
         currPos.z = newPos.z;
     }
 
+    /**
+     * Get the position of an edge based on its endpoint positions
+     * @param e - The edge to get position for
+     * @returns The edge's source and destination positions
+     */
     getEdgePosition(e: Edge): EdgePosition {
         const ngraphEdge = this._getMappedEdge(e);
         const pos = this.ngraphLayout.getLinkPosition(ngraphEdge.id);
@@ -221,20 +270,36 @@ export class NGraphEngine extends LayoutEngine {
         };
     }
 
+    /**
+     * Get all nodes in the simulation
+     * @returns Iterable of nodes
+     */
     get nodes(): Iterable<Node> {
         // ...is this cheating?
         return this.nodeMapping.keys();
     }
 
+    /**
+     * Get all edges in the simulation
+     * @returns Iterable of edges
+     */
     get edges(): Iterable<Edge> {
         return this.edgeMapping.keys();
     }
 
+    /**
+     * Pin a node to its current position
+     * @param n - The node to pin
+     */
     pin(n: Node): void {
         const ngraphNode = this._getMappedNode(n);
         this.ngraphLayout.pinNode(ngraphNode, true);
     }
 
+    /**
+     * Unpin a node to allow it to move freely
+     * @param n - The node to unpin
+     */
     unpin(n: Node): void {
         const ngraphNode = this._getMappedNode(n);
         this.ngraphLayout.pinNode(ngraphNode, false);

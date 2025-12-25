@@ -4,7 +4,6 @@
  * These helpers allow expensive computations to be deferred until they are
  * actually needed. When logging is disabled or the log level is filtered,
  * the expensive computation is never executed.
- *
  * @example
  * ```typescript
  * import { lazy } from "graphty-element/logging";
@@ -20,7 +19,6 @@
  *     logger.debug("Data", { positions: lazy(() => computeExpensivePositions()) });
  * }
  * ```
- *
  * @module logging/LazyEval
  */
 
@@ -43,10 +41,8 @@ export interface LazyValue<T> {
  *
  * The provided function will only be called when the lazy value is invoked.
  * After the first call, the result is cached and returned on subsequent calls.
- *
  * @param fn - Function that computes the value
  * @returns A lazy wrapper function that computes and caches the value on first call
- *
  * @example
  * ```typescript
  * // Basic usage
@@ -57,7 +53,6 @@ export interface LazyValue<T> {
  * const value = lazyData(); // Computes on first call
  * const cachedValue = lazyData(); // Returns cached value
  * ```
- *
  * @remarks
  * **Performance Guidelines:**
  *
@@ -96,7 +91,6 @@ export function lazy<T>(fn: () => T): LazyValue<T> {
 
 /**
  * Check if a value is a lazy wrapper.
- *
  * @param value - The value to check
  * @returns true if the value is a lazy wrapper
  */
@@ -107,7 +101,6 @@ export function isLazy(value: unknown): value is LazyValue<unknown> {
 /**
  * Resolve a potentially lazy value.
  * If the value is lazy, evaluate it. Otherwise, return as-is.
- *
  * @param value - The value to resolve (may be lazy or regular)
  * @returns The resolved value
  */
@@ -118,7 +111,6 @@ export function resolveLazy<T>(value: T | LazyValue<T>): T {
 /**
  * Resolve all lazy values in a data object (one level deep).
  * This is used internally by the logger to resolve lazy values before logging.
- *
  * @param data - Object that may contain lazy values
  * @returns A new object with all lazy values resolved
  */

@@ -26,8 +26,7 @@ export interface SelectOption<T = unknown> {
 
 /**
  * Definition for a single algorithm option
- *
- * @typeParam T - The type of the option value
+ * @template T - The type of the option value
  */
 export interface OptionDefinition<T = unknown> {
     /** The data type of this option */
@@ -72,7 +71,6 @@ export type OptionsSchema = Record<string, OptionDefinition>;
  *
  * This allows TypeScript to infer the correct types for algorithm options
  * based on the schema definition.
- *
  * @example
  * ```typescript
  * const schema = {
@@ -92,6 +90,11 @@ export type OptionsFromSchema<S extends OptionsSchema> = {
  * Validation error for option schema validation
  */
 export class OptionValidationError extends Error {
+    /**
+     * Creates an option validation error
+     * @param optionKey - The key of the option that failed validation
+     * @param message - The validation error message
+     */
     constructor(
         public readonly optionKey: string,
         message: string,
@@ -103,7 +106,6 @@ export class OptionValidationError extends Error {
 
 /**
  * Validates a single option value against its definition
- *
  * @param key - The option key/name
  * @param value - The value to validate
  * @param def - The option definition
@@ -156,6 +158,10 @@ export function validateOption(key: string, value: unknown, def: OptionDefinitio
 
 /**
  * Validates a number or integer option
+ * @param key - The option key/name
+ * @param value - The value to validate
+ * @param def - The option definition
+ * @param requireInteger - Whether the value must be an integer
  */
 function validateNumber(key: string, value: unknown, def: OptionDefinition, requireInteger: boolean): void {
     if (typeof value !== "number") {
@@ -185,6 +191,9 @@ function validateNumber(key: string, value: unknown, def: OptionDefinition, requ
 
 /**
  * Validates a select option
+ * @param key - The option key/name
+ * @param value - The value to validate
+ * @param def - The option definition
  */
 function validateSelect(key: string, value: unknown, def: OptionDefinition): void {
     if (!def.options || def.options.length === 0) {
@@ -200,7 +209,6 @@ function validateSelect(key: string, value: unknown, def: OptionDefinition): voi
 
 /**
  * Resolves options by applying defaults and validating values
- *
  * @param schema - The options schema
  * @param providedOptions - User-provided options (may be partial)
  * @returns Fully resolved options with defaults applied
@@ -230,7 +238,6 @@ export function resolveOptions<S extends OptionsSchema>(
  *
  * This is a helper function that provides better type inference
  * when defining option schemas.
- *
  * @param schema - The schema definition
  * @returns The same schema with proper typing
  */

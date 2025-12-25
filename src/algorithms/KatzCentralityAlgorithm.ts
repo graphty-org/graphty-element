@@ -196,7 +196,11 @@ export class KatzCentralityAlgorithm extends Algorithm<KatzCentralityOptions> {
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Katz centrality algorithm on the graph
+     *
+     * Computes Katz centrality scores for all nodes using matrix iteration.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

@@ -62,6 +62,10 @@ import type {QueueableOptions, RunAlgorithmOptions} from "./utils/queue-migratio
 import {XRSessionManager} from "./xr/XRSessionManager";
 // import {createXrButton} from "./xr-button";
 
+/**
+ * Main orchestrator class for graph visualization and interaction.
+ * Integrates Babylon.js scene management, coordinates nodes, edges, layouts, and styling.
+ */
 export class Graph implements GraphContext {
     styles: Styles;
     // babylon
@@ -120,6 +124,11 @@ export class Graph implements GraphContext {
     // Storage for Z positions when switching from 3D to 2D mode
     private savedZPositions = new Map<NodeIdType, number>();
 
+    /**
+     * Creates a new Graph instance and initializes the rendering engine and managers.
+     * @param element - DOM element or element ID to attach the graph canvas to
+     * @param useMockInput - Whether to use mock input for testing (defaults to false)
+     */
     constructor(element: Element | string, useMockInput = false) {
         // Initialize EventManager first as other components depend on it
         this.eventManager = new EventManager();
@@ -383,6 +392,9 @@ export class Graph implements GraphContext {
         this.initialized = false;
     }
 
+    /**
+     * Shuts down the graph, stopping animations and disposing all resources.
+     */
     shutdown(): void {
         // Stop any running camera animations
         try {
@@ -403,6 +415,9 @@ export class Graph implements GraphContext {
         this.lifecycleManager.dispose();
     }
 
+    /**
+     * Executes all algorithms specified in the style template configuration.
+     */
     async runAlgorithmsFromTemplate(): Promise<void> {
         if (this.runAlgorithmsOnLoad && this.styles.config.data.algorithms) {
             await this.algorithmManager.runAlgorithmsFromTemplate(this.styles.config.data.algorithms);
@@ -414,6 +429,9 @@ export class Graph implements GraphContext {
         }
     }
 
+    /**
+     * Initializes the graph instance, setting up managers, styles, and rendering pipeline.
+     */
     async init(): Promise<void> {
         if (this.initialized) {
             return;
@@ -540,6 +558,12 @@ export class Graph implements GraphContext {
         this.statsManager.endFrameProfiling();
     }
 
+    /**
+     * Sets the style template for the graph, applying visual and behavioral configurations.
+     * @param t - Style schema containing configuration for graph appearance and behavior
+     * @param options - Optional queueing options for batch processing
+     * @returns The updated Styles instance
+     */
     async setStyleTemplate(t: StyleSchema, options?: QueueableOptions): Promise<Styles> {
         // Future enhancement: if t is a URL, fetch URL
 
@@ -731,6 +755,12 @@ export class Graph implements GraphContext {
         return this.styles;
     }
 
+    /**
+     * Adds graph data from a registered data source.
+     * @param type - Type/name of the registered data source
+     * @param opts - Options to pass to the data source
+     * @returns Promise that resolves when data is loaded
+     */
     async addDataFromSource(type: string, opts: object = {}): Promise<void> {
         return this.dataManager.addDataFromSource(type, opts);
     }
@@ -739,6 +769,10 @@ export class Graph implements GraphContext {
      * Load graph data from a File object with auto-format detection
      * @param file - File object from file input
      * @param options - Loading options
+     * @param options.format - Explicit format override (e.g., "graphml", "json")
+     * @param options.nodeIdPath - JMESPath for node ID extraction
+     * @param options.edgeSrcIdPath - JMESPath for edge source ID extraction
+     * @param options.edgeDstIdPath - JMESPath for edge destination ID extraction
      */
     async loadFromFile(
         file: File,
@@ -784,16 +818,17 @@ export class Graph implements GraphContext {
 
     /**
      * Load graph data from a URL with auto-format detection
-     *
      * @remarks
      * This method attempts to detect the format from the URL extension first.
      * If the extension is not recognized (e.g., `.txt`), it fetches the content
      * and uses content-based detection. The content is then passed directly to
      * the data source to avoid a double-fetch.
-     *
      * @param url - URL to fetch graph data from
      * @param options - Loading options
-     *
+     * @param options.format - Explicit format override (e.g., "graphml", "json")
+     * @param options.nodeIdPath - JMESPath for node ID extraction
+     * @param options.edgeSrcIdPath - JMESPath for edge source ID extraction
+     * @param options.edgeDstIdPath - JMESPath for edge destination ID extraction
      * @example
      * ```typescript
      * // Auto-detect format from extension
@@ -874,29 +909,31 @@ export class Graph implements GraphContext {
         }
     }
 
+    /**
+     * Add a single node to the graph.
+     * @param node - Node data object to add
+     * @param idPath - Key to use for node ID (default: "id")
+     * @param options - Queue options for operation ordering
+     */
     async addNode(node: AdHocData, idPath?: string, options?: QueueableOptions): Promise<void> {
         await this.addNodes([node], idPath, options);
     }
 
     /**
      * Add nodes to the graph incrementally.
-     *
      * @remarks
      * This method ADDS nodes to the existing graph without removing existing nodes.
      * For complete replacement, use the `nodeData` property on the web component instead.
      *
      * Nodes are added to the current layout and will animate into position if
      * a force-directed layout is active.
-     *
      * @param nodes - Array of node data objects to add
      * @param idPath - Key to use for node IDs (default: "id")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when nodes are added
      * @since 1.0.0
-     *
      * @see {@link addEdges} for adding edges
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default | Data Loading Examples}
-     *
      * @example
      * ```typescript
      * // Add nodes with default ID field
@@ -939,13 +976,19 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Add a single edge to the graph.
+     * @param edge - Edge data object to add
+     * @param srcIdPath - Key to use for edge source ID (default: "source")
+     * @param dstIdPath - Key to use for edge destination ID (default: "target")
+     * @param options - Queue options for operation ordering
+     */
     async addEdge(edge: AdHocData, srcIdPath?: string, dstIdPath?: string, options?: QueueableOptions): Promise<void> {
         await this.addEdges([edge], srcIdPath, dstIdPath, options);
     }
 
     /**
      * Add edges to the graph incrementally.
-     *
      * @remarks
      * This method ADDS edges to the existing graph without removing existing edges.
      * Source and target nodes should exist before adding edges, otherwise the edges
@@ -953,17 +996,14 @@ export class Graph implements GraphContext {
      *
      * Edges connect nodes and can optionally store additional data accessible
      * via `edge.data`.
-     *
      * @param edges - Array of edge data objects to add
      * @param srcIdPath - Path to source node ID in edge data (default: "source")
      * @param dstIdPath - Path to target node ID in edge data (default: "target")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when edges are added
      * @since 1.0.0
-     *
      * @see {@link addNodes} for adding nodes first
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default | Data Loading Examples}
-     *
      * @example
      * ```typescript
      * // Add edges with default source/target fields
@@ -1008,7 +1048,6 @@ export class Graph implements GraphContext {
 
     /**
      * Set the layout algorithm and configuration.
-     *
      * @remarks
      * Available layouts:
      * - `ngraph`: Force-directed (3D optimized, recommended for general use)
@@ -1021,17 +1060,14 @@ export class Graph implements GraphContext {
      *
      * Layout changes are queued and execute in order. The layout will
      * animate nodes from their current positions to new positions.
-     *
      * @param type - Layout algorithm name
      * @param opts - Layout-specific configuration options
      * @param options - Options for operation queue behavior
      * @returns Promise that resolves when layout is initialized
      * @since 1.0.0
-     *
      * @see {@link waitForSettled} to wait for layout completion
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout--default | 3D Layout Examples}
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout2d--default | 2D Layout Examples}
-     *
      * @example
      * ```typescript
      * // Use force-directed layout with custom settings
@@ -1074,7 +1110,6 @@ export class Graph implements GraphContext {
 
     /**
      * Run a graph algorithm and store results on nodes/edges.
-     *
      * @remarks
      * Algorithms are identified by namespace and type (e.g., `graphty:degree`).
      * Results are stored on each node's `algorithmResults` property and can be
@@ -1088,17 +1123,14 @@ export class Graph implements GraphContext {
      * - **Shortest Path**: dijkstra, bellman-ford
      * - **Spanning Tree**: prim, kruskal
      * - **Flow**: max-flow, min-cut
-     *
      * @param namespace - Algorithm namespace (e.g., "graphty")
      * @param type - Algorithm type (e.g., "degree", "pagerank")
      * @param options - Algorithm options and queue settings
      * @returns Promise that resolves when algorithm completes
      * @since 1.0.0
-     *
      * @see {@link applySuggestedStyles} to visualize results
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-centrality--degree | Centrality Examples}
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-community--louvain | Community Detection}
-     *
      * @example
      * ```typescript
      * // Run degree centrality
@@ -1195,6 +1227,9 @@ export class Graph implements GraphContext {
 
     /**
      * Private helper to apply style layers from suggested styles
+     * @param suggestedStyles - Configuration containing style layers to apply
+     * @param algorithmKey - Unique identifier for the algorithm providing these styles
+     * @param options - Options controlling how styles are applied
      */
     #applyStyleLayers(
         suggestedStyles: SuggestedStylesConfig,
@@ -1255,6 +1290,11 @@ export class Graph implements GraphContext {
         }
     }
 
+    /**
+     * Remove nodes from the graph by their IDs.
+     * @param nodeIds - Array of node IDs to remove
+     * @param options - Queue options for operation ordering
+     */
     async removeNodes(nodeIds: (string | number)[], options?: QueueableOptions): Promise<void> {
         const removeNodeWithSelectionCheck = (id: string | number): void => {
             // Check if the node being removed is selected
@@ -1291,6 +1331,11 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Update node data for existing nodes in the graph.
+     * @param updates - Array of update objects containing node ID and properties to update
+     * @param options - Queue options for operation ordering
+     */
     async updateNodes(updates: {id: string | number, [key: string]: unknown}[], options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             updates.forEach((update) => {
@@ -1329,6 +1374,11 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Set the active camera mode (e.g., "arcRotate", "universal").
+     * @param mode - Camera mode key to activate
+     * @param options - Queue options for operation ordering
+     */
     async setCameraMode(mode: CameraKey, options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             this.camera.activateCamera(mode);
@@ -1351,6 +1401,11 @@ export class Graph implements GraphContext {
         );
     }
 
+    /**
+     * Update rendering settings for the graph visualization.
+     * @param settings - Object containing rendering configuration options
+     * @param options - Queue options for operation ordering
+     */
     async setRenderSettings(settings: Record<string, unknown>, options?: QueueableOptions): Promise<void> {
         if (options?.skipQueue) {
             // Apply render settings directly
@@ -1377,6 +1432,7 @@ export class Graph implements GraphContext {
     /**
      * Execute multiple operations as a batch
      * Operations will be queued and executed in dependency order
+     * @param fn - Function containing operations to batch
      */
     async batchOperations(fn: () => Promise<void> | void): Promise<void> {
         this.operationQueue.enterBatchMode();
@@ -1392,21 +1448,36 @@ export class Graph implements GraphContext {
         await this.operationQueue.exitBatchMode();
     }
 
+    /**
+     * Get the total number of nodes in the graph.
+     * @returns The number of nodes
+     */
     getNodeCount(): number {
         return this.dataManager.nodes.size;
     }
 
+    /**
+     * Get the total number of edges in the graph.
+     * @returns The number of edges
+     */
     getEdgeCount(): number {
         return this.dataManager.edges.size;
     }
 
     /**
      * Alias for addEventListener
+     * @param type - Event type to listen for
+     * @param cb - Callback function to execute when event fires
      */
     on(type: EventType, cb: EventCallbackType): void {
         this.addListener(type, cb);
     }
 
+    /**
+     * Add an event listener for graph events.
+     * @param type - Event type to listen for
+     * @param cb - Callback function to execute when event fires
+     */
     addListener(type: EventType, cb: EventCallbackType): void {
         // Delegate to EventManager
         this.eventManager.addListener(type, cb);
@@ -1415,7 +1486,6 @@ export class Graph implements GraphContext {
     /**
      * Get the total number of registered event listeners.
      * Useful for debugging and testing to ensure listeners are properly cleaned up.
-     *
      * @returns The number of registered listeners
      */
     listenerCount(): number {
@@ -1424,18 +1494,14 @@ export class Graph implements GraphContext {
 
     /**
      * Zoom the camera to fit all nodes in view.
-     *
      * @remarks
      * This operation executes immediately and does not go through the
      * operation queue. It may race with queued camera updates.
      *
      * For better coordination, consider using batchOperations.
-     *
      * @since 1.0.0
-     *
      * @see {@link waitForSettled} to wait for layout before zooming
      * @see {@link setCameraState} for manual camera control
-     *
      * @example
      * ```typescript
      * // Zoom to fit after data loads
@@ -1456,42 +1522,82 @@ export class Graph implements GraphContext {
 
     // GraphContext implementation methods
 
+    /**
+     * Get the Styles instance for the graph.
+     * @returns The Styles instance
+     */
     getStyles(): Styles {
         return this.styles;
     }
 
+    /**
+     * Get the StyleManager instance.
+     * @returns The StyleManager instance
+     */
     getStyleManager(): StyleManager {
         return this.styleManager;
     }
 
+    /**
+     * Get the DataManager instance.
+     * @returns The DataManager instance
+     */
     getDataManager(): DataManager {
         return this.dataManager;
     }
 
+    /**
+     * Get the LayoutManager instance.
+     * @returns The LayoutManager instance
+     */
     getLayoutManager(): LayoutManager {
         return this.layoutManager;
     }
 
+    /**
+     * Get the UpdateManager instance.
+     * @returns The UpdateManager instance
+     */
     getUpdateManager(): UpdateManager {
         return this.updateManager;
     }
 
+    /**
+     * Get the MeshCache instance used for mesh instancing.
+     * @returns The MeshCache instance
+     */
     getMeshCache(): MeshCache {
         return this.dataManager.meshCache;
     }
 
+    /**
+     * Get the Babylon.js Scene instance.
+     * @returns The Scene instance
+     */
     getScene(): Scene {
         return this.scene;
     }
 
+    /**
+     * Get the StatsManager instance for performance metrics.
+     * @returns The StatsManager instance
+     */
     getStatsManager(): StatsManager {
         return this.statsManager;
     }
 
+    /**
+     * Get the SelectionManager instance for handling node selection.
+     * @returns The SelectionManager instance
+     */
     getSelectionManager(): SelectionManager {
         return this.selectionManager;
     }
 
+    /**
+     * Get the EventManager instance for event handling.
+     * @returns The EventManager instance
+     */
     getEventManager(): EventManager {
         return this.eventManager;
     }
@@ -1510,7 +1616,6 @@ export class Graph implements GraphContext {
 
     /**
      * Select a node by its ID.
-     *
      * @remarks
      * Selection triggers a `selection-changed` event and applies selection styles
      * (defined in the style template). Only one node can be selected at a time;
@@ -1520,15 +1625,12 @@ export class Graph implements GraphContext {
      * - Show a details panel with node information
      * - Highlight the node and its connections
      * - Enable context-specific actions
-     *
      * @param nodeId - The ID of the node to select
      * @returns True if the node was found and selected, false if not found
      * @since 1.0.0
-     *
      * @see {@link deselectNode} to clear selection
      * @see {@link getSelectedNode} to get current selection
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/selection--default | Selection Examples}
-     *
      * @example
      * ```typescript
      * // Select a node and show its details
@@ -1550,16 +1652,12 @@ export class Graph implements GraphContext {
 
     /**
      * Deselect the currently selected node.
-     *
      * @remarks
      * Clears the current selection and triggers a `selection-changed` event.
      * If no node is selected, this is a no-op.
-     *
      * @since 1.0.0
-     *
      * @see {@link selectNode} to select a node
      * @see {@link getSelectedNode} to check current selection
-     *
      * @example
      * ```typescript
      * // Clear selection programmatically
@@ -1581,7 +1679,6 @@ export class Graph implements GraphContext {
 
     /**
      * Check if a specific node is currently selected.
-     *
      * @param nodeId - The ID of the node to check.
      * @returns True if the node is selected, false otherwise.
      */
@@ -1634,6 +1731,11 @@ export class Graph implements GraphContext {
         });
     }
 
+    /**
+     * Check if the graph is in 2D mode (deprecated - use getViewMode instead).
+     * @returns True if in 2D mode, false otherwise
+     * @deprecated Use getViewMode() === "2d" instead
+     */
     is2D(): boolean {
         // eslint-disable-next-line @typescript-eslint/no-deprecated -- Supporting backward compatibility
         return this.styles.config.graph.twoD;
@@ -1642,6 +1744,7 @@ export class Graph implements GraphContext {
     /**
      * Get the current view mode.
      * Returns the viewMode from config (always set due to default value).
+     * @returns The current view mode ("2d", "3d", "ar", or "vr")
      */
     getViewMode(): ViewMode {
         return this.styles.config.graph.viewMode;
@@ -1650,10 +1753,9 @@ export class Graph implements GraphContext {
     /**
      * Set the view mode.
      * This controls the camera type, input handling, and rendering approach.
-     *
      * @param mode - The view mode to set: "2d", "3d", "ar", or "vr"
      * @param options - Optional queueing options
-     *
+     * @returns Promise that resolves when view mode is set
      * @example
      * ```typescript
      * // Switch to 2D orthographic view
@@ -1683,6 +1785,7 @@ export class Graph implements GraphContext {
     /**
      * Internal method for setting view mode - bypasses queue
      * Used by operations that are already queued
+     * @param mode - The view mode to set
      */
     private async _setViewModeInternal(mode: ViewMode): Promise<void> {
         const previousMode = this.getViewMode();
@@ -1845,10 +1948,18 @@ export class Graph implements GraphContext {
         this.updateManager.enableZoomToFit();
     }
 
+    /**
+     * Check if ray updates are needed for edge arrows.
+     * @returns True if rays need updating
+     */
     needsRayUpdate(): boolean {
         return this.needRays;
     }
 
+    /**
+     * Get the current graph context configuration.
+     * @returns The graph context configuration
+     */
     getConfig(): GraphContextConfig {
         return {
             pinOnDrag: this.pinOnDrag,
@@ -1857,14 +1968,26 @@ export class Graph implements GraphContext {
         };
     }
 
+    /**
+     * Check if the layout engine is currently running.
+     * @returns True if layout is running
+     */
     isRunning(): boolean {
         return this.layoutManager.running;
     }
 
+    /**
+     * Set whether the layout engine should run.
+     * @param running - True to start the layout, false to stop it
+     */
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
     }
 
+    /**
+     * Get the current XR configuration.
+     * @returns The XR configuration if set
+     */
     getXRConfig(): XRConfig | undefined {
         return this.graphContext.getConfig().xr;
     }
@@ -1880,6 +2003,10 @@ export class Graph implements GraphContext {
         this.graphContext.updateConfig({xr: fullConfig});
     }
 
+    /**
+     * Get the XR session manager instance.
+     * @returns The XR session manager if XR is initialized
+     */
     getXRSessionManager(): XRSessionManager | undefined {
         return this.xrSessionManager ?? undefined;
     }
@@ -1887,9 +2014,7 @@ export class Graph implements GraphContext {
     /**
      * Check if VR mode is supported on this device/browser.
      * Returns true if WebXR is available and VR sessions are supported.
-     *
      * @returns Promise resolving to true if VR is supported
-     *
      * @example
      * ```typescript
      * const vrSupported = await graph.isVRSupported();
@@ -1909,9 +2034,7 @@ export class Graph implements GraphContext {
     /**
      * Check if AR mode is supported on this device/browser.
      * Returns true if WebXR is available and AR sessions are supported.
-     *
      * @returns Promise resolving to true if AR is supported
-     *
      * @example
      * ```typescript
      * const arSupported = await graph.isARSupported();
@@ -1931,6 +2054,7 @@ export class Graph implements GraphContext {
     // Input manager access
     /**
      * Get the input manager
+     * @returns The input manager instance
      */
     get input(): InputManager {
         return this.inputManager;
@@ -1938,6 +2062,7 @@ export class Graph implements GraphContext {
 
     /**
      * Enable or disable input
+     * @param enabled - True to enable input, false to disable
      */
     setInputEnabled(enabled: boolean): void {
         this.inputManager.setEnabled(enabled);
@@ -1952,11 +2077,20 @@ export class Graph implements GraphContext {
 
     /**
      * Stop recording and get recorded events
+     * @returns Array of recorded input events
      */
     stopInputRecording(): RecordedInputEvent[] {
         return this.inputManager.stopRecording();
     }
 
+    /**
+     * Convert 3D world coordinates to 2D screen coordinates.
+     * @param worldPos - World position to convert
+     * @param worldPos.x - X coordinate in world space
+     * @param worldPos.y - Y coordinate in world space
+     * @param worldPos.z - Z coordinate in world space
+     * @returns Screen coordinates {x, y}
+     */
     worldToScreen(worldPos: {x: number, y: number, z: number}): {x: number, y: number} {
         const engine = this.scene.getEngine();
         const viewport = this.scene.activeCamera?.viewport;
@@ -1981,6 +2115,13 @@ export class Graph implements GraphContext {
         return {x: screenX, y: screenY};
     }
 
+    /**
+     * Convert 2D screen coordinates to 3D world coordinates via raycasting.
+     * @param screenPos - Screen position to convert
+     * @param screenPos.x - X coordinate in screen space
+     * @param screenPos.y - Y coordinate in screen space
+     * @returns World coordinates {x, y, z} or null if no intersection
+     */
     screenToWorld(screenPos: {x: number, y: number}): {x: number, y: number, z: number} | null {
         const pickInfo = this.scene.pick(screenPos.x, screenPos.y);
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -1995,10 +2136,19 @@ export class Graph implements GraphContext {
         return null;
     }
 
+    /**
+     * Get the active camera controller.
+     * @returns The active camera controller or null if none active
+     */
     getCameraController(): CameraController | null {
         return this.camera.getActiveController();
     }
 
+    /**
+     * Get the Babylon.js mesh for a node by its ID.
+     * @param nodeId - ID of the node
+     * @returns The node's mesh or null if not found
+     */
     getNodeMesh(nodeId: string): AbstractMesh | null {
         const node = this.dataManager.nodes.get(nodeId);
         return node?.mesh ?? null;
@@ -2006,7 +2156,6 @@ export class Graph implements GraphContext {
 
     /**
      * Wait for the graph operations to complete and layout to stabilize.
-     *
      * @remarks
      * This method waits for all queued operations (data loading, layout changes,
      * algorithm execution) to complete. Use this before taking screenshots,
@@ -2015,13 +2164,10 @@ export class Graph implements GraphContext {
      * The method returns when:
      * - All queued operations have completed
      * - The operation queue is empty
-     *
      * @returns Promise that resolves when all operations are complete
      * @since 1.0.0
-     *
      * @see {@link zoomToFit} to zoom after settling
      * @see {@link captureScreenshot} for capturing stable views
-     *
      * @example
      * ```typescript
      * // Wait for layout to settle before zooming
@@ -2048,10 +2194,8 @@ export class Graph implements GraphContext {
 
     /**
      * Capture a screenshot of the current graph visualization.
-     *
      * @param options - Screenshot options (format, resolution, destinations, etc.)
      * @returns Promise resolving to ScreenshotResult with blob and metadata
-     *
      * @example
      * ```typescript
      * // Basic PNG screenshot
@@ -2082,10 +2226,8 @@ export class Graph implements GraphContext {
 
     /**
      * Check if screenshot can be captured with given options.
-     *
      * @param options - Screenshot options to validate
      * @returns Promise<CapabilityCheck> - Result indicating whether screenshot is supported
-     *
      * @example
      * ```typescript
      * // Check if 4x multiplier is supported
@@ -2111,10 +2253,8 @@ export class Graph implements GraphContext {
 
     /**
      * Capture an animation as a video (stationary or animated camera)
-     *
      * @param options - Animation capture options
      * @returns Promise resolving to AnimationResult with blob and metadata
-     *
      * @example
      * ```typescript
      * // Basic 5-second video at 30fps
@@ -2186,6 +2326,10 @@ export class Graph implements GraphContext {
 
     /**
      * Capture video with animated camera path
+     * @param options - Animation configuration options
+     * @param capture - Media recorder capture instance
+     * @param onProgress - Progress callback function
+     * @returns Promise resolving to animation result with video blob
      */
     private async captureAnimatedCameraVideo(
         options: import("./video/VideoCapture.js").AnimationOptions,
@@ -2239,6 +2383,8 @@ export class Graph implements GraphContext {
 
     /**
      * Handle video download if requested
+     * @param result - Animation result containing the video blob
+     * @param options - Animation options including download settings
      */
     private handleVideoDownload(
         result: import("./video/VideoCapture.js").AnimationResult,
@@ -2269,9 +2415,7 @@ export class Graph implements GraphContext {
 
     /**
      * Cancel ongoing animation capture
-     *
      * @returns true if a capture was cancelled, false if no capture was in progress
-     *
      * @example
      * ```typescript
      * // Start a capture
@@ -2314,6 +2458,7 @@ export class Graph implements GraphContext {
 
     /**
      * Check if an animation capture is currently in progress
+     * @returns True if currently capturing an animation
      */
     isAnimationCapturing(): boolean {
         return this.activeCapture?.isCapturing() ?? false;
@@ -2321,10 +2466,8 @@ export class Graph implements GraphContext {
 
     /**
      * Estimate performance and potential issues for animation capture
-     *
      * @param options - Animation options to estimate
      * @returns Promise resolving to CaptureEstimate
-     *
      * @example
      * ```typescript
      * const estimate = await graph.estimateAnimationCapture({
@@ -2346,6 +2489,7 @@ export class Graph implements GraphContext {
 
     /**
      * Get the current camera state
+     * @returns Camera state including position, target, and rotation
      */
     getCameraState(): import("./screenshot/types.js").CameraState {
         const camera = this.scene.activeCamera;
@@ -2459,6 +2603,8 @@ export class Graph implements GraphContext {
 
     /**
      * Set the camera state (Phase 4: with animation support)
+     * @param state - Camera state or preset name to apply
+     * @param options - Optional animation configuration
      */
     async setCameraState(
         state: import("./screenshot/types.js").CameraState | {preset: string},
@@ -2526,6 +2672,7 @@ export class Graph implements GraphContext {
 
     /**
      * Apply camera state immediately without animation
+     * @param state - Camera state to apply
      */
     private applyCameraStateImmediate(state: import("./screenshot/types.js").CameraState): void {
         const camera = this.scene.activeCamera;
@@ -2650,6 +2797,8 @@ export class Graph implements GraphContext {
 
     /**
      * Apply easing function to animation
+     * @param animation - Babylon.js animation to apply easing to
+     * @param easing - Easing function name (linear, easeIn, easeOut, easeInOut)
      */
     private applyEasing(animation: Animation, easing?: string): void {
         if (!easing || easing === "linear") {
@@ -2681,6 +2830,13 @@ export class Graph implements GraphContext {
     /**
      * Animate camera distance using dummy object pattern
      * Required because cameraDistance is not a scene node property
+     * @param orbitController - Orbit camera controller instance
+     * @param orbitController.cameraDistance - Current camera distance from pivot
+     * @param orbitController.updateCameraPosition - Function to update camera position
+     * @param targetDistance - Target camera distance to animate to
+     * @param frameCount - Number of frames for the animation
+     * @param fps - Frames per second for the animation
+     * @param easing - Optional easing function name
      */
     private async animateCameraDistance(
         orbitController: {
@@ -2742,6 +2898,9 @@ export class Graph implements GraphContext {
     /**
      * Animate OrbitCameraController to target state
      * Handles pivot-based camera system with custom distance animation
+     * @param targetState - Target camera state to animate to
+     * @param options - Animation configuration options
+     * @param signal - Optional abort signal to cancel animation
      */
     private async animateOrbitCamera(
         targetState: import("./screenshot/types.js").CameraState,
@@ -2980,6 +3139,9 @@ export class Graph implements GraphContext {
 
     /**
      * Animate 2D camera (zoom and pan)
+     * @param targetState - Target camera state to animate to
+     * @param options - Animation configuration options
+     * @param signal - Optional abort signal to cancel animation
      */
     private async animate2DCamera(
         targetState: import("./screenshot/types.js").CameraState,
@@ -3206,6 +3368,12 @@ export class Graph implements GraphContext {
 
     /**
      * Set camera position (3D)
+     * @param position - Camera position coordinates
+     * @param position.x - X coordinate
+     * @param position.y - Y coordinate
+     * @param position.z - Z coordinate
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when camera position is set
      */
     async setCameraPosition(
         position: {x: number, y: number, z: number},
@@ -3219,6 +3387,12 @@ export class Graph implements GraphContext {
 
     /**
      * Set camera target (3D)
+     * @param target - Camera target coordinates
+     * @param target.x - X coordinate
+     * @param target.y - Y coordinate
+     * @param target.z - Z coordinate
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when camera target is set
      */
     async setCameraTarget(
         target: {x: number, y: number, z: number},
@@ -3232,6 +3406,9 @@ export class Graph implements GraphContext {
 
     /**
      * Set camera zoom (2D)
+     * @param zoom - Zoom level (1.0 = default, >1 = zoomed in, <1 = zoomed out)
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when zoom is set
      */
     async setCameraZoom(
         zoom: number,
@@ -3242,6 +3419,11 @@ export class Graph implements GraphContext {
 
     /**
      * Set camera pan (2D)
+     * @param pan - Pan offset coordinates
+     * @param pan.x - X offset
+     * @param pan.y - Y offset
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when pan is set
      */
     async setCameraPan(
         pan: {x: number, y: number},
@@ -3252,6 +3434,8 @@ export class Graph implements GraphContext {
 
     /**
      * Reset camera to default state
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when camera is reset
      */
     async resetCamera(options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
         // Get default camera state from current controller
@@ -3262,6 +3446,7 @@ export class Graph implements GraphContext {
     /**
      * Get default camera state for current camera type
      * Lazily captures the initial state on first use, or returns captured state
+     * @returns The default camera state
      */
     private getDefaultCameraState(): import("./screenshot/types.js").CameraState {
         // If we haven't captured initial state yet, capture it now
@@ -3273,6 +3458,8 @@ export class Graph implements GraphContext {
 
     /**
      * Resolve a camera preset (built-in or user-defined) to a CameraState
+     * @param preset - Name of the preset to resolve
+     * @returns The resolved camera state
      */
     resolveCameraPreset(preset: string): import("./screenshot/types.js").CameraState {
         const camera = this.scene.activeCamera;
@@ -3337,6 +3524,7 @@ export class Graph implements GraphContext {
 
     /**
      * Save current camera state as a named preset
+     * @param name - Name for the camera preset
      */
     saveCameraPreset(name: string): void {
         if (BUILTIN_PRESETS.includes(name as typeof BUILTIN_PRESETS[number])) {
@@ -3352,6 +3540,9 @@ export class Graph implements GraphContext {
 
     /**
      * Load a camera preset (built-in or user-defined)
+     * @param name - Name of the preset to load
+     * @param options - Optional animation configuration
+     * @returns Promise that resolves when camera state is applied
      */
     async loadCameraPreset(name: string, options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
         return this.setCameraState({preset: name} as {preset: string}, options);
@@ -3359,6 +3550,7 @@ export class Graph implements GraphContext {
 
     /**
      * Get all camera presets (built-in + user-defined)
+     * @returns Object mapping preset names to camera states or builtin marker
      */
     getCameraPresets(): Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> {
         const presets: Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> = {};
@@ -3378,6 +3570,7 @@ export class Graph implements GraphContext {
 
     /**
      * Export user-defined presets as JSON
+     * @returns Object mapping preset names to camera states
      */
     exportCameraPresets(): Record<string, import("./screenshot/types.js").CameraState> {
         const exported: Record<string, import("./screenshot/types.js").CameraState> = {};
@@ -3389,6 +3582,7 @@ export class Graph implements GraphContext {
 
     /**
      * Import user-defined presets from JSON
+     * @param presets - Object mapping preset names to camera states
      */
     importCameraPresets(presets: Record<string, import("./screenshot/types.js").CameraState>): void {
         for (const [name, state] of Object.entries(presets)) {
@@ -3403,6 +3597,9 @@ export class Graph implements GraphContext {
 
     /**
      * Set graph data (delegates to data manager)
+     * @param data - Graph data object
+     * @param data.nodes - Array of node data objects
+     * @param data.edges - Array of edge data objects
      */
     setData(data: {nodes: Record<string, unknown>[], edges: Record<string, unknown>[]}): void {
         // Add nodes
@@ -3424,6 +3621,8 @@ export class Graph implements GraphContext {
 
     /**
      * Get a specific node
+     * @param nodeId - ID of the node to retrieve
+     * @returns The node instance or undefined if not found
      */
     getNode(nodeId: string | number): Node | undefined {
         return this.dataManager.getNode(nodeId);
@@ -3431,6 +3630,7 @@ export class Graph implements GraphContext {
 
     /**
      * Get all nodes
+     * @returns Array of all node instances
      */
     getNodes(): Node[] {
         return Array.from(this.dataManager.nodes.values());
@@ -3452,10 +3652,8 @@ export class Graph implements GraphContext {
 
     /**
      * Enable AI-powered natural language control of the graph.
-     *
      * @param config - AI configuration including provider and optional API key
      * @returns Promise resolving when AI is ready
-     *
      * @example
      * ```typescript
      * // Enable with mock provider (for testing)
@@ -3482,7 +3680,6 @@ export class Graph implements GraphContext {
 
     /**
      * Disable AI control and clean up resources.
-     *
      * @example
      * ```typescript
      * graph.disableAiControl();
@@ -3498,11 +3695,8 @@ export class Graph implements GraphContext {
 
     /**
      * Send a natural language command to the AI controller.
-     *
      * @param input - Natural language command (e.g., "switch to circular layout")
-     * @param options - Optional execution options
      * @returns Promise resolving to command result
-     *
      * @example
      * ```typescript
      * // Query graph info
@@ -3531,9 +3725,7 @@ export class Graph implements GraphContext {
 
     /**
      * Get the current AI status synchronously.
-     *
      * @returns Current AI status or null if AI is not enabled
-     *
      * @example
      * ```typescript
      * const status = graph.getAiStatus();
@@ -3548,10 +3740,8 @@ export class Graph implements GraphContext {
 
     /**
      * Subscribe to AI status changes.
-     *
      * @param callback - Function called when status changes
      * @returns Unsubscribe function
-     *
      * @example
      * ```typescript
      * const unsubscribe = graph.onAiStatusChange((status) => {
@@ -3576,7 +3766,6 @@ export class Graph implements GraphContext {
 
     /**
      * Cancel any in-progress AI command.
-     *
      * @example
      * ```typescript
      * // Start a long-running command
@@ -3593,9 +3782,7 @@ export class Graph implements GraphContext {
     /**
      * Get the AI manager for advanced configuration.
      * Returns null if AI is not enabled.
-     *
      * @returns The AI manager or null
-     *
      * @example
      * ```typescript
      * const manager = graph.getAiManager();
@@ -3611,7 +3798,6 @@ export class Graph implements GraphContext {
 
     /**
      * Check if AI control is currently enabled.
-     *
      * @returns True if AI is enabled
      */
     isAiEnabled(): boolean {
@@ -3621,10 +3807,8 @@ export class Graph implements GraphContext {
     /**
      * Retry the last AI command.
      * Useful for retrying after transient errors.
-     *
      * @returns Promise resolving to command result
      * @throws Error if AI not enabled or no previous command
-     *
      * @example
      * ```typescript
      * // After a failed command
@@ -3647,9 +3831,7 @@ export class Graph implements GraphContext {
     /**
      * Get the API key manager for configuring keys before enabling AI.
      * Returns null if AI has never been enabled.
-     *
      * @returns The API key manager or null
-     *
      * @example
      * ```typescript
      * const keyManager = graph.getApiKeyManager();
@@ -3666,9 +3848,7 @@ export class Graph implements GraphContext {
     /**
      * Create a standalone ApiKeyManager for key management without enabling AI.
      * Useful for settings UIs that configure keys before AI activation.
-     *
      * @returns A new ApiKeyManager instance
-     *
      * @example
      * ```typescript
      * // In a settings UI component
@@ -3694,9 +3874,7 @@ export class Graph implements GraphContext {
     /**
      * Get the voice input adapter.
      * Creates the adapter on first use.
-     *
      * @returns The voice input adapter
-     *
      * @example
      * ```typescript
      * const adapter = graph.getVoiceAdapter();
@@ -3713,10 +3891,13 @@ export class Graph implements GraphContext {
 
     /**
      * Start voice input and execute commands.
-     *
      * @param options - Voice input options
+     * @param options.continuous - Whether to continuously listen for input
+     * @param options.interimResults - Whether to return interim transcription results
+     * @param options.language - BCP 47 language tag (e.g., "en-US", "fr-FR")
+     * @param options.onTranscript - Callback for transcription events
+     * @param options.onStart - Callback when voice input starts
      * @returns True if voice input started successfully
-     *
      * @example
      * ```typescript
      * graph.startVoiceInput({
@@ -3769,7 +3950,6 @@ export class Graph implements GraphContext {
 
     /**
      * Stop voice input.
-     *
      * @example
      * ```typescript
      * graph.stopVoiceInput();
@@ -3781,7 +3961,6 @@ export class Graph implements GraphContext {
 
     /**
      * Check if voice input is currently active.
-     *
      * @returns True if voice input is active
      */
     isVoiceActive(): boolean {
@@ -3916,6 +4095,9 @@ export class Graph implements GraphContext {
         await this.xrSessionManager.exitXR();
     }
 
+    /**
+     * Dispose all graph resources including voice, AI, XR, and Babylon.js components.
+     */
     dispose(): void {
         // Clean up voice adapter if created
         this.voiceAdapter?.dispose();

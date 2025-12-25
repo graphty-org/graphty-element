@@ -58,6 +58,9 @@ export interface LouvainOptions extends Record<string, unknown> {
     useOptimized: boolean;
 }
 
+/**
+ *
+ */
 export class LouvainAlgorithm extends Algorithm<LouvainOptions> {
     static namespace = "graphty";
     static type = "louvain";
@@ -125,7 +128,11 @@ export class LouvainAlgorithm extends Algorithm<LouvainOptions> {
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Louvain algorithm on the graph
+     *
+     * Detects communities by optimizing modularity in a hierarchical manner.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

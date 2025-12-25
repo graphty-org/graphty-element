@@ -2,7 +2,7 @@
 
 # Interface: EdgeClickEvent
 
-Defined in: [src/events.ts:208](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L208)
+Defined in: [src/events.ts:208](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L208)
 
 Emitted when an edge is clicked.
 
@@ -16,7 +16,7 @@ Emitted when an edge is clicked.
 
 > **data**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/events.ts:211](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L211)
+Defined in: [src/events.ts:211](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L211)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/events.ts:211](https://github.com/graphty-org/graphty-element/b
 
 > **edge**: [`Edge`](../../Edge/classes/Edge.md)
 
-Defined in: [src/events.ts:210](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L210)
+Defined in: [src/events.ts:210](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L210)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/events.ts:210](https://github.com/graphty-org/graphty-element/b
 
 > **event**: `PointerEvent`
 
-Defined in: [src/events.ts:212](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L212)
+Defined in: [src/events.ts:212](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L212)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/events.ts:212](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"edge-click"`
 
-Defined in: [src/events.ts:209](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L209)
+Defined in: [src/events.ts:209](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L209)

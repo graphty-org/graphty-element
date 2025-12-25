@@ -47,11 +47,9 @@ export interface ScreenshotOptions {
      *
      * Quality enhancement uses supersampling (rendering at higher resolution then downscaling)
      * which provides the highest quality anti-aliasing for screenshots.
-     *
      * @example
      * // Use default settings (2x supersampling)
      * enhanceQuality: true
-     *
      * @example
      * // Custom settings
      * enhanceQuality: {
@@ -86,8 +84,7 @@ export interface ScreenshotOptions {
      *
      * When implemented, this will allow embedding custom metadata into PNG files
      * such as graph information, capture settings, or application data.
-     *
-     * @future Phase 3+ feature
+     * @deprecated Not yet implemented - Phase 3+ feature
      */
     // embedMetadata?: boolean;
 
@@ -95,8 +92,7 @@ export interface ScreenshotOptions {
      * Custom metadata to embed in the PNG file.
      *
      * NOTE: This feature is not yet implemented. Requires embedMetadata support.
-     *
-     * @future Phase 3+ feature
+     * @deprecated Not yet implemented - Phase 3+ feature
      */
     // metadata?: Record<string, string>;
 }

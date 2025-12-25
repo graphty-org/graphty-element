@@ -51,6 +51,10 @@ export class AiController {
     private lastInput: string | null = null;
     private lastError: Error | null = null;
 
+    /**
+     * Creates a new AiController instance.
+     * @param options - Configuration options for the controller
+     */
     constructor(options: AiControllerOptions) {
         this.provider = options.provider;
         this.commandRegistry = options.commandRegistry;
@@ -70,6 +74,7 @@ export class AiController {
 
     /**
      * Emit an AI event if an emitter is configured.
+     * @param event - The AI event to emit
      */
     private emitAiEvent(event: AiEvent): void {
         if (this.emitEvent) {

@@ -12,10 +12,8 @@ import {
  * Blue highlight - universal safe hue
  * Returns blue for highlighted state, light gray for normal
  * ✅ Blue is universally safe ✅ 4.5:1 contrast (WCAG AAA)
- *
  * @param isHighlighted - Whether element is highlighted
  * @returns Hex color string
- *
  * @example
  * blueHighlight(true)  // "#0072B2" (Okabe-Ito blue)
  * blueHighlight(false) // "#CCCCCC" (light gray)
@@ -27,10 +25,8 @@ export function blueHighlight(isHighlighted: boolean): string {
 /**
  * Green success - for correct/successful states
  * Returns green for highlighted state, gray for normal
- *
  * @param isHighlighted - Whether element is highlighted
  * @returns Hex color string
- *
  * @example
  * greenSuccess(true)  // "#009E73" (Okabe-Ito green)
  * greenSuccess(false) // "#999999" (medium gray)
@@ -42,10 +38,8 @@ export function greenSuccess(isHighlighted: boolean): string {
 /**
  * Orange warning - for attention/warning states
  * Returns orange for highlighted state, light gray for normal
- *
  * @param isHighlighted - Whether element is highlighted
  * @returns Hex color string
- *
  * @example
  * orangeWarning(true)  // "#E69F00" (Okabe-Ito orange)
  * orangeWarning(false) // "#CCCCCC" (light gray)
@@ -57,7 +51,6 @@ export function orangeWarning(isHighlighted: boolean): string {
 /**
  * Custom binary colors
  * Allows specifying custom highlight and muted colors
- *
  * @param isHighlighted - Whether element is highlighted
  * @param highlightColor - Color for highlighted state (hex string)
  * @param mutedColor - Color for normal state (hex string)

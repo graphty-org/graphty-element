@@ -5,12 +5,10 @@
 /**
  * Linear mapping from [0,1] to [minWidth, maxWidth]
  * Default range: [0.5, 5]
- *
  * @param value - Normalized value (0-1)
  * @param minWidth - Minimum width (default: 0.5)
  * @param maxWidth - Maximum width (default: 5)
  * @returns Scaled width
- *
  * @example
  * linear(0.0)     // 0.5
  * linear(0.5)     // 2.75
@@ -25,12 +23,10 @@ export function linear(value: number, minWidth = 0.5, maxWidth = 5): number {
 
 /**
  * Logarithmic scaling for highly varied flows
- *
  * @param value - Normalized value (0-1)
  * @param minWidth - Minimum width (default: 0.5)
  * @param maxWidth - Maximum width (default: 5)
  * @returns Scaled width
- *
  * @example
  * log(0.5, 0.5, 5) // Logarithmic scaling
  */
@@ -59,12 +55,10 @@ export function log(value: number, minWidth = 0.5, maxWidth = 5): number {
 
 /**
  * Binary: highlight vs normal
- *
  * @param isHighlighted - Whether the edge is highlighted
  * @param highlightWidth - Width for highlighted edges (default: 3)
  * @param normalWidth - Width for normal edges (default: 1)
  * @returns Width based on highlight state
- *
  * @example
  * binary(true)     // 3
  * binary(false)    // 1
@@ -80,11 +74,9 @@ export function binary(
 
 /**
  * Stepped (discrete width levels)
- *
  * @param value - Normalized value (0-1)
  * @param widths - Array of width values
  * @returns Width from the appropriate step
- *
  * @example
  * stepped(0.3, [0.5, 1, 2, 3, 5]) // 1
  */

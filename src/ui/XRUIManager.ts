@@ -20,10 +20,17 @@ export class XRUIManager {
     private styleElement: HTMLStyleElement | null = null;
 
     /**
-   * Callback function triggered when user clicks an XR button
-   */
+     * Callback function triggered when user clicks an XR button
+     */
     public onEnterXR: ((mode: XRSessionMode) => void) | null = null;
 
+    /**
+     * Creates a new XRUIManager instance and initializes UI buttons
+     * @param container - The HTML element to contain the XR UI
+     * @param vrAvailable - Whether VR is available on this device
+     * @param arAvailable - Whether AR is available on this device
+     * @param config - UI configuration options
+     */
     constructor(
         container: HTMLElement,
         vrAvailable: boolean,
@@ -56,8 +63,8 @@ export class XRUIManager {
     }
 
     /**
-   * Create the overlay container with proper positioning
-   */
+     * Create the overlay container with proper positioning
+     */
     private createOverlay(): void {
         this.overlay = document.createElement("div");
         this.overlay.className = `xr-button-overlay xr-position-${this.config.position}`;
@@ -67,8 +74,11 @@ export class XRUIManager {
     }
 
     /**
-   * Create a button for entering XR mode
-   */
+     * Create a button for entering XR mode
+     * @param label - Button text label
+     * @param mode - XR session mode for this button
+     * @returns The created button element
+     */
     private createButton(label: string, mode: XRSessionMode): HTMLButtonElement {
         const button = document.createElement("button");
         button.className = "webxr-button webxr-available";
@@ -88,8 +98,8 @@ export class XRUIManager {
     }
 
     /**
-   * Show the "not available" message
-   */
+     * Show the "not available" message
+     */
     private showUnavailableMessage(): void {
         const message = document.createElement("div");
         message.className = "webxr-button webxr-not-available";
@@ -107,8 +117,8 @@ export class XRUIManager {
     }
 
     /**
-   * Inject default CSS styles with custom properties
-   */
+     * Inject default CSS styles with custom properties
+     */
     private injectDefaultStyles(): void {
         const css = `
         .webxr-button {
@@ -188,8 +198,8 @@ export class XRUIManager {
     }
 
     /**
-   * Clean up resources and remove UI elements
-   */
+     * Clean up resources and remove UI elements
+     */
     public dispose(): void {
         if (this.unavailableTimeout) {
             clearTimeout(this.unavailableTimeout);

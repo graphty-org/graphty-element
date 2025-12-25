@@ -1,5 +1,5 @@
 /**
- * @fileoverview Bipartite Matching Algorithm wrapper
+ * @file Bipartite Matching Algorithm wrapper
  *
  * This algorithm finds the maximum matching in a bipartite graph.
  * A matching is a set of edges without common vertices.
@@ -12,6 +12,12 @@ import {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ * Bipartite Matching algorithm for finding maximum matchings
+ *
+ * Finds the maximum matching in a bipartite graph where nodes can be divided
+ * into two disjoint sets with edges only between sets.
+ */
 export class BipartiteMatchingAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "bipartite-matching";
@@ -68,7 +74,11 @@ export class BipartiteMatchingAlgorithm extends Algorithm {
         category: "path",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the bipartite matching algorithm on the graph
+     *
+     * Computes the maximum matching and partitions nodes into left and right sets.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const edges = Array.from(g.getDataManager().edges.values());

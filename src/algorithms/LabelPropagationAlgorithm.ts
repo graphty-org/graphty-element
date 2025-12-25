@@ -38,6 +38,9 @@ export interface LabelPropagationOptions extends Record<string, unknown> {
     randomSeed: number;
 }
 
+/**
+ *
+ */
 export class LabelPropagationAlgorithm extends Algorithm<LabelPropagationOptions> {
     static namespace = "graphty";
     static type = "label-propagation";
@@ -88,7 +91,11 @@ export class LabelPropagationAlgorithm extends Algorithm<LabelPropagationOptions
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the label propagation algorithm on the graph
+     *
+     * Detects communities by propagating labels through the network.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

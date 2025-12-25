@@ -3,9 +3,12 @@ import {ScreenshotError, ScreenshotErrorCode} from "../screenshot/ScreenshotErro
 import type {AnimationOptions, AnimationResult} from "./VideoCapture.js";
 
 /**
- * Error thrown when animation capture is cancelled
+ * Error thrown when animation capture is cancelled by the user
  */
 export class AnimationCancelledError extends Error {
+    /**
+     * Creates a new AnimationCancelledError
+     */
     constructor() {
         super("Animation capture cancelled");
         this.name = "AnimationCancelledError";
@@ -57,12 +60,17 @@ export class MediaRecorderCapture {
     /** Debug logging enabled */
     private debug: boolean;
 
+    /**
+     * Creates a new MediaRecorderCapture instance
+     * @param config - Configuration options for the recorder
+     */
     constructor(config: MediaRecorderCaptureConfig = {}) {
         this.debug = config.debug ?? false;
     }
 
     /**
      * Log a debug message if debug mode is enabled
+     * @param message - The message to log
      */
     private log(message: string): void {
         if (this.debug) {
@@ -81,6 +89,8 @@ export class MediaRecorderCapture {
      * 1. WebM VP9 (best quality, smallest size)
      * 2. WebM VP8 (good quality, good compatibility)
      * 3. MP4 H.264 (Safari, universal fallback)
+     * @param requestedFormat - Requested video format or 'auto' for automatic detection
+     * @returns MIME type string for the selected codec
      */
     private getSupportedCodec(requestedFormat?: "webm" | "mp4" | "auto"): string {
         // Debug: Log codec support detection
@@ -146,7 +156,12 @@ export class MediaRecorderCapture {
     }
 
     /**
-     * Captures video in realtime using MediaRecorder
+     * Captures video in realtime using MediaRecorder API.
+     * Streams canvas frames directly to a video blob as the animation plays.
+     * @param canvas - The HTML canvas element to capture
+     * @param options - Animation capture options
+     * @param onProgress - Optional callback for progress updates (0-100)
+     * @returns Animation result with blob and metadata
      */
     async captureRealtime(
         canvas: HTMLCanvasElement,
@@ -289,7 +304,6 @@ export class MediaRecorderCapture {
      * 2. Stop the recorder (may trigger onstop asynchronously)
      * 3. Reject the promise synchronously (guarantees cancellation error)
      * 4. Clear state (prevents double-handling)
-     *
      * @returns true if a capture was cancelled, false if no capture was in progress
      */
     cancel(): boolean {
@@ -318,13 +332,16 @@ export class MediaRecorderCapture {
 
     /**
      * Check if a capture is currently in progress
+     * @returns True if actively recording, false otherwise
      */
     isCapturing(): boolean {
         return this.activeRecorder !== null && this.activeRecorder.state === "recording";
     }
 
     /**
-     * Get the MIME type that will be used for the given options
+     * Get the MIME type that will be used for the given format option
+     * @param format - Requested video format or 'auto' for automatic detection
+     * @returns MIME type string for the selected codec
      */
     getMimeType(format?: "webm" | "mp4" | "auto"): string {
         return this.getSupportedCodec(format);

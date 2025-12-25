@@ -7,7 +7,6 @@
  * Apply deadzone to thumbstick/joystick input to prevent drift.
  * Remaps values from [threshold, 1] to [0, 1] for smooth start.
  * Also applies quadratic curve for smooth acceleration.
- *
  * @param value - Raw input value (-1 to 1)
  * @param threshold - Deadzone threshold (default 0.15)
  * @returns Adjusted value with deadzone and curve applied

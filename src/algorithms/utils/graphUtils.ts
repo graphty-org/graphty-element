@@ -1,5 +1,5 @@
 /**
- * @fileoverview Utility functions for building graph data structures from graphty-element Graph
+ * @file Utility functions for building graph data structures from graphty-element Graph
  */
 
 /**
@@ -38,11 +38,9 @@ export interface AdjacencyOptions {
  *
  * Returns a Map where keys are node IDs (as strings) and values are Sets of neighbor node IDs.
  * For undirected graphs, both directions are added automatically.
- *
  * @param graph - The graphty-element Graph instance
  * @param options - Configuration options
  * @returns Map of node ID to Set of neighbor IDs
- *
  * @example
  * ```typescript
  * // Undirected graph
@@ -86,11 +84,9 @@ export function buildAdjacencyList(
  *
  * Returns a Map where keys are node IDs (as strings) and values are Maps of neighbor ID to edge weight.
  * For undirected graphs, both directions are added automatically with the same weight.
- *
  * @param graph - The graphty-element Graph instance
  * @param options - Configuration options
  * @returns Map of node ID to Map of neighbor ID to weight
- *
  * @example
  * ```typescript
  * // Get weighted adjacency (weights from 'value' attribute)

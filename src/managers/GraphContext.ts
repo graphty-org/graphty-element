@@ -128,6 +128,17 @@ export interface GraphContextConfig {
  * This can be used by Graph to provide services to Node/Edge
  */
 export class DefaultGraphContext implements GraphContext {
+    /**
+     * Creates an instance of DefaultGraphContext
+     * @param styleManager - StyleManager instance for style operations
+     * @param dataManager - DataManager instance for node/edge operations
+     * @param layoutManager - LayoutManager instance for layout operations
+     * @param meshCache - MeshCache instance for mesh creation and caching
+     * @param scene - Babylon.js Scene instance
+     * @param statsManager - StatsManager instance for performance monitoring
+     * @param config - Graph-level configuration options
+     * @param rayUpdateNeeded - Whether ray updates are needed for edge arrows
+     */
     constructor(
         private styleManager: StyleManager,
         private dataManager: DataManager,
@@ -139,30 +150,58 @@ export class DefaultGraphContext implements GraphContext {
         private rayUpdateNeeded = true,
     ) {}
 
+    /**
+     * Get the StyleManager for style operations
+     * @returns StyleManager instance
+     */
     getStyleManager(): StyleManager {
         return this.styleManager;
     }
 
+    /**
+     * Get the DataManager for node/edge operations
+     * @returns DataManager instance
+     */
     getDataManager(): DataManager {
         return this.dataManager;
     }
 
+    /**
+     * Get the LayoutManager for layout operations
+     * @returns LayoutManager instance
+     */
     getLayoutManager(): LayoutManager {
         return this.layoutManager;
     }
 
+    /**
+     * Get the MeshCache for mesh creation and caching
+     * @returns MeshCache instance
+     */
     getMeshCache(): MeshCache {
         return this.meshCache;
     }
 
+    /**
+     * Get the Babylon.js Scene
+     * @returns Scene instance
+     */
     getScene(): Scene {
         return this.scene;
     }
 
+    /**
+     * Get the StatsManager for performance monitoring
+     * @returns StatsManager instance
+     */
     getStatsManager(): StatsManager {
         return this.statsManager;
     }
 
+    /**
+     * Check if the graph is in 2D mode
+     * @returns True if in 2D mode, false otherwise
+     */
     is2D(): boolean {
         const config = this.styleManager.getStyles().config.graph;
         // Support both new viewMode and deprecated twoD for backward compatibility
@@ -170,29 +209,50 @@ export class DefaultGraphContext implements GraphContext {
         return config.viewMode === "2d" || config.twoD;
     }
 
+    /**
+     * Check if ray updates are needed for edge arrows
+     * @returns True if ray updates are needed, false otherwise
+     */
     needsRayUpdate(): boolean {
         return this.rayUpdateNeeded;
     }
 
+    /**
+     * Set whether ray updates are needed for edge arrows
+     * @param needed - Whether ray updates are needed
+     */
     setRayUpdateNeeded(needed: boolean): void {
         this.rayUpdateNeeded = needed;
     }
 
+    /**
+     * Get graph-level configuration options
+     * @returns GraphContextConfig instance
+     */
     getConfig(): GraphContextConfig {
         return this.config;
     }
 
     /**
      * Update configuration
+     * @param config - Partial configuration to merge with existing config
      */
     updateConfig(config: Partial<GraphContextConfig>): void {
         Object.assign(this.config, config);
     }
 
+    /**
+     * Check if the layout is running
+     * @returns True if layout is running, false otherwise
+     */
     isRunning(): boolean {
         return this.layoutManager.running;
     }
 
+    /**
+     * Set the running state
+     * @param running - Whether layout should be running
+     */
     setRunning(running: boolean): void {
         this.layoutManager.running = running;
     }

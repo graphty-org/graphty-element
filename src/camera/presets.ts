@@ -23,6 +23,8 @@ interface BoundingBox {
 
 /**
  * Calculate bounding box from graph nodes
+ * @param graph - Graph instance to calculate bounds for
+ * @returns Bounding box containing all nodes
  */
 function getNodeBoundingBox(graph: Graph): BoundingBox {
     const nodes = graph.getNodes();
@@ -78,6 +80,9 @@ function getNodeBoundingBox(graph: Graph): BoundingBox {
 
 /**
  * Calculate fitToGraph preset - adapts to 2D or 3D camera
+ * @param graph - Graph instance to fit camera to
+ * @param camera - Camera to calculate state for
+ * @returns Camera state that fits all nodes in view
  */
 export function calculateFitToGraph(
     graph: Graph,
@@ -123,6 +128,9 @@ export function calculateFitToGraph(
 
 /**
  * Calculate topView preset - adapts to 2D or 3D camera
+ * @param graph - Graph instance to calculate view for
+ * @param camera - Camera to calculate state for
+ * @returns Camera state for top-down view
  */
 export function calculateTopView(graph: Graph, camera: Camera): CameraState {
     const bounds = getNodeBoundingBox(graph);
@@ -150,6 +158,8 @@ export function calculateTopView(graph: Graph, camera: Camera): CameraState {
 
 /**
  * Calculate sideView preset - 3D only
+ * @param graph - Graph instance to calculate view for
+ * @returns Camera state for side view
  */
 export function calculateSideView(graph: Graph): CameraState {
     const bounds = getNodeBoundingBox(graph);
@@ -165,6 +175,8 @@ export function calculateSideView(graph: Graph): CameraState {
 
 /**
  * Calculate frontView preset - 3D only
+ * @param graph - Graph instance to calculate view for
+ * @returns Camera state for front view
  */
 export function calculateFrontView(graph: Graph): CameraState {
     const bounds = getNodeBoundingBox(graph);
@@ -180,6 +192,8 @@ export function calculateFrontView(graph: Graph): CameraState {
 
 /**
  * Calculate isometric preset - 3D only
+ * @param graph - Graph instance to calculate view for
+ * @returns Camera state for isometric view
  */
 export function calculateIsometric(graph: Graph): CameraState {
     const bounds = getNodeBoundingBox(graph);

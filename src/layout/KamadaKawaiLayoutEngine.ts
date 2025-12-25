@@ -52,6 +52,9 @@ export const KamadaKawaiLayoutConfig = z.strictObject({
 export type KamadaKawaiLayoutConfigType = z.infer<typeof KamadaKawaiLayoutConfig>;
 export type KamadaKawaiLayoutOpts = Partial<KamadaKawaiLayoutConfigType>;
 
+/**
+ * Kamada-Kawai layout engine using spring-embedder energy minimization
+ */
 export class KamadaKawaiLayout extends SimpleLayoutEngine {
     static type = "kamada-kawai";
     static maxDimensions = 3;
@@ -59,15 +62,27 @@ export class KamadaKawaiLayout extends SimpleLayoutEngine {
     scalingFactor = 50;
     config: KamadaKawaiLayoutConfigType;
 
+    /**
+     * Create a Kamada-Kawai layout engine
+     * @param opts - Configuration options including scale and dimensions
+     */
     constructor(opts: KamadaKawaiLayoutOpts) {
         super(opts);
         this.config = KamadaKawaiLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for Kamada-Kawai layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions using Kamada-Kawai algorithm
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

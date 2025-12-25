@@ -30,6 +30,11 @@ export class XRSessionManager {
     private xrHelper: WebXRDefaultExperience | null = null;
     private activeMode: "immersive-vr" | "immersive-ar" | null = null;
 
+    /**
+     * Creates a new XRSessionManager instance
+     * @param scene - The Babylon.js scene for XR rendering
+     * @param config - XR session configuration
+     */
     constructor(scene: Scene, config: XRSessionConfig) {
         this.scene = scene;
         this.config = config;
@@ -37,8 +42,9 @@ export class XRSessionManager {
     }
 
     /**
-   * Check if WebXR is supported in the current browser
-   */
+     * Check if WebXR is supported in the current browser
+     * @returns True if WebXR API is available
+     */
     public isXRSupported(): boolean {
         const hasNavigator = typeof navigator !== "undefined";
         const hasXR = hasNavigator && !!navigator.xr;
@@ -56,8 +62,9 @@ export class XRSessionManager {
     }
 
     /**
-   * Check if VR sessions are supported on this device
-   */
+     * Check if VR sessions are supported on this device
+     * @returns Promise resolving to true if VR is supported
+     */
     public async isVRSupported(): Promise<boolean> {
         if (!this.isXRSupported()) {
             return false;
@@ -78,8 +85,9 @@ export class XRSessionManager {
     }
 
     /**
-   * Check if AR sessions are supported on this device
-   */
+     * Check if AR sessions are supported on this device
+     * @returns Promise resolving to true if AR is supported
+     */
     public async isARSupported(): Promise<boolean> {
         if (!this.isXRSupported()) {
             return false;
@@ -100,8 +108,10 @@ export class XRSessionManager {
     }
 
     /**
-   * Enter VR mode and optionally transfer camera position
-   */
+     * Enter VR mode and optionally transfer camera position from a previous camera
+     * @param previousCamera - Optional camera to copy position from
+     * @returns Promise that resolves when VR session is active
+     */
     public async enterVR(previousCamera?: Camera): Promise<void> {
         if (!this.isXRSupported()) {
             throw new Error("WebXR is not supported in this browser");
@@ -169,8 +179,10 @@ export class XRSessionManager {
     }
 
     /**
-   * Enter AR mode and transfer camera position
-   */
+     * Enter AR mode and optionally transfer camera position from a previous camera
+     * @param previousCamera - Optional camera to copy position from
+     * @returns Promise that resolves when AR session is active
+     */
     public async enterAR(previousCamera?: Camera): Promise<void> {
         if (!this.isXRSupported()) {
             throw new Error("WebXR is not supported in this browser");
@@ -229,8 +241,9 @@ export class XRSessionManager {
     }
 
     /**
-   * Exit the current XR session
-   */
+     * Exit the current XR session and clean up resources
+     * @returns Promise that resolves when session is exited
+     */
     public async exitXR(): Promise<void> {
         if (!this.activeMode || !this.xrHelper) {
             return; // No active session to exit
@@ -250,29 +263,32 @@ export class XRSessionManager {
     }
 
     /**
-   * Get the active XR camera
-   */
+     * Get the active XR camera
+     * @returns The XR camera or null if no session is active
+     */
     public getXRCamera(): Camera | null {
         return this.xrHelper?.baseExperience.camera ?? null;
     }
 
     /**
-   * Get the WebXR helper instance
-   */
+     * Get the WebXR helper instance for advanced XR features
+     * @returns The WebXR helper or null if no session is active
+     */
     public getXRHelper(): WebXRDefaultExperience | null {
         return this.xrHelper;
     }
 
     /**
-   * Get the currently active XR mode
-   */
+     * Get the currently active XR mode
+     * @returns The active XR mode or null if no session is active
+     */
     public getActiveMode(): "immersive-vr" | "immersive-ar" | null {
         return this.activeMode;
     }
 
     /**
-   * Cleanup all XR resources
-   */
+     * Cleanup all XR resources
+     */
     public dispose(): void {
         if (this.xrHelper) {
             this.xrHelper.dispose();

@@ -2,7 +2,7 @@
 
 # Interface: NodeGenericEvent
 
-Defined in: [src/events.ts:137](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L137)
+Defined in: [src/events.ts:137](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L137)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:137](https://github.com/graphty-org/graphty-element/b
 
 > **node**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/events.ts:139](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L139)
+Defined in: [src/events.ts:139](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L139)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [src/events.ts:139](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"node-update-after"` \| `"node-update-before"`
 
-Defined in: [src/events.ts:138](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L138)
+Defined in: [src/events.ts:138](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L138)

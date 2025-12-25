@@ -128,9 +128,7 @@ export interface AlgorithmInfo {
 
 /**
  * Get information about all registered algorithms including their options schemas
- *
  * @returns Array of algorithm information objects
- *
  * @example
  * ```typescript
  * const algorithms = getAllAlgorithmInfo();
@@ -187,9 +185,7 @@ export function getAllAlgorithmInfo(): AlgorithmInfo[] {
 
 /**
  * Get all algorithm Zod-based options schemas as a Map
- *
  * @returns Map of algorithm key ("namespace:type") to Zod options schema
- *
  * @example
  * ```typescript
  * const schemas = getAllAlgorithmSchemas();

@@ -47,6 +47,9 @@ export interface GirvanNewmanOptions extends Record<string, unknown> {
     maxIterations: number;
 }
 
+/**
+ *
+ */
 export class GirvanNewmanAlgorithm extends Algorithm<GirvanNewmanOptions> {
     static namespace = "graphty";
     static type = "girvan-newman";
@@ -106,7 +109,11 @@ export class GirvanNewmanAlgorithm extends Algorithm<GirvanNewmanOptions> {
         category: "grouping",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the Girvan-Newman algorithm on the graph
+     *
+     * Detects communities by iteratively removing edges with highest betweenness.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

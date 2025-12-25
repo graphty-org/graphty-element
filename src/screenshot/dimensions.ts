@@ -12,6 +12,13 @@ export interface CalculatedDimensions {
     height: number;
 }
 
+/**
+ * Calculates the output dimensions for a screenshot based on user options and canvas aspect ratio.
+ * Supports explicit dimensions (width/height), multiplier-based scaling, and strict aspect ratio validation.
+ * @param canvas - The HTML canvas element to capture
+ * @param options - Screenshot configuration options
+ * @returns The calculated width and height for the screenshot
+ */
 export function calculateDimensions(
     canvas: HTMLCanvasElement,
     options: ScreenshotOptions,
@@ -78,6 +85,13 @@ export function calculateDimensions(
     return {width, height};
 }
 
+/**
+ * Validates screenshot dimensions against browser limits.
+ * Checks for positive finite numbers, maximum dimension size, and total pixel count.
+ * Throws ScreenshotError if validation fails.
+ * @param width - The width in pixels to validate
+ * @param height - The height in pixels to validate
+ */
 export function validateDimensions(width: number, height: number): void {
     // Check for valid positive dimensions
     if (width <= 0 || height <= 0 || !Number.isFinite(width) || !Number.isFinite(height)) {

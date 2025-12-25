@@ -2,7 +2,7 @@
 
 # Class: AlgorithmManager
 
-Defined in: [src/managers/AlgorithmManager.ts:11](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L11)
+Defined in: [src/managers/AlgorithmManager.ts:11](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L11)
 
 Manages algorithm execution and coordination
 Handles running algorithms from templates and individual algorithm execution
@@ -17,7 +17,9 @@ Handles running algorithms from templates and individual algorithm execution
 
 > **new AlgorithmManager**(`eventManager`, `graph`): `AlgorithmManager`
 
-Defined in: [src/managers/AlgorithmManager.ts:12](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L12)
+Defined in: [src/managers/AlgorithmManager.ts:17](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L17)
+
+Creates an instance of AlgorithmManager
 
 #### Parameters
 
@@ -25,9 +27,13 @@ Defined in: [src/managers/AlgorithmManager.ts:12](https://github.com/graphty-org
 
 [`EventManager`](EventManager.md)
 
+Event manager for emitting algorithm events
+
 ##### graph
 
 [`Graph`](../../Graph/classes/Graph.md)
+
+Graph instance to run algorithms on
 
 #### Returns
 
@@ -39,9 +45,9 @@ Defined in: [src/managers/AlgorithmManager.ts:12](https://github.com/graphty-org
 
 > **dispose**(): `void`
 
-Defined in: [src/managers/AlgorithmManager.ts:22](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L22)
+Defined in: [src/managers/AlgorithmManager.ts:34](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L34)
 
-Dispose of all resources held by the manager
+Disposes of the algorithm manager and cleans up resources
 
 #### Returns
 
@@ -57,7 +63,7 @@ Dispose of all resources held by the manager
 
 > **getAvailableAlgorithms**(): `string`[]
 
-Defined in: [src/managers/AlgorithmManager.ts:133](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L133)
+Defined in: [src/managers/AlgorithmManager.ts:150](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L150)
 
 Get list of available algorithms
 TODO: This depends on the Algorithm registry implementation
@@ -66,13 +72,15 @@ TODO: This depends on the Algorithm registry implementation
 
 `string`[]
 
+Array of available algorithm names
+
 ***
 
 ### hasAlgorithm()
 
 > **hasAlgorithm**(`namespace`, `type`): `boolean`
 
-Defined in: [src/managers/AlgorithmManager.ts:120](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L120)
+Defined in: [src/managers/AlgorithmManager.ts:136](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L136)
 
 Check if an algorithm exists
 
@@ -82,13 +90,19 @@ Check if an algorithm exists
 
 `string`
 
+Algorithm namespace
+
 ##### type
 
 `string`
 
+Algorithm type
+
 #### Returns
 
 `boolean`
+
+True if the algorithm exists, false otherwise
 
 ***
 
@@ -96,13 +110,15 @@ Check if an algorithm exists
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/managers/AlgorithmManager.ts:17](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L17)
+Defined in: [src/managers/AlgorithmManager.ts:26](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L26)
 
-Initialize the manager
+Initializes the algorithm manager
 
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when initialization is complete
 
 #### Implementation of
 
@@ -114,7 +130,7 @@ Initialize the manager
 
 > **runAlgorithm**(`namespace`, `type`, `algorithmOptions?`): `Promise`\<`void`\>
 
-Defined in: [src/managers/AlgorithmManager.ts:77](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L77)
+Defined in: [src/managers/AlgorithmManager.ts:90](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L90)
 
 Run a specific algorithm by namespace and type
 
@@ -148,7 +164,7 @@ Optional algorithm-specific options (source, target, etc.)
 
 > **runAlgorithmsFromTemplate**(`algorithms`): `Promise`\<`void`\>
 
-Defined in: [src/managers/AlgorithmManager.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/AlgorithmManager.ts#L30)
+Defined in: [src/managers/AlgorithmManager.ts:43](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/AlgorithmManager.ts#L43)
 
 Run algorithms specified in the template configuration
 Called during initialization if runAlgorithmsOnLoad is true
@@ -158,6 +174,8 @@ Called during initialization if runAlgorithmsOnLoad is true
 ##### algorithms
 
 `string`[]
+
+Array of algorithm names in "namespace:type" format
 
 #### Returns
 

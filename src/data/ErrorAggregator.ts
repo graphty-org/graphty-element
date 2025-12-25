@@ -37,6 +37,10 @@ export class ErrorAggregator {
     private errorsByCategory = new Map<string, DataLoadingError[]>();
     private errorsByField = new Map<string, DataLoadingError[]>();
 
+    /**
+     * Creates a new ErrorAggregator instance.
+     * @param maxErrors - Maximum number of errors to collect before stopping
+     */
     constructor(maxErrors = 100) {
         this.maxErrors = maxErrors;
     }
@@ -82,6 +86,7 @@ export class ErrorAggregator {
 
     /**
      * Get the total number of errors
+     * @returns The count of accumulated errors
      */
     getErrorCount(): number {
         return this.errors.length;
@@ -89,6 +94,7 @@ export class ErrorAggregator {
 
     /**
      * Check if error limit has been reached
+     * @returns True if the maximum error count has been reached
      */
     hasReachedLimit(): boolean {
         return this.errors.length >= this.maxErrors;
@@ -96,6 +102,7 @@ export class ErrorAggregator {
 
     /**
      * Get all errors
+     * @returns Array of all accumulated errors
      */
     getErrors(): DataLoadingError[] {
         return [... this.errors];
@@ -103,6 +110,7 @@ export class ErrorAggregator {
 
     /**
      * Get a summary of all errors
+     * @returns Error summary with categorization and suggestions
      */
     getSummary(): ErrorSummary {
         const totalErrors = this.errors.length;
@@ -136,6 +144,7 @@ export class ErrorAggregator {
 
     /**
      * Get a user-friendly error message
+     * @returns Formatted error message with suggestions
      */
     getUserFriendlyMessage(): string {
         const summary = this.getSummary();
@@ -150,6 +159,7 @@ export class ErrorAggregator {
 
     /**
      * Get a detailed error report with all error messages
+     * @returns Comprehensive report with categorized errors
      */
     getDetailedReport(): string {
         const summary = this.getSummary();
@@ -196,6 +206,11 @@ export class ErrorAggregator {
 
     /**
      * Generate user-friendly message based on error patterns
+     * @param totalErrors - Total number of errors
+     * @param primaryCategory - Most common error category
+     * @param errorsByCategory - Errors grouped by category
+     * @param errorsByField - Errors grouped by field name
+     * @returns Object containing user-friendly message and optional suggestion
      */
     private generateUserFriendlyMessage(
         totalErrors: number,

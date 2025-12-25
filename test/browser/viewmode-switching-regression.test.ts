@@ -254,7 +254,7 @@ describe("ViewMode Switching Regression Tests", () => {
             await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Verify 2D camera is active
-            assert.isTrue(graph.is2D(), "Should be in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode");
 
             // Verify camera manager has an active controller
             const cameraManager = graph.camera;

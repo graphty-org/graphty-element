@@ -4,7 +4,7 @@
 
 > **isViewMode**(`value`): value is "2d" \| "3d" \| "ar" \| "vr"
 
-Defined in: [src/config/ViewMode.ts:26](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/ViewMode.ts#L26)
+Defined in: [src/config/ViewMode.ts:28](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/ViewMode.ts#L28)
 
 Type guard to check if a string is a valid ViewMode
 
@@ -14,6 +14,10 @@ Type guard to check if a string is a valid ViewMode
 
 `string`
 
+String value to check
+
 ## Returns
 
 value is "2d" \| "3d" \| "ar" \| "vr"
+
+True if value is a valid ViewMode

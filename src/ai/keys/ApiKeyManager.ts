@@ -161,6 +161,7 @@ export class ApiKeyManager {
 
     /**
      * Custom toString to avoid exposing keys.
+     * @returns String representation without sensitive data
      */
     toString(): string {
         const providers = this.getConfiguredProviders();

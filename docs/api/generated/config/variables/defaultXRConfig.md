@@ -4,7 +4,7 @@
 
 > `const` **defaultXRConfig**: [`XRConfig`](../interfaces/XRConfig.md)
 
-Defined in: [src/config/XRConfig.ts:166](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L166)
+Defined in: [src/config/XRConfig.ts:166](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L166)
 
 Default XR configuration
 

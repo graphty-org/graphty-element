@@ -21,7 +21,6 @@ export interface CameraWaypoint {
  * For guaranteed frame-perfect capture (e.g., for production video rendering),
  * consider using external screen recording software or frame-by-frame export
  * with a third-party video encoding library like ffmpeg.
- *
  * @see design/screen-capture-design-review.md for technical details on capture modes
  * @see src/screenshot/constants.ts for default values (VIDEO_CONSTANTS)
  */
@@ -77,6 +76,9 @@ export interface AnimationResult {
 
 /**
  * Calculate frame drop rate as a percentage
+ * @param framesCaptured - Number of frames successfully captured
+ * @param expectedFrames - Total number of frames expected
+ * @returns Drop rate as a percentage (0-100)
  */
 export function calculateDropRate(framesCaptured: number, expectedFrames: number): number {
     if (expectedFrames === 0) {

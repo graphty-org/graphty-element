@@ -50,6 +50,9 @@ export const PlanarLayoutConfig = z.strictObject({
 export type PlanarLayoutConfigType = z.infer<typeof PlanarLayoutConfig>;
 export type PlanarLayoutOpts = Partial<PlanarLayoutConfigType>;
 
+/**
+ * Planar layout engine for planar graphs (no edge crossings)
+ */
 export class PlanarLayout extends SimpleLayoutEngine {
     static type = "planar";
     static maxDimensions = 2;
@@ -57,11 +60,20 @@ export class PlanarLayout extends SimpleLayoutEngine {
     scalingFactor = 70;
     config: PlanarLayoutConfigType;
 
+    /**
+     * Create a planar layout engine
+     * @param opts - Configuration options including scale and seed
+     */
     constructor(opts: PlanarLayoutOpts) {
         super(opts);
         this.config = PlanarLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for planar layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter or null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Planar layout only supports 2D
         if (dimension > this.maxDimensions) {
@@ -71,6 +83,9 @@ export class PlanarLayout extends SimpleLayoutEngine {
         return {dim: dimension};
     }
 
+    /**
+     * Compute planar node positions with no edge crossings
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

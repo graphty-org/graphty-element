@@ -1,5 +1,5 @@
 /**
- * @fileoverview Minimum Cut Algorithm wrapper
+ * @file Minimum Cut Algorithm wrapper
  *
  * This algorithm finds the minimum cut that separates a source from a sink
  * or the global minimum cut of a graph. Uses the max-flow min-cut theorem.
@@ -71,6 +71,12 @@ export interface MinCutOptions extends Record<string, unknown> {
     kargerIterations: number;
 }
 
+/**
+ * Minimum Cut algorithm using max-flow min-cut theorem
+ *
+ * Finds the minimum cut that separates a source from a sink (s-t cut)
+ * or the global minimum cut of the graph using Stoer-Wagner or Karger's algorithm.
+ */
 export class MinCutAlgorithm extends Algorithm<MinCutOptions> {
     static namespace = "graphty";
     static type = "min-cut";
@@ -179,7 +185,11 @@ export class MinCutAlgorithm extends Algorithm<MinCutOptions> {
 
     /**
      * Configure the algorithm with source, sink, and useGlobalMinCut options
-     *
+     * @param options - Configuration options
+     * @param options.source - The source node for s-t cut (optional)
+     * @param options.sink - The sink node for s-t cut (optional)
+     * @param options.useGlobalMinCut - Whether to use global min cut (optional)
+     * @returns This algorithm instance for chaining
      * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
     configure(options: {source?: string, sink?: string, useGlobalMinCut?: boolean}): this {
@@ -187,7 +197,11 @@ export class MinCutAlgorithm extends Algorithm<MinCutOptions> {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the minimum cut algorithm on the graph
+     *
+     * Computes either s-t cut or global minimum cut and marks cut edges and partitions.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const edges = Array.from(g.getDataManager().edges.values());

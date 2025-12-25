@@ -1,5 +1,5 @@
 /**
- * @fileoverview Index file for color palettes
+ * @file Index file for color palettes
  *
  * Re-exports all palette types for convenient access:
  * - binary: True/false state colors

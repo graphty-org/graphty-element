@@ -54,15 +54,25 @@ export class SelectionManager implements Manager {
     private dataManager: DataManager | null = null;
     private styleManager: StyleManager | null = null;
 
+    /**
+     * Creates a new selection manager
+     * @param eventManager - Event manager for emitting selection events
+     */
     constructor(private eventManager: EventManager) {
         // Clone the default selection style to allow customization
         this.selectionStyleLayer = structuredClone(DEFAULT_SELECTION_STYLE);
     }
 
+    /**
+     * Initialize the selection manager
+     */
     async init(): Promise<void> {
         // No async initialization needed
     }
 
+    /**
+     * Dispose the selection manager and clear selection
+     */
     dispose(): void {
         // Clear selection on dispose
         if (this.selectedNode) {
@@ -75,6 +85,7 @@ export class SelectionManager implements Manager {
     /**
      * Set the DataManager reference.
      * Required for selectById() functionality.
+     * @param dataManager - The data manager instance
      */
     setDataManager(dataManager: DataManager): void {
         this.dataManager = dataManager;
@@ -83,6 +94,7 @@ export class SelectionManager implements Manager {
     /**
      * Set the StyleManager reference.
      * Required for triggering style updates when selection changes.
+     * @param styleManager - The style manager instance
      */
     setStyleManager(styleManager: StyleManager): void {
         this.styleManager = styleManager;
@@ -98,7 +110,7 @@ export class SelectionManager implements Manager {
 
     /**
      * Check if a specific node is currently selected.
-     * @param node The node to check.
+     * @param node - The node to check.
      * @returns True if the node is selected, false otherwise.
      */
     isSelected(node: Node): boolean {
@@ -109,8 +121,7 @@ export class SelectionManager implements Manager {
      * Select a node.
      * If another node is currently selected, it will be deselected first.
      * Emits a selection-changed event.
-     *
-     * @param node The node to select.
+     * @param node - The node to select.
      */
     select(node: Node): void {
         // No-op if selecting the same node
@@ -136,8 +147,7 @@ export class SelectionManager implements Manager {
     /**
      * Select a node by its ID.
      * Requires DataManager to be set via setDataManager().
-     *
-     * @param nodeId The ID of the node to select.
+     * @param nodeId - The ID of the node to select.
      * @returns True if the node was found and selected, false if not found.
      */
     selectById(nodeId: string | number): boolean {
@@ -175,7 +185,6 @@ export class SelectionManager implements Manager {
     /**
      * Get the selection style layer.
      * This layer can be modified to customize the appearance of selected nodes.
-     *
      * @returns The selection style layer configuration.
      */
     getSelectionStyleLayer(): StyleLayerType {
@@ -185,8 +194,7 @@ export class SelectionManager implements Manager {
     /**
      * Update the selection style layer.
      * Use this to customize the appearance of selected nodes.
-     *
-     * @param layer The new selection style layer configuration.
+     * @param layer - The new selection style layer configuration.
      */
     setSelectionStyleLayer(layer: StyleLayerType): void {
         // Ensure the layer has the selection metadata
@@ -204,8 +212,7 @@ export class SelectionManager implements Manager {
      * Handle node removal.
      * Should be called when a node is removed from the graph.
      * If the removed node was selected, the selection is cleared.
-     *
-     * @param node The node being removed.
+     * @param node - The node being removed.
      */
     onNodeRemoved(node: Node): void {
         if (this.selectedNode === node) {
@@ -217,6 +224,8 @@ export class SelectionManager implements Manager {
 
     /**
      * Update the _selected property in node data and trigger style recalculation.
+     * @param node - The node to update
+     * @param selected - Whether the node is selected
      */
     private updateNodeSelectionData(node: Node, selected: boolean): void {
         // Update the node data

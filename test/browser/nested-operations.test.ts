@@ -316,7 +316,7 @@ describe("Nested Operations", () => {
         verifyNodeMeshShapes("sphere");
         verifyCircularLayoutGeometry();
         // Skip material check in 2D mode as mesh materials may differ
-        if (!skipMaterialCheck && !graph.is2D()) {
+        if (!skipMaterialCheck && graph.getViewMode() !== "2d") {
             verifyNodeMeshMaterials("#4CAF50");
         }
     }
@@ -341,7 +341,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we're in 3D mode initially
-            assert.isFalse(graph.is2D(), "Should start in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D mode");
 
             // Switch to 2D - internally calls updateLayoutDimension()
             await delay(10);
@@ -354,7 +354,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Should render correctly in 2D
-            assert.isTrue(graph.is2D(), "Should be in 2D mode after style change");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode after style change");
             assert.equal(graph.getNodeCount(), 3, "Should have 3 nodes");
             assert.equal(graph.getEdgeCount(), 2, "Should have 2 edges");
 
@@ -376,7 +376,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we're in 3D mode
-            assert.isFalse(graph.is2D(), "Should start in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D mode");
 
             // Switch to 2D
             await delay(10);
@@ -385,7 +385,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we switched to 2D - this proves the dimension change was processed
-            assert.isTrue(graph.is2D(), "Should have switched to 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should have switched to 2D mode");
         });
 
         it("should preserve node data when switching 2D/3D", async() => {
@@ -512,7 +512,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Should render correctly in final state (3D)
-            assert.isFalse(graph.is2D(), "Should be in 3D mode after rapid toggling");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode after rapid toggling");
             assert.equal(graph.getNodeCount(), 3, "Should have 3 nodes");
             assert.equal(graph.getEdgeCount(), 2, "Should have 2 edges");
             // Verify final styles are correct after rapid toggling
@@ -536,7 +536,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Should be in 2D mode
-            assert.isTrue(graph.is2D(), "Should settle to 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should settle to 2D mode");
 
             // Data should be intact
             assert.equal(graph.getNodeCount(), 3, "Should have 3 nodes");
@@ -548,7 +548,7 @@ describe("Nested Operations", () => {
 
             // Track mode changes
             const checkMode = (): void => {
-                modeChanges.push(graph.is2D());
+                modeChanges.push(graph.getViewMode() === "2d");
             };
 
             await graph.setLayout("circular");
@@ -569,7 +569,7 @@ describe("Nested Operations", () => {
             clearInterval(interval);
 
             // Final state should be 2D
-            assert.isTrue(graph.is2D(), "Should end in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should end in 2D mode");
         });
     });
 
@@ -649,7 +649,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify 3D mode
-            assert.isFalse(graph.is2D(), "Should start in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D mode");
 
             // Switch to 2D - should update camera and layout appropriately
             await graph.setStyleTemplate(createStyleTemplate({graph: {twoD: true}}));
@@ -657,7 +657,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify the mode switch completed successfully
-            assert.isTrue(graph.is2D(), "Should be in 2D mode after switch");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode after switch");
 
             // Verify data is intact
             assert.equal(graph.getNodeCount(), 3, "Should have 3 nodes");
@@ -699,7 +699,7 @@ describe("Nested Operations", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Should complete without deadlock or errors
-            assert.isTrue(graph.is2D(), "Should be in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode");
             assert.equal(graph.getNodeCount(), 3, "Should have 3 nodes");
             assert.equal(graph.getEdgeCount(), 2, "Should have 2 edges");
             verifyFinalStyles();
@@ -852,7 +852,7 @@ describe("Nested Operations", () => {
             assert.isBelow(elapsed, 5000, "Should complete without blocking");
 
             // State should be correct
-            assert.isTrue(graph.is2D(), "Should be in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode");
         });
     });
 });

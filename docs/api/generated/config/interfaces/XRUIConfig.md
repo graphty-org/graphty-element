@@ -2,7 +2,7 @@
 
 # Interface: XRUIConfig
 
-Defined in: [src/config/XRConfig.ts:12](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L12)
+Defined in: [src/config/XRConfig.ts:12](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L12)
 
 UI configuration for XR buttons
 
@@ -12,7 +12,7 @@ UI configuration for XR buttons
 
 > **enabled**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:17](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L17)
+Defined in: [src/config/XRConfig.ts:17](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L17)
 
 Enable or disable the XR UI buttons
 
@@ -28,7 +28,7 @@ true
 
 > **position**: `"top-right"` \| `"top-left"` \| `"bottom-left"` \| `"bottom-right"`
 
-Defined in: [src/config/XRConfig.ts:23](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L23)
+Defined in: [src/config/XRConfig.ts:23](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L23)
 
 Position of the XR buttons on screen
 
@@ -44,7 +44,7 @@ Position of the XR buttons on screen
 
 > **showAvailabilityWarning**: `boolean`
 
-Defined in: [src/config/XRConfig.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L37)
+Defined in: [src/config/XRConfig.ts:37](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L37)
 
 Show "VR / AR NOT AVAILABLE" warning when XR is not available
 When false, no message is displayed if AR/VR aren't available
@@ -61,7 +61,7 @@ false
 
 > **unavailableMessageDuration**: `number`
 
-Defined in: [src/config/XRConfig.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/XRConfig.ts#L30)
+Defined in: [src/config/XRConfig.ts:30](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/XRConfig.ts#L30)
 
 Duration in milliseconds to show "not available" message
 Set to 0 to keep message visible permanently

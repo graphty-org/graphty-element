@@ -99,17 +99,18 @@ export interface LlmProvider {
     readonly supportsSystemPromptWithTools?: boolean;
 
     /**
-   * Configure the provider with options.
-   */
+     * Configure the provider with options.
+     */
     configure(options: ProviderOptions): void;
 
     /**
-   * Generate a response from the LLM.
-   * @param messages - Conversation history
-   * @param tools - Available tools for the LLM to use
-   * @param options - Optional settings including abort signal
-   * @returns Promise resolving to the LLM response
-   */
+     * Generate a response from the LLM.
+     * @param messages - Conversation history
+     * @param tools - Available tools for the LLM to use
+     * @param options - Optional settings
+     * @param options.signal - Optional abort signal for cancellation
+     * @returns Promise resolving to the LLM response
+     */
     generate(
         messages: Message[],
         tools: ToolDefinition[],
@@ -117,12 +118,12 @@ export interface LlmProvider {
     ): Promise<LlmResponse>;
 
     /**
-   * Generate a streaming response from the LLM.
-   * @param messages - Conversation history
-   * @param tools - Available tools for the LLM to use
-   * @param callbacks - Callbacks for streaming events
-   * @param signal - Optional abort signal
-   */
+     * Generate a streaming response from the LLM.
+     * @param messages - Conversation history
+     * @param tools - Available tools for the LLM to use
+     * @param callbacks - Callbacks for streaming events
+     * @param signal - Optional abort signal
+     */
     generateStream(
         messages: Message[],
         tools: ToolDefinition[],
@@ -131,10 +132,10 @@ export interface LlmProvider {
     ): Promise<void>;
 
     /**
-   * Validate the configured API key by making a minimal API call.
-   * This consumes a small number of tokens but confirms the key is valid.
-   * @returns Promise resolving to true if valid, false if invalid
-   * @throws Error if not configured or network error occurs
-   */
+     * Validate the configured API key by making a minimal API call.
+     * This consumes a small number of tokens but confirms the key is valid.
+     * @returns Promise resolving to true if valid, false if invalid
+     * @throws Error if not configured or network error occurs
+     */
     validateApiKey(): Promise<boolean>;
 }

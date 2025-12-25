@@ -50,9 +50,7 @@ export interface LayoutInfo {
 
 /**
  * Get information about all registered layouts including their options schemas
- *
  * @returns Array of layout information objects
- *
  * @example
  * ```typescript
  * const layouts = getAllLayoutInfo();
@@ -86,9 +84,7 @@ export function getAllLayoutInfo(): LayoutInfo[] {
 
 /**
  * Get all layout Zod-based options schemas as a Map
- *
  * @returns Map of layout type to options schema
- *
  * @example
  * ```typescript
  * const schemas = getAllLayoutSchemas();

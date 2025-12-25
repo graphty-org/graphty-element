@@ -80,7 +80,7 @@ export const queryGraph: GraphCommand = {
                     const edgeCount = graph.getEdgeCount();
                     const layoutManager = graph.getLayoutManager();
                     const layout = layoutManager.layoutEngine?.type ?? "unknown";
-                    const is2D = graph.is2D();
+                    const is2D = graph.getViewMode() === "2d";
 
                     return Promise.resolve({
                         success: true,

@@ -5,6 +5,12 @@ import {
     WebXREnterExitUIButton,
 } from "@babylonjs/core";
 
+/**
+ * Creates and initializes XR (VR/AR) buttons for entering immersive mode.
+ * @param scene - Babylon.js scene to attach XR experience to
+ * @param camera - Camera to use for XR rendering
+ * @returns Promise resolving to WebXR experience or null if not supported
+ */
 export async function createXrButton(scene: Scene, camera: Camera): Promise<WebXRDefaultExperience | null> {
     const element = scene.getEngine().getInputElement();
     if (!element) {

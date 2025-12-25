@@ -132,6 +132,9 @@ export const setCameraPosition: GraphCommand = {
 
 /**
  * Find nodes matching a JMESPath selector (reused from StyleCommands).
+ * @param graph - The graph instance
+ * @param selector - JMESPath selector string
+ * @returns Array of matching node IDs
  */
 function findMatchingNodeIds(graph: Graph, selector: string): string[] {
     const dataManager = graph.getDataManager();

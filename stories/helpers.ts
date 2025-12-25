@@ -6,7 +6,6 @@
 import type {Meta} from "@storybook/web-components-vite";
 import isChromatic from "chromatic/isChromatic";
 import lodash from "lodash";
-// eslint-disable-next-line @typescript-eslint/unbound-method
 const {set: deepSet, merge} = lodash;
 
 import {type AdHocData, type CalculatedStyleConfig, type StyleLayerType, type StyleSchema, StyleTemplate} from "../src/config";

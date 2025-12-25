@@ -2,7 +2,7 @@
 
 # Interface: DataLoadingErrorSummaryEvent
 
-Defined in: [src/events.ts:104](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L104)
+Defined in: [src/events.ts:104](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L104)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:104](https://github.com/graphty-org/graphty-element/b
 
 > **detailedReport**: `string`
 
-Defined in: [src/events.ts:111](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L111)
+Defined in: [src/events.ts:111](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L111)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/events.ts:111](https://github.com/graphty-org/graphty-element/b
 
 > **format**: `string`
 
-Defined in: [src/events.ts:106](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L106)
+Defined in: [src/events.ts:106](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L106)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:106](https://github.com/graphty-org/graphty-element/b
 
 > **message**: `string`
 
-Defined in: [src/events.ts:109](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L109)
+Defined in: [src/events.ts:109](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L109)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/events.ts:109](https://github.com/graphty-org/graphty-element/b
 
 > `optional` **primaryCategory**: `string`
 
-Defined in: [src/events.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L108)
+Defined in: [src/events.ts:108](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L108)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [src/events.ts:108](https://github.com/graphty-org/graphty-element/b
 
 > `optional` **suggestion**: `string`
 
-Defined in: [src/events.ts:110](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L110)
+Defined in: [src/events.ts:110](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L110)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [src/events.ts:110](https://github.com/graphty-org/graphty-element/b
 
 > **totalErrors**: `number`
 
-Defined in: [src/events.ts:107](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L107)
+Defined in: [src/events.ts:107](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L107)
 
 ***
 
@@ -58,4 +58,4 @@ Defined in: [src/events.ts:107](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"data-loading-error-summary"`
 
-Defined in: [src/events.ts:105](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L105)
+Defined in: [src/events.ts:105](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L105)

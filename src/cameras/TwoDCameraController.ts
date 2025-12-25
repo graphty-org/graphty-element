@@ -23,11 +23,22 @@ export interface TwoDCameraControlsConfigType {
 }
 
 // === Camera Controller Class ===
+/**
+ * Controls a 2D orthographic camera with pan, zoom, and rotation support.
+ * Provides smooth inertia-based movement and keyboard controls.
+ */
 export class TwoDCameraController {
     public camera: FreeCamera;
     public parent: TransformNode;
     public velocity = {x: 0, y: 0, zoom: 0, rotate: 0};
 
+    /**
+     * Creates a new TwoDCameraController instance.
+     * @param scene - The Babylon.js scene
+     * @param engine - The Babylon.js engine (standard or WebGPU)
+     * @param canvas - The HTML canvas element
+     * @param config - Configuration options for 2D camera controls
+     */
     constructor(
         public scene: Scene,
         public engine: Engine | WebGPUEngine,
@@ -44,6 +55,10 @@ export class TwoDCameraController {
         this.camera.setTarget(Vector3.Zero());
     }
 
+    /**
+     * Updates the orthographic camera bounds based on size.
+     * @param size - The half-width of the orthographic view
+     */
     public updateOrtho(size: number): void {
         const aspect = this.engine.getRenderHeight() / this.engine.getRenderWidth();
         this.camera.orthoLeft = -size;
@@ -76,11 +91,20 @@ export class TwoDCameraController {
         this.updateOrthoAspectRatio();
     }
 
+    /**
+     * Pans the camera by a delta amount.
+     * @param dx - Horizontal pan delta
+     * @param dy - Vertical pan delta
+     */
     public pan(dx: number, dy: number): void {
         this.camera.position.x += dx;
         this.camera.position.y += dy;
     }
 
+    /**
+     * Zooms the camera by a multiplicative factor.
+     * @param factor - Zoom factor (greater than 1 zooms out, less than 1 zooms in)
+     */
     public zoom(factor: number): void {
         this.camera.orthoLeft = factor * (this.camera.orthoLeft ?? 1);
         this.camera.orthoRight = factor * (this.camera.orthoRight ?? 1);
@@ -88,10 +112,18 @@ export class TwoDCameraController {
         this.camera.orthoBottom = factor * (this.camera.orthoBottom ?? 1);
     }
 
+    /**
+     * Rotates the camera around the Z-axis.
+     * @param delta - Rotation delta in radians
+     */
     public rotate(delta: number): void {
         this.parent.rotation.z += delta;
     }
 
+    /**
+     * Applies velocity-based inertia to camera movement.
+     * Should be called each frame to update camera position based on velocity.
+     */
     public applyInertia(): void {
         const v = this.velocity;
         const c = this.config;
@@ -113,6 +145,11 @@ export class TwoDCameraController {
         v.rotate *= c.rotateDamping;
     }
 
+    /**
+     * Zooms the camera to fit a bounding box in view.
+     * @param min - The minimum corner of the bounding box
+     * @param max - The maximum corner of the bounding box
+     */
     public zoomToBoundingBox(min: Vector3, max: Vector3): void {
         const centerX = (min.x + max.x) / 2;
         const centerY = (min.y + max.y) / 2;

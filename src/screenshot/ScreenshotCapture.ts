@@ -17,6 +17,10 @@ import {ScreenshotError, ScreenshotErrorCode} from "./ScreenshotError.js";
 import {enableTransparentBackground, restoreBackground} from "./transparency.js";
 import type {ClipboardStatus, QualityEnhancementOptions, ScreenshotOptions, ScreenshotResult} from "./types.js";
 
+/**
+ * Handles screenshot capture for graph visualizations using Babylon.js rendering engine.
+ * Supports quality enhancement, transparent backgrounds, format conversion, and multiple output destinations.
+ */
 export class ScreenshotCapture {
     /**
      * Common mesh names used for skybox/PhotoDome meshes.
@@ -24,6 +28,13 @@ export class ScreenshotCapture {
      */
     private readonly skyboxMeshNames = ["testdome", "skybox", "skyBox", "Skybox"];
 
+    /**
+     * Creates a new ScreenshotCapture instance
+     * @param engine - The Babylon.js rendering engine
+     * @param scene - The Babylon.js scene to capture
+     * @param canvas - The HTML canvas element being rendered to
+     * @param graph - The graph instance for accessing layout and camera state
+     */
     constructor(
         private engine: Engine | WebGPUEngine,
         private scene: Scene,
@@ -54,6 +65,12 @@ export class ScreenshotCapture {
         return fallbackMesh ?? null;
     }
 
+    /**
+     * Captures a screenshot of the current scene with the specified options.
+     * Handles timing, camera state, quality enhancement, and output destinations.
+     * @param options - Screenshot configuration options
+     * @returns Screenshot result with blob, metadata, and destination status
+     */
     async captureScreenshot(options: ScreenshotOptions = {}): Promise<ScreenshotResult> {
         // Check if we should wait for other operations (default: true)
         const waitForOperations = options.timing?.waitForOperations ?? true;
@@ -296,6 +313,7 @@ export class ScreenshotCapture {
      * Waits for any pending operations in the operation queue to complete.
      * Since the screenshot operation is queued, this is handled automatically
      * by the queue - all previous operations complete before this one starts.
+     * @returns Promise that resolves when all operations are complete
      * @internal
      */
     private async waitForOperations(): Promise<void> {
@@ -310,6 +328,7 @@ export class ScreenshotCapture {
      * If no layout engine is active or it's already settled, returns immediately.
      * Throws ScreenshotError with LAYOUT_SETTLE_TIMEOUT if the layout doesn't settle
      * within the configured timeout (SCREENSHOT_CONSTANTS.LAYOUT_SETTLE_TIMEOUT_MS).
+     * @returns Promise that resolves when layout has settled
      * @internal
      */
     private async waitForLayoutSettle(): Promise<void> {
@@ -628,6 +647,11 @@ export class ScreenshotCapture {
     /**
      * Enable quality enhancement using supersampling and optional MSAA/FXAA.
      * Returns the enhancement state so it can be removed after capture.
+     * @param options - Quality enhancement configuration
+     * @param dimensions - Target output dimensions
+     * @param dimensions.width - Target width in pixels
+     * @param dimensions.height - Target height in pixels
+     * @returns Enhancement state object for cleanup
      */
     private enableQualityEnhancement(
         options: QualityEnhancementOptions,
@@ -677,7 +701,8 @@ export class ScreenshotCapture {
     }
 
     /**
-     * Remove quality enhancement after capture
+     * Remove quality enhancement after capture and clean up resources
+     * @param state - Enhancement state to dispose
      */
     private disableQualityEnhancement(state: EnhancementState): void {
         if (state.pipeline) {

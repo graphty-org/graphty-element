@@ -32,14 +32,19 @@ export class VercelAiProvider implements LlmProvider {
     private temperature?: number;
     private providerType: VercelProviderType;
 
+    /**
+     * Creates a new VercelAiProvider instance.
+     * @param providerType - Type of provider (openai, anthropic, or google)
+     */
     constructor(providerType: VercelProviderType) {
         this.name = providerType;
         this.providerType = providerType;
     }
 
     /**
-   * Configure the provider with options.
-   */
+     * Configure the provider with options.
+     * @param options - Provider configuration options
+     */
     configure(options: ProviderOptions): void {
         this.apiKey = options.apiKey;
         this.model = options.model;
@@ -49,8 +54,9 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Get the configured model for the Vercel AI SDK.
-   */
+     * Get the configured model for the Vercel AI SDK.
+     * @returns Language model instance
+     */
     private getModel(): LanguageModel {
         if (!this.apiKey) {
             throw new Error(`API key not configured for ${this.name}`);
@@ -83,8 +89,13 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Generate a response from the LLM.
-   */
+     * Generate a response from the LLM.
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param options - Generation options
+     * @param options.signal - Optional abort signal
+     * @returns Promise resolving to LLM response
+     */
     async generate(
         messages: Message[],
         tools: ToolDefinition[],
@@ -114,8 +125,12 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Generate a streaming response from the LLM.
-   */
+     * Generate a streaming response from the LLM.
+     * @param messages - Conversation messages
+     * @param tools - Available tools for the LLM
+     * @param callbacks - Streaming callbacks for text and tool calls
+     * @param signal - Optional abort signal
+     */
     async generateStream(
         messages: Message[],
         tools: ToolDefinition[],
@@ -206,6 +221,8 @@ export class VercelAiProvider implements LlmProvider {
 
     /**
      * Convert our Message format to Vercel AI SDK's ModelMessage format.
+     * @param messages - Messages to convert
+     * @returns Array of ModelMessage objects
      */
     private convertMessages(messages: Message[]): ModelMessage[] {
         return messages.map((msg): ModelMessage => {
@@ -250,10 +267,12 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Convert our ToolDefinition format to Vercel AI SDK's tool format.
-   * We create plain tool objects to avoid complex generic inference issues with the AI SDK's
-   * tool() helper function which causes "Type instantiation is excessively deep" errors.
-   */
+     * Convert our ToolDefinition format to Vercel AI SDK's tool format.
+     * We create plain tool objects to avoid complex generic inference issues with the AI SDK's
+     * tool() helper function which causes "Type instantiation is excessively deep" errors.
+     * @param tools - Tool definitions to convert
+     * @returns Record mapping tool names to Tool objects
+     */
     private convertTools(tools: ToolDefinition[]): Record<string, Tool> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result: Record<string, any> = {};
@@ -271,8 +290,10 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Convert Vercel AI SDK tool calls to our ToolCall format.
-   */
+     * Convert Vercel AI SDK tool calls to our ToolCall format.
+     * @param toolCalls - Tool calls from Vercel AI SDK
+     * @returns Array of ToolCall objects
+     */
     private convertToolCalls(
         toolCalls: {toolCallId: string, toolName: string, input?: unknown, args?: unknown}[] | undefined,
     ): ToolCall[] {
@@ -288,11 +309,11 @@ export class VercelAiProvider implements LlmProvider {
     }
 
     /**
-   * Validate the configured API key by making a minimal API call.
-   * This sends a simple prompt to verify the key works.
-   * @returns Promise resolving to true if valid, false if invalid
-   * @throws Error if not configured or network error occurs
-   */
+     * Validate the configured API key by making a minimal API call.
+     * This sends a simple prompt to verify the key works.
+     * @returns Promise resolving to true if valid, false if invalid
+     * @throws Error if not configured or network error occurs
+     */
     async validateApiKey(): Promise<boolean> {
         try {
             await this.generate(

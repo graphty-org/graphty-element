@@ -1,7 +1,6 @@
 /**
  * Server-side logging utilities.
  * These are only meant to be run in Node.js, not in the browser.
- *
  * @module logging/server
  */
 

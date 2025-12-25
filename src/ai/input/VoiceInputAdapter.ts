@@ -59,6 +59,7 @@ declare global {
 
 /**
  * Get the SpeechRecognition constructor if available.
+ * @returns SpeechRecognition constructor or null if not supported
  */
 function getSpeechRecognitionConstructor(): SpeechRecognitionConstructor | null {
     if (typeof window === "undefined") {
@@ -84,14 +85,25 @@ export class VoiceInputAdapter implements InputAdapter {
     private startCallbacks: VoiceStartCallback[] = [];
     private SpeechRecognitionCtor: SpeechRecognitionConstructor | null = null;
 
+    /**
+     * Creates a new VoiceInputAdapter instance.
+     */
     constructor() {
         this.SpeechRecognitionCtor = getSpeechRecognitionConstructor();
     }
 
+    /**
+     * Check if voice input is supported in this browser.
+     * @returns True if Web Speech API is available
+     */
     get isSupported(): boolean {
         return this.SpeechRecognitionCtor !== null;
     }
 
+    /**
+     * Get whether voice input is currently active.
+     * @returns True if listening for voice input
+     */
     get isActive(): boolean {
         return this._isActive;
     }
@@ -196,6 +208,8 @@ export class VoiceInputAdapter implements InputAdapter {
 
     /**
      * Notify start callbacks and clear them (one-shot).
+     * @param started - Whether voice input started successfully
+     * @param error - Optional error message if start failed
      */
     private notifyStart(started: boolean, error?: string): void {
         for (const callback of this.startCallbacks) {
@@ -207,6 +221,7 @@ export class VoiceInputAdapter implements InputAdapter {
 
     /**
      * Handle speech recognition results.
+     * @param event - Speech recognition event containing results
      */
     private handleResult(event: SpeechRecognitionEvent): void {
         // Process results starting from the new ones

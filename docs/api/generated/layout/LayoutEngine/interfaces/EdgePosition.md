@@ -2,7 +2,7 @@
 
 # Interface: EdgePosition
 
-Defined in: [src/layout/LayoutEngine.ts:13](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L13)
+Defined in: [src/layout/LayoutEngine.ts:13](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L13)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/layout/LayoutEngine.ts:13](https://github.com/graphty-org/graph
 
 > **dst**: [`Position`](Position.md)
 
-Defined in: [src/layout/LayoutEngine.ts:15](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L15)
+Defined in: [src/layout/LayoutEngine.ts:15](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L15)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [src/layout/LayoutEngine.ts:15](https://github.com/graphty-org/graph
 
 > **src**: [`Position`](Position.md)
 
-Defined in: [src/layout/LayoutEngine.ts:14](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L14)
+Defined in: [src/layout/LayoutEngine.ts:14](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L14)

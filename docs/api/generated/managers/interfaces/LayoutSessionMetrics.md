@@ -2,7 +2,7 @@
 
 # Interface: LayoutSessionMetrics
 
-Defined in: [src/managers/StatsManager.ts:70](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L70)
+Defined in: [src/managers/StatsManager.ts:70](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L70)
 
 Layout session performance metrics
 Tracks the complete layout session from start to settlement
@@ -13,7 +13,7 @@ Tracks the complete layout session from start to settlement
 
 > **blockingOverhead**: `number`
 
-Defined in: [src/managers/StatsManager.ts:77](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L77)
+Defined in: [src/managers/StatsManager.ts:77](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L77)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [src/managers/StatsManager.ts:77](https://github.com/graphty-org/gra
 
 > **endTime**: `number`
 
-Defined in: [src/managers/StatsManager.ts:72](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L72)
+Defined in: [src/managers/StatsManager.ts:72](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L72)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [src/managers/StatsManager.ts:72](https://github.com/graphty-org/gra
 
 > **frameCount**: `number`
 
-Defined in: [src/managers/StatsManager.ts:74](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L74)
+Defined in: [src/managers/StatsManager.ts:74](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L74)
 
 ***
 
@@ -37,7 +37,7 @@ Defined in: [src/managers/StatsManager.ts:74](https://github.com/graphty-org/gra
 
 > **percentages**: `object`
 
-Defined in: [src/managers/StatsManager.ts:78](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L78)
+Defined in: [src/managers/StatsManager.ts:78](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L78)
 
 #### blocking
 
@@ -57,7 +57,7 @@ Defined in: [src/managers/StatsManager.ts:78](https://github.com/graphty-org/gra
 
 > **perFrame**: `object`
 
-Defined in: [src/managers/StatsManager.ts:83](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L83)
+Defined in: [src/managers/StatsManager.ts:83](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L83)
 
 #### blocking
 
@@ -81,7 +81,7 @@ Defined in: [src/managers/StatsManager.ts:83](https://github.com/graphty-org/gra
 
 > **startTime**: `number`
 
-Defined in: [src/managers/StatsManager.ts:71](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L71)
+Defined in: [src/managers/StatsManager.ts:71](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L71)
 
 ***
 
@@ -89,7 +89,7 @@ Defined in: [src/managers/StatsManager.ts:71](https://github.com/graphty-org/gra
 
 > **totalCpuTime**: `number`
 
-Defined in: [src/managers/StatsManager.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L75)
+Defined in: [src/managers/StatsManager.ts:75](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L75)
 
 ***
 
@@ -97,7 +97,7 @@ Defined in: [src/managers/StatsManager.ts:75](https://github.com/graphty-org/gra
 
 > **totalElapsed**: `number`
 
-Defined in: [src/managers/StatsManager.ts:73](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L73)
+Defined in: [src/managers/StatsManager.ts:73](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L73)
 
 ***
 
@@ -105,4 +105,4 @@ Defined in: [src/managers/StatsManager.ts:73](https://github.com/graphty-org/gra
 
 > **totalGpuTime**: `number`
 
-Defined in: [src/managers/StatsManager.ts:76](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L76)
+Defined in: [src/managers/StatsManager.ts:76](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L76)

@@ -21,6 +21,10 @@ interface NodeOpts {
     pinOnDrag?: boolean;
 }
 
+/**
+ * Represents a node in the graph visualization with its mesh, label, and associated data.
+ * Manages node rendering, styling, drag behavior, and interactions with the layout engine.
+ */
 export class Node {
     parentGraph: Graph | GraphContext;
     opts: NodeOpts;
@@ -39,6 +43,7 @@ export class Node {
 
     /**
      * Helper to check if we're using GraphContext
+     * @returns The GraphContext instance from the parent graph
      */
     private get context(): GraphContext {
         // Check if parentGraph has GraphContext methods
@@ -50,6 +55,14 @@ export class Node {
         return this.parentGraph;
     }
 
+    /**
+     * Creates a new Node instance with mesh, label, and behaviors.
+     * @param graph - The parent graph or graph context that owns this node
+     * @param nodeId - Unique identifier for this node
+     * @param styleId - Style identifier determining the node's visual appearance
+     * @param data - Custom data associated with this node
+     * @param opts - Optional configuration options for the node
+     */
     constructor(graph: Graph | GraphContext, nodeId: NodeIdType, styleId: NodeStyleId, data: AdHocData<string | number>, opts: NodeOpts = {}) {
         this.parentGraph = graph;
         this.id = nodeId;
@@ -103,10 +116,18 @@ export class Node {
         NodeBehavior.addDefaultBehaviors(this, this.opts);
     }
 
+    /**
+     * Adds a calculated style value to this node's change manager.
+     * @param cv - The calculated value to add to the node's styling system
+     */
     addCalculatedStyle(cv: CalculatedValue): void {
         this.changeManager.addCalculatedValue(cv);
     }
 
+    /**
+     * Updates the node's mesh position and style based on layout engine and style changes.
+     * Handles mesh recreation if disposed and applies any pending style updates.
+     */
     update(): void {
         this.context.getStatsManager().startMeasurement("Node.update");
 
@@ -148,6 +169,11 @@ export class Node {
         this.context.getStatsManager().endMeasurement("Node.update");
     }
 
+    /**
+     * Updates the node's visual style by recreating the mesh with the specified style.
+     * Preserves the node's position and reattaches behaviors and labels.
+     * @param styleId - The new style identifier to apply to the node
+     */
     updateStyle(styleId: NodeStyleId): void {
         this.context.getStatsManager().startMeasurement("Node.updateMesh");
 
@@ -235,10 +261,16 @@ export class Node {
         this.context.getStatsManager().endMeasurement("Node.updateMesh");
     }
 
+    /**
+     * Pins the node in place, preventing the layout engine from moving it.
+     */
     pin(): void {
         this.context.getLayoutManager().layoutEngine?.pin(this);
     }
 
+    /**
+     * Unpins the node, allowing the layout engine to move it again.
+     */
     unpin(): void {
         this.context.getLayoutManager().layoutEngine?.unpin(this);
     }
@@ -379,6 +411,10 @@ export class Node {
     }
 
     // Test helper methods
+    /**
+     * Gets the current 3D position of the node's mesh.
+     * @returns An object containing the x, y, and z coordinates of the node
+     */
     getPosition(): {x: number, y: number, z: number} {
         return {
             x: this.mesh.position.x,
@@ -387,11 +423,19 @@ export class Node {
         };
     }
 
+    /**
+     * Checks whether the node is currently pinned in place.
+     * @returns True if the node is pinned, false otherwise
+     */
     isPinned(): boolean {
         // For now, nodes are not pinned unless drag behavior is disabled
         return false;
     }
 
+    /**
+     * Checks whether the node is currently selected.
+     * @returns True if the node is selected, false otherwise
+     */
     isSelected(): boolean {
         // Check if node is in selection - this is a simplified version
         // In reality, selection state would be managed by a selection manager

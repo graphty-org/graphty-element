@@ -3,6 +3,10 @@ import Hammer from "hammerjs";
 
 import {OrbitCameraController, OrbitConfig} from "./OrbitCameraController";
 
+/**
+ * Handles user input for the orbit camera controller.
+ * Processes mouse, touch, and keyboard input for camera manipulation.
+ */
 export class OrbitInputController {
     private canvas: HTMLCanvasElement;
     private controller: OrbitCameraController;
@@ -51,6 +55,11 @@ export class OrbitInputController {
         this.keysDown[evt.key.toLowerCase()] = false;
     };
 
+    /**
+     * Creates a new OrbitInputController instance.
+     * @param canvas - The HTML canvas element to attach input listeners to
+     * @param controller - The orbit camera controller to manipulate
+     */
     constructor(canvas: HTMLCanvasElement, controller: OrbitCameraController) {
         this.canvas = canvas;
         this.controller = controller;
@@ -91,6 +100,10 @@ export class OrbitInputController {
         });
     }
 
+    /**
+     * Enables input handling by attaching event listeners.
+     * Idempotent - can be called multiple times safely.
+     */
     public enable(): void {
         if (this.enabled) {
             return;
@@ -112,6 +125,10 @@ export class OrbitInputController {
         }
     }
 
+    /**
+     * Disables input handling by removing event listeners.
+     * Idempotent - can be called multiple times safely.
+     */
     public disable(): void {
         if (!this.enabled) {
             return;
@@ -132,6 +149,10 @@ export class OrbitInputController {
         }
     }
 
+    /**
+     * Updates camera based on keyboard input and applies inertia.
+     * Should be called each frame in the render loop.
+     */
     public update(): void {
         if (!this.enabled) {
             return;

@@ -20,6 +20,10 @@ export interface DataSourceChunk {
     edges: AdHocData[];
 }
 
+/**
+ * Base class for all data source implementations that load graph data from various formats.
+ * Provides common functionality for validation, chunking, error handling, and data fetching.
+ */
 export abstract class DataSource {
     static readonly type: string;
     static readonly DEFAULT_CHUNK_SIZE = 1000;
@@ -29,6 +33,11 @@ export abstract class DataSource {
     protected errorAggregator: ErrorAggregator;
     protected chunkSize: number;
 
+    /**
+     * Creates a new DataSource instance.
+     * @param errorLimit - Maximum number of errors before stopping data processing
+     * @param chunkSize - Number of nodes to process per chunk
+     */
     constructor(errorLimit = 100, chunkSize = DataSource.DEFAULT_CHUNK_SIZE) {
         this.errorAggregator = new ErrorAggregator(errorLimit);
         this.chunkSize = chunkSize;
@@ -45,6 +54,7 @@ export abstract class DataSource {
 
     /**
      * Standardized error message templates
+     * @returns Object containing error message template functions
      */
     protected get errorMessages(): {
         missingInput: () => string;
@@ -74,6 +84,10 @@ export abstract class DataSource {
     /**
      * Fetch with retry logic and timeout
      * Protected method for use by all DataSources
+     * @param url - URL to fetch from
+     * @param retries - Number of retry attempts on failure
+     * @param timeout - Timeout in milliseconds for each attempt
+     * @returns Promise resolving to the fetch Response
      */
     protected async fetchWithRetry(
         url: string,
@@ -134,6 +148,7 @@ export abstract class DataSource {
     /**
      * Shared method to get content from data, file, or URL
      * Subclasses should call this instead of implementing their own
+     * @returns Promise resolving to the content string
      */
     protected async getContent(): Promise<string> {
         const config = this.getConfig();
@@ -157,6 +172,9 @@ export abstract class DataSource {
     /**
      * Shared chunking helper
      * Yields nodes in chunks, with all edges in the first chunk
+     * @param nodes - Array of node data objects
+     * @param edges - Array of edge data objects
+     * @yields DataSourceChunk objects containing chunked nodes and edges
      */
     protected *chunkData(
         nodes: AdHocData[],
@@ -177,11 +195,17 @@ export abstract class DataSource {
 
     /**
      * Get the error aggregator for this data source
+     * @returns The ErrorAggregator instance tracking validation errors
      */
     getErrorAggregator(): ErrorAggregator {
         return this.errorAggregator;
     }
 
+    /**
+     * Fetches, validates, and yields graph data in chunks.
+     * Filters out invalid nodes and edges based on schema validation.
+     * @yields DataSourceChunk objects containing validated nodes and edges
+     */
     async *getData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         for await (const chunk of this.sourceFetchData()) {
             // Filter out invalid nodes
@@ -227,6 +251,9 @@ export abstract class DataSource {
      * Validate data against schema
      * Returns false if validation fails (and adds error to aggregator)
      * Returns true if validation succeeds
+     * @param schema - Zod schema to validate against
+     * @param obj - Data object to validate
+     * @returns Promise resolving to true if validation succeeds, false otherwise
      */
     async dataValidator(schema: z4.$ZodObject, obj: object): Promise<boolean> {
         const res = await z4.safeParseAsync(schema, obj);
@@ -245,10 +272,19 @@ export abstract class DataSource {
         return true; // Validation passed
     }
 
+    /**
+     * Gets the type identifier for this data source instance.
+     * @returns The type string identifier
+     */
     get type(): string {
         return (this.constructor as typeof DataSource).type;
     }
 
+    /**
+     * Registers a data source class with the registry.
+     * @param cls - The data source class to register
+     * @returns The registered class for chaining
+     */
     static register<T extends DataSourceClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
@@ -256,6 +292,12 @@ export abstract class DataSource {
         return cls;
     }
 
+    /**
+     * Creates a data source instance by type name.
+     * @param type - The registered type identifier
+     * @param opts - Configuration options for the data source
+     * @returns A new data source instance or null if type not found
+     */
     static get(type: string, opts: object = {}): DataSource | null {
         const SourceClass = dataSourceRegistry.get(type);
         if (SourceClass) {
@@ -267,10 +309,8 @@ export abstract class DataSource {
 
     /**
      * Get all registered data source types.
-     *
      * @returns Array of registered data source type names
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const types = DataSource.getRegisteredTypes();

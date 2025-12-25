@@ -15,7 +15,17 @@ export interface ContentArea {
     height: number;
 }
 
+/**
+ * Renders speech bubble pointers for label callouts
+ */
 export class PointerRenderer {
+    /**
+     * Creates a speech bubble path with pointer in clockwise direction
+     * @param ctx - Canvas rendering context
+     * @param contentArea - Content area dimensions
+     * @param radius - Corner radius
+     * @param pointerOptions - Pointer configuration options
+     */
     createSpeechBubblePath(
         ctx: CanvasRenderingContext2D,
         contentArea: ContentArea,
@@ -43,6 +53,13 @@ export class PointerRenderer {
         }
     }
 
+    /**
+     * Creates a speech bubble path with pointer in counter-clockwise direction
+     * @param ctx - Canvas rendering context
+     * @param contentArea - Content area dimensions
+     * @param radius - Corner radius
+     * @param pointerOptions - Pointer configuration options
+     */
     createSpeechBubblePathCCW(
         ctx: CanvasRenderingContext2D,
         contentArea: ContentArea,

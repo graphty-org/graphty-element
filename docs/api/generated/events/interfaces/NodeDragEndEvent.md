@@ -2,7 +2,7 @@
 
 # Interface: NodeDragEndEvent
 
-Defined in: [src/events.ts:183](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L183)
+Defined in: [src/events.ts:183](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L183)
 
 Emitted when a node drag operation ends.
 
@@ -16,7 +16,7 @@ Emitted when a node drag operation ends.
 
 > **node**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/events.ts:185](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L185)
+Defined in: [src/events.ts:185](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L185)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/events.ts:185](https://github.com/graphty-org/graphty-element/b
 
 > **position**: `object`
 
-Defined in: [src/events.ts:186](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L186)
+Defined in: [src/events.ts:186](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L186)
 
 #### x
 
@@ -44,4 +44,4 @@ Defined in: [src/events.ts:186](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"node-drag-end"`
 
-Defined in: [src/events.ts:184](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L184)
+Defined in: [src/events.ts:184](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L184)

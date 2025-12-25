@@ -2,7 +2,7 @@
 
 # Interface: GraphDataAddedEvent
 
-Defined in: [src/events.ts:45](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L45)
+Defined in: [src/events.ts:45](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L45)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:45](https://github.com/graphty-org/graphty-element/bl
 
 > **count**: `number`
 
-Defined in: [src/events.ts:48](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L48)
+Defined in: [src/events.ts:48](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L48)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/events.ts:48](https://github.com/graphty-org/graphty-element/bl
 
 > **dataType**: `"nodes"` \| `"edges"`
 
-Defined in: [src/events.ts:47](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L47)
+Defined in: [src/events.ts:47](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L47)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/events.ts:47](https://github.com/graphty-org/graphty-element/bl
 
 > **shouldStartLayout**: `boolean`
 
-Defined in: [src/events.ts:49](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L49)
+Defined in: [src/events.ts:49](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L49)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/events.ts:49](https://github.com/graphty-org/graphty-element/bl
 
 > **shouldZoomToFit**: `boolean`
 
-Defined in: [src/events.ts:50](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L50)
+Defined in: [src/events.ts:50](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L50)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [src/events.ts:50](https://github.com/graphty-org/graphty-element/bl
 
 > **type**: `"data-added"`
 
-Defined in: [src/events.ts:46](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L46)
+Defined in: [src/events.ts:46](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L46)

@@ -4,7 +4,7 @@
 
 > **safeParseOptions**\<`S`\>(`optionsSchema`, `options`): [`SafeParseResult`](../type-aliases/SafeParseResult.md)\<[`InferOptions`](../type-aliases/InferOptions.md)\<`S`\>\>
 
-Defined in: [src/config/OptionsSchema.ts:142](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/config/OptionsSchema.ts#L142)
+Defined in: [src/config/OptionsSchema.ts:147](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/config/OptionsSchema.ts#L147)
 
 Safely parse options, returning a result object instead of throwing
 
@@ -20,9 +20,13 @@ Safely parse options, returning a result object instead of throwing
 
 `S`
 
+Options schema to validate against
+
 ### options
 
 [`PartialOptions`](../type-aliases/PartialOptions.md)\<`S`\>
+
+Partial options to parse and validate
 
 ## Returns
 

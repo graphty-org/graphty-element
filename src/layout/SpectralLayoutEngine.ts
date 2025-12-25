@@ -41,6 +41,9 @@ export const SpectralLayoutConfig = z.strictObject({
 export type SpectralLayoutConfigType = z.infer<typeof SpectralLayoutConfig>;
 export type SpectralLayoutOpts = Partial<SpectralLayoutConfigType>;
 
+/**
+ * Spectral layout engine using graph Laplacian eigenvectors
+ */
 export class SpectralLayout extends SimpleLayoutEngine {
     static type = "spectral";
     static maxDimensions = 2;
@@ -48,11 +51,20 @@ export class SpectralLayout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: SpectralLayoutConfigType;
 
+    /**
+     * Create a spectral layout engine
+     * @param opts - Configuration options including scale and center
+     */
     constructor(opts: SpectralLayoutOpts) {
         super(opts);
         this.config = SpectralLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for spectral layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter or null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Spectral layout only supports 2D
         if (dimension > this.maxDimensions) {
@@ -62,6 +74,9 @@ export class SpectralLayout extends SimpleLayoutEngine {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions using spectral graph theory
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

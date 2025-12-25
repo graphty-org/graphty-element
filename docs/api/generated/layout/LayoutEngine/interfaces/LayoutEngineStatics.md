@@ -2,7 +2,7 @@
 
 # Interface: LayoutEngineStatics
 
-Defined in: [src/layout/LayoutEngine.ts:25](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L25)
+Defined in: [src/layout/LayoutEngine.ts:25](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L25)
 
 Interface for LayoutEngine class static members
 Exported for use in type annotations when referencing layout classes
@@ -13,7 +13,7 @@ Exported for use in type annotations when referencing layout classes
 
 > **maxDimensions**: `number`
 
-Defined in: [src/layout/LayoutEngine.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L27)
+Defined in: [src/layout/LayoutEngine.ts:27](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L27)
 
 ***
 
@@ -21,7 +21,7 @@ Defined in: [src/layout/LayoutEngine.ts:27](https://github.com/graphty-org/graph
 
 > **type**: `string`
 
-Defined in: [src/layout/LayoutEngine.ts:26](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L26)
+Defined in: [src/layout/LayoutEngine.ts:26](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L26)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: [src/layout/LayoutEngine.ts:26](https://github.com/graphty-org/graph
 
 > `optional` **zodOptionsSchema**: [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/layout/LayoutEngine.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L28)
+Defined in: [src/layout/LayoutEngine.ts:28](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L28)
 
 ## Methods
 
@@ -37,7 +37,7 @@ Defined in: [src/layout/LayoutEngine.ts:28](https://github.com/graphty-org/graph
 
 > **getZodOptionsSchema**(): [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/layout/LayoutEngine.ts:29](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L29)
+Defined in: [src/layout/LayoutEngine.ts:29](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L29)
 
 #### Returns
 
@@ -49,7 +49,7 @@ Defined in: [src/layout/LayoutEngine.ts:29](https://github.com/graphty-org/graph
 
 > **hasZodOptions**(): `boolean`
 
-Defined in: [src/layout/LayoutEngine.ts:30](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L30)
+Defined in: [src/layout/LayoutEngine.ts:30](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L30)
 
 #### Returns
 

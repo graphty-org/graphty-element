@@ -9,7 +9,10 @@ export interface CaptureEstimate {
 }
 
 /**
- * Estimates performance and potential issues for animation capture
+ * Estimates performance and potential issues for animation capture.
+ * Predicts frame drops and provides recommendations based on resolution and FPS.
+ * @param options - Animation options to analyze
+ * @returns Capture estimate with warnings and recommendations
  */
 export function estimateAnimationCapture(
     options: Pick<AnimationOptions, "duration" | "fps" | "width" | "height">,

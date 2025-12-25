@@ -49,7 +49,14 @@ export interface ArrowGeometry {
     scaleFactor?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+/**
+ * Factory class for creating edge meshes and arrow heads
+ *
+ * Handles creation of various edge types including solid lines, patterned lines,
+ * bezier curves, and different arrow head styles. Manages 2D/3D rendering modes
+ * and mesh caching for performance optimization.
+ */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class -- Static factory class for edge mesh creation
 export class EdgeMesh {
     private static readonly UNIT_VECTOR_POINTS = [0, 0, -0.5, 0, 0, 0.5];
     private static shadersRegistered = false;
@@ -201,7 +208,6 @@ void main() {
      * 2D mode is enabled when BOTH conditions are met:
      * 1. Camera is in orthographic mode
      * 2. Graph has twoD metadata set to true
-     *
      * @param scene - Babylon.js scene
      * @returns true if 2D mode should be used
      */
@@ -229,7 +235,6 @@ void main() {
      *
      * Solid lines in 3D mode are cached via MeshCache for performance.
      * Bezier curves and patterned lines are created per-edge (no caching).
-     *
      * @param cache - MeshCache instance for caching reusable meshes
      * @param options - Edge mesh options including styleId, width, and color
      * @param style - Full edge style configuration
@@ -334,7 +339,6 @@ void main() {
      *
      * In 2D mode, uses StandardMaterial with XY rotation.
      * In 3D mode, uses shader-based billboard rendering.
-     *
      * @param _cache - MeshCache instance (currently unused, kept for API compatibility)
      * @param _styleId - Style ID (currently unused, kept for API compatibility)
      * @param options - Arrow head options including type, width, color, size, and opacity
@@ -391,6 +395,13 @@ void main() {
      * Create a filled arrow base mesh using FilledArrowRenderer
      * Returns a cached mesh template with thin instance support.
      * lineDirection is set per-instance when creating thin instances.
+     * @param type - Arrow type (normal, inverted, diamond, etc.)
+     * @param length - Arrow length in world units
+     * @param width - Arrow width in world units
+     * @param color - Arrow color as hex string
+     * @param opacity - Arrow opacity (0-1)
+     * @param scene - Babylon.js scene
+     * @returns Created arrow mesh
      */
     private static createFilledArrow(
         type: string,
@@ -669,7 +680,6 @@ void main() {
 
     /**
      * Gets the default arrow width based on constants.
-     *
      * @returns The default arrow width value from EDGE_CONSTANTS
      */
     static calculateArrowWidth(): number {
@@ -678,7 +688,6 @@ void main() {
 
     /**
      * Gets the default arrow length based on constants.
-     *
      * @returns The default arrow length value from EDGE_CONSTANTS
      */
     static calculateArrowLength(): number {
@@ -688,6 +697,8 @@ void main() {
     /**
      * Get geometry metadata for an arrow type
      * This is the single source of truth for arrow positioning and line length calculations
+     * @param arrowType - The arrow type to get geometry metadata for
+     * @returns Arrow geometry configuration including positioning mode and offsets
      */
     static getArrowGeometry(arrowType: string): ArrowGeometry {
         switch (arrowType) {
@@ -746,6 +757,11 @@ void main() {
 
     /**
      * Calculate arrow mesh position given surface point and arrow properties
+     * @param surfacePoint - Point on the node surface where arrow should be positioned
+     * @param direction - Direction vector from surface to arrow
+     * @param arrowLength - Length of the arrow in world units
+     * @param geometry - Arrow geometry configuration
+     * @returns Calculated position for the arrow mesh
      */
     static calculateArrowPosition(
         surfacePoint: Vector3,
@@ -769,6 +785,11 @@ void main() {
 
     /**
      * Calculate where the line should end given arrow properties
+     * @param surfacePoint - Point on the node surface
+     * @param direction - Direction vector from surface outward
+     * @param arrowLength - Length of the arrow in world units
+     * @param geometry - Arrow geometry configuration
+     * @returns Calculated endpoint for the line segment
      */
     static calculateLineEndpoint(
         surfacePoint: Vector3,
@@ -791,7 +812,6 @@ void main() {
      *
      * Note: This method is used for straight-line edges only.
      * Bezier curves have their geometry baked in world coordinates.
-     *
      * @param mesh - The edge mesh to transform
      * @param srcPoint - The source point (start of edge)
      * @param dstPoint - The destination point (end of edge)
@@ -856,6 +876,9 @@ void main() {
     /**
      * Calculate automatic control points for natural curve
      * Creates a perpendicular offset from the midpoint for a smooth arc
+     * @param src - Source point of the curve
+     * @param dst - Destination point of the curve
+     * @returns Tuple of two control points for the bezier curve
      */
     private static calculateControlPoints(src: Vector3, dst: Vector3): [Vector3, Vector3] {
         const direction = dst.subtract(src);
@@ -886,6 +909,12 @@ void main() {
 
     /**
      * Cubic Bezier formula: B(t) = (1-t)³P₀ + 3(1-t)²tP₁ + 3(1-t)t²P₂ + t³P₃
+     * @param t - Interpolation parameter (0-1)
+     * @param p0 - Start point
+     * @param p1 - First control point
+     * @param p2 - Second control point
+     * @param p3 - End point
+     * @returns Interpolated point on the bezier curve
      */
     private static cubicBezier(
         t: number,
@@ -908,6 +937,8 @@ void main() {
 
     /**
      * Create a self-loop curve (circular arc) when source === destination
+     * @param center - Center point for the self-loop
+     * @returns Flat array of coordinates forming a circular arc
      */
     private static createSelfLoopCurve(center: Vector3): number[] {
         const radius = 2.0; // Loop radius

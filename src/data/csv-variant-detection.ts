@@ -21,6 +21,8 @@ export interface CSVVariantInfo {
 
 /**
  * Detect CSV variant from headers and sample data
+ * @param headers - Array of column header names
+ * @returns Information about the detected CSV variant including column mappings
  */
 export function detectCSVVariant(
     headers: string[],

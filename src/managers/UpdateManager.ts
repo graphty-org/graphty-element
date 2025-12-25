@@ -43,6 +43,17 @@ export class UpdateManager implements Manager {
     private lastZoomStep = 0;
     private wasSettled = false;
 
+    /**
+     * Creates a new update manager
+     * @param eventManager - Event manager for emitting update events
+     * @param statsManager - Stats manager for performance tracking
+     * @param layoutManager - Layout manager for graph layout
+     * @param dataManager - Data manager for nodes and edges
+     * @param styleManager - Style manager for styling
+     * @param camera - Camera manager for view control
+     * @param graphContext - Graph context for accessing shared resources
+     * @param config - Optional configuration
+     */
     constructor(
         private eventManager: EventManager,
         private statsManager: StatsManager,
@@ -60,11 +71,18 @@ export class UpdateManager implements Manager {
         };
     }
 
+    /**
+     * Initialize the update manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // UpdateManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Dispose the update manager
+     */
     dispose(): void {
         // UpdateManager doesn't hold resources to dispose
     }
@@ -92,6 +110,7 @@ export class UpdateManager implements Manager {
 
     /**
      * Get current zoom to fit state
+     * @returns True if zoom to fit is enabled
      */
     isZoomToFitEnabled(): boolean {
         return this.needsZoomToFit;
@@ -99,6 +118,7 @@ export class UpdateManager implements Manager {
 
     /**
      * Get the current render frame count
+     * @returns Total number of frames rendered
      */
     getRenderFrameCount(): number {
         return this.frameCount;
@@ -107,6 +127,7 @@ export class UpdateManager implements Manager {
     /**
      * Render a fixed number of frames (for testing)
      * This ensures deterministic rendering similar to Babylon.js testing approach
+     * @param count - Number of frames to render
      */
     renderFixedFrames(count: number): void {
         for (let i = 0; i < count; i++) {
@@ -119,6 +140,9 @@ export class UpdateManager implements Manager {
      */
     private frameCount = 0;
 
+    /**
+     * Update the graph for the current frame
+     */
     update(): void {
         this.frameCount++;
 
@@ -191,6 +215,7 @@ export class UpdateManager implements Manager {
 
     /**
      * Update all nodes and calculate bounding box
+     * @returns Object containing minimum and maximum bounding box vectors
      */
     private updateNodes(): {boundingBoxMin?: Vector3, boundingBoxMax?: Vector3} {
         let boundingBoxMin: Vector3 | undefined;
@@ -229,6 +254,11 @@ export class UpdateManager implements Manager {
 
     /**
      * Update bounding box for a single axis
+     * @param pos - Position vector
+     * @param min - Minimum bounds vector
+     * @param max - Maximum bounds vector
+     * @param size - Node size
+     * @param axis - Axis to update (x, y, or z)
      */
     private updateBoundingBoxAxis(
         pos: Vector3,
@@ -246,6 +276,9 @@ export class UpdateManager implements Manager {
 
     /**
      * Expand bounding box to include a label mesh
+     * @param labelMesh - The label mesh to include
+     * @param min - Minimum bounds vector
+     * @param max - Maximum bounds vector
      */
     private expandBoundingBoxForLabel(labelMesh: Mesh, min: Vector3, max: Vector3): void {
         const labelBoundingInfo = labelMesh.getBoundingInfo();
@@ -262,6 +295,8 @@ export class UpdateManager implements Manager {
 
     /**
      * Update all edges and expand bounding box for edge labels
+     * @param boundingBoxMin - Minimum bounds (optional)
+     * @param boundingBoxMax - Maximum bounds (optional)
      */
     private updateEdges(boundingBoxMin?: Vector3, boundingBoxMax?: Vector3): void {
         this.statsManager.edgeUpdate.beginMonitoring();
@@ -297,6 +332,8 @@ export class UpdateManager implements Manager {
 
     /**
      * Handle zoom to fit logic
+     * @param boundingBoxMin - Minimum bounds (optional)
+     * @param boundingBoxMax - Maximum bounds (optional)
      */
     private handleZoomToFit(boundingBoxMin?: Vector3, boundingBoxMax?: Vector3): void {
         if (!this.needsZoomToFit) {
@@ -367,6 +404,7 @@ export class UpdateManager implements Manager {
 
     /**
      * Check if zoom to fit has been completed
+     * @returns True if zoom to fit has completed at least once
      */
     get zoomToFitCompleted(): boolean {
         return this.hasZoomedToFit;
@@ -374,6 +412,7 @@ export class UpdateManager implements Manager {
 
     /**
      * Update configuration
+     * @param config - Partial configuration to merge
      */
     updateConfig(config: Partial<UpdateManagerConfig>): void {
         Object.assign(this.config, config);

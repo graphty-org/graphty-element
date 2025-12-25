@@ -75,6 +75,8 @@ let logFileStream: fs.WriteStream | null = null;
 
 /**
  * Format log level for terminal output with colors.
+ * @param level - The log level string
+ * @returns Colored and formatted log level string
  */
 function formatLogLevel(level: string): string {
     switch (level.toUpperCase()) {
@@ -97,6 +99,8 @@ function formatLogLevel(level: string): string {
 
 /**
  * Display a log entry in the terminal.
+ * @param sessionId - The session ID for this log entry
+ * @param log - The log entry to display
  */
 function displayLog(sessionId: string, log: LogEntry): void {
     const time = new Date(log.time).toLocaleTimeString();
@@ -126,6 +130,11 @@ function displayLog(sessionId: string, log: LogEntry): void {
 
 /**
  * Handle incoming HTTP request.
+ * @param req - The incoming HTTP request
+ * @param res - The HTTP response object
+ * @param host - The server hostname
+ * @param port - The server port number
+ * @param useHttps - Whether HTTPS is being used
  */
 function handleRequest(
     req: http.IncomingMessage,
@@ -279,6 +288,9 @@ function handleRequest(
 
 /**
  * Print startup banner.
+ * @param host - The server hostname
+ * @param port - The server port number
+ * @param useHttps - Whether HTTPS is being used
  */
 function printBanner(host: string, port: number, useHttps: boolean): void {
     const protocol = useHttps ? "https" : "http";
@@ -327,7 +339,6 @@ function printBanner(host: string, port: number, useHttps: boolean): void {
 
 /**
  * Start the log server.
- *
  * @param options - Server configuration options
  */
 export function startLogServer(options: LogServerOptions = {}): void {

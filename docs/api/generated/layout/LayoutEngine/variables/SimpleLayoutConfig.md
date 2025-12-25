@@ -4,4 +4,4 @@
 
 > `const` **SimpleLayoutConfig**: `ZodObject`\<\{ `scalingFactor`: `ZodDefault`\<`ZodNumber`\>; \}, `$loose`\>
 
-Defined in: [src/layout/LayoutEngine.ts:147](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/layout/LayoutEngine.ts#L147)
+Defined in: [src/layout/LayoutEngine.ts:185](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/layout/LayoutEngine.ts#L185)

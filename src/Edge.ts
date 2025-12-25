@@ -38,6 +38,10 @@ interface EdgeOpts {
     metadata?: object;
 }
 
+/**
+ * Represents a directed edge between two nodes in the graph visualization.
+ * Handles rendering of edge lines, arrow heads/tails, and labels with support for various styles.
+ */
 export class Edge {
     parentGraph: Graph | GraphContext;
     opts: EdgeOpts;
@@ -71,6 +75,7 @@ export class Edge {
 
     /**
      * Helper to check if we're using GraphContext
+     * @returns The GraphContext instance
      */
     private get context(): GraphContext {
         // Check if parentGraph has GraphContext methods
@@ -82,6 +87,15 @@ export class Edge {
         return this.parentGraph;
     }
 
+    /**
+     * Creates a new Edge instance connecting two nodes.
+     * @param graph - The parent graph or graph context
+     * @param srcNodeId - The ID of the source node
+     * @param dstNodeId - The ID of the destination node
+     * @param styleId - The style ID to apply to this edge
+     * @param data - Custom data associated with the edge
+     * @param opts - Optional configuration options
+     */
     constructor(graph: Graph | GraphContext, srcNodeId: NodeIdType, dstNodeId: NodeIdType, styleId: EdgeStyleId, data: AdHocData, opts: EdgeOpts = {}) {
         this.parentGraph = graph;
         this.srcId = srcNodeId;
@@ -215,10 +229,18 @@ export class Edge {
         }
     }
 
+    /**
+     * Adds a calculated style value to this edge.
+     * @param cv - The calculated value to add
+     */
     addCalculatedStyle(cv: CalculatedValue): void {
         this.changeManager.addCalculatedValue(cv);
     }
 
+    /**
+     * Updates the edge's visual representation based on current node positions and style changes.
+     * Performs dirty checking to skip updates when nodes haven't moved.
+     */
     update(): void {
         this.context.getStatsManager().startMeasurement("Edge.update");
 
@@ -333,6 +355,10 @@ export class Edge {
         this.context.getStatsManager().endMeasurement("Edge.update");
     }
 
+    /**
+     * Updates the edge's style by changing its styleId and recreating visual elements.
+     * @param styleId - The new style ID to apply
+     */
     updateStyle(styleId: EdgeStyleId): void {
         // console.log("Edge.updateStyle called:", {oldStyleId: this.styleId, newStyleId: styleId, meshDisposed: this.mesh.isDisposed()});
         // Only skip update if styleId is the same AND mesh is not disposed
@@ -494,6 +520,10 @@ export class Edge {
         }
     }
 
+    /**
+     * Updates ray directions for all edges in the graph to enable accurate mesh intersections.
+     * @param g - The graph or graph context containing the edges
+     */
     static updateRays(g: Graph | GraphContext): void {
         const context = "getStyles" in g ? g : g;
 
@@ -529,6 +559,12 @@ export class Edge {
         context.getScene().render();
     }
 
+    /**
+     * Transforms the edge mesh to position it between source and destination points.
+     * Handles different mesh types (solid, patterned, 2D, bezier).
+     * @param srcPoint - The source point position
+     * @param dstPoint - The destination point position
+     */
     transformEdgeMesh(srcPoint: Vector3, dstPoint: Vector3): void {
         // PHASE 5: Check if mesh is PatternedLineMesh and route accordingly
         if (this.mesh instanceof PatternedLineMesh) {
@@ -547,6 +583,11 @@ export class Edge {
         }
     }
 
+    /**
+     * Calculates and applies transformations for arrow head and tail meshes.
+     * Adjusts edge line endpoints to create gaps for arrows.
+     * @returns Edge line positions adjusted for arrow placement
+     */
     transformArrowCap(): EdgeLine {
         if (this.arrowMesh) {
             const {srcPoint, dstPoint, newEndPoint} = this.getInterceptPoints();
@@ -796,6 +837,11 @@ export class Edge {
         };
     }
 
+    /**
+     * Calculates ray intersection points with source and destination node meshes.
+     * Used to position edges at node surfaces rather than centers.
+     * @returns Intersection points for source, destination, and adjusted endpoint
+     */
     getInterceptPoints(): InterceptPoint {
         const srcMesh = this.srcNode.mesh;
         const dstMesh = this.dstNode.mesh;
@@ -1002,9 +1048,19 @@ export class Edge {
     }
 }
 
+/**
+ * A specialized map data structure for storing edges using source and destination node IDs.
+ * Provides efficient lookup and management of edges in the graph.
+ */
 export class EdgeMap {
     map = new Map<NodeIdType, Map<NodeIdType, Edge>>();
 
+    /**
+     * Checks if an edge exists between the specified source and destination nodes.
+     * @param srcId - The source node ID
+     * @param dstId - The destination node ID
+     * @returns True if the edge exists, false otherwise
+     */
     has(srcId: NodeIdType, dstId: NodeIdType): boolean {
         const dstMap = this.map.get(srcId);
         if (!dstMap) {
@@ -1014,6 +1070,12 @@ export class EdgeMap {
         return dstMap.has(dstId);
     }
 
+    /**
+     * Adds an edge to the map. Throws an error if the edge already exists.
+     * @param srcId - The source node ID
+     * @param dstId - The destination node ID
+     * @param e - The edge instance to store
+     */
     set(srcId: NodeIdType, dstId: NodeIdType, e: Edge): void {
         let dstMap = this.map.get(srcId);
         if (!dstMap) {
@@ -1028,6 +1090,12 @@ export class EdgeMap {
         dstMap.set(dstId, e);
     }
 
+    /**
+     * Retrieves an edge from the map.
+     * @param srcId - The source node ID
+     * @param dstId - The destination node ID
+     * @returns The edge if found, undefined otherwise
+     */
     get(srcId: NodeIdType, dstId: NodeIdType): Edge | undefined {
         const dstMap = this.map.get(srcId);
         if (!dstMap) {
@@ -1037,6 +1105,10 @@ export class EdgeMap {
         return dstMap.get(dstId);
     }
 
+    /**
+     * Gets the total number of edges stored in the map.
+     * @returns The total count of all edges
+     */
     get size(): number {
         let sz = 0;
         for (const dstMap of this.map.values()) {
@@ -1046,6 +1118,12 @@ export class EdgeMap {
         return sz;
     }
 
+    /**
+     * Removes an edge from the map.
+     * @param srcId - The source node ID
+     * @param dstId - The destination node ID
+     * @returns True if the edge was removed, false if it didn't exist
+     */
     delete(srcId: NodeIdType, dstId: NodeIdType): boolean {
         const dstMap = this.map.get(srcId);
         if (!dstMap) {
@@ -1062,6 +1140,9 @@ export class EdgeMap {
         return result;
     }
 
+    /**
+     * Removes all edges from the map.
+     */
     clear(): void {
         this.map.clear();
     }

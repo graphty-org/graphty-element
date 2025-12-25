@@ -107,6 +107,9 @@ function isD3Edge(e: unknown): e is D3Edge {
     return false;
 }
 
+/**
+ * D3 force-directed layout engine using d3-force-3d simulation
+ */
 export class D3GraphEngine extends LayoutEngine {
     static type = "d3";
     static maxDimensions = 3;
@@ -122,10 +125,18 @@ export class D3GraphEngine extends LayoutEngine {
     newEdgeMap = new Map<Edge, D3InputEdge>();
     reheat = false;
 
+    /**
+     * Check if there are pending nodes or edges to be processed
+     * @returns True if the graph needs to be refreshed
+     */
     get graphNeedsRefresh(): boolean {
         return !!this.newNodeMap.size || !!this.newEdgeMap.size;
     }
 
+    /**
+     * Create a D3 force-directed layout engine
+     * @param anyOpts - Configuration options for the D3 simulation
+     */
     constructor(anyOpts: D3LayoutOptions = {}) {
         super();
 
@@ -149,9 +160,19 @@ export class D3GraphEngine extends LayoutEngine {
         this.d3ForceLayout.force("link").id((d) => (d as D3InputNode).id);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async init(): Promise<void> {}
+    /**
+     * Initialize the layout engine
+     *
+     * D3 force simulation is initialized in the constructor and doesn't require
+     * additional async initialization.
+     */
+    async init(): Promise<void> {
+        // No-op - D3 simulation is ready after construction
+    }
 
+    /**
+     * Refresh the D3 simulation with pending nodes and edges
+     */
     refresh(): void {
         if (this.graphNeedsRefresh || this.reheat) {
             // update nodes
@@ -195,11 +216,18 @@ export class D3GraphEngine extends LayoutEngine {
         }
     }
 
+    /**
+     * Advance the D3 simulation by one tick
+     */
     step(): void {
         this.refresh();
         this.d3ForceLayout.tick();
     }
 
+    /**
+     * Check if the simulation has settled below alpha minimum
+     * @returns True if the simulation has settled
+     */
     get isSettled(): boolean {
         // If there are pending nodes/edges to be processed, we're not settled
         if (this.graphNeedsRefresh) {
@@ -209,10 +237,18 @@ export class D3GraphEngine extends LayoutEngine {
         return this.d3ForceLayout.alpha() < this.d3AlphaMin;
     }
 
+    /**
+     * Add a node to the D3 simulation
+     * @param n - The node to add
+     */
     addNode(n: Node): void {
         this.newNodeMap.set(n, {id: n.id});
     }
 
+    /**
+     * Add an edge to the D3 simulation
+     * @param e - The edge to add
+     */
     addEdge(e: Edge): void {
         this.newEdgeMap.set(e, {
             source: e.srcId,
@@ -220,14 +256,27 @@ export class D3GraphEngine extends LayoutEngine {
         });
     }
 
+    /**
+     * Get all nodes in the simulation
+     * @returns Iterable of nodes
+     */
     get nodes(): Iterable<Node> {
         return this.nodeMapping.keys();
     }
 
+    /**
+     * Get all edges in the simulation
+     * @returns Iterable of edges
+     */
     get edges(): Iterable<Edge> {
         return this.edgeMapping.keys();
     }
 
+    /**
+     * Get the current position of a node in the simulation
+     * @param n - The node to get position for
+     * @returns The node's position coordinates
+     */
     getNodePosition(n: Node): Position {
         const d3node = this._getMappedNode(n);
         // if (d3node.x === undefined || d3node.y === undefined || d3node.z === undefined) {
@@ -241,6 +290,11 @@ export class D3GraphEngine extends LayoutEngine {
         };
     }
 
+    /**
+     * Set a node's position in the simulation
+     * @param n - The node to set position for
+     * @param newPos - The new position coordinates
+     */
     setNodePosition(n: Node, newPos: Position): void {
         const d3node = this._getMappedNode(n);
         d3node.x = newPos.x;
@@ -249,6 +303,11 @@ export class D3GraphEngine extends LayoutEngine {
         this.reheat = true;
     }
 
+    /**
+     * Get the position of an edge based on its endpoint positions
+     * @param e - The edge to get position for
+     * @returns The edge's source and destination positions
+     */
     getEdgePosition(e: Edge): EdgePosition {
         const d3edge = this._getMappedEdge(e);
 
@@ -266,6 +325,10 @@ export class D3GraphEngine extends LayoutEngine {
         };
     }
 
+    /**
+     * Pin a node to its current position
+     * @param n - The node to pin
+     */
     pin(n: Node): void {
         const d3node = this._getMappedNode(n);
 
@@ -275,6 +338,10 @@ export class D3GraphEngine extends LayoutEngine {
         this.reheat = true; // TODO: is this necessary?
     }
 
+    /**
+     * Unpin a node to allow it to move freely
+     * @param n - The node to unpin
+     */
     unpin(n: Node): void {
         const d3node = this._getMappedNode(n);
 

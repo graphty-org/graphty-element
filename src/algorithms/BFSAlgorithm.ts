@@ -38,6 +38,12 @@ export interface BFSOptions extends Record<string, unknown> {
     targetNode: number | string | null;
 }
 
+/**
+ * Breadth-First Search (BFS) algorithm for graph traversal
+ *
+ * Performs a breadth-first traversal from a source node, computing level information
+ * and predecessor relationships for each reachable node.
+ */
 export class BFSAlgorithm extends Algorithm<BFSOptions> {
     static namespace = "graphty";
     static type = "bfs";
@@ -94,7 +100,9 @@ export class BFSAlgorithm extends Algorithm<BFSOptions> {
 
     /**
      * Configure the algorithm with source node
-     *
+     * @param options - Configuration options
+     * @param options.source - The source node to start BFS from
+     * @returns This algorithm instance for chaining
      * @deprecated Use constructor options instead. This method is kept for backward compatibility.
      */
     configure(options: {source: number | string}): this {
@@ -102,7 +110,11 @@ export class BFSAlgorithm extends Algorithm<BFSOptions> {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the BFS algorithm on the graph
+     *
+     * Computes BFS level, predecessor, and distance information for all reachable nodes.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const dm = g.getDataManager();

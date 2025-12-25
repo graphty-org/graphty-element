@@ -2,7 +2,7 @@
 
 # Interface: NodeHoverEvent
 
-Defined in: [src/events.ts:163](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L163)
+Defined in: [src/events.ts:163](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L163)
 
 Emitted when the pointer enters a node (hover start).
 
@@ -16,7 +16,7 @@ Emitted when the pointer enters a node (hover start).
 
 > **data**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/events.ts:166](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L166)
+Defined in: [src/events.ts:166](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L166)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/events.ts:166](https://github.com/graphty-org/graphty-element/b
 
 > **node**: [`Node`](../../Node/classes/Node.md)
 
-Defined in: [src/events.ts:165](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L165)
+Defined in: [src/events.ts:165](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L165)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/events.ts:165](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"node-hover"`
 
-Defined in: [src/events.ts:164](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L164)
+Defined in: [src/events.ts:164](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L164)

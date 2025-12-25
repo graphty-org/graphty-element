@@ -33,7 +33,6 @@ interface LogEntry {
 
 /**
  * Create a remote sink for sending logs to a log server.
- *
  * @param options - Sink configuration options
  * @returns A Sink that sends logs to the remote server
  */
@@ -59,6 +58,8 @@ export function createRemoteSink(options: RemoteSinkOptions): Sink {
 
     /**
      * Check if a message should be throttled.
+     * @param message - The message to check
+     * @returns true if the message should be throttled
      */
     function shouldThrottle(message: string): boolean {
         for (const pattern of throttlePatterns) {
@@ -79,6 +80,8 @@ export function createRemoteSink(options: RemoteSinkOptions): Sink {
 
     /**
      * Format a LogRecord into a LogEntry for the server.
+     * @param record - The log record to format
+     * @returns A formatted log entry for transmission
      */
     function formatRecord(record: LogRecord): LogEntry {
         const parts: string[] = [];
@@ -115,6 +118,8 @@ export function createRemoteSink(options: RemoteSinkOptions): Sink {
 
     /**
      * Send logs to the server with retry logic.
+     * @param logs - Array of log entries to send
+     * @param retriesLeft - Number of retry attempts remaining
      */
     async function sendLogs(logs: LogEntry[], retriesLeft: number): Promise<void> {
         try {

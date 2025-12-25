@@ -1,5 +1,5 @@
 /**
- * @fileoverview Unified Options Schema System
+ * @file Unified Options Schema System
  *
  * This module provides a Zod-based schema system that combines validation
  * with rich UI metadata. Both algorithms and layouts use this system to
@@ -47,7 +47,6 @@ export type OptionsSchema = Record<string, OptionDefinition>;
 
 /**
  * Infer TypeScript types from an OptionsSchema
- *
  * @example
  * ```typescript
  * const myOptions = defineOptions({
@@ -71,7 +70,8 @@ export type PartialOptions<S extends OptionsSchema> = Partial<InferOptions<S>>;
 
 /**
  * Helper to define options with full type inference
- *
+ * @param schema - Options schema definition
+ * @returns The same schema with full type inference
  * @example
  * ```typescript
  * export const myOptions = defineOptions({
@@ -95,6 +95,8 @@ export function defineOptions<S extends OptionsSchema>(schema: S): S {
  *
  * This creates a z.object() from the individual field schemas,
  * allowing standard Zod parsing/validation.
+ * @param optionsSchema - Options schema to convert
+ * @returns Zod object schema for validation
  */
 export function toZodSchema<S extends OptionsSchema>(
     optionsSchema: S,
@@ -112,7 +114,9 @@ export function toZodSchema<S extends OptionsSchema>(
  *
  * Uses Zod for validation, applying defaults from the schema.
  * Throws ZodError if validation fails.
- *
+ * @param optionsSchema - Options schema to validate against
+ * @param options - Partial options to parse and validate
+ * @returns Fully typed options with defaults applied
  * @example
  * ```typescript
  * const options = parseOptions(myOptionsSchema, { dampingFactor: 0.9 });
@@ -136,7 +140,8 @@ export type SafeParseResult<T> =
 
 /**
  * Safely parse options, returning a result object instead of throwing
- *
+ * @param optionsSchema - Options schema to validate against
+ * @param options - Partial options to parse and validate
  * @returns Object with success flag and either data or error
  */
 export function safeParseOptions<S extends OptionsSchema>(
@@ -156,6 +161,8 @@ export function safeParseOptions<S extends OptionsSchema>(
  * Get default values from an options schema
  *
  * Extracts the default value from each Zod schema definition.
+ * @param optionsSchema - Options schema to extract defaults from
+ * @returns Object with all default values
  */
 export function getDefaults<S extends OptionsSchema>(
     optionsSchema: S,
@@ -166,6 +173,8 @@ export function getDefaults<S extends OptionsSchema>(
 
 /**
  * Check if a schema has any configurable options
+ * @param optionsSchema - Options schema to check
+ * @returns True if schema has any options
  */
 export function hasOptions(optionsSchema: OptionsSchema): boolean {
     return Object.keys(optionsSchema).length > 0;
@@ -173,7 +182,7 @@ export function hasOptions(optionsSchema: OptionsSchema): boolean {
 
 /**
  * Get all option metadata from a schema (for UI generation)
- *
+ * @param optionsSchema - Options schema to extract metadata from
  * @returns Map of option name to metadata
  */
 export function getOptionsMeta(optionsSchema: OptionsSchema): Map<string, OptionMeta> {
@@ -187,8 +196,9 @@ export function getOptionsMeta(optionsSchema: OptionsSchema): Map<string, Option
 
 /**
  * Get options filtered by advanced flag
- *
+ * @param optionsSchema - Options schema to filter
  * @param advanced - If true, return only advanced options. If false, return only basic options.
+ * @returns Filtered options schema
  */
 export function getOptionsFiltered(
     optionsSchema: OptionsSchema,
@@ -207,7 +217,7 @@ export function getOptionsFiltered(
 
 /**
  * Get options grouped by their group property
- *
+ * @param optionsSchema - Options schema to group
  * @returns Map of group name to options in that group. Ungrouped options are under ""
  */
 export function getOptionsGrouped(

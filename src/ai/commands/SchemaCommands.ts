@@ -58,7 +58,6 @@ const MAX_STRING_LENGTH = 100;
 
 /**
  * Perform random sampling from an array.
- *
  * @param items - Array of items to sample from
  * @param count - Number of items to sample
  * @returns Array of randomly sampled items
@@ -80,7 +79,6 @@ function randomSample<T>(items: T[], count: number): T[] {
 
 /**
  * Perform stratified sampling based on a property value.
- *
  * @param items - Array of items to sample from
  * @param count - Total number of items to sample
  * @param getStratumKey - Function to extract the stratum key from an item
@@ -349,6 +347,12 @@ interface MixedPropertyResult {
 
 /**
  * Analyze string property values.
+ * @param property - Name of the property
+ * @param target - Whether analyzing nodes or edges
+ * @param values - Array of property values
+ * @param nullCount - Count of null values
+ * @param limit - Maximum number of unique values to include
+ * @returns Analysis result for string property
  */
 function analyzeStringProperty(
     property: string,
@@ -393,6 +397,11 @@ function analyzeStringProperty(
 
 /**
  * Analyze number property values.
+ * @param property - Name of the property
+ * @param target - Whether analyzing nodes or edges
+ * @param values - Array of property values
+ * @param nullCount - Count of null values
+ * @returns Analysis result for number property
  */
 function analyzeNumberProperty(
     property: string,
@@ -425,6 +434,11 @@ function analyzeNumberProperty(
 
 /**
  * Analyze boolean property values.
+ * @param property - Name of the property
+ * @param target - Whether analyzing nodes or edges
+ * @param values - Array of property values
+ * @param nullCount - Count of null values
+ * @returns Analysis result for boolean property
  */
 function analyzeBooleanProperty(
     property: string,
@@ -457,6 +471,12 @@ function analyzeBooleanProperty(
 
 /**
  * Analyze array property values.
+ * @param property - Name of the property
+ * @param target - Whether analyzing nodes or edges
+ * @param values - Array of property values
+ * @param nullCount - Count of null values
+ * @param limit - Maximum number of samples to include
+ * @returns Analysis result for array property
  */
 function analyzeArrayProperty(
     property: string,
@@ -517,6 +537,11 @@ function analyzeArrayProperty(
 
 /**
  * Analyze mixed type property values.
+ * @param property - Name of the property
+ * @param target - Whether analyzing nodes or edges
+ * @param values - Array of property values
+ * @param nullCount - Count of null values
+ * @returns Analysis result for mixed type property
  */
 function analyzeMixedProperty(
     property: string,

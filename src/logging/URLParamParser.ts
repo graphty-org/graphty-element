@@ -32,7 +32,6 @@ export interface ParsedLoggingParams {
  * - `?graphty-element-logging=layout:debug,xr:info` - Enable modules with levels
  * - `?graphty-element-log-level=debug` - Set global log level
  * - `?graphty-element-remote-log=https://localhost:9080` - Send logs to remote server
- *
  * @returns Parsed logging parameters, or null if logging param is not present or disabled
  */
 export function parseLoggingURLParams(): ParsedLoggingParams | null {
@@ -110,7 +109,6 @@ export function parseLoggingURLParams(): ParsedLoggingParams | null {
 
 /**
  * Check if a string is a valid URL.
- *
  * @param urlString - The string to validate
  * @returns true if the string is a valid URL
  */

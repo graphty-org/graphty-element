@@ -2,7 +2,9 @@
 
 # Class: Styles
 
-Defined in: [src/Styles.ts:27](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L27)
+Defined in: [src/Styles.ts:30](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L30)
+
+Manages style layers and computes styles for nodes and edges.
 
 ## Constructors
 
@@ -10,11 +12,15 @@ Defined in: [src/Styles.ts:27](https://github.com/graphty-org/graphty-element/bl
 
 > **new Styles**(`config`): `Styles`
 
-Defined in: [src/Styles.ts:37](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L37)
+Defined in: [src/Styles.ts:48](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L48)
+
+Creates a new Styles instance from a style configuration.
 
 #### Parameters
 
 ##### config
+
+Style schema configuration
 
 ###### behavior
 
@@ -200,7 +206,7 @@ View mode controls how the graph is rendered and displayed.
 
 > `readonly` **config**: `object`
 
-Defined in: [src/Styles.ts:28](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L28)
+Defined in: [src/Styles.ts:31](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L31)
 
 #### behavior
 
@@ -388,11 +394,15 @@ View mode controls how the graph is rendered and displayed.
 
 > **get** **layers**(): readonly `object`[]
 
-Defined in: [src/Styles.ts:33](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L33)
+Defined in: [src/Styles.ts:40](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L40)
+
+Gets the read-only array of style layers.
 
 ##### Returns
 
 readonly `object`[]
+
+Array of style layers
 
 ## Methods
 
@@ -400,11 +410,15 @@ readonly `object`[]
 
 > **addLayer**(`layer`): `void`
 
-Defined in: [src/Styles.ts:93](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L93)
+Defined in: [src/Styles.ts:127](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L127)
+
+Adds a new style layer to the end of the layer stack.
 
 #### Parameters
 
 ##### layer
+
+Style layer to add
 
 ###### edge?
 
@@ -2084,11 +2098,15 @@ Defined in: [src/Styles.ts:93](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **default**(): `Styles`
 
-Defined in: [src/Styles.ts:86](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L86)
+Defined in: [src/Styles.ts:116](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L116)
+
+Creates a default Styles instance with minimal configuration.
 
 #### Returns
 
 `Styles`
+
+New default Styles instance
 
 ***
 
@@ -2096,7 +2114,9 @@ Defined in: [src/Styles.ts:86](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromJson**(`json`): `Styles`
 
-Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L57)
+Defined in: [src/Styles.ts:73](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L73)
+
+Creates a Styles instance from a JSON string.
 
 #### Parameters
 
@@ -2104,9 +2124,13 @@ Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/bl
 
 `string`
 
+JSON string containing style configuration
+
 #### Returns
 
 `Styles`
+
+New Styles instance
 
 ***
 
@@ -2114,7 +2138,9 @@ Defined in: [src/Styles.ts:57](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromObject**(`obj`): `Styles`
 
-Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L62)
+Defined in: [src/Styles.ts:83](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L83)
+
+Creates a Styles instance from a plain object.
 
 #### Parameters
 
@@ -2122,9 +2148,13 @@ Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/bl
 
 `object`
 
+Object containing style configuration
+
 #### Returns
 
 `Styles`
+
+New Styles instance
 
 ***
 
@@ -2132,7 +2162,9 @@ Defined in: [src/Styles.ts:62](https://github.com/graphty-org/graphty-element/bl
 
 > `static` **fromUrl**(`url`): `Promise`\<`Styles`\>
 
-Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L75)
+Defined in: [src/Styles.ts:101](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L101)
+
+Fetches and creates a Styles instance from a URL.
 
 #### Parameters
 
@@ -2140,9 +2172,13 @@ Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/bl
 
 `string`
 
+URL to fetch style configuration from
+
 #### Returns
 
 `Promise`\<`Styles`\>
+
+Promise resolving to new Styles instance
 
 ***
 
@@ -2150,7 +2186,9 @@ Defined in: [src/Styles.ts:75](https://github.com/graphty-org/graphty-element/bl
 
 > **getCalculatedStylesForEdge**(`data`): `CalculatedValue`[]
 
-Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L153)
+Defined in: [src/Styles.ts:213](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L213)
+
+Retrieves calculated style values for an edge from matching layers.
 
 #### Parameters
 
@@ -2158,9 +2196,13 @@ Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/b
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Edge data for selector matching
+
 #### Returns
 
 `CalculatedValue`[]
+
+Array of calculated values to apply to the edge
 
 ***
 
@@ -2168,7 +2210,9 @@ Defined in: [src/Styles.ts:153](https://github.com/graphty-org/graphty-element/b
 
 > **getCalculatedStylesForNode**(`data`): `CalculatedValue`[]
 
-Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L136)
+Defined in: [src/Styles.ts:191](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L191)
+
+Retrieves calculated style values for a node from matching layers.
 
 #### Parameters
 
@@ -2176,9 +2220,13 @@ Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/b
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data for selector matching
+
 #### Returns
 
 `CalculatedValue`[]
+
+Array of calculated values to apply to the node
 
 ***
 
@@ -2186,11 +2234,15 @@ Defined in: [src/Styles.ts:136](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getEdgeIdForStyle**(`style`): [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
-Defined in: [src/Styles.ts:231](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L231)
+Defined in: [src/Styles.ts:317](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L317)
+
+Gets or creates a style ID for an edge style configuration.
 
 #### Parameters
 
 ##### style
+
+Edge style configuration
 
 ###### arrowHead?
 
@@ -3244,17 +3296,23 @@ Defined in: [src/Styles.ts:231](https://github.com/graphty-org/graphty-element/b
 
 [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
+Edge style identifier
+
 ***
 
 ### getNodeIdForStyle()
 
 > `static` **getNodeIdForStyle**(`style`): [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
-Defined in: [src/Styles.ts:227](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L227)
+Defined in: [src/Styles.ts:308](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L308)
+
+Gets or creates a style ID for a node style configuration.
 
 #### Parameters
 
 ##### style
+
+Node style configuration
 
 ###### effect?
 
@@ -3816,13 +3874,17 @@ Defined in: [src/Styles.ts:227](https://github.com/graphty-org/graphty-element/b
 
 [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
+Node style identifier
+
 ***
 
 ### getStyleForEdge()
 
 > **getStyleForEdge**(`data`, `algorithmResults?`): [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
-Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L178)
+Defined in: [src/Styles.ts:244](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L244)
+
+Computes the merged style for an edge by applying matching layers.
 
 #### Parameters
 
@@ -3830,13 +3892,19 @@ Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/b
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Edge data for selector matching
+
 ##### algorithmResults?
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Optional algorithm results for selector matching
+
 #### Returns
 
 [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
+
+Style ID for the computed edge style
 
 ***
 
@@ -3844,7 +3912,9 @@ Defined in: [src/Styles.ts:178](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getStyleForEdgeStyleId**(`id`): `object`
 
-Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L218)
+Defined in: [src/Styles.ts:294](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L294)
+
+Retrieves the edge style configuration for a given style ID.
 
 #### Parameters
 
@@ -3852,9 +3922,13 @@ Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/b
 
 [`EdgeStyleId`](../type-aliases/EdgeStyleId.md)
 
+Edge style identifier
+
 #### Returns
 
 `object`
+
+Edge style configuration
 
 ##### arrowHead?
 
@@ -4910,7 +4984,9 @@ Defined in: [src/Styles.ts:218](https://github.com/graphty-org/graphty-element/b
 
 > **getStyleForNode**(`data`, `algorithmResults?`): [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
-Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L111)
+Defined in: [src/Styles.ts:161](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L161)
+
+Computes the merged style for a node by applying matching layers.
 
 #### Parameters
 
@@ -4918,13 +4994,19 @@ Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/b
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data for selector matching
+
 ##### algorithmResults?
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Optional algorithm results for selector matching
+
 #### Returns
 
 [`NodeStyleId`](../type-aliases/NodeStyleId.md)
+
+Style ID for the computed node style
 
 ***
 
@@ -4932,7 +5014,9 @@ Defined in: [src/Styles.ts:111](https://github.com/graphty-org/graphty-element/b
 
 > `static` **getStyleForNodeStyleId**(`id`): `object`
 
-Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L209)
+Defined in: [src/Styles.ts:280](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L280)
+
+Retrieves the node style configuration for a given style ID.
 
 #### Parameters
 
@@ -4940,9 +5024,13 @@ Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/b
 
 [`NodeStyleId`](../type-aliases/NodeStyleId.md)
 
+Node style identifier
+
 #### Returns
 
 `object`
+
+Node style configuration
 
 ##### effect?
 
@@ -5506,7 +5594,9 @@ Defined in: [src/Styles.ts:209](https://github.com/graphty-org/graphty-element/b
 
 > **insertLayer**(`position`, `layer`): `void`
 
-Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L99)
+Defined in: [src/Styles.ts:138](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L138)
+
+Inserts a style layer at a specific position in the layer stack.
 
 #### Parameters
 
@@ -5514,7 +5604,11 @@ Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/bl
 
 `number`
 
+Index position to insert the layer
+
 ##### layer
+
+Style layer to insert
 
 ###### edge?
 
@@ -7194,7 +7288,9 @@ Defined in: [src/Styles.ts:99](https://github.com/graphty-org/graphty-element/bl
 
 > **removeLayersByMetadata**(`predicate`): `boolean`
 
-Defined in: [src/Styles.ts:105](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L105)
+Defined in: [src/Styles.ts:149](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L149)
+
+Removes style layers matching a metadata predicate.
 
 #### Parameters
 
@@ -7202,6 +7298,10 @@ Defined in: [src/Styles.ts:105](https://github.com/graphty-org/graphty-element/b
 
 (`metadata`) => `boolean`
 
+Function to test layer metadata for removal
+
 #### Returns
 
 `boolean`
+
+True if any layers were removed

@@ -31,10 +31,17 @@ export class LayoutManager implements Manager {
     private _running = false;
     private logger: Logger = GraphtyLogger.getLogger(["graphty", "layout"]);
 
+    /**
+     * Gets the running state of the layout
+     * @returns True if layout is running, false otherwise
+     */
     get running(): boolean {
         return this._running;
     }
 
+    /**
+     * Sets the running state of the layout
+     */
     set running(value: boolean) {
         this._running = value;
     }
@@ -42,6 +49,12 @@ export class LayoutManager implements Manager {
     // GraphContext for error reporting
     private graphContext: GraphContext | null = null;
 
+    /**
+     * Creates an instance of LayoutManager
+     * @param eventManager - Event manager for emitting layout events
+     * @param dataManager - Data manager for accessing nodes and edges
+     * @param styles - Styles instance for layout configuration
+     */
     constructor(
         private eventManager: EventManager,
         private dataManager: DataManager,
@@ -50,6 +63,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Set the GraphContext for error reporting
+     * @param context - GraphContext instance
      */
     setGraphContext(context: GraphContext): void {
         this.graphContext = context;
@@ -57,16 +71,24 @@ export class LayoutManager implements Manager {
 
     /**
      * Update the styles reference when a new style template is loaded
+     * @param styles - New styles instance
      */
     updateStyles(styles: Styles): void {
         this.styles = styles;
     }
 
+    /**
+     * Initializes the layout manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // LayoutManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Disposes of the layout manager and cleans up resources
+     */
     dispose(): void {
         // Dispose current layout engine if any
         if (this.layoutEngine && hasDispose(this.layoutEngine)) {
@@ -80,6 +102,8 @@ export class LayoutManager implements Manager {
     /**
      * Internal method for setting layout - bypasses queue
      * Used by operations that are already queued to prevent nested queueing
+     * @param type - Layout type identifier
+     * @param opts - Layout-specific options
      */
     private async _setLayoutInternal(type: string, opts: object = {}): Promise<void> {
         this.logger.info("Setting layout", {type, options: opts});
@@ -199,6 +223,9 @@ export class LayoutManager implements Manager {
     /**
      * Public method for setting layout
      * This goes through the queue when called from Graph
+     * @param type - Layout type identifier
+     * @param opts - Layout-specific options
+     * @returns Promise that resolves when layout is set
      */
     async setLayout(type: string, opts: object = {}): Promise<void> {
         return this._setLayoutInternal(type, opts);
@@ -215,6 +242,8 @@ export class LayoutManager implements Manager {
 
     /**
      * Get node position from layout engine
+     * @param node - Node to get position for
+     * @returns Node position as [x, y, z] or undefined if not available
      */
     getNodePosition(node: Node): [number, number, number] | undefined {
         const position = this.layoutEngine?.getNodePosition(node);
@@ -227,6 +256,8 @@ export class LayoutManager implements Manager {
 
     /**
      * Get edge path from layout engine
+     * @param edge - Edge to get path for
+     * @returns Edge path as array of [x, y, z] points or undefined if not available
      */
     getEdgePath(edge: Edge): [number, number, number][] | undefined {
         if (this.layoutEngine && hasGetEdgePath(this.layoutEngine)) {
@@ -238,6 +269,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Check if layout has settled
+     * @returns True if layout has settled, false otherwise
      */
     get isSettled(): boolean {
         // If not running, consider it settled
@@ -256,6 +288,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Get nodes from layout engine
+     * @returns Iterable of nodes managed by the layout engine
      */
     get nodes(): Iterable<Node> {
         return this.layoutEngine?.nodes ?? [];
@@ -263,6 +296,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Get edges from layout engine
+     * @returns Iterable of edges managed by the layout engine
      */
     get edges(): Iterable<Edge> {
         return this.layoutEngine?.edges ?? [];
@@ -270,6 +304,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Get current layout type
+     * @returns Current layout type identifier or undefined if no layout is set
      */
     get layoutType(): string | undefined {
         return this.layoutEngine?.type;
@@ -277,6 +312,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Update layout dimension when 2D/3D mode changes
+     * @param twoD - Whether to use 2D mode
      */
     async updateLayoutDimension(twoD: boolean): Promise<void> {
         try {
@@ -316,6 +352,8 @@ export class LayoutManager implements Manager {
 
     /**
      * Apply layout from style template if specified
+     * @param layoutType - Layout type identifier from template
+     * @param layoutOptions - Layout options from template
      */
     async applyTemplateLayout(layoutType?: string, layoutOptions?: object): Promise<void> {
         if (layoutType) {
@@ -338,6 +376,8 @@ export class LayoutManager implements Manager {
 
     /**
      * Check if layout options have changed
+     * @param newOptions - New layout options to compare
+     * @returns True if options have changed, false otherwise
      */
     private hasOptionsChanged(newOptions: object): boolean {
         // If no previous options, consider it changed
@@ -360,6 +400,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Get layout statistics
+     * @returns Object containing layout statistics
      */
     getStats(): {
         layoutType: string | undefined;
@@ -382,6 +423,7 @@ export class LayoutManager implements Manager {
 
     /**
      * Check if layout engine is currently set
+     * @returns True if layout engine is set, false otherwise
      */
     hasLayoutEngine(): boolean {
         return this.layoutEngine !== undefined;
@@ -390,6 +432,7 @@ export class LayoutManager implements Manager {
     /**
      * Update positions for newly added nodes
      * This is called when nodes are added to an existing layout
+     * @param nodes - Array of nodes to update positions for
      */
     async updatePositions(nodes: Node[]): Promise<void> {
         if (!this.layoutEngine || nodes.length === 0) {

@@ -2,7 +2,7 @@
 
 # Interface: PerformanceSnapshot
 
-Defined in: [src/managers/StatsManager.ts:120](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L120)
+Defined in: [src/managers/StatsManager.ts:120](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L120)
 
 Performance snapshot including CPU, GPU, and scene metrics
 
@@ -12,7 +12,7 @@ Performance snapshot including CPU, GPU, and scene metrics
 
 > **cpu**: `object`[]
 
-Defined in: [src/managers/StatsManager.ts:121](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L121)
+Defined in: [src/managers/StatsManager.ts:121](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L121)
 
 #### avg
 
@@ -60,7 +60,7 @@ Defined in: [src/managers/StatsManager.ts:121](https://github.com/graphty-org/gr
 
 > `optional` **gpu**: `object`
 
-Defined in: [src/managers/StatsManager.ts:133](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L133)
+Defined in: [src/managers/StatsManager.ts:133](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L133)
 
 #### gpuFrameTime
 
@@ -76,7 +76,7 @@ Defined in: [src/managers/StatsManager.ts:133](https://github.com/graphty-org/gr
 
 > `optional` **layoutSession**: [`LayoutSessionMetrics`](LayoutSessionMetrics.md)
 
-Defined in: [src/managers/StatsManager.ts:146](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L146)
+Defined in: [src/managers/StatsManager.ts:146](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L146)
 
 ***
 
@@ -84,7 +84,7 @@ Defined in: [src/managers/StatsManager.ts:146](https://github.com/graphty-org/gr
 
 > `optional` **scene**: `object`
 
-Defined in: [src/managers/StatsManager.ts:137](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L137)
+Defined in: [src/managers/StatsManager.ts:137](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L137)
 
 #### activeMeshesEvaluation
 
@@ -120,4 +120,4 @@ Defined in: [src/managers/StatsManager.ts:137](https://github.com/graphty-org/gr
 
 > **timestamp**: `number`
 
-Defined in: [src/managers/StatsManager.ts:147](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/managers/StatsManager.ts#L147)
+Defined in: [src/managers/StatsManager.ts:147](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/managers/StatsManager.ts#L147)

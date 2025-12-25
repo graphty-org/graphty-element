@@ -60,6 +60,9 @@ export const SpiralLayoutConfig = z.strictObject({
 export type SpiralLayoutConfigType = z.infer<typeof SpiralLayoutConfig>;
 export type SpiralLayoutOpts = Partial<SpiralLayoutConfigType>;
 
+/**
+ * Spiral layout engine that arranges nodes along a spiral path
+ */
 export class SpiralLayout extends SimpleLayoutEngine {
     static type = "spiral";
     static maxDimensions = 2;
@@ -67,11 +70,20 @@ export class SpiralLayout extends SimpleLayoutEngine {
     scalingFactor = 80;
     config: SpiralLayoutConfigType;
 
+    /**
+     * Create a spiral layout engine
+     * @param opts - Configuration options including resolution and equidistant spacing
+     */
     constructor(opts: SpiralLayoutOpts) {
         super(opts);
         this.config = SpiralLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for spiral layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter or null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Spiral layout only supports 2D
         if (dimension > this.maxDimensions) {
@@ -81,6 +93,9 @@ export class SpiralLayout extends SimpleLayoutEngine {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions along a spiral path
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

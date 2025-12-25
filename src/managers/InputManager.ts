@@ -74,6 +74,11 @@ export class InputManager implements Manager {
     private playbackIndex = 0;
     private playbackStartTime = 0;
 
+    /**
+     * Creates an instance of InputManager
+     * @param context - Manager context providing access to scene, canvas, and event manager
+     * @param config - Input manager configuration options
+     */
     constructor(
         private context: ManagerContext,
         private config: InputManagerConfig = {},
@@ -95,6 +100,9 @@ export class InputManager implements Manager {
         this.onKeyUp = this.inputSystem.onKeyUp;
     }
 
+    /**
+     * Initializes the input manager and sets up event bridges
+     */
     async init(): Promise<void> {
         try {
             // Attach input system to canvas
@@ -125,6 +133,9 @@ export class InputManager implements Manager {
         }
     }
 
+    /**
+     * Disposes of the input manager and cleans up resources
+     */
     dispose(): void {
         // Save recorded events if recording
         if (this.config.recordInput && this.recordedEvents.length > 0) {
@@ -140,6 +151,7 @@ export class InputManager implements Manager {
 
     /**
      * Enable or disable all input
+     * @param enabled - Whether input should be enabled
      */
     setEnabled(enabled: boolean): void {
         this.enabled = enabled;
@@ -156,6 +168,7 @@ export class InputManager implements Manager {
 
     /**
      * Get the current pointer position
+     * @returns Current pointer position as Vector2
      */
     getPointerPosition(): Vector2 {
         return this.inputSystem.getPointerPosition();
@@ -163,6 +176,8 @@ export class InputManager implements Manager {
 
     /**
      * Check if a pointer button is currently down
+     * @param button - Mouse button to check (left, middle, right)
+     * @returns True if the button is pressed, false otherwise
      */
     isPointerDown(button?: MouseButton): boolean {
         return this.inputSystem.isPointerDown(button);
@@ -170,6 +185,7 @@ export class InputManager implements Manager {
 
     /**
      * Get all active touch points
+     * @returns Array of active touch points
      */
     getActiveTouches(): TouchPoint[] {
         return this.inputSystem.getActiveTouches();
@@ -177,6 +193,7 @@ export class InputManager implements Manager {
 
     /**
      * Get the mock input system for testing
+     * @returns MockDeviceInputSystem instance
      * @throws Error if not using mock input
      */
     getMockInputSystem(): MockDeviceInputSystem {
@@ -198,6 +215,7 @@ export class InputManager implements Manager {
 
     /**
      * Stop recording input events
+     * @returns Array of recorded events
      */
     stopRecording(): RecordedInputEvent[] {
         this.config.recordInput = false;
@@ -209,6 +227,8 @@ export class InputManager implements Manager {
 
     /**
      * Start playback of recorded events
+     * @param events - Optional array of events to play back
+     * @returns Promise that resolves when playback completes
      */
     startPlayback(events?: RecordedInputEvent[]): Promise<void> {
         if (events) {
@@ -295,6 +315,8 @@ export class InputManager implements Manager {
 
     /**
      * Serialize event data for recording
+     * @param data - Event data to serialize
+     * @returns Serialized event data as a plain object
      */
     private serializeEventData(data: unknown): Record<string, unknown> {
         // Handle Vector2 objects
@@ -381,6 +403,7 @@ export class InputManager implements Manager {
 
     /**
      * Load playback file
+     * @param filename - Path or URL to the playback file
      */
     private async loadPlaybackFile(filename: string): Promise<void> {
         try {
@@ -418,6 +441,7 @@ export class InputManager implements Manager {
 
     /**
      * Update configuration
+     * @param config - Partial configuration to merge with existing config
      */
     updateConfig(config: Partial<InputManagerConfig>): void {
         Object.assign(this.config, config);

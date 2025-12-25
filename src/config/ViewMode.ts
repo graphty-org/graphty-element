@@ -22,6 +22,8 @@ export const DEFAULT_VIEW_MODE: ViewMode = "3d";
 
 /**
  * Type guard to check if a string is a valid ViewMode
+ * @param value - String value to check
+ * @returns True if value is a valid ViewMode
  */
 export function isViewMode(value: string): value is ViewMode {
     return (VIEW_MODE_VALUES as readonly string[]).includes(value);

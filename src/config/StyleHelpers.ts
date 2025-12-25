@@ -1,5 +1,5 @@
 /**
- * @fileoverview StyleHelpers - Reusable utility functions for mapping algorithm results to visual styles
+ * @file StyleHelpers - Reusable utility functions for mapping algorithm results to visual styles
  *
  * Provides research-backed, colorblind-safe, accessible visualization helpers:
  * - Color palettes (sequential, categorical, diverging, binary)
@@ -66,28 +66,22 @@
  * - `greenSuccess` - Green vs Gray
  * - `orangeWarning` - Orange vs Gray
  * - `custom(highlight, normal)` - Custom colors
- *
  * @example
  * // Sequential gradient for continuous data
  * StyleHelpers.color.sequential.viridis(0.75) // → "#6ece58"
- *
  * @example
  * // Categorical colors for communities
  * StyleHelpers.color.categorical.okabeIto(2) // → "#009E73"
- *
  * @example
  * // Linear size scaling
  * StyleHelpers.size.linear(0.5, 1, 5) // → 3
- *
  * @example
  * // Threshold opacity (focus on important nodes)
  * StyleHelpers.opacity.threshold(0.3, 0.5, 0.2, 1.0) // → 0.2 (below threshold)
- *
  * @example
  * // Combined color and size
  * const result = StyleHelpers.combined.colorAndSize(0.8);
  * // → { color: "#6ece58", size: 4.2 }
- *
  * @module StyleHelpers
  */
 

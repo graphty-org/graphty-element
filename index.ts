@@ -295,11 +295,9 @@ export type {CommandContext, CommandExample, CommandResult, GraphCommand} from "
 // =============================================================================
 /**
  * Colorblind simulation utilities for accessibility testing.
- *
  * @remarks
  * These functions help test whether color palettes are accessible to users
  * with various forms of color vision deficiency.
- *
  * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-palettepicker--default | Palette Examples}
  */
 export {

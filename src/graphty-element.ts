@@ -21,6 +21,9 @@ export class Graphty extends LitElement {
     #element: Element;
     #resizeObserver: ResizeObserver | null = null;
 
+    /**
+     * Creates a new Graphty element instance.
+     */
     constructor() {
         super();
 
@@ -31,6 +34,9 @@ export class Graphty extends LitElement {
         this.#graph = new Graph(this.#element);
     }
 
+    /**
+     * Called when the element is added to the DOM. Sets up the graph container and resize observer.
+     */
     connectedCallback(): void {
         super.connectedCallback();
         this.renderRoot.appendChild(this.#element);
@@ -73,6 +79,10 @@ export class Graphty extends LitElement {
     //     // console.log(`update: ${[... changedProperties.keys()].join(", ")}`);
     // }
 
+    /**
+     * Called after the first update of the element. Initializes async graph setup.
+     * @param changedProperties - Map of changed property names to their previous values
+     */
     firstUpdated(changedProperties: Map<string, unknown>): void {
         super.firstUpdated(changedProperties);
         // console.log(`firstUpdated: ${[... changedProperties.keys()].join(", ")}`);
@@ -83,6 +93,9 @@ export class Graphty extends LitElement {
             });
     }
 
+    /**
+     * Performs async initialization tasks for the graph, including event forwarding and graph initialization.
+     */
     async asyncFirstUpdated(): Promise<void> {
         // Forward ALL internal graph events as DOM CustomEvents
         // This allows external code (e.g., React) to listen for any graph event
@@ -110,10 +123,17 @@ export class Graphty extends LitElement {
         this.#graph.engine.resize();
     }
 
+    /**
+     * Renders the graph container element.
+     * @returns The graph container element
+     */
     render(): Element {
         return this.#element;
     }
 
+    /**
+     * Called when the element is removed from the DOM. Cleans up resources and shuts down the graph.
+     */
     disconnectedCallback(): void {
         // Disconnect the resize observer
         if (this.#resizeObserver) {
@@ -142,27 +162,21 @@ export class Graphty extends LitElement {
 
     /**
      * Array of node data objects to visualize.
-     *
      * @remarks
      * Setting this property replaces all existing nodes. For incremental
      * updates, use the `graph.addNodes()` method instead.
      *
      * Each node object should have an ID field (default: "id"). Additional
      * properties can be used in style selectors and accessed via `node.data`.
-     *
-     * @defaultValue `[]`
      * @since 1.0.0
-     *
      * @see {@link edgeData} for edge data
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--default | Basic Examples}
-     *
      * @example HTML attribute (JSON string)
      * ```html
      * <graphty-element
      *   node-data='[{"id": "1", "label": "Node 1"}, {"id": "2", "label": "Node 2"}]'>
      * </graphty-element>
      * ```
-     *
      * @example JavaScript property
      * ```typescript
      * const element = document.querySelector('graphty-element');
@@ -171,11 +185,15 @@ export class Graphty extends LitElement {
      *   { id: 'b', label: 'Node B', category: 'secondary' }
      * ];
      * ```
+     * @returns Array of node data objects or undefined if not set
      */
     @property({attribute: "node-data"})
     get nodeData(): Record<string, unknown>[] | undefined {
         return this.#nodeData;
     }
+    /**
+     * Sets the node data array. Triggers addition of nodes to the graph.
+     */
     set nodeData(value: Record<string, unknown>[] | undefined) {
         const oldValue = this.#nodeData;
         this.#nodeData = value;
@@ -190,28 +208,22 @@ export class Graphty extends LitElement {
 
     /**
      * Array of edge data objects defining connections between nodes.
-     *
      * @remarks
      * Setting this property replaces all existing edges. For incremental
      * updates, use the `graph.addEdges()` method instead.
      *
      * Each edge object should have source and target fields (default: "source", "target").
      * Additional properties can be used for styling (e.g., weight, label).
-     *
-     * @defaultValue `[]`
      * @since 1.0.0
-     *
      * @see {@link nodeData} for node data
      * @see {@link edgeSrcIdPath} to customize source field
      * @see {@link edgeDstIdPath} to customize target field
-     *
      * @example HTML attribute
      * ```html
      * <graphty-element
      *   edge-data='[{"source": "1", "target": "2"}, {"source": "2", "target": "3"}]'>
      * </graphty-element>
      * ```
-     *
      * @example JavaScript property
      * ```typescript
      * element.edgeData = [
@@ -219,11 +231,15 @@ export class Graphty extends LitElement {
      *   { source: 'b', target: 'c', weight: 2.0 }
      * ];
      * ```
+     * @returns Array of edge data objects or undefined if not set
      */
     @property({attribute: "edge-data"})
     get edgeData(): Record<string, unknown>[] | undefined {
         return this.#edgeData;
     }
+    /**
+     * Sets the edge data array. Triggers addition of edges to the graph.
+     */
     set edgeData(value: Record<string, unknown>[] | undefined) {
         const oldValue = this.#edgeData;
         this.#edgeData = value;
@@ -239,11 +255,15 @@ export class Graphty extends LitElement {
     /**
      * The type of data source (e.g. "json"). See documentation for
      * data sources for more information.
+     * @returns Data source type string or undefined if not set
      */
     @property({attribute: "data-source"})
     get dataSource(): string | undefined {
         return this.#dataSource;
     }
+    /**
+     * Sets the data source type. Initializes data loading when combined with dataSourceConfig.
+     */
     set dataSource(value: string | undefined) {
         const oldValue = this.#dataSource;
         this.#dataSource = value;
@@ -257,11 +277,15 @@ export class Graphty extends LitElement {
     /**
      * The configuration for the data source. See documentation for
      * data sources for more information.
+     * @returns Data source configuration object or undefined if not set
      */
     @property({attribute: "data-source-config"})
     get dataSourceConfig(): Record<string, unknown> | undefined {
         return this.#dataSourceConfig;
     }
+    /**
+     * Sets the data source configuration. Initializes data loading when combined with dataSource.
+     */
     set dataSourceConfig(value: Record<string, unknown> | undefined) {
         const oldValue = this.#dataSourceConfig;
         this.#dataSourceConfig = value;
@@ -288,11 +312,15 @@ export class Graphty extends LitElement {
      * A jmespath string that can be used to select the unique node identifier
      * for each node. Defaults to "id", as in `{id: 42}` is the identifier of
      * the node.
+     * @returns JMESPath string or undefined if not set
      */
     @property({attribute: "node-id-path"})
     get nodeIdPath(): string | undefined {
         return this.#nodeIdPath;
     }
+    /**
+     * Sets the JMESPath for node ID extraction. Updates graph configuration.
+     */
     set nodeIdPath(value: string | undefined) {
         const oldValue = this.#nodeIdPath;
         this.#nodeIdPath = value;
@@ -308,11 +336,15 @@ export class Graphty extends LitElement {
      * Similar to the nodeIdPath property / node-id-path attribute, this is a
      * jmespath that describes where to find the source node identifier for this edge.
      * Defaults to "src", as in `{src: 42, dst: 31337}`
+     * @returns JMESPath string or undefined if not set
      */
     @property({attribute: "edge-src-id-path"})
     get edgeSrcIdPath(): string | undefined {
         return this.#edgeSrcIdPath;
     }
+    /**
+     * Sets the JMESPath for edge source ID extraction. Updates graph configuration.
+     */
     set edgeSrcIdPath(value: string | undefined) {
         const oldValue = this.#edgeSrcIdPath;
         this.#edgeSrcIdPath = value;
@@ -328,11 +360,15 @@ export class Graphty extends LitElement {
      * Similar to the nodeIdPath property / node-id-path attribute, this is a
      * jmespath that describes where to find the desination node identifier for this edge.
      * Defaults to "dst", as in `{src: 42, dst: 31337}`
+     * @returns JMESPath string or undefined if not set
      */
     @property({attribute: "edge-dst-id-path"})
     get edgeDstIdPath(): string | undefined {
         return this.#edgeDstIdPath;
     }
+    /**
+     * Sets the JMESPath for edge destination ID extraction. Updates graph configuration.
+     */
     set edgeDstIdPath(value: string | undefined) {
         const oldValue = this.#edgeDstIdPath;
         this.#edgeDstIdPath = value;
@@ -346,7 +382,6 @@ export class Graphty extends LitElement {
 
     /**
      * Layout algorithm to use for positioning nodes.
-     *
      * @remarks
      * Available layouts:
      * - `ngraph`: Force-directed (3D optimized, recommended)
@@ -356,13 +391,9 @@ export class Graphty extends LitElement {
      * - `hierarchical`: Tree/DAG layout
      * - `random`: Random positions
      * - `fixed`: Pre-defined positions from node data
-     *
-     * @defaultValue `'ngraph'`
      * @since 1.0.0
-     *
      * @see {@link layoutConfig} for layout-specific options
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/layout--default | Layout Examples}
-     *
      * @example
      * ```typescript
      * // Set force-directed layout
@@ -372,11 +403,15 @@ export class Graphty extends LitElement {
      * element.layout = 'circular';
      * element.layoutConfig = { radius: 5 };
      * ```
+     * @returns Layout algorithm name or undefined if not set
      */
     @property()
     get layout(): string | undefined {
         return this.#layout;
     }
+    /**
+     * Sets the layout algorithm. Triggers layout recalculation with merged config.
+     */
     set layout(value: string | undefined) {
         const oldValue = this.#layout;
         this.#layout = value;
@@ -394,11 +429,15 @@ export class Graphty extends LitElement {
     /**
      * Specifies which type of layout to use. See the layout documentation for
      * more information.
+     * @returns Layout configuration object or undefined if not set
      */
     @property({attribute: "layout-config"})
     get layoutConfig(): Record<string, unknown> | undefined {
         return this.#layoutConfig;
     }
+    /**
+     * Sets layout-specific configuration. Updates active layout if one is set.
+     */
     set layoutConfig(value: Record<string, unknown> | undefined) {
         const oldValue = this.#layoutConfig;
         this.#layoutConfig = value;
@@ -415,7 +454,6 @@ export class Graphty extends LitElement {
 
     /**
      * View mode controls how the graph is rendered and displayed.
-     *
      * @remarks
      * - `"2d"`: Orthographic camera, fixed top-down view
      * - `"3d"`: Perspective camera with orbit controls (default)
@@ -423,23 +461,23 @@ export class Graphty extends LitElement {
      * - `"vr"`: Virtual reality mode using WebXR
      *
      * VR and AR modes require WebXR support in the browser.
-     *
-     * @defaultValue `'3d'`
      * @since 1.0.0
-     *
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/viewmode--default | View Mode Examples}
-     *
      * @example
      * ```typescript
      * element.viewMode = "2d";  // Switch to 2D orthographic view
      * element.viewMode = "3d";  // Switch to 3D perspective view
      * element.viewMode = "vr";  // Enter VR mode (requires WebXR support)
      * ```
+     * @returns Current view mode or undefined if not set
      */
     @property({attribute: "view-mode"})
     get viewMode(): ViewMode | undefined {
         return this.#viewMode;
     }
+    /**
+     * Sets the view mode. Switches camera and rendering mode accordingly.
+     */
     set viewMode(value: ViewMode | undefined) {
         const oldValue = this.#viewMode;
         this.#viewMode = value;
@@ -453,9 +491,11 @@ export class Graphty extends LitElement {
     }
 
     /**
+     * Gets 2D layout mode (deprecated - use viewMode instead).
      * @deprecated Use viewMode instead. layout2d: true is equivalent to viewMode: "2d"
      * Specifies that the layout should be rendered in two dimensions (as
      * opposed to 3D)
+     * @returns True if in 2D mode, false if 3D, undefined otherwise
      */
     @property({attribute: "layout-2d"})
     get layout2d(): boolean | undefined {
@@ -470,6 +510,9 @@ export class Graphty extends LitElement {
 
         return undefined;
     }
+    /**
+     * Sets 2D mode (deprecated). Converts boolean to viewMode internally.
+     */
     set layout2d(value: boolean | undefined) {
         console.warn(
             "[graphty-element] layout2d is deprecated. Use viewMode instead. " +
@@ -484,7 +527,6 @@ export class Graphty extends LitElement {
 
     /**
      * Style template configuration for the graph visualization.
-     *
      * @remarks
      * Style templates define the visual appearance of nodes, edges, and the graph
      * background. They can include colors, sizes, shapes, labels, and selection styles.
@@ -493,12 +535,8 @@ export class Graphty extends LitElement {
      * - A string name (e.g., "default", "dark")
      * - A partial configuration object to override defaults
      * - A complete StyleSchema configuration
-     *
-     * @defaultValue `'default'`
      * @since 1.0.0
-     *
      * @see {@link https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphstyles--default | Style Examples}
-     *
      * @example
      * ```typescript
      * // Apply dark theme
@@ -510,11 +548,15 @@ export class Graphty extends LitElement {
      *   edge: { color: '#cccccc' }
      * };
      * ```
+     * @returns Style template configuration or undefined if not set
      */
     @property({attribute: "style-template"})
     get styleTemplate(): StyleSchema | undefined {
         return this.#styleTemplate;
     }
+    /**
+     * Sets the style template. Applies visual styling to the graph.
+     */
     set styleTemplate(value: StyleSchema | undefined) {
         const oldValue = this.#styleTemplate;
         this.#styleTemplate = value;
@@ -529,12 +571,16 @@ export class Graphty extends LitElement {
 
     /**
      * Whether or not to run all algorithims in a style template when the
-     * template is loaded
+     * template is loaded.
+     * @returns Boolean flag or undefined if not set
      */
     @property({attribute: "run-algorithms-on-load"})
     get runAlgorithmsOnLoad(): boolean | undefined {
         return this.#runAlgorithmsOnLoad;
     }
+    /**
+     * Sets whether to run algorithms when a style template loads. Updates graph configuration.
+     */
     set runAlgorithmsOnLoad(value: boolean | undefined) {
         const oldValue = this.#runAlgorithmsOnLoad;
         this.#runAlgorithmsOnLoad = value;
@@ -553,11 +599,15 @@ export class Graphty extends LitElement {
      * When enabled, hierarchical timing and advanced statistics will be collected.
      * Access profiling data via graph.getStatsManager().getSnapshot() or
      * graph.getStatsManager().reportDetailed().
+     * @returns Boolean flag or undefined if not set
      */
     @property({attribute: "enable-detailed-profiling", type: Boolean})
     get enableDetailedProfiling(): boolean | undefined {
         return this.#enableDetailedProfiling;
     }
+    /**
+     * Sets detailed profiling mode. Enables hierarchical timing and advanced stats collection.
+     */
     set enableDetailedProfiling(value: boolean | undefined) {
         const oldValue = this.#enableDetailedProfiling;
         this.#enableDetailedProfiling = value;
@@ -572,7 +622,6 @@ export class Graphty extends LitElement {
     /**
      * XR (VR/AR) configuration.
      * Controls XR UI buttons, VR/AR mode settings, and input handling.
-     *
      * @example
      * ```typescript
      * element.xr = {
@@ -588,11 +637,15 @@ export class Graphty extends LitElement {
      *   }
      * };
      * ```
+     * @returns XR configuration object or undefined if not set
      */
     @property({attribute: false})
     get xr(): PartialXRConfig | undefined {
         return this.#xr;
     }
+    /**
+     * Sets XR configuration. Updates VR/AR settings and UI options.
+     */
     set xr(value: PartialXRConfig | undefined) {
         const oldValue = this.#xr;
         this.#xr = value;
@@ -607,10 +660,8 @@ export class Graphty extends LitElement {
 
     /**
      * Capture a screenshot of the current graph visualization.
-     *
      * @param options - Screenshot options (format, resolution, destinations, etc.)
      * @returns Promise resolving to ScreenshotResult with blob and metadata
-     *
      * @example
      * ```typescript
      * const el = document.querySelector('graphty-element');
@@ -639,10 +690,8 @@ export class Graphty extends LitElement {
      * Phase 6: Capability Check API
      * Check if screenshot can be captured with given options.
      * Available from Phase 6 onwards.
-     *
      * @param options - Screenshot options to validate
      * @returns Promise<CapabilityCheck> - Result indicating whether screenshot is supported
-     *
      * @example
      * ```typescript
      * const el = document.querySelector('graphty-element');
@@ -664,10 +713,8 @@ export class Graphty extends LitElement {
      * Phase 7: Video Capture API
      * Capture an animation as a video (stationary or animated camera)
      * Available from Phase 7 onwards.
-     *
      * @param options - Animation capture options
      * @returns Promise<AnimationResult> - Result with video blob and metadata
-     *
      * @example
      * ```typescript
      * const el = document.querySelector('graphty-element');
@@ -697,9 +744,7 @@ export class Graphty extends LitElement {
      * Phase 7: Cancel Animation Capture
      * Cancel an ongoing animation capture
      * Available from Phase 7 onwards.
-     *
      * @returns true if a capture was cancelled, false if no capture was in progress
-     *
      * @example
      * ```typescript
      * const el = document.querySelector("graphty-element");
@@ -734,7 +779,6 @@ export class Graphty extends LitElement {
     /**
      * Phase 7: Check if animation capture is in progress
      * Available from Phase 7 onwards.
-     *
      * @returns true if a capture is currently running
      */
     isAnimationCapturing(): boolean {
@@ -745,10 +789,8 @@ export class Graphty extends LitElement {
      * Phase 7: Animation Capture Estimation
      * Estimate performance and potential issues for animation capture
      * Available from Phase 7 onwards.
-     *
      * @param options - Animation options to estimate
      * @returns Promise<CaptureEstimate> - Estimation result
-     *
      * @example
      * ```typescript
      * const el = document.querySelector("graphty-element");
@@ -776,7 +818,6 @@ export class Graphty extends LitElement {
     /**
      * Get the current view mode.
      * @returns The current view mode ("2d", "3d", "ar", or "vr")
-     *
      * @example
      * ```typescript
      * const mode = element.getViewMode();
@@ -790,10 +831,8 @@ export class Graphty extends LitElement {
     /**
      * Set the view mode.
      * Changes the rendering dimension and camera system.
-     *
      * @param mode - The view mode to set ("2d", "3d", "ar", or "vr")
      * @returns Promise that resolves when the mode switch is complete
-     *
      * @example
      * ```typescript
      * // Switch to 2D orthographic view
@@ -813,9 +852,7 @@ export class Graphty extends LitElement {
      *
      * Use this to conditionally show/hide VR controls or display
      * appropriate messaging to users.
-     *
      * @returns Promise resolving to true if VR is supported
-     *
      * @example
      * ```typescript
      * const vrButton = document.querySelector('#vr-button');
@@ -836,9 +873,7 @@ export class Graphty extends LitElement {
      *
      * Use this to conditionally show/hide AR controls or display
      * appropriate messaging to users.
-     *
      * @returns Promise resolving to true if AR is supported
-     *
      * @example
      * ```typescript
      * const arButton = document.querySelector('#ar-button');
@@ -881,6 +916,9 @@ export class Graphty extends LitElement {
     /**
      * Set camera position (3D)
      * @param position - Target position {x, y, z}
+     * @param position.x - X coordinate
+     * @param position.y - Y coordinate
+     * @param position.z - Z coordinate
      * @param options - Animation options
      * @returns Promise that resolves when the position is applied (or animation completes)
      */
@@ -894,6 +932,9 @@ export class Graphty extends LitElement {
     /**
      * Set camera target (3D)
      * @param target - Target point to look at {x, y, z}
+     * @param target.x - X coordinate
+     * @param target.y - Y coordinate
+     * @param target.z - Z coordinate
      * @param options - Animation options
      * @returns Promise that resolves when the target is applied (or animation completes)
      */
@@ -920,6 +961,8 @@ export class Graphty extends LitElement {
     /**
      * Set camera pan (2D)
      * @param pan - Pan position {x, y}
+     * @param pan.x - X offset
+     * @param pan.y - Y offset
      * @param options - Animation options
      * @returns Promise that resolves when the pan is applied (or animation completes)
      */
@@ -940,8 +983,8 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * Save current camera state as a named preset
-     * Available from Phase 5 onwards
+     * Save current camera state as a named preset.
+     * Available from Phase 5 onwards.
      * @param name - Name for the preset
      */
     saveCameraPreset(name: string): void {
@@ -949,18 +992,19 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * Load a camera preset (built-in or user-defined)
-     * Available from Phase 5 onwards
+     * Load a camera preset (built-in or user-defined).
+     * Available from Phase 5 onwards.
      * @param name - Name of the preset to load
      * @param options - Animation options
+     * @returns Promise that resolves when preset is loaded
      */
     async loadCameraPreset(name: string, options?: import("./screenshot/types.js").CameraAnimationOptions): Promise<void> {
         return this.#graph.loadCameraPreset(name, options);
     }
 
     /**
-     * Get all camera presets (built-in + user-defined)
-     * Available from Phase 5 onwards
+     * Get all camera presets (built-in + user-defined).
+     * Available from Phase 5 onwards.
      * @returns Record of preset names to their state (built-in presets are marked)
      */
     getCameraPresets(): Record<string, import("./screenshot/types.js").CameraState | {builtin: true}> {
@@ -986,7 +1030,8 @@ export class Graphty extends LitElement {
     }
 
     /**
-     * Get the underlying Graph instance for debugging purposes
+     * Get the underlying Graph instance for debugging purposes.
+     * @returns The Graph instance
      */
     get graph(): Graph {
         return this.#graph;
@@ -998,13 +1043,11 @@ export class Graphty extends LitElement {
 
     /**
      * Add a single node to the graph.
-     *
      * @param node - Node data object to add
      * @param idPath - Key to use for node ID (default: "id")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when node is added
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addNode({ id: 'node-1', label: 'First Node' });
@@ -1020,13 +1063,11 @@ export class Graphty extends LitElement {
 
     /**
      * Add multiple nodes to the graph.
-     *
      * @param nodes - Array of node data objects to add
      * @param idPath - Key to use for node IDs (default: "id")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when nodes are added
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addNodes([
@@ -1045,14 +1086,12 @@ export class Graphty extends LitElement {
 
     /**
      * Add a single edge to the graph.
-     *
      * @param edge - Edge data object to add
      * @param srcIdPath - Path to source node ID (default: "source")
      * @param dstIdPath - Path to target node ID (default: "target")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when edge is added
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addEdge({ source: 'a', target: 'b', weight: 1.5 });
@@ -1069,14 +1108,12 @@ export class Graphty extends LitElement {
 
     /**
      * Add multiple edges to the graph.
-     *
      * @param edges - Array of edge data objects to add
      * @param srcIdPath - Path to source node ID (default: "source")
      * @param dstIdPath - Path to target node ID (default: "target")
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when edges are added
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addEdges([
@@ -1096,12 +1133,10 @@ export class Graphty extends LitElement {
 
     /**
      * Remove nodes from the graph.
-     *
      * @param nodeIds - Array of node IDs to remove
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when nodes are removed
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.removeNodes(['node-1', 'node-2']);
@@ -1116,12 +1151,10 @@ export class Graphty extends LitElement {
 
     /**
      * Update node data.
-     *
      * @param updates - Array of update objects with id and properties to update
      * @param options - Queue options for operation ordering
      * @returns Promise that resolves when nodes are updated
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.updateNodes([
@@ -1138,12 +1171,10 @@ export class Graphty extends LitElement {
 
     /**
      * Add data from a data source.
-     *
      * @param type - Data source type (e.g., "json", "csv", "graphml")
      * @param opts - Data source configuration options
      * @returns Promise that resolves when data is loaded
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addDataFromSource('json', { url: 'https://example.com/data.json' });
@@ -1155,12 +1186,14 @@ export class Graphty extends LitElement {
 
     /**
      * Load graph data from a URL.
-     *
      * @param url - URL to fetch graph data from
      * @param options - Loading options
+     * @param options.format - Data format (e.g., "json", "csv", "graphml")
+     * @param options.nodeIdPath - JMESPath for node ID field
+     * @param options.edgeSrcIdPath - JMESPath for edge source ID field
+     * @param options.edgeDstIdPath - JMESPath for edge destination ID field
      * @returns Promise that resolves when data is loaded
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.loadFromUrl('https://example.com/graph.json');
@@ -1180,12 +1213,14 @@ export class Graphty extends LitElement {
 
     /**
      * Load graph data from a File object.
-     *
      * @param file - File object from file input
      * @param options - Loading options
+     * @param options.format - Data format (e.g., "json", "csv", "graphml")
+     * @param options.nodeIdPath - JMESPath for node ID field
+     * @param options.edgeSrcIdPath - JMESPath for edge source ID field
+     * @param options.edgeDstIdPath - JMESPath for edge destination ID field
      * @returns Promise that resolves when data is loaded
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const input = document.querySelector('input[type="file"]');
@@ -1207,11 +1242,9 @@ export class Graphty extends LitElement {
 
     /**
      * Get a node by its ID.
-     *
      * @param nodeId - The ID of the node to get
      * @returns The node, or undefined if not found
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const node = element.getNode('node-1');
@@ -1226,10 +1259,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get all nodes in the graph.
-     *
      * @returns Array of all nodes
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const nodes = element.getNodes();
@@ -1242,10 +1273,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the number of nodes in the graph.
-     *
      * @returns Number of nodes
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * console.log('Node count:', element.getNodeCount());
@@ -1257,10 +1286,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the number of edges in the graph.
-     *
      * @returns Number of edges
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * console.log('Edge count:', element.getEdgeCount());
@@ -1276,11 +1303,9 @@ export class Graphty extends LitElement {
 
     /**
      * Select a node by its ID.
-     *
      * @param nodeId - The ID of the node to select
      * @returns True if the node was found and selected, false otherwise
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * if (element.selectNode('node-1')) {
@@ -1294,9 +1319,7 @@ export class Graphty extends LitElement {
 
     /**
      * Deselect the currently selected node.
-     *
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.deselectNode();
@@ -1308,10 +1331,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the currently selected node.
-     *
      * @returns The selected node, or null if no node is selected
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const selected = element.getSelectedNode();
@@ -1326,11 +1347,9 @@ export class Graphty extends LitElement {
 
     /**
      * Check if a specific node is selected.
-     *
      * @param nodeId - The ID of the node to check
      * @returns True if the node is selected, false otherwise
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * if (element.isNodeSelected('node-1')) {
@@ -1348,13 +1367,11 @@ export class Graphty extends LitElement {
 
     /**
      * Run a graph algorithm.
-     *
      * @param namespace - Algorithm namespace (e.g., "graphty")
      * @param type - Algorithm type (e.g., "degree", "pagerank")
      * @param options - Algorithm options
      * @returns Promise that resolves when algorithm completes
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.runAlgorithm('graphty', 'degree');
@@ -1371,12 +1388,10 @@ export class Graphty extends LitElement {
 
     /**
      * Apply suggested styles from an algorithm.
-     *
      * @param algorithmKey - Algorithm key (e.g., "graphty:degree")
      * @param options - Options for applying styles
      * @returns True if styles were applied, false otherwise
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.runAlgorithm('graphty', 'degree');
@@ -1392,11 +1407,9 @@ export class Graphty extends LitElement {
 
     /**
      * Get suggested styles for an algorithm without applying them.
-     *
      * @param algorithmKey - Algorithm key (e.g., "graphty:degree")
      * @returns Suggested styles config, or null if none exist
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const styles = element.getSuggestedStyles('graphty:degree');
@@ -1415,12 +1428,10 @@ export class Graphty extends LitElement {
 
     /**
      * Set the style template.
-     *
      * @param template - Style template configuration
      * @param options - Queue options
      * @returns Promise that resolves with the applied styles
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.setStyleTemplate({
@@ -1437,10 +1448,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the style manager for advanced style manipulation.
-     *
      * @returns The style manager instance
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const styleManager = element.getStyleManager();
@@ -1460,13 +1469,11 @@ export class Graphty extends LitElement {
 
     /**
      * Set the layout algorithm.
-     *
      * @param type - Layout algorithm name
      * @param opts - Layout-specific options
      * @param options - Queue options
      * @returns Promise that resolves when layout is initialized
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.setLayout('circular', { radius: 5 });
@@ -1487,9 +1494,7 @@ export class Graphty extends LitElement {
 
     /**
      * Zoom the camera to fit all nodes in view.
-     *
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.waitForSettled();
@@ -1502,10 +1507,8 @@ export class Graphty extends LitElement {
 
     /**
      * Wait for all operations to complete and layout to stabilize.
-     *
      * @returns Promise that resolves when all operations are complete
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.addNodes(nodes);
@@ -1519,11 +1522,9 @@ export class Graphty extends LitElement {
 
     /**
      * Execute multiple operations as a batch.
-     *
      * @param fn - Function containing batch operations
      * @returns Promise that resolves when batch completes
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.batchOperations(async () => {
@@ -1543,11 +1544,9 @@ export class Graphty extends LitElement {
 
     /**
      * Subscribe to graph events.
-     *
      * @param type - Event type to listen for
      * @param callback - Callback function
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.on('graph-settled', () => {
@@ -1564,7 +1563,6 @@ export class Graphty extends LitElement {
 
     /**
      * Subscribe to graph events (alias for on).
-     *
      * @param type - Event type to listen for
      * @param callback - Callback function
      * @since 1.5.0
@@ -1578,10 +1576,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the total number of registered event listeners.
-     *
      * @returns Number of registered listeners
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * console.log('Active listeners:', element.listenerCount());
@@ -1597,10 +1593,8 @@ export class Graphty extends LitElement {
 
     /**
      * Check if the graph is in 2D mode.
-     *
      * @returns True if in 2D mode, false otherwise
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * if (element.is2D()) {
@@ -1609,7 +1603,7 @@ export class Graphty extends LitElement {
      * ```
      */
     is2D(): boolean {
-        return this.#graph.is2D();
+        return this.getViewMode() === "2d";
     }
 
     // ============================================================================
@@ -1618,10 +1612,8 @@ export class Graphty extends LitElement {
 
     /**
      * Set XR (VR/AR) configuration.
-     *
      * @param config - XR configuration
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.setXRConfig({
@@ -1636,7 +1628,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the current XR configuration.
-     *
      * @returns The current XR configuration, or undefined if not set
      * @since 1.5.0
      */
@@ -1646,10 +1637,8 @@ export class Graphty extends LitElement {
 
     /**
      * Exit XR (VR/AR) mode.
-     *
      * @returns Promise that resolves when XR session ends
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.exitXR();
@@ -1665,11 +1654,9 @@ export class Graphty extends LitElement {
 
     /**
      * Resolve a camera preset to a CameraState.
-     *
      * @param preset - Preset name (e.g., "fitToGraph", "topView")
      * @returns The resolved camera state
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const state = element.resolveCameraPreset('topView');
@@ -1686,10 +1673,8 @@ export class Graphty extends LitElement {
 
     /**
      * Enable or disable user input.
-     *
      * @param enabled - Whether input should be enabled
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.setInputEnabled(false); // Disable interaction
@@ -1705,9 +1690,7 @@ export class Graphty extends LitElement {
 
     /**
      * Shut down the graph and release resources.
-     *
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.shutdown();
@@ -1719,10 +1702,8 @@ export class Graphty extends LitElement {
 
     /**
      * Check if the graph is running.
-     *
      * @returns True if the graph is running, false otherwise
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * if (element.isRunning()) {
@@ -1740,11 +1721,12 @@ export class Graphty extends LitElement {
 
     /**
      * Convert world coordinates to screen coordinates.
-     *
      * @param worldPos - Position in world space
+     * @param worldPos.x - X coordinate in world space
+     * @param worldPos.y - Y coordinate in world space
+     * @param worldPos.z - Z coordinate in world space
      * @returns Position in screen space
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const node = element.getNode('node-1');
@@ -1762,11 +1744,11 @@ export class Graphty extends LitElement {
 
     /**
      * Convert screen coordinates to world coordinates.
-     *
      * @param screenPos - Position in screen space
+     * @param screenPos.x - X pixel coordinate
+     * @param screenPos.y - Y pixel coordinate
      * @returns Position in world space, or null if not found
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const worldPos = element.screenToWorld({ x: 100, y: 200 });
@@ -1785,10 +1767,10 @@ export class Graphty extends LitElement {
 
     /**
      * Set graph data (both nodes and edges) at once.
-     *
      * @param data - Object containing nodes and edges arrays
+     * @param data.nodes - Array of node data objects
+     * @param data.edges - Array of edge data objects
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * element.setData({
@@ -1807,10 +1789,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the Styles object for direct style access.
-     *
      * @returns The Styles object
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const styles = element.getStyles();
@@ -1823,7 +1803,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the DataManager for advanced data operations.
-     *
      * @returns The DataManager instance
      * @since 1.5.0
      */
@@ -1833,7 +1812,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the LayoutManager for advanced layout operations.
-     *
      * @returns The LayoutManager instance
      * @since 1.5.0
      */
@@ -1843,7 +1821,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the UpdateManager for update scheduling.
-     *
      * @returns The UpdateManager instance
      * @since 1.5.0
      */
@@ -1853,10 +1830,8 @@ export class Graphty extends LitElement {
 
     /**
      * Get the StatsManager for performance statistics.
-     *
      * @returns The StatsManager instance
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const stats = element.getStatsManager();
@@ -1869,7 +1844,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the SelectionManager for selection operations.
-     *
      * @returns The SelectionManager instance
      * @since 1.5.0
      */
@@ -1879,7 +1853,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the EventManager for event operations.
-     *
      * @returns The EventManager instance
      * @since 1.5.0
      */
@@ -1889,7 +1862,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the Babylon.js Scene for advanced rendering operations.
-     *
      * @returns The Babylon.js Scene
      * @since 1.5.0
      */
@@ -1899,7 +1871,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the MeshCache for mesh management.
-     *
      * @returns The MeshCache instance
      * @since 1.5.0
      */
@@ -1913,7 +1884,6 @@ export class Graphty extends LitElement {
 
     /**
      * Set the camera mode.
-     *
      * @param mode - Camera mode key
      * @param options - Queue options
      * @returns Promise that resolves when camera mode is set
@@ -1928,7 +1898,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the current camera controller.
-     *
      * @returns The camera controller, or null if not available
      * @since 1.5.0
      */
@@ -1938,7 +1907,6 @@ export class Graphty extends LitElement {
 
     /**
      * Set render settings for advanced rendering control.
-     *
      * @param settings - Render settings object
      * @param options - Queue options
      * @returns Promise that resolves when settings are applied
@@ -1953,11 +1921,9 @@ export class Graphty extends LitElement {
 
     /**
      * Get a node's mesh by its ID.
-     *
      * @param nodeId - The ID of the node
      * @returns The node's mesh, or null if not found
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const mesh = element.getNodeMesh('node-1');
@@ -1972,7 +1938,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the XR session manager.
-     *
      * @returns The XR session manager, or undefined if not initialized
      * @since 1.5.0
      */
@@ -1986,11 +1951,9 @@ export class Graphty extends LitElement {
 
     /**
      * Enable AI control for the graph.
-     *
      * @param config - AI manager configuration
      * @returns Promise that resolves when AI is enabled
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * await element.enableAiControl({
@@ -2004,7 +1967,6 @@ export class Graphty extends LitElement {
 
     /**
      * Disable AI control for the graph.
-     *
      * @since 1.5.0
      */
     disableAiControl(): void {
@@ -2013,11 +1975,9 @@ export class Graphty extends LitElement {
 
     /**
      * Send a command to the AI assistant.
-     *
      * @param message - The command message
      * @returns Promise with the execution result
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const result = await element.aiCommand('Show me the most connected nodes');
@@ -2030,7 +1990,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the current AI status.
-     *
      * @returns The AI status, or null if AI is not enabled
      * @since 1.5.0
      */
@@ -2040,11 +1999,9 @@ export class Graphty extends LitElement {
 
     /**
      * Subscribe to AI status changes.
-     *
      * @param callback - Callback function for status changes
      * @returns Unsubscribe function
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const unsubscribe = element.onAiStatusChange((status) => {
@@ -2059,7 +2016,6 @@ export class Graphty extends LitElement {
 
     /**
      * Cancel the current AI command.
-     *
      * @since 1.5.0
      */
     cancelAiCommand(): void {
@@ -2068,7 +2024,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the AI manager.
-     *
      * @returns The AI manager, or null if not enabled
      * @since 1.5.0
      */
@@ -2078,7 +2033,6 @@ export class Graphty extends LitElement {
 
     /**
      * Check if AI control is enabled.
-     *
      * @returns True if AI is enabled
      * @since 1.5.0
      */
@@ -2088,7 +2042,6 @@ export class Graphty extends LitElement {
 
     /**
      * Retry the last AI command that failed.
-     *
      * @returns Promise with the execution result
      * @since 1.5.0
      */
@@ -2098,7 +2051,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the API key manager.
-     *
      * @returns The API key manager, or null if not created
      * @since 1.5.0
      */
@@ -2109,10 +2061,8 @@ export class Graphty extends LitElement {
     /**
      * Create an API key manager for persistent key storage.
      * This is a static method - the manager is not tied to any specific graph instance.
-     *
      * @returns The created API key manager
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const keyManager = Graphty.createApiKeyManager();
@@ -2125,7 +2075,6 @@ export class Graphty extends LitElement {
 
     /**
      * Get the voice input adapter.
-     *
      * @returns The voice input adapter
      * @since 1.5.0
      */
@@ -2135,11 +2084,14 @@ export class Graphty extends LitElement {
 
     /**
      * Start voice input for AI commands.
-     *
      * @param options - Voice input options
+     * @param options.continuous - Whether to continue listening after results
+     * @param options.interimResults - Whether to report interim (non-final) results
+     * @param options.language - Language code (e.g., "en-US")
+     * @param options.onTranscript - Callback for transcript results
+     * @param options.onStart - Callback when voice input starts
      * @returns True if voice input started successfully
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const started = element.startVoiceInput({
@@ -2162,7 +2114,6 @@ export class Graphty extends LitElement {
 
     /**
      * Stop voice input.
-     *
      * @since 1.5.0
      */
     stopVoiceInput(): void {
@@ -2171,7 +2122,6 @@ export class Graphty extends LitElement {
 
     /**
      * Check if voice input is active.
-     *
      * @returns True if voice input is active
      * @since 1.5.0
      */

@@ -190,15 +190,26 @@ export class StatsManager implements Manager {
     private currentFrameNumber = 0;
     private longTaskObserver: PerformanceObserver | null = null;
 
+    /**
+     * Creates a new stats manager for performance tracking
+     * @param eventManager - Event manager for emitting stats events
+     */
     constructor(
         private eventManager: EventManager,
     ) {}
 
+    /**
+     * Initialize the stats manager
+     * @returns Promise that resolves when initialization is complete
+     */
     async init(): Promise<void> {
         // StatsManager doesn't need async initialization
         return Promise.resolve();
     }
 
+    /**
+     * Dispose the stats manager and clean up instrumentation
+     */
     dispose(): void {
         // Dispose instrumentation
         if (this.sceneInstrumentation) {
@@ -224,6 +235,8 @@ export class StatsManager implements Manager {
     /**
      * Initialize Babylon.js instrumentation
      * Should be called after scene and engine are created
+     * @param scene - The Babylon.js scene
+     * @param engine - The Babylon.js engine (Engine or WebGPUEngine)
      */
     initializeBabylonInstrumentation(scene: Scene, engine: Engine | WebGPUEngine): void {
         // Scene instrumentation
@@ -243,7 +256,9 @@ export class StatsManager implements Manager {
 
     /**
      * Inject mocked instrumentation for testing
-     * @internal - Only for testing purposes
+     * @param engineInstrumentation - Mock engine instrumentation
+     * @param sceneInstrumentation - Mock scene instrumentation
+     * @internal
      */
     _injectMockInstrumentation(
         engineInstrumentation?: EngineInstrumentation | null,
@@ -260,6 +275,8 @@ export class StatsManager implements Manager {
 
     /**
      * Update cache statistics
+     * @param hits - Number of cache hits
+     * @param misses - Number of cache misses
      */
     updateCacheStats(hits: number, misses: number): void {
         this.meshCacheHits = hits;
@@ -268,6 +285,8 @@ export class StatsManager implements Manager {
 
     /**
      * Update node/edge counts
+     * @param nodeCount - Current number of nodes
+     * @param edgeCount - Current number of edges
      */
     updateCounts(nodeCount: number, edgeCount: number): void {
         this.nodeCount = nodeCount;
@@ -312,6 +331,7 @@ export class StatsManager implements Manager {
 
     /**
      * Get current statistics
+     * @returns Current graph statistics including counts and performance metrics
      */
     getStats(): {
         numNodes: number;
@@ -337,6 +357,7 @@ export class StatsManager implements Manager {
 
     /**
      * Generate a human-readable statistics report
+     * @returns Formatted string with all statistics
      */
     toString(): string {
         let statsStr = "";
@@ -403,6 +424,7 @@ export class StatsManager implements Manager {
 
     /**
      * Get performance summary
+     * @returns Summary of key performance metrics
      */
     getPerformanceSummary(): {
         fps: number;
@@ -542,6 +564,7 @@ export class StatsManager implements Manager {
 
     /**
      * Report a frame with high blocking overhead
+     * @param profile - Frame profile data with blocking information
      */
     private reportHighBlockingFrame(profile: FrameProfile): void {
         const topOps = [... profile.operations].sort((a, b) => b.duration - a.duration).slice(0, 5);
@@ -567,6 +590,7 @@ export class StatsManager implements Manager {
     /**
      * Get blocking correlation report
      * Shows which operations appear most often in high-blocking frames
+     * @returns Array of operation statistics sorted by blocking correlation
      */
     getBlockingReport(): OperationBlockingStats[] {
         if (this.frameProfiles.length === 0) {
@@ -637,6 +661,9 @@ export class StatsManager implements Manager {
 
     /**
      * Measure synchronous code execution
+     * @param label - Label for this measurement
+     * @param fn - Function to measure
+     * @returns The return value of fn
      */
     measure<T>(label: string, fn: () => T): T {
         if (!this.enabled) {
@@ -659,6 +686,9 @@ export class StatsManager implements Manager {
 
     /**
      * Measure async code execution
+     * @param label - Label for this measurement
+     * @param fn - Async function to measure
+     * @returns Promise resolving to the return value of fn
      */
     async measureAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
         if (!this.enabled) {
@@ -681,6 +711,7 @@ export class StatsManager implements Manager {
 
     /**
      * Start manual timing
+     * @param label - Label for this measurement
      */
     startMeasurement(label: string): void {
         if (!this.enabled) {
@@ -692,6 +723,7 @@ export class StatsManager implements Manager {
 
     /**
      * End manual timing
+     * @param label - Label for this measurement (must match startMeasurement)
      */
     endMeasurement(label: string): void {
         if (!this.enabled) {
@@ -724,6 +756,8 @@ export class StatsManager implements Manager {
 
     /**
      * Record a measurement and update statistics
+     * @param label - Label for the measurement
+     * @param duration - Duration in milliseconds
      */
     private recordMeasurement(label: string, duration: number): void {
         if (!this.measurements.has(label)) {
@@ -764,6 +798,11 @@ export class StatsManager implements Manager {
     /**
      * Calculate percentile from stored durations
      * Uses simple sorting approach (accurate but not streaming)
+     * @param durations - Array of duration measurements
+     * @param percentile - Percentile to calculate (0-100)
+     * @param filled - Whether the ring buffer is completely filled
+     * @param currentIndex - Current index in the ring buffer
+     * @returns The calculated percentile value
      */
     private getPercentile(durations: number[], percentile: number, filled: boolean, currentIndex: number): number {
         // Only use filled portion of ring buffer
@@ -787,6 +826,7 @@ export class StatsManager implements Manager {
 
     /**
      * Get comprehensive performance snapshot
+     * @returns Complete performance data including CPU, GPU, and scene metrics
      */
     getSnapshot(): PerformanceSnapshot {
         const cpuMeasurements = Array.from(this.measurements.values()).map((m) => ({
@@ -871,6 +911,7 @@ export class StatsManager implements Manager {
 
     /**
      * Calculate layout session metrics
+     * @returns Layout session metrics if available, undefined otherwise
      */
     private getLayoutSessionMetrics(): LayoutSessionMetrics | undefined {
         if (this.layoutSessionStartTime === null || this.layoutSessionEndTime === null) {
@@ -1243,8 +1284,8 @@ export class StatsManager implements Manager {
 
     /**
      * Set a counter to a specific value
-     * @param label Counter identifier
-     * @param value Value to set
+     * @param label - Counter identifier
+     * @param value - Value to set
      */
     setCounter(label: string, value: number): void {
         if (!this.enabled) {
@@ -1267,7 +1308,7 @@ export class StatsManager implements Manager {
 
     /**
      * Get current value of a counter
-     * @param label Counter identifier
+     * @param label - Counter identifier
      * @returns Current counter value (0 if not found)
      */
     getCounter(label: string): number {
@@ -1281,7 +1322,7 @@ export class StatsManager implements Manager {
 
     /**
      * Reset a specific counter to 0
-     * @param label Counter identifier
+     * @param label - Counter identifier
      */
     resetCounter(label: string): void {
         if (!this.enabled) {
@@ -1312,6 +1353,7 @@ export class StatsManager implements Manager {
 
     /**
      * Get snapshot of all counters
+     * @returns Array of counter snapshots
      */
     getCountersSnapshot(): CounterSnapshot[] {
         return Array.from(this.counters.values()).map((c) => ({

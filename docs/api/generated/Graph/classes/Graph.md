@@ -2,11 +2,10 @@
 
 # Class: Graph
 
-Defined in: [src/Graph.ts:65](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L65)
+Defined in: [src/Graph.ts:69](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L69)
 
-GraphContext provides controlled access to graph services
-This interface allows Node and Edge classes to access required services
-without direct dependency on the Graph class, eliminating circular dependencies
+Main orchestrator class for graph visualization and interaction.
+Integrates Babylon.js scene management, coordinates nodes, edges, layouts, and styling.
 
 ## Implements
 
@@ -18,17 +17,23 @@ without direct dependency on the Graph class, eliminating circular dependencies
 
 > **new Graph**(`element`, `useMockInput`): `Graph`
 
-Defined in: [src/Graph.ts:123](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L123)
+Defined in: [src/Graph.ts:132](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L132)
+
+Creates a new Graph instance and initializes the rendering engine and managers.
 
 #### Parameters
 
 ##### element
+
+DOM element or element ID to attach the graph canvas to
 
 `string` | `Element`
 
 ##### useMockInput
 
 `boolean` = `false`
+
+Whether to use mock input for testing (defaults to false)
 
 #### Returns
 
@@ -40,7 +45,7 @@ Defined in: [src/Graph.ts:123](https://github.com/graphty-org/graphty-element/bl
 
 > **camera**: `CameraManager`
 
-Defined in: [src/Graph.ts:72](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L72)
+Defined in: [src/Graph.ts:76](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L76)
 
 ***
 
@@ -48,7 +53,7 @@ Defined in: [src/Graph.ts:72](https://github.com/graphty-org/graphty-element/blo
 
 > **canvas**: `HTMLCanvasElement`
 
-Defined in: [src/Graph.ts:69](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L69)
+Defined in: [src/Graph.ts:73](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L73)
 
 ***
 
@@ -56,7 +61,7 @@ Defined in: [src/Graph.ts:69](https://github.com/graphty-org/graphty-element/blo
 
 > **element**: `Element`
 
-Defined in: [src/Graph.ts:68](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L68)
+Defined in: [src/Graph.ts:72](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L72)
 
 ***
 
@@ -64,7 +69,7 @@ Defined in: [src/Graph.ts:68](https://github.com/graphty-org/graphty-element/blo
 
 > `optional` **enableDetailedProfiling**: `boolean`
 
-Defined in: [src/Graph.ts:85](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L85)
+Defined in: [src/Graph.ts:89](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L89)
 
 ***
 
@@ -72,7 +77,7 @@ Defined in: [src/Graph.ts:85](https://github.com/graphty-org/graphty-element/blo
 
 > **engine**: `Engine` \| `WebGPUEngine`
 
-Defined in: [src/Graph.ts:70](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L70)
+Defined in: [src/Graph.ts:74](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L74)
 
 ***
 
@@ -80,7 +85,7 @@ Defined in: [src/Graph.ts:70](https://github.com/graphty-org/graphty-element/blo
 
 > `readonly` **eventManager**: [`EventManager`](../../managers/classes/EventManager.md)
 
-Defined in: [src/Graph.ts:97](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L97)
+Defined in: [src/Graph.ts:101](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L101)
 
 Event manager for adding/removing event listeners
 
@@ -90,7 +95,7 @@ Event manager for adding/removing event listeners
 
 > `optional` **fetchEdges**: [`FetchEdgesFn`](../../config/type-aliases/FetchEdgesFn.md)
 
-Defined in: [src/Graph.ts:82](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L82)
+Defined in: [src/Graph.ts:86](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L86)
 
 ***
 
@@ -98,7 +103,7 @@ Defined in: [src/Graph.ts:82](https://github.com/graphty-org/graphty-element/blo
 
 > `optional` **fetchNodes**: [`FetchNodesFn`](../../config/type-aliases/FetchNodesFn.md)
 
-Defined in: [src/Graph.ts:81](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L81)
+Defined in: [src/Graph.ts:85](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L85)
 
 ***
 
@@ -106,7 +111,7 @@ Defined in: [src/Graph.ts:81](https://github.com/graphty-org/graphty-element/blo
 
 > **initialized**: `boolean` = `false`
 
-Defined in: [src/Graph.ts:83](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L83)
+Defined in: [src/Graph.ts:87](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L87)
 
 ***
 
@@ -114,7 +119,7 @@ Defined in: [src/Graph.ts:83](https://github.com/graphty-org/graphty-element/blo
 
 > **needRays**: `boolean` = `true`
 
-Defined in: [src/Graph.ts:77](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L77)
+Defined in: [src/Graph.ts:81](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L81)
 
 ***
 
@@ -122,7 +127,7 @@ Defined in: [src/Graph.ts:77](https://github.com/graphty-org/graphty-element/blo
 
 > **operationQueue**: [`OperationQueueManager`](../../managers/classes/OperationQueueManager.md)
 
-Defined in: [src/Graph.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L108)
+Defined in: [src/Graph.ts:112](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L112)
 
 ***
 
@@ -130,7 +135,7 @@ Defined in: [src/Graph.ts:108](https://github.com/graphty-org/graphty-element/bl
 
 > `optional` **pinOnDrag**: `boolean`
 
-Defined in: [src/Graph.ts:79](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L79)
+Defined in: [src/Graph.ts:83](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L83)
 
 ***
 
@@ -138,7 +143,7 @@ Defined in: [src/Graph.ts:79](https://github.com/graphty-org/graphty-element/blo
 
 > **runAlgorithmsOnLoad**: `boolean` = `false`
 
-Defined in: [src/Graph.ts:84](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L84)
+Defined in: [src/Graph.ts:88](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L88)
 
 ***
 
@@ -146,7 +151,7 @@ Defined in: [src/Graph.ts:84](https://github.com/graphty-org/graphty-element/blo
 
 > **scene**: `Scene`
 
-Defined in: [src/Graph.ts:71](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L71)
+Defined in: [src/Graph.ts:75](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L75)
 
 ***
 
@@ -154,7 +159,7 @@ Defined in: [src/Graph.ts:71](https://github.com/graphty-org/graphty-element/blo
 
 > `optional` **skybox**: `string`
 
-Defined in: [src/Graph.ts:75](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L75)
+Defined in: [src/Graph.ts:79](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L79)
 
 ***
 
@@ -162,7 +167,7 @@ Defined in: [src/Graph.ts:75](https://github.com/graphty-org/graphty-element/blo
 
 > **styles**: [`Styles`](../../Styles/classes/Styles.md)
 
-Defined in: [src/Graph.ts:66](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L66)
+Defined in: [src/Graph.ts:70](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L70)
 
 ***
 
@@ -170,7 +175,7 @@ Defined in: [src/Graph.ts:66](https://github.com/graphty-org/graphty-element/blo
 
 > **xrHelper**: `WebXRDefaultExperience` \| `null` = `null`
 
-Defined in: [src/Graph.ts:76](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L76)
+Defined in: [src/Graph.ts:80](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L80)
 
 ## Accessors
 
@@ -180,7 +185,7 @@ Defined in: [src/Graph.ts:76](https://github.com/graphty-org/graphty-element/blo
 
 > **get** **input**(): [`InputManager`](../../managers/classes/InputManager.md)
 
-Defined in: [src/Graph.ts:1935](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1935)
+Defined in: [src/Graph.ts:2059](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2059)
 
 Get the input manager
 
@@ -188,13 +193,17 @@ Get the input manager
 
 [`InputManager`](../../managers/classes/InputManager.md)
 
+The input manager instance
+
 ## Methods
 
 ### addDataFromSource()
 
 > **addDataFromSource**(`type`, `opts`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:734](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L734)
+Defined in: [src/Graph.ts:764](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L764)
+
+Adds graph data from a registered data source.
 
 #### Parameters
 
@@ -202,13 +211,19 @@ Defined in: [src/Graph.ts:734](https://github.com/graphty-org/graphty-element/bl
 
 `string`
 
+Type/name of the registered data source
+
 ##### opts
 
 `object` = `{}`
 
+Options to pass to the data source
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when data is loaded
 
 ***
 
@@ -216,7 +231,9 @@ Defined in: [src/Graph.ts:734](https://github.com/graphty-org/graphty-element/bl
 
 > **addEdge**(`edge`, `srcIdPath?`, `dstIdPath?`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:942](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L942)
+Defined in: [src/Graph.ts:986](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L986)
+
+Add a single edge to the graph.
 
 #### Parameters
 
@@ -224,17 +241,25 @@ Defined in: [src/Graph.ts:942](https://github.com/graphty-org/graphty-element/bl
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Edge data object to add
+
 ##### srcIdPath?
 
 `string`
+
+Key to use for edge source ID (default: "source")
 
 ##### dstIdPath?
 
 `string`
 
+Key to use for edge destination ID (default: "target")
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -246,7 +271,7 @@ Defined in: [src/Graph.ts:942](https://github.com/graphty-org/graphty-element/bl
 
 > **addEdges**(`edges`, `srcIdPath?`, `dstIdPath?`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:987](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L987)
+Defined in: [src/Graph.ts:1027](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1027)
 
 Add edges to the graph incrementally.
 
@@ -327,7 +352,9 @@ await graph.addEdges([{source: 'a', target: 'b'}]);
 
 > **addListener**(`type`, `cb`): `void`
 
-Defined in: [src/Graph.ts:1410](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1410)
+Defined in: [src/Graph.ts:1481](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1481)
+
+Add an event listener for graph events.
 
 #### Parameters
 
@@ -335,9 +362,13 @@ Defined in: [src/Graph.ts:1410](https://github.com/graphty-org/graphty-element/b
 
 [`EventType`](../../events/type-aliases/EventType.md)
 
+Event type to listen for
+
 ##### cb
 
 [`EventCallbackType`](../../events/type-aliases/EventCallbackType.md)
+
+Callback function to execute when event fires
 
 #### Returns
 
@@ -349,7 +380,9 @@ Defined in: [src/Graph.ts:1410](https://github.com/graphty-org/graphty-element/b
 
 > **addNode**(`node`, `idPath?`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:877](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L877)
+Defined in: [src/Graph.ts:918](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L918)
+
+Add a single node to the graph.
 
 #### Parameters
 
@@ -357,13 +390,19 @@ Defined in: [src/Graph.ts:877](https://github.com/graphty-org/graphty-element/bl
 
 [`AdHocData`](../../config/type-aliases/AdHocData.md)
 
+Node data object to add
+
 ##### idPath?
 
 `string`
 
+Key to use for node ID (default: "id")
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -375,7 +414,7 @@ Defined in: [src/Graph.ts:877](https://github.com/graphty-org/graphty-element/bl
 
 > **addNodes**(`nodes`, `idPath?`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:920](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L920)
+Defined in: [src/Graph.ts:957](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L957)
 
 Add nodes to the graph incrementally.
 
@@ -449,7 +488,7 @@ graph.zoomToFit();
 
 > **aiCommand**(`input`): `Promise`\<`ExecutionResult`\>
 
-Defined in: [src/Graph.ts:3519](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3519)
+Defined in: [src/Graph.ts:3713](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3713)
 
 Send a natural language command to the AI controller.
 
@@ -487,7 +526,7 @@ await graph.aiCommand('Show in 2D');
 
 > **applySuggestedStyles**(`algorithmKey`, `options?`): `boolean`
 
-Defined in: [src/Graph.ts:1160](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1160)
+Defined in: [src/Graph.ts:1192](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1192)
 
 Apply suggested styles from an algorithm
 
@@ -517,7 +556,7 @@ true if any styles were applied, false otherwise
 
 > **batchOperations**(`fn`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1381](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1381)
+Defined in: [src/Graph.ts:1437](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1437)
 
 Execute multiple operations as a batch
 Operations will be queued and executed in dependency order
@@ -527,6 +566,8 @@ Operations will be queued and executed in dependency order
 ##### fn
 
 () => `void` \| `Promise`\<`void`\>
+
+Function containing operations to batch
 
 #### Returns
 
@@ -538,7 +579,7 @@ Operations will be queued and executed in dependency order
 
 > **canCaptureScreenshot**(`options?`): `Promise`\<`CapabilityCheck`\>
 
-Defined in: [src/Graph.ts:2107](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2107)
+Defined in: [src/Graph.ts:2249](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2249)
 
 Check if screenshot can be captured with given options.
 
@@ -581,7 +622,7 @@ console.log(`Memory: ${check8k.estimatedMemoryMB.toFixed(0)}MB`);
 
 > **cancelAiCommand**(): `void`
 
-Defined in: [src/Graph.ts:3589](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3589)
+Defined in: [src/Graph.ts:3778](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3778)
 
 Cancel any in-progress AI command.
 
@@ -605,7 +646,7 @@ graph.cancelAiCommand();
 
 > **cancelAnimationCapture**(): `boolean`
 
-Defined in: [src/Graph.ts:2300](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2300)
+Defined in: [src/Graph.ts:2444](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2444)
 
 Cancel ongoing animation capture
 
@@ -647,7 +688,7 @@ try {
 
 > **captureAnimation**(`options`): `Promise`\<`AnimationResult`\>
 
-Defined in: [src/Graph.ts:2151](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2151)
+Defined in: [src/Graph.ts:2291](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2291)
 
 Capture an animation as a video (stationary or animated camera)
 
@@ -705,7 +746,7 @@ const result = await graph.captureAnimation({
 
 > **captureScreenshot**(`options?`): `Promise`\<`ScreenshotResult`\>
 
-Defined in: [src/Graph.ts:2073](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2073)
+Defined in: [src/Graph.ts:2217](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2217)
 
 Capture a screenshot of the current graph visualization.
 
@@ -748,7 +789,7 @@ const result = await graph.captureScreenshot({
 
 > `static` **createApiKeyManager**(): `ApiKeyManager`
 
-Defined in: [src/Graph.ts:3683](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3683)
+Defined in: [src/Graph.ts:3863](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3863)
 
 Create a standalone ApiKeyManager for key management without enabling AI.
 Useful for settings UIs that configure keys before AI activation.
@@ -777,7 +818,7 @@ keyManager.setKey('openai', apiKey);
 
 > **deselectNode**(): `void`
 
-Defined in: [src/Graph.ts:1578](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1578)
+Defined in: [src/Graph.ts:1676](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1676)
 
 Deselect the currently selected node.
 
@@ -821,7 +862,7 @@ document.addEventListener('keydown', (e) => {
 
 > **disableAiControl**(): `void`
 
-Defined in: [src/Graph.ts:3492](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3492)
+Defined in: [src/Graph.ts:3689](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3689)
 
 Disable AI control and clean up resources.
 
@@ -842,7 +883,9 @@ graph.disableAiControl();
 
 > **dispose**(): `void`
 
-Defined in: [src/Graph.ts:3919](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3919)
+Defined in: [src/Graph.ts:4101](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L4101)
+
+Dispose all graph resources including voice, AI, XR, and Babylon.js components.
 
 #### Returns
 
@@ -854,7 +897,7 @@ Defined in: [src/Graph.ts:3919](https://github.com/graphty-org/graphty-element/b
 
 > **enableAiControl**(`config`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3474](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3474)
+Defined in: [src/Graph.ts:3672](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3672)
 
 Enable AI-powered natural language control of the graph.
 
@@ -894,7 +937,7 @@ const result = await graph.aiCommand('Show me the graph summary');
 
 > **enterXR**(`mode`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3851](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3851)
+Defined in: [src/Graph.ts:4030](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L4030)
 
 Enter XR mode (VR or AR)
 
@@ -916,7 +959,7 @@ The XR mode to enter ('immersive-vr' or 'immersive-ar')
 
 > **estimateAnimationCapture**(`options`): `Promise`\<`CaptureEstimate`\>
 
-Defined in: [src/Graph.ts:2342](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2342)
+Defined in: [src/Graph.ts:2485](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2485)
 
 Estimate performance and potential issues for animation capture
 
@@ -955,7 +998,7 @@ if (estimate.likelyToDropFrames) {
 
 > **exitXR**(): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3894](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3894)
+Defined in: [src/Graph.ts:4073](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L4073)
 
 Exit XR mode and return to previous camera
 
@@ -969,7 +1012,7 @@ Exit XR mode and return to previous camera
 
 > **exportCameraPresets**(): `Record`\<`string`, `CameraState`\>
 
-Defined in: [src/Graph.ts:3382](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3382)
+Defined in: [src/Graph.ts:3575](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3575)
 
 Export user-defined presets as JSON
 
@@ -977,13 +1020,15 @@ Export user-defined presets as JSON
 
 `Record`\<`string`, `CameraState`\>
 
+Object mapping preset names to camera states
+
 ***
 
 ### getAiManager()
 
 > **getAiManager**(): `AiManager` \| `null`
 
-Defined in: [src/Graph.ts:3608](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3608)
+Defined in: [src/Graph.ts:3795](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3795)
 
 Get the AI manager for advanced configuration.
 Returns null if AI is not enabled.
@@ -1010,7 +1055,7 @@ if (manager) {
 
 > **getAiStatus**(): `AiStatus` \| `null`
 
-Defined in: [src/Graph.ts:3545](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3545)
+Defined in: [src/Graph.ts:3737](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3737)
 
 Get the current AI status synchronously.
 
@@ -1035,7 +1080,7 @@ if (status?.state === 'executing') {
 
 > **getApiKeyManager**(): `ApiKeyManager` \| `null`
 
-Defined in: [src/Graph.ts:3662](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3662)
+Defined in: [src/Graph.ts:3844](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3844)
 
 Get the API key manager for configuring keys before enabling AI.
 Returns null if AI has never been enabled.
@@ -1062,11 +1107,15 @@ if (keyManager) {
 
 > **getCameraController**(): `CameraController` \| `null`
 
-Defined in: [src/Graph.ts:1998](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1998)
+Defined in: [src/Graph.ts:2143](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2143)
+
+Get the active camera controller.
 
 #### Returns
 
 `CameraController` \| `null`
+
+The active camera controller or null if none active
 
 ***
 
@@ -1074,7 +1123,7 @@ Defined in: [src/Graph.ts:1998](https://github.com/graphty-org/graphty-element/b
 
 > **getCameraPresets**(): `Record`\<`string`, `CameraState` \| \{ `builtin`: `true`; \}\>
 
-Defined in: [src/Graph.ts:3363](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3363)
+Defined in: [src/Graph.ts:3555](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3555)
 
 Get all camera presets (built-in + user-defined)
 
@@ -1082,13 +1131,15 @@ Get all camera presets (built-in + user-defined)
 
 `Record`\<`string`, `CameraState` \| \{ `builtin`: `true`; \}\>
 
+Object mapping preset names to camera states or builtin marker
+
 ***
 
 ### getCameraState()
 
 > **getCameraState**(): `CameraState`
 
-Defined in: [src/Graph.ts:2350](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2350)
+Defined in: [src/Graph.ts:2494](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2494)
 
 Get the current camera state
 
@@ -1096,19 +1147,23 @@ Get the current camera state
 
 `CameraState`
 
+Camera state including position, target, and rotation
+
 ***
 
 ### getConfig()
 
 > **getConfig**(): [`GraphContextConfig`](../../managers/interfaces/GraphContextConfig.md)
 
-Defined in: [src/Graph.ts:1852](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1852)
+Defined in: [src/Graph.ts:1963](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1963)
 
-Get graph-level configuration options
+Get the current graph context configuration.
 
 #### Returns
 
 [`GraphContextConfig`](../../managers/interfaces/GraphContextConfig.md)
+
+The graph context configuration
 
 #### Implementation of
 
@@ -1120,13 +1175,15 @@ Get graph-level configuration options
 
 > **getDataManager**(): [`DataManager`](../../managers/classes/DataManager.md)
 
-Defined in: [src/Graph.ts:1467](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1467)
+Defined in: [src/Graph.ts:1545](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1545)
 
-Get the DataManager for node/edge operations
+Get the DataManager instance.
 
 #### Returns
 
 [`DataManager`](../../managers/classes/DataManager.md)
+
+The DataManager instance
 
 #### Implementation of
 
@@ -1138,11 +1195,15 @@ Get the DataManager for node/edge operations
 
 > **getEdgeCount**(): `number`
 
-Defined in: [src/Graph.ts:1399](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1399)
+Defined in: [src/Graph.ts:1463](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1463)
+
+Get the total number of edges in the graph.
 
 #### Returns
 
 `number`
+
+The number of edges
 
 ***
 
@@ -1150,18 +1211,15 @@ Defined in: [src/Graph.ts:1399](https://github.com/graphty-org/graphty-element/b
 
 > **getEventManager**(): [`EventManager`](../../managers/classes/EventManager.md)
 
-Defined in: [src/Graph.ts:1495](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1495)
+Defined in: [src/Graph.ts:1601](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1601)
 
-Get EventManager for emitting events
-Optional method for event emission
+Get the EventManager instance for event handling.
 
 #### Returns
 
 [`EventManager`](../../managers/classes/EventManager.md)
 
-#### Since
-
-1.5.0
+The EventManager instance
 
 #### Implementation of
 
@@ -1173,13 +1231,15 @@ Optional method for event emission
 
 > **getLayoutManager**(): [`LayoutManager`](../../managers/classes/LayoutManager.md)
 
-Defined in: [src/Graph.ts:1471](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1471)
+Defined in: [src/Graph.ts:1553](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1553)
 
-Get the LayoutManager for layout operations
+Get the LayoutManager instance.
 
 #### Returns
 
 [`LayoutManager`](../../managers/classes/LayoutManager.md)
+
+The LayoutManager instance
 
 #### Implementation of
 
@@ -1191,13 +1251,15 @@ Get the LayoutManager for layout operations
 
 > **getMeshCache**(): `MeshCache`
 
-Defined in: [src/Graph.ts:1479](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1479)
+Defined in: [src/Graph.ts:1569](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1569)
 
-Get the MeshCache for mesh creation and caching
+Get the MeshCache instance used for mesh instancing.
 
 #### Returns
 
 `MeshCache`
+
+The MeshCache instance
 
 #### Implementation of
 
@@ -1209,7 +1271,7 @@ Get the MeshCache for mesh creation and caching
 
 > **getNode**(`nodeId`): [`Node`](../../Node/classes/Node.md) \| `undefined`
 
-Defined in: [src/Graph.ts:3428](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3428)
+Defined in: [src/Graph.ts:3627](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3627)
 
 Get a specific node
 
@@ -1217,11 +1279,15 @@ Get a specific node
 
 ##### nodeId
 
+ID of the node to retrieve
+
 `string` | `number`
 
 #### Returns
 
 [`Node`](../../Node/classes/Node.md) \| `undefined`
+
+The node instance or undefined if not found
 
 ***
 
@@ -1229,11 +1295,15 @@ Get a specific node
 
 > **getNodeCount**(): `number`
 
-Defined in: [src/Graph.ts:1395](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1395)
+Defined in: [src/Graph.ts:1455](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1455)
+
+Get the total number of nodes in the graph.
 
 #### Returns
 
 `number`
+
+The number of nodes
 
 ***
 
@@ -1241,7 +1311,9 @@ Defined in: [src/Graph.ts:1395](https://github.com/graphty-org/graphty-element/b
 
 > **getNodeMesh**(`nodeId`): `AbstractMesh` \| `null`
 
-Defined in: [src/Graph.ts:2002](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2002)
+Defined in: [src/Graph.ts:2152](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2152)
+
+Get the Babylon.js mesh for a node by its ID.
 
 #### Parameters
 
@@ -1249,9 +1321,13 @@ Defined in: [src/Graph.ts:2002](https://github.com/graphty-org/graphty-element/b
 
 `string`
 
+ID of the node
+
 #### Returns
 
 `AbstractMesh` \| `null`
+
+The node's mesh or null if not found
 
 ***
 
@@ -1259,7 +1335,7 @@ Defined in: [src/Graph.ts:2002](https://github.com/graphty-org/graphty-element/b
 
 > **getNodes**(): [`Node`](../../Node/classes/Node.md)[]
 
-Defined in: [src/Graph.ts:3435](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3435)
+Defined in: [src/Graph.ts:3635](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3635)
 
 Get all nodes
 
@@ -1267,19 +1343,23 @@ Get all nodes
 
 [`Node`](../../Node/classes/Node.md)[]
 
+Array of all node instances
+
 ***
 
 ### getScene()
 
 > **getScene**(): `Scene`
 
-Defined in: [src/Graph.ts:1483](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1483)
+Defined in: [src/Graph.ts:1577](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1577)
 
-Get the Babylon.js Scene
+Get the Babylon.js Scene instance.
 
 #### Returns
 
 `Scene`
+
+The Scene instance
 
 #### Implementation of
 
@@ -1291,7 +1371,7 @@ Get the Babylon.js Scene
 
 > **getSelectedNode**(): [`Node`](../../Node/classes/Node.md) \| `null`
 
-Defined in: [src/Graph.ts:1507](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1507)
+Defined in: [src/Graph.ts:1613](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1613)
 
 Get the currently selected node.
 
@@ -1307,14 +1387,15 @@ The selected node, or null if nothing is selected.
 
 > **getSelectionManager**(): [`SelectionManager`](../../managers/classes/SelectionManager.md)
 
-Defined in: [src/Graph.ts:1491](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1491)
+Defined in: [src/Graph.ts:1593](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1593)
 
-Get SelectionManager for node selection operations
-Optional method for selection functionality
+Get the SelectionManager instance for handling node selection.
 
 #### Returns
 
 [`SelectionManager`](../../managers/classes/SelectionManager.md)
+
+The SelectionManager instance
 
 #### Implementation of
 
@@ -1326,13 +1407,15 @@ Optional method for selection functionality
 
 > **getStatsManager**(): [`StatsManager`](../../managers/classes/StatsManager.md)
 
-Defined in: [src/Graph.ts:1487](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1487)
+Defined in: [src/Graph.ts:1585](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1585)
 
-Get the StatsManager for performance monitoring
+Get the StatsManager instance for performance metrics.
 
 #### Returns
 
 [`StatsManager`](../../managers/classes/StatsManager.md)
+
+The StatsManager instance
 
 #### Implementation of
 
@@ -1344,13 +1427,15 @@ Get the StatsManager for performance monitoring
 
 > **getStyleManager**(): [`StyleManager`](../../managers/classes/StyleManager.md)
 
-Defined in: [src/Graph.ts:1463](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1463)
+Defined in: [src/Graph.ts:1537](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1537)
 
-Get the StyleManager for style operations
+Get the StyleManager instance.
 
 #### Returns
 
 [`StyleManager`](../../managers/classes/StyleManager.md)
+
+The StyleManager instance
 
 #### Implementation of
 
@@ -1362,11 +1447,15 @@ Get the StyleManager for style operations
 
 > **getStyles**(): [`Styles`](../../Styles/classes/Styles.md)
 
-Defined in: [src/Graph.ts:1459](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1459)
+Defined in: [src/Graph.ts:1529](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1529)
+
+Get the Styles instance for the graph.
 
 #### Returns
 
 [`Styles`](../../Styles/classes/Styles.md)
+
+The Styles instance
 
 ***
 
@@ -1374,7 +1463,7 @@ Defined in: [src/Graph.ts:1459](https://github.com/graphty-org/graphty-element/b
 
 > **getSuggestedStyles**(`algorithmKey`): [`SuggestedStylesConfig`](../../config/interfaces/SuggestedStylesConfig.md) \| `null`
 
-Defined in: [src/Graph.ts:1190](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1190)
+Defined in: [src/Graph.ts:1222](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1222)
 
 Get suggested styles without applying them
 
@@ -1398,11 +1487,15 @@ Suggested styles config or null if none exist
 
 > **getUpdateManager**(): [`UpdateManager`](../../managers/classes/UpdateManager.md)
 
-Defined in: [src/Graph.ts:1475](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1475)
+Defined in: [src/Graph.ts:1561](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1561)
+
+Get the UpdateManager instance.
 
 #### Returns
 
 [`UpdateManager`](../../managers/classes/UpdateManager.md)
+
+The UpdateManager instance
 
 ***
 
@@ -1410,7 +1503,7 @@ Defined in: [src/Graph.ts:1475](https://github.com/graphty-org/graphty-element/b
 
 > **getViewMode**(): `"2d"` \| `"3d"` \| `"ar"` \| `"vr"`
 
-Defined in: [src/Graph.ts:1646](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1646)
+Defined in: [src/Graph.ts:1749](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1749)
 
 Get the current view mode.
 Returns the viewMode from config (always set due to default value).
@@ -1419,13 +1512,15 @@ Returns the viewMode from config (always set due to default value).
 
 `"2d"` \| `"3d"` \| `"ar"` \| `"vr"`
 
+The current view mode ("2d", "3d", "ar", or "vr")
+
 ***
 
 ### getVoiceAdapter()
 
 > **getVoiceAdapter**(): `VoiceInputAdapter`
 
-Defined in: [src/Graph.ts:3708](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3708)
+Defined in: [src/Graph.ts:3886](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3886)
 
 Get the voice input adapter.
 Creates the adapter on first use.
@@ -1451,14 +1546,15 @@ if (adapter.isSupported) {
 
 > **getXRConfig**(): [`XRConfig`](../../config/interfaces/XRConfig.md) \| `undefined`
 
-Defined in: [src/Graph.ts:1868](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1868)
+Defined in: [src/Graph.ts:1991](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1991)
 
-Get XR configuration
-Optional method for XR-specific functionality
+Get the current XR configuration.
 
 #### Returns
 
 [`XRConfig`](../../config/interfaces/XRConfig.md) \| `undefined`
+
+The XR configuration if set
 
 #### Implementation of
 
@@ -1470,14 +1566,15 @@ Optional method for XR-specific functionality
 
 > **getXRSessionManager**(): `XRSessionManager` \| `undefined`
 
-Defined in: [src/Graph.ts:1883](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1883)
+Defined in: [src/Graph.ts:2010](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2010)
 
-Get XR session manager
-Optional method for XR-specific functionality
+Get the XR session manager instance.
 
 #### Returns
 
 `XRSessionManager` \| `undefined`
+
+The XR session manager if XR is initialized
 
 #### Implementation of
 
@@ -1489,7 +1586,7 @@ Optional method for XR-specific functionality
 
 > **importCameraPresets**(`presets`): `void`
 
-Defined in: [src/Graph.ts:3393](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3393)
+Defined in: [src/Graph.ts:3587](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3587)
 
 Import user-defined presets from JSON
 
@@ -1498,6 +1595,8 @@ Import user-defined presets from JSON
 ##### presets
 
 `Record`\<`string`, `CameraState`\>
+
+Object mapping preset names to camera states
 
 #### Returns
 
@@ -1509,7 +1608,9 @@ Import user-defined presets from JSON
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:417](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L417)
+Defined in: [src/Graph.ts:435](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L435)
+
+Initializes the graph instance, setting up managers, styles, and rendering pipeline.
 
 #### Returns
 
@@ -1517,17 +1618,23 @@ Defined in: [src/Graph.ts:417](https://github.com/graphty-org/graphty-element/bl
 
 ***
 
-### is2D()
+### ~~is2D()~~
 
 > **is2D**(): `boolean`
 
-Defined in: [src/Graph.ts:1637](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1637)
+Defined in: [src/Graph.ts:1739](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1739)
 
-Check if the graph is in 2D mode
+Check if the graph is in 2D mode (deprecated - use getViewMode instead).
 
 #### Returns
 
 `boolean`
+
+True if in 2D mode, false otherwise
+
+#### Deprecated
+
+Use getViewMode() === "2d" instead
 
 #### Implementation of
 
@@ -1539,7 +1646,7 @@ Check if the graph is in 2D mode
 
 > **isAiEnabled**(): `boolean`
 
-Defined in: [src/Graph.ts:3617](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3617)
+Defined in: [src/Graph.ts:3803](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3803)
 
 Check if AI control is currently enabled.
 
@@ -1555,7 +1662,7 @@ True if AI is enabled
 
 > **isAnimationCapturing**(): `boolean`
 
-Defined in: [src/Graph.ts:2318](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2318)
+Defined in: [src/Graph.ts:2463](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2463)
 
 Check if an animation capture is currently in progress
 
@@ -1563,13 +1670,15 @@ Check if an animation capture is currently in progress
 
 `boolean`
 
+True if currently capturing an animation
+
 ***
 
 ### isARSupported()
 
 > **isARSupported**(): `Promise`\<`boolean`\>
 
-Defined in: [src/Graph.ts:1923](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1923)
+Defined in: [src/Graph.ts:2046](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2046)
 
 Check if AR mode is supported on this device/browser.
 Returns true if WebXR is available and AR sessions are supported.
@@ -1595,7 +1704,7 @@ if (!arSupported) {
 
 > **isNodeSelected**(`nodeId`): `boolean`
 
-Defined in: [src/Graph.ts:1588](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1588)
+Defined in: [src/Graph.ts:1685](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1685)
 
 Check if a specific node is currently selected.
 
@@ -1619,13 +1728,15 @@ True if the node is selected, false otherwise.
 
 > **isRunning**(): `boolean`
 
-Defined in: [src/Graph.ts:1860](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1860)
+Defined in: [src/Graph.ts:1975](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1975)
 
-Check if the layout is running
+Check if the layout engine is currently running.
 
 #### Returns
 
 `boolean`
+
+True if layout is running
 
 #### Implementation of
 
@@ -1637,7 +1748,7 @@ Check if the layout is running
 
 > **isVoiceActive**(): `boolean`
 
-Defined in: [src/Graph.ts:3787](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3787)
+Defined in: [src/Graph.ts:3966](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3966)
 
 Check if voice input is currently active.
 
@@ -1653,7 +1764,7 @@ True if voice input is active
 
 > **isVRSupported**(): `Promise`\<`boolean`\>
 
-Defined in: [src/Graph.ts:1901](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1901)
+Defined in: [src/Graph.ts:2026](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2026)
 
 Check if VR mode is supported on this device/browser.
 Returns true if WebXR is available and VR sessions are supported.
@@ -1679,7 +1790,7 @@ if (!vrSupported) {
 
 > **listenerCount**(): `number`
 
-Defined in: [src/Graph.ts:1421](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1421)
+Defined in: [src/Graph.ts:1491](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1491)
 
 Get the total number of registered event listeners.
 Useful for debugging and testing to ensure listeners are properly cleaned up.
@@ -1696,7 +1807,7 @@ The number of registered listeners
 
 > **loadCameraPreset**(`name`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3356](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3356)
+Defined in: [src/Graph.ts:3547](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3547)
 
 Load a camera preset (built-in or user-defined)
 
@@ -1706,13 +1817,19 @@ Load a camera preset (built-in or user-defined)
 
 `string`
 
+Name of the preset to load
+
 ##### options?
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when camera state is applied
 
 ***
 
@@ -1720,7 +1837,7 @@ Load a camera preset (built-in or user-defined)
 
 > **loadFromFile**(`file`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:743](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L743)
+Defined in: [src/Graph.ts:777](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L777)
 
 Load graph data from a File object with auto-format detection
 
@@ -1740,17 +1857,25 @@ Loading options
 
 `string`
 
+JMESPath for edge destination ID extraction
+
 ###### edgeSrcIdPath?
 
 `string`
+
+JMESPath for edge source ID extraction
 
 ###### format?
 
 `string`
 
+Explicit format override (e.g., "graphml", "json")
+
 ###### nodeIdPath?
 
 `string`
+
+JMESPath for node ID extraction
 
 #### Returns
 
@@ -1762,7 +1887,7 @@ Loading options
 
 > **loadFromUrl**(`url`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:809](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L809)
+Defined in: [src/Graph.ts:844](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L844)
 
 Load graph data from a URL with auto-format detection
 
@@ -1782,17 +1907,25 @@ Loading options
 
 `string`
 
+JMESPath for edge destination ID extraction
+
 ###### edgeSrcIdPath?
 
 `string`
+
+JMESPath for edge source ID extraction
 
 ###### format?
 
 `string`
 
+Explicit format override (e.g., "graphml", "json")
+
 ###### nodeIdPath?
 
 `string`
+
+JMESPath for node ID extraction
 
 #### Returns
 
@@ -1824,13 +1957,15 @@ await graph.loadFromUrl("https://example.com/data.txt", { format: "graphml" });
 
 > **needsRayUpdate**(): `boolean`
 
-Defined in: [src/Graph.ts:1848](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1848)
+Defined in: [src/Graph.ts:1955](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1955)
 
-Check if ray updates are needed (for edge arrows)
+Check if ray updates are needed for edge arrows.
 
 #### Returns
 
 `boolean`
+
+True if rays need updating
 
 #### Implementation of
 
@@ -1842,7 +1977,7 @@ Check if ray updates are needed (for edge arrows)
 
 > **on**(`type`, `cb`): `void`
 
-Defined in: [src/Graph.ts:1406](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1406)
+Defined in: [src/Graph.ts:1472](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1472)
 
 Alias for addEventListener
 
@@ -1852,9 +1987,13 @@ Alias for addEventListener
 
 [`EventType`](../../events/type-aliases/EventType.md)
 
+Event type to listen for
+
 ##### cb
 
 [`EventCallbackType`](../../events/type-aliases/EventCallbackType.md)
+
+Callback function to execute when event fires
 
 #### Returns
 
@@ -1866,7 +2005,7 @@ Alias for addEventListener
 
 > **onAiStatusChange**(`callback`): () => `void`
 
-Defined in: [src/Graph.ts:3568](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3568)
+Defined in: [src/Graph.ts:3758](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3758)
 
 Subscribe to AI status changes.
 
@@ -1908,7 +2047,9 @@ unsubscribe();
 
 > **removeNodes**(`nodeIds`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1258](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1258)
+Defined in: [src/Graph.ts:1298](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1298)
+
+Remove nodes from the graph by their IDs.
 
 #### Parameters
 
@@ -1916,9 +2057,13 @@ Defined in: [src/Graph.ts:1258](https://github.com/graphty-org/graphty-element/b
 
 (`string` \| `number`)[]
 
+Array of node IDs to remove
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -1930,7 +2075,7 @@ Defined in: [src/Graph.ts:1258](https://github.com/graphty-org/graphty-element/b
 
 > **render**(): `void`
 
-Defined in: [src/Graph.ts:3442](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3442)
+Defined in: [src/Graph.ts:3642](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3642)
 
 Render method (public for testing)
 
@@ -1944,7 +2089,7 @@ Render method (public for testing)
 
 > **resetCamera**(`options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3256](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3256)
+Defined in: [src/Graph.ts:3440](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3440)
 
 Reset camera to default state
 
@@ -1954,9 +2099,13 @@ Reset camera to default state
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when camera is reset
 
 ***
 
@@ -1964,7 +2113,7 @@ Reset camera to default state
 
 > **resolveCameraPreset**(`preset`): `CameraState`
 
-Defined in: [src/Graph.ts:3277](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3277)
+Defined in: [src/Graph.ts:3464](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3464)
 
 Resolve a camera preset (built-in or user-defined) to a CameraState
 
@@ -1974,9 +2123,13 @@ Resolve a camera preset (built-in or user-defined) to a CameraState
 
 `string`
 
+Name of the preset to resolve
+
 #### Returns
 
 `CameraState`
+
+The resolved camera state
 
 ***
 
@@ -1984,7 +2137,7 @@ Resolve a camera preset (built-in or user-defined) to a CameraState
 
 > **retryLastAiCommand**(): `Promise`\<`ExecutionResult`\>
 
-Defined in: [src/Graph.ts:3639](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3639)
+Defined in: [src/Graph.ts:3823](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3823)
 
 Retry the last AI command.
 Useful for retrying after transient errors.
@@ -2017,7 +2170,7 @@ try {
 
 > **runAlgorithm**(`namespace`, `type`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1124](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1124)
+Defined in: [src/Graph.ts:1156](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1156)
 
 Run a graph algorithm and store results on nodes/edges.
 
@@ -2101,7 +2254,9 @@ styleManager.addLayer({
 
 > **runAlgorithmsFromTemplate**(): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:406](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L406)
+Defined in: [src/Graph.ts:421](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L421)
+
+Executes all algorithms specified in the style template configuration.
 
 #### Returns
 
@@ -2113,7 +2268,7 @@ Defined in: [src/Graph.ts:406](https://github.com/graphty-org/graphty-element/bl
 
 > **saveCameraPreset**(`name`): `void`
 
-Defined in: [src/Graph.ts:3341](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3341)
+Defined in: [src/Graph.ts:3529](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3529)
 
 Save current camera state as a named preset
 
@@ -2122,6 +2277,8 @@ Save current camera state as a named preset
 ##### name
 
 `string`
+
+Name for the camera preset
 
 #### Returns
 
@@ -2133,23 +2290,33 @@ Save current camera state as a named preset
 
 > **screenToWorld**(`screenPos`): \{ `x`: `number`; `y`: `number`; `z`: `number`; \} \| `null`
 
-Defined in: [src/Graph.ts:1984](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1984)
+Defined in: [src/Graph.ts:2125](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2125)
+
+Convert 2D screen coordinates to 3D world coordinates via raycasting.
 
 #### Parameters
 
 ##### screenPos
 
+Screen position to convert
+
 ###### x
 
 `number`
+
+X coordinate in screen space
 
 ###### y
 
 `number`
 
+Y coordinate in screen space
+
 #### Returns
 
 \{ `x`: `number`; `y`: `number`; `z`: `number`; \} \| `null`
+
+World coordinates {x, y, z} or null if no intersection
 
 ***
 
@@ -2157,7 +2324,7 @@ Defined in: [src/Graph.ts:1984](https://github.com/graphty-org/graphty-element/b
 
 > **selectNode**(`nodeId`): `boolean`
 
-Defined in: [src/Graph.ts:1547](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1547)
+Defined in: [src/Graph.ts:1649](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1649)
 
 Select a node by its ID.
 
@@ -2218,7 +2385,9 @@ graph.on('node-click', ({ node }) => {
 
 > **setCameraMode**(`mode`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1332](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1332)
+Defined in: [src/Graph.ts:1382](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1382)
+
+Set the active camera mode (e.g., "arcRotate", "universal").
 
 #### Parameters
 
@@ -2226,9 +2395,13 @@ Defined in: [src/Graph.ts:1332](https://github.com/graphty-org/graphty-element/b
 
 `CameraKey`
 
+Camera mode key to activate
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -2240,7 +2413,7 @@ Defined in: [src/Graph.ts:1332](https://github.com/graphty-org/graphty-element/b
 
 > **setCameraPan**(`pan`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3246](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3246)
+Defined in: [src/Graph.ts:3428](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3428)
 
 Set camera pan (2D)
 
@@ -2248,21 +2421,31 @@ Set camera pan (2D)
 
 ##### pan
 
+Pan offset coordinates
+
 ###### x
 
 `number`
+
+X offset
 
 ###### y
 
 `number`
 
+Y offset
+
 ##### options?
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when pan is set
 
 ***
 
@@ -2270,7 +2453,7 @@ Set camera pan (2D)
 
 > **setCameraPosition**(`position`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3210](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3210)
+Defined in: [src/Graph.ts:3378](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3378)
 
 Set camera position (3D)
 
@@ -2278,25 +2461,37 @@ Set camera position (3D)
 
 ##### position
 
+Camera position coordinates
+
 ###### x
 
 `number`
+
+X coordinate
 
 ###### y
 
 `number`
 
+Y coordinate
+
 ###### z
 
 `number`
+
+Z coordinate
 
 ##### options?
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when camera position is set
 
 ***
 
@@ -2304,7 +2499,7 @@ Set camera position (3D)
 
 > **setCameraState**(`state`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:2463](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2463)
+Defined in: [src/Graph.ts:2609](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2609)
 
 Set the camera state (Phase 4: with animation support)
 
@@ -2312,11 +2507,15 @@ Set the camera state (Phase 4: with animation support)
 
 ##### state
 
+Camera state or preset name to apply
+
 `CameraState` | \{ `preset`: `string`; \}
 
 ##### options?
 
 `CameraAnimationOptions`
+
+Optional animation configuration
 
 #### Returns
 
@@ -2328,7 +2527,7 @@ Set the camera state (Phase 4: with animation support)
 
 > **setCameraTarget**(`target`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3223](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3223)
+Defined in: [src/Graph.ts:3397](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3397)
 
 Set camera target (3D)
 
@@ -2336,25 +2535,37 @@ Set camera target (3D)
 
 ##### target
 
+Camera target coordinates
+
 ###### x
 
 `number`
+
+X coordinate
 
 ###### y
 
 `number`
 
+Y coordinate
+
 ###### z
 
 `number`
+
+Z coordinate
 
 ##### options?
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when camera target is set
 
 ***
 
@@ -2362,7 +2573,7 @@ Set camera target (3D)
 
 > **setCameraZoom**(`zoom`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:3236](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3236)
+Defined in: [src/Graph.ts:3413](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3413)
 
 Set camera zoom (2D)
 
@@ -2372,13 +2583,19 @@ Set camera zoom (2D)
 
 `number`
 
+Zoom level (1.0 = default, \>1 = zoomed in, \<1 = zoomed out)
+
 ##### options?
 
 `CameraAnimationOptions`
 
+Optional animation configuration
+
 #### Returns
 
 `Promise`\<`void`\>
+
+Promise that resolves when zoom is set
 
 ***
 
@@ -2386,7 +2603,7 @@ Set camera zoom (2D)
 
 > **setData**(`data`): `void`
 
-Defined in: [src/Graph.ts:3407](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3407)
+Defined in: [src/Graph.ts:3604](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3604)
 
 Set graph data (delegates to data manager)
 
@@ -2394,13 +2611,19 @@ Set graph data (delegates to data manager)
 
 ##### data
 
+Graph data object
+
 ###### edges
 
 `Record`\<`string`, `unknown`\>[]
 
+Array of edge data objects
+
 ###### nodes
 
 `Record`\<`string`, `unknown`\>[]
+
+Array of node data objects
 
 #### Returns
 
@@ -2412,7 +2635,7 @@ Set graph data (delegates to data manager)
 
 > **setInputEnabled**(`enabled`): `void`
 
-Defined in: [src/Graph.ts:1942](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1942)
+Defined in: [src/Graph.ts:2067](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2067)
 
 Enable or disable input
 
@@ -2421,6 +2644,8 @@ Enable or disable input
 ##### enabled
 
 `boolean`
+
+True to enable input, false to disable
 
 #### Returns
 
@@ -2432,7 +2657,7 @@ Enable or disable input
 
 > **setLayout**(`type`, `opts`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1053](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1053)
+Defined in: [src/Graph.ts:1089](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1089)
 
 Set the layout algorithm and configuration.
 
@@ -2511,7 +2736,9 @@ await graph.setLayout('circular', { radius: 5 });
 
 > **setRenderSettings**(`settings`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1354](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1354)
+Defined in: [src/Graph.ts:1409](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1409)
+
+Update rendering settings for the graph visualization.
 
 #### Parameters
 
@@ -2519,9 +2746,13 @@ Defined in: [src/Graph.ts:1354](https://github.com/graphty-org/graphty-element/b
 
 `Record`\<`string`, `unknown`\>
 
+Object containing rendering configuration options
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -2533,15 +2764,17 @@ Defined in: [src/Graph.ts:1354](https://github.com/graphty-org/graphty-element/b
 
 > **setRunning**(`running`): `void`
 
-Defined in: [src/Graph.ts:1864](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1864)
+Defined in: [src/Graph.ts:1983](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1983)
 
-Set the running state
+Set whether the layout engine should run.
 
 #### Parameters
 
 ##### running
 
 `boolean`
+
+True to start the layout, false to stop it
 
 #### Returns
 
@@ -2557,11 +2790,15 @@ Set the running state
 
 > **setStyleTemplate**(`t`, `options?`): `Promise`\<[`Styles`](../../Styles/classes/Styles.md)\>
 
-Defined in: [src/Graph.ts:543](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L543)
+Defined in: [src/Graph.ts:567](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L567)
+
+Sets the style template for the graph, applying visual and behavioral configurations.
 
 #### Parameters
 
 ##### t
+
+Style schema containing configuration for graph appearance and behavior
 
 ###### behavior
 
@@ -2741,9 +2978,13 @@ View mode controls how the graph is rendered and displayed.
 
 `QueueableOptions`
 
+Optional queueing options for batch processing
+
 #### Returns
 
 `Promise`\<[`Styles`](../../Styles/classes/Styles.md)\>
+
+The updated Styles instance
 
 ***
 
@@ -2751,7 +2992,7 @@ View mode controls how the graph is rendered and displayed.
 
 > **setViewMode**(`mode`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1666](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1666)
+Defined in: [src/Graph.ts:1768](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1768)
 
 Set the view mode.
 This controls the camera type, input handling, and rendering approach.
@@ -2774,6 +3015,8 @@ Optional queueing options
 
 `Promise`\<`void`\>
 
+Promise that resolves when view mode is set
+
 #### Example
 
 ```typescript
@@ -2790,7 +3033,7 @@ await graph.setViewMode("vr");
 
 > **setXRConfig**(`config`): `void`
 
-Defined in: [src/Graph.ts:1877](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1877)
+Defined in: [src/Graph.ts:2000](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2000)
 
 Set XR configuration.
 Merges with defaults and updates the graph context.
@@ -3085,7 +3328,9 @@ WebXR reference space type for VR
 
 > **shutdown**(): `void`
 
-Defined in: [src/Graph.ts:386](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L386)
+Defined in: [src/Graph.ts:398](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L398)
+
+Shuts down the graph, stopping animations and disposing all resources.
 
 #### Returns
 
@@ -3097,7 +3342,7 @@ Defined in: [src/Graph.ts:386](https://github.com/graphty-org/graphty-element/bl
 
 > **startInputRecording**(): `void`
 
-Defined in: [src/Graph.ts:1949](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1949)
+Defined in: [src/Graph.ts:2074](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2074)
 
 Start recording input for testing/automation
 
@@ -3111,7 +3356,7 @@ Start recording input for testing/automation
 
 > **startVoiceInput**(`options?`): `boolean`
 
-Defined in: [src/Graph.ts:3734](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3734)
+Defined in: [src/Graph.ts:3915](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3915)
 
 Start voice input and execute commands.
 
@@ -3125,21 +3370,31 @@ Voice input options
 
 `boolean`
 
+Whether to continuously listen for input
+
 ###### interimResults?
 
 `boolean`
+
+Whether to return interim transcription results
 
 ###### language?
 
 `string`
 
+BCP 47 language tag (e.g., "en-US", "fr-FR")
+
 ###### onStart?
 
 (`started`, `error?`) => `void`
 
+Callback when voice input starts
+
 ###### onTranscript?
 
 (`text`, `isFinal`) => `void`
+
+Callback for transcription events
 
 #### Returns
 
@@ -3168,7 +3423,7 @@ graph.startVoiceInput({
 
 > **stopInputRecording**(): [`RecordedInputEvent`](../../managers/interfaces/RecordedInputEvent.md)[]
 
-Defined in: [src/Graph.ts:1956](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1956)
+Defined in: [src/Graph.ts:2082](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2082)
 
 Stop recording and get recorded events
 
@@ -3176,13 +3431,15 @@ Stop recording and get recorded events
 
 [`RecordedInputEvent`](../../managers/interfaces/RecordedInputEvent.md)[]
 
+Array of recorded input events
+
 ***
 
 ### stopVoiceInput()
 
 > **stopVoiceInput**(): `void`
 
-Defined in: [src/Graph.ts:3778](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L3778)
+Defined in: [src/Graph.ts:3958](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L3958)
 
 Stop voice input.
 
@@ -3202,7 +3459,7 @@ graph.stopVoiceInput();
 
 > **update**(): `void`
 
-Defined in: [src/Graph.ts:489](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L489)
+Defined in: [src/Graph.ts:507](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L507)
 
 Update method - kept for backward compatibility
 All update logic is now handled by UpdateManager
@@ -3217,7 +3474,9 @@ All update logic is now handled by UpdateManager
 
 > **updateNodes**(`updates`, `options?`): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:1294](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1294)
+Defined in: [src/Graph.ts:1339](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1339)
+
+Update node data for existing nodes in the graph.
 
 #### Parameters
 
@@ -3225,9 +3484,13 @@ Defined in: [src/Graph.ts:1294](https://github.com/graphty-org/graphty-element/b
 
 `object`[]
 
+Array of update objects containing node ID and properties to update
+
 ##### options?
 
 `QueueableOptions`
+
+Queue options for operation ordering
 
 #### Returns
 
@@ -3239,7 +3502,7 @@ Defined in: [src/Graph.ts:1294](https://github.com/graphty-org/graphty-element/b
 
 > **waitForSettled**(): `Promise`\<`void`\>
 
-Defined in: [src/Graph.ts:2044](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L2044)
+Defined in: [src/Graph.ts:2190](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2190)
 
 Wait for the graph operations to complete and layout to stabilize.
 
@@ -3294,27 +3557,39 @@ console.log('Algorithm complete, results available');
 
 > **worldToScreen**(`worldPos`): `object`
 
-Defined in: [src/Graph.ts:1960](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1960)
+Defined in: [src/Graph.ts:2094](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L2094)
+
+Convert 3D world coordinates to 2D screen coordinates.
 
 #### Parameters
 
 ##### worldPos
 
+World position to convert
+
 ###### x
 
 `number`
+
+X coordinate in world space
 
 ###### y
 
 `number`
 
+Y coordinate in world space
+
 ###### z
 
 `number`
 
+Z coordinate in world space
+
 #### Returns
 
 `object`
+
+Screen coordinates {x, y}
 
 ##### x
 
@@ -3330,7 +3605,7 @@ Defined in: [src/Graph.ts:1960](https://github.com/graphty-org/graphty-element/b
 
 > **zoomToFit**(): `void`
 
-Defined in: [src/Graph.ts:1453](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Graph.ts#L1453)
+Defined in: [src/Graph.ts:1519](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Graph.ts#L1519)
 
 Zoom the camera to fit all nodes in view.
 

@@ -7,6 +7,9 @@ export interface AnimationOptions {
     animationSpeed: number;
 }
 
+/**
+ * Handles animations for rich text labels (pulse, bounce, shake, glow, fill)
+ */
 export class RichTextAnimator {
     private animationTime = 0;
     private originalPosition: Vector3 | null = null;
@@ -14,11 +17,22 @@ export class RichTextAnimator {
     private sceneCallback: (() => void) | null = null;
     private lastFillUpdate = 0;
 
+    /**
+     * Creates a new rich text animator
+     * @param scene - Babylon.js scene
+     * @param options - Animation configuration options
+     */
     constructor(
         private readonly scene: Scene,
         private readonly options: AnimationOptions,
     ) {}
 
+    /**
+     * Sets up animation for a mesh
+     * @param mesh - The mesh to animate
+     * @param material - The mesh material (for glow animation)
+     * @param progressCallback - Optional callback for progress-based animations
+     */
     setupAnimation(
         mesh: Mesh,
         material: StandardMaterial | null,
@@ -114,10 +128,17 @@ export class RichTextAnimator {
         }
     }
 
+    /**
+     * Updates the original position reference for animations
+     * @param position - New original position
+     */
     updateOriginalPosition(position: Vector3): void {
         this.originalPosition = position.clone();
     }
 
+    /**
+     * Disposes the animator and cleans up scene callbacks
+     */
     dispose(): void {
         if (this.sceneCallback) {
             this.scene.unregisterBeforeRender(this.sceneCallback);

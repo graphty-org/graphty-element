@@ -22,9 +22,7 @@ let currentConfig: LoggerConfig = {... DEFAULT_CONFIG, format: {... DEFAULT_CONF
 
 /**
  * Configure the logging system.
- *
  * @param config - Partial configuration to merge with defaults
- * @returns Promise that resolves when configuration is complete
  */
 export function configureLogging(config: Partial<LoggerConfig>): void {
     currentConfig = {
@@ -42,7 +40,6 @@ export function configureLogging(config: Partial<LoggerConfig>): void {
 
 /**
  * Get the current logging configuration.
- *
  * @returns The current configuration (readonly copy)
  */
 export function getLoggingConfig(): LoggerConfig {
@@ -51,7 +48,6 @@ export function getLoggingConfig(): LoggerConfig {
 
 /**
  * Check if a specific module category is enabled for logging.
- *
  * @param category - Hierarchical category path, e.g., ["graphty", "layout", "ngraph"]
  * @returns true if the module should log
  */

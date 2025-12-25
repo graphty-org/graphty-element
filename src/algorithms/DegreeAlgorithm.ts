@@ -2,6 +2,9 @@ import type {SuggestedStylesConfig} from "../config";
 import {Algorithm} from "./Algorithm";
 import {toAlgorithmGraph} from "./utils/graphConverter";
 
+/**
+ *
+ */
 export class DegreeAlgorithm extends Algorithm {
     static namespace = "graphty";
     static type = "degree";
@@ -30,7 +33,11 @@ export class DegreeAlgorithm extends Algorithm {
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the degree algorithm on the graph
+     *
+     * Computes in-degree, out-degree, and total degree for all nodes.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

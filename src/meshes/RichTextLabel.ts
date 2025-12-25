@@ -87,6 +87,9 @@ type ResolvedRichTextLabelOptions = RequiredExceptOptional<
     borders: Border[];
 };
 
+/**
+ * Rich text label with support for formatting, badges, animations, and speech bubble pointers
+ */
 export class RichTextLabel {
     private scene: Scene;
     private options: ResolvedRichTextLabelOptions;
@@ -109,10 +112,21 @@ export class RichTextLabel {
     private depthFadeCallback: (() => void) | null = null;
     private animationStarted = false;
 
+    /**
+     * Factory method to create a rich text label
+     * @param scene - Babylon.js scene
+     * @param userOptions - Label configuration options
+     * @returns A new RichTextLabel instance
+     */
     static createLabel(scene: Scene, userOptions: RichTextLabelOptions): RichTextLabel {
         return new RichTextLabel(scene, userOptions);
     }
 
+    /**
+     * Creates a new rich text label
+     * @param scene - Babylon.js scene
+     * @param userOptions - Label configuration options
+     */
     constructor(scene: Scene, userOptions: RichTextLabelOptions) {
         this.scene = scene;
 
@@ -944,6 +958,10 @@ export class RichTextLabel {
         this.scene.registerBeforeRender(this.depthFadeCallback);
     }
 
+    /**
+     * Sets the label text and redraws the label
+     * @param text - The new text content
+     */
     public setText(text: string): void {
         const numericValue = Number(text);
         if (this.options.smartOverflow && !isNaN(numericValue)) {
@@ -966,11 +984,21 @@ export class RichTextLabel {
         this._drawContent();
     }
 
+    /**
+     * Sets the progress bar value
+     * @param value - Progress value between 0 and 1
+     */
     public setProgress(value: number): void {
         this._progressValue = Math.max(0, Math.min(1, value));
         this._drawContent();
     }
 
+    /**
+     * Attaches the label to a target mesh or position
+     * @param target - The mesh or position to attach to
+     * @param position - The attachment position relative to the target
+     * @param offset - Distance offset from the target
+     */
     public attachTo(target: AbstractMesh | Vector3, position: AttachPosition = "top", offset = 0.5): void {
         this.options.attachTo = target;
         this.options.attachPosition = position;
@@ -983,6 +1011,9 @@ export class RichTextLabel {
         this._attachToTarget();
     }
 
+    /**
+     * Starts the label animation (if configured)
+     */
     public startAnimation(): void {
         if (this.animationStarted || !this.mesh || !this.material) {
             return;
@@ -1010,6 +1041,9 @@ export class RichTextLabel {
         this.animator.setupAnimation(this.mesh, this.material, progressCallback);
     }
 
+    /**
+     * Disposes the label and cleans up all resources
+     */
     public dispose(): void {
         // Clean up scene callback first
         if (this.depthFadeCallback) {
@@ -1034,10 +1068,18 @@ export class RichTextLabel {
         }
     }
 
+    /**
+     * Gets the label's mesh
+     * @returns The Babylon.js mesh or null if not created
+     */
     public get labelMesh(): Mesh | null {
         return this.mesh;
     }
 
+    /**
+     * Gets the label's unique identifier
+     * @returns The label ID
+     */
     public get labelId(): string {
         return this.id;
     }

@@ -116,6 +116,7 @@ export class SystemPromptBuilder {
 
     /**
      * Build the base introduction prompt.
+     * @returns Base prompt text
      */
     private buildBasePrompt(): string {
         return `You are an AI assistant that helps users interact with a graph visualization application called Graphty.
@@ -130,6 +131,7 @@ You can help users:
 
     /**
      * Build the statistics section.
+     * @returns Graph statistics text
      */
     private buildStatsSection(): string {
         if (!this.graph) {
@@ -142,11 +144,12 @@ You can help users:
         return `## Current Graph State
 - Total nodes: ${nodeCount}
 - Total edges: ${edgeCount}
-- Visualization mode: ${this.graph.is2D() ? "2D" : "3D"}`;
+- Visualization mode: ${this.graph.getViewMode() === "2d" ? "2D" : "3D"}`;
     }
 
     /**
      * Build the schema section.
+     * @returns Schema information text
      */
     private buildSchemaSection(): string {
         if (!this.schemaSummary) {
@@ -158,6 +161,7 @@ You can help users:
 
     /**
      * Build the layout section.
+     * @returns Layout information text
      */
     private buildLayoutSection(): string {
         if (!this.graph) {
@@ -174,6 +178,7 @@ You can help users:
 
     /**
      * Build the commands section.
+     * @returns Available commands text
      */
     private buildCommandsSection(): string {
         const commandDescriptions = this.commands
@@ -191,6 +196,7 @@ ${commandDescriptions}`;
 
     /**
      * Build the instructions section.
+     * @returns User instructions text
      */
     private buildInstructionsSection(): string {
         return `## Instructions
@@ -207,6 +213,7 @@ ${commandDescriptions}`;
     /**
      * Build a minimal prompt without graph context.
      * Useful when graph is not yet available.
+     * @returns Minimal system prompt text
      */
     buildMinimal(): string {
         return `You are an AI assistant that helps users interact with a graph visualization.
@@ -222,6 +229,7 @@ If no tools match the user's request, respond conversationally.`;
 
 /**
  * Create a new SystemPromptBuilder instance.
+ * @returns New SystemPromptBuilder instance
  */
 export function createSystemPromptBuilder(): SystemPromptBuilder {
     return new SystemPromptBuilder();

@@ -15,11 +15,19 @@ interface DOTEdge {
     attributes: Record<string, string | number>;
 }
 
+/**
+ * Data source for loading graph data from DOT (Graphviz) format files.
+ * Supports directed and undirected graphs with node and edge attributes.
+ */
 export class DOTDataSource extends DataSource {
     static readonly type = "dot";
 
     private config: DOTDataSourceConfig;
 
+    /**
+     * Creates a new DOTDataSource instance.
+     * @param config - Configuration options for DOT parsing and data loading
+     */
     constructor(config: DOTDataSourceConfig) {
         super(config.errorLimit ?? 100, config.chunkSize);
         this.config = config;
@@ -29,6 +37,10 @@ export class DOTDataSource extends DataSource {
         return this.config;
     }
 
+    /**
+     * Fetches and parses DOT format data into graph chunks.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
     // Get DOT content
         const dotContent = await this.getContent();
@@ -451,6 +463,9 @@ export class DOTDataSource extends DataSource {
     /**
      * Skips tokens until the next statement boundary (semicolon or closing brace).
      * Used for error recovery to continue parsing after a malformed statement.
+     * @param tokens - Array of tokenized DOT content
+     * @param startIndex - Index to start skipping from
+     * @returns Index of the next statement boundary
      */
     private skipToNextStatement(tokens: string[], startIndex: number): number {
         let i = startIndex;
@@ -482,6 +497,9 @@ export class DOTDataSource extends DataSource {
     /**
      * Finds the index of the matching closing brace for an opening brace at startIndex.
      * Returns -1 if no matching brace is found.
+     * @param tokens - Array of tokenized DOT content
+     * @param startIndex - Index of the opening brace
+     * @returns Index of matching closing brace or -1 if not found
      */
     private findMatchingBrace(tokens: string[], startIndex: number): number {
         if (tokens[startIndex] !== "{") {
@@ -509,6 +527,10 @@ export class DOTDataSource extends DataSource {
      * - "a -> b -> c" returns [[a], [b], [c]]
      * - "{A B} -> {C D}" returns [[A, B], [C, D]]
      * - "a -> {B C} -> d" returns [[a], [B, C], [d]]
+     * @param firstToken - The first node ID in the chain
+     * @param tokens - Array of tokenized DOT content
+     * @param operatorIndex - Index of the first edge operator
+     * @returns Object containing node groups, attributes, and end index
      */
     private collectEdgeChainNodes(
         firstToken: string,
@@ -523,6 +545,10 @@ export class DOTDataSource extends DataSource {
     /**
      * Continues collecting edge chain nodes from an initial set of groups.
      * Used when the first part of the chain is an anonymous subgraph.
+     * @param initialGroups - Initial node groups to start with
+     * @param tokens - Array of tokenized DOT content
+     * @param operatorIndex - Index of the first edge operator
+     * @returns Object containing node groups, attributes, and end index
      */
     private collectEdgeChainNodesFromGroups(
         initialGroups: string[][],
@@ -564,6 +590,9 @@ export class DOTDataSource extends DataSource {
     /**
      * Collects node IDs from an anonymous subgraph like { A B C }
      * Used for edge shorthand like {A B} -> {C D}
+     * @param tokens - Array of tokenized DOT content
+     * @param startIndex - Index of the opening brace
+     * @returns Object containing node IDs and end index
      */
     private collectSubgraphNodes(
         tokens: string[],

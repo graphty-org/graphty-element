@@ -111,13 +111,11 @@ export function easeOutBounce(t: number): number {
 
 /**
  * Interpolate between two numeric values with easing
- *
  * @param from - Start value
  * @param to - End value
  * @param progress - Progress (0-1)
  * @param easing - Easing function (default: linear)
  * @returns Interpolated value
- *
  * @example
  * // Smooth size transition from 1 to 5
  * interpolate(1, 5, 0.5, easeInOut) // → 3
@@ -135,12 +133,10 @@ export function interpolate(
 
 /**
  * Create a stepped animation that cycles through discrete values
- *
  * @param values - Array of values to cycle through
  * @param progress - Progress (0-1)
  * @param easing - Easing function (default: linear)
  * @returns Current value from the array
- *
  * @example
  * // Cycle through colors
  * const colors = ["#FF0000", "#00FF00", "#0000FF"];
@@ -155,11 +151,9 @@ export function stepped<T>(values: T[], progress: number, easing: EasingFunction
 
 /**
  * Pulse animation - oscillates between 0 and 1
- *
  * @param progress - Progress (0-1 repeats infinitely)
  * @param frequency - Number of pulses per cycle (default: 1)
  * @returns Value oscillating between 0 and 1
- *
  * @example
  * // Pulsing opacity (0 → 1 → 0)
  * pulse(0.5) // → 1.0 (at peak)
@@ -173,13 +167,11 @@ export function pulse(progress: number, frequency = 1): number {
 
 /**
  * Wave animation - smooth oscillation
- *
  * @param progress - Progress (0-1 repeats infinitely)
  * @param frequency - Number of waves per cycle (default: 1)
  * @param amplitude - Wave amplitude 0-1 (default: 1)
  * @param offset - Vertical offset 0-1 (default: 0.5)
  * @returns Oscillating value
- *
  * @example
  * // Gentle size oscillation between 0.5 and 1.5
  * const size = 1 + wave(time, 1, 0.5, 0);
@@ -196,12 +188,10 @@ export function wave(
 
 /**
  * Delayed start - begins after a delay
- *
  * @param progress - Progress (0-1)
  * @param delay - Delay before starting (0-1)
  * @param easing - Easing function (default: linear)
  * @returns Delayed progress value (0-1)
- *
  * @example
  * // Start animation halfway through
  * delayedStart(0.6, 0.5, easeOut) // → ~0.2 (adjusted for delay)
@@ -221,14 +211,12 @@ export function delayedStart(
 
 /**
  * Stagger - offset animation for multiple elements
- *
  * @param progress - Global progress (0-1)
  * @param elementIndex - Index of this element
  * @param totalElements - Total number of elements
  * @param staggerDelay - Delay between elements (0-1, default: 0.1)
  * @param easing - Easing function (default: linear)
  * @returns Per-element progress (0-1)
- *
  * @example
  * // Animate 10 nodes with slight delay between each
  * for (let i = 0; i < 10; i++) {
@@ -249,12 +237,10 @@ export function stagger(
 
 /**
  * Spring animation - damped oscillation
- *
  * @param progress - Progress (0-1)
  * @param stiffness - Spring stiffness (default: 170)
  * @param damping - Damping coefficient (default: 26)
  * @returns Spring-eased value (may overshoot 1.0)
- *
  * @example
  * // Bouncy entrance animation
  * const size = interpolate(0, 5, spring(progress, 200, 20));

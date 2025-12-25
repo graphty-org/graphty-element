@@ -68,9 +68,7 @@ const algorithmRegistry = new Map<string, AlgorithmClass>();
 
 /**
  * Base class for all graph algorithms
- *
- * @typeParam TOptions - The options type for this algorithm (defaults to empty object)
- *
+ * @template TOptions - The options type for this algorithm (defaults to empty object)
  * @example
  * ```typescript
  * // Algorithm with options
@@ -102,7 +100,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      *
      * Subclasses should override this to define their configurable options.
      * An empty schema means the algorithm has no configurable options.
-     *
      * @deprecated Use zodOptionsSchema instead for new implementations
      */
     static optionsSchema: OptionsSchema = {};
@@ -136,6 +133,7 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
      *
      * Algorithms that use the new schema-based options should access
      * options via this getter.
+     * @returns The resolved schema options
      */
     protected get schemaOptions(): TOptions {
         return this._schemaOptions;
@@ -143,7 +141,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Creates a new algorithm instance
-     *
      * @param g - The graph to run the algorithm on
      * @param options - Optional configuration options (uses schema defaults if not provided)
      */
@@ -154,7 +151,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Resolves and validates options against the schema
-     *
      * @param options - User-provided options (partial)
      * @returns Fully resolved options with defaults applied
      */
@@ -170,14 +166,26 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         return resolveOptions(schema, options as Partial<OptionsFromSchema<typeof schema>>) as TOptions;
     }
 
+    /**
+     * Gets the algorithm type
+     * @returns The algorithm type identifier
+     */
     get type(): string {
         return (this.constructor as typeof Algorithm).type;
     }
 
+    /**
+     * Gets the algorithm namespace
+     * @returns The algorithm namespace identifier
+     */
     get namespace(): string {
         return (this.constructor as typeof Algorithm).namespace;
     }
 
+    /**
+     * Gets all algorithm results for nodes, edges, and graph
+     * @returns An object containing node, edge, and graph results
+     */
     get results(): AdHocData {
         const algorithmResults = {} as AdHocData;
 
@@ -214,6 +222,12 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         return ret;
     }
 
+    /**
+     * Adds a result value for a specific node
+     * @param nodeId - The ID of the node to add the result to
+     * @param resultName - The name of the result field
+     * @param result - The result value to store
+     */
     addNodeResult(nodeId: number | string, resultName: string, result: unknown): void {
         const p = this.#createPath(resultName);
         const n = this.graph.getDataManager().nodes.get(nodeId);
@@ -226,11 +240,22 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         // replace algorithmResults with graph.nodes; set result on each node.algorithmResult
     }
 
+    /**
+     * Adds a result value for a specific edge
+     * @param edge - The edge to add the result to
+     * @param resultName - The name of the result field
+     * @param result - The result value to store
+     */
     addEdgeResult(edge: Edge, resultName: string, result: unknown): void {
         const p = this.#createPath(resultName);
         deepSet(edge, p, result);
     }
 
+    /**
+     * Adds a result value for the graph
+     * @param resultName - The name of the result field
+     * @param result - The result value to store
+     */
     addGraphResult(resultName: string, result: unknown): void {
         const dm = this.graph.getDataManager();
         dm.graphResults ??= {} as AdHocData;
@@ -239,6 +264,11 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         deepSet(dm.graphResults, path, result);
     }
 
+    /**
+     * Registers an algorithm class in the global registry
+     * @param cls - The algorithm class to register
+     * @returns The registered algorithm class
+     */
     static register<T extends AlgorithmClass>(cls: T): T {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t: string = (cls as any).type;
@@ -248,6 +278,13 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         return cls;
     }
 
+    /**
+     * Gets an algorithm instance from the registry
+     * @param g - The graph to run the algorithm on
+     * @param namespace - The algorithm namespace
+     * @param type - The algorithm type
+     * @returns A new instance of the algorithm, or null if not found
+     */
     static get(g: Graph, namespace: string, type: string): Algorithm | null {
         const SourceClass = algorithmRegistry.get(`${namespace}:${type}`);
         if (SourceClass) {
@@ -257,12 +294,19 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
         return null;
     }
 
+    /**
+     * Gets an algorithm class from the registry
+     * @param namespace - The algorithm namespace
+     * @param type - The algorithm type
+     * @returns The algorithm class, or null if not found
+     */
     static getClass(namespace: string, type: string): (AlgorithmClass & AlgorithmStatics) | null {
         return algorithmRegistry.get(`${namespace}:${type}`) as (AlgorithmClass & AlgorithmStatics) | null ?? null;
     }
 
     /**
      * Check if this algorithm has suggested styles
+     * @returns true if suggested styles are defined
      */
     static hasSuggestedStyles(): boolean {
         return !!this.suggestedStyles;
@@ -270,6 +314,7 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Get suggested styles for this algorithm
+     * @returns The suggested styles configuration, or null if none defined
      */
     static getSuggestedStyles(): SuggestedStylesConfig | null {
         return this.suggestedStyles ? this.suggestedStyles() : null;
@@ -277,7 +322,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Get the options schema for this algorithm
-     *
      * @returns The options schema, or an empty object if no options defined
      * @deprecated Use getZodOptionsSchema() instead
      */
@@ -288,7 +332,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Check if this algorithm has configurable options
-     *
      * @returns true if the algorithm has at least one option defined
      * @deprecated Use hasZodOptions() instead
      */
@@ -299,7 +342,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Get the Zod-based options schema for this algorithm.
-     *
      * @returns The Zod options schema, or an empty object if no schema defined
      */
     static getZodOptionsSchema(): ZodOptionsSchema {
@@ -308,7 +350,6 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
 
     /**
      * Check if this algorithm has a Zod-based options schema.
-     *
      * @returns true if the algorithm has a Zod options schema defined
      */
     static hasZodOptions(): boolean {
@@ -335,10 +376,8 @@ export abstract class Algorithm<TOptions extends Record<string, unknown> = Recor
     /**
      * Get all registered algorithm types.
      * This method is provided for API consistency with DataSource.
-     *
      * @returns Array of algorithm keys in "namespace:type" format
      * @since 1.5.0
-     *
      * @example
      * ```typescript
      * const types = Algorithm.getRegisteredTypes();

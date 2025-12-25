@@ -42,6 +42,9 @@ export const ShellLayoutConfig = z.strictObject({
 export type ShellLayoutConfigType = z.infer<typeof ShellLayoutConfig>;
 export type ShellLayoutOpts = Partial<ShellLayoutConfigType>;
 
+/**
+ * Shell layout engine that arranges nodes in concentric shells
+ */
 export class ShellLayout extends SimpleLayoutEngine {
     static type = "shell";
     static maxDimensions = 2;
@@ -49,11 +52,20 @@ export class ShellLayout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: ShellLayoutConfigType;
 
+    /**
+     * Create a shell layout engine
+     * @param opts - Configuration options including node lists for each shell
+     */
     constructor(opts: ShellLayoutOpts) {
         super(opts);
         this.config = ShellLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for shell layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter or null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Shell layout only supports 2D
         if (dimension > this.maxDimensions) {
@@ -63,6 +75,9 @@ export class ShellLayout extends SimpleLayoutEngine {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions in concentric shells
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

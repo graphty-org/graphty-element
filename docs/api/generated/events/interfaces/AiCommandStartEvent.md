@@ -2,7 +2,7 @@
 
 # Interface: AiCommandStartEvent
 
-Defined in: [src/events.ts:236](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L236)
+Defined in: [src/events.ts:236](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L236)
 
 Emitted when an AI command starts processing
 
@@ -12,7 +12,7 @@ Emitted when an AI command starts processing
 
 > **input**: `string`
 
-Defined in: [src/events.ts:238](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L238)
+Defined in: [src/events.ts:238](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L238)
 
 ***
 
@@ -20,7 +20,7 @@ Defined in: [src/events.ts:238](https://github.com/graphty-org/graphty-element/b
 
 > **timestamp**: `number`
 
-Defined in: [src/events.ts:239](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L239)
+Defined in: [src/events.ts:239](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L239)
 
 ***
 
@@ -28,4 +28,4 @@ Defined in: [src/events.ts:239](https://github.com/graphty-org/graphty-element/b
 
 > **type**: `"ai-command-start"`
 
-Defined in: [src/events.ts:237](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L237)
+Defined in: [src/events.ts:237](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L237)

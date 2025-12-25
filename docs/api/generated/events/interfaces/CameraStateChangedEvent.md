@@ -2,7 +2,7 @@
 
 # Interface: CameraStateChangedEvent
 
-Defined in: [src/events.ts:59](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L59)
+Defined in: [src/events.ts:59](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L59)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/events.ts:59](https://github.com/graphty-org/graphty-element/bl
 
 > **state**: `object`
 
-Defined in: [src/events.ts:61](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L61)
+Defined in: [src/events.ts:61](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L61)
 
 #### Index Signature
 
@@ -70,4 +70,4 @@ Defined in: [src/events.ts:61](https://github.com/graphty-org/graphty-element/bl
 
 > **type**: `"camera-state-changed"`
 
-Defined in: [src/events.ts:60](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/events.ts#L60)
+Defined in: [src/events.ts:60](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/events.ts#L60)

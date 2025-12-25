@@ -1,12 +1,24 @@
 import type {RichTextStyle, TextSegment} from "./RichTextLabel.ts";
 
+/**
+ * Parses rich text markup into styled text segments
+ */
 export class RichTextParser {
     private readonly defaultStyle: RichTextStyle;
 
+    /**
+     * Creates a new rich text parser
+     * @param defaultStyle - Default text style to use as base
+     */
     constructor(defaultStyle: RichTextStyle) {
         this.defaultStyle = defaultStyle;
     }
 
+    /**
+     * Parses rich text into an array of line segments
+     * @param text - The text to parse (supports markup tags)
+     * @returns Array of text segments grouped by line
+     */
     parse(text: string): TextSegment[][] {
         const lines = text.split("\n");
         const parsedContent: TextSegment[][] = [];
@@ -88,6 +100,16 @@ export class RichTextParser {
         return segments;
     }
 
+    /**
+     * Measures the dimensions of parsed text content
+     * @param parsedContent - The parsed text segments
+     * @param ctx - Canvas rendering context for measurement
+     * @param options - Measurement options
+     * @param options.lineHeight - Line height multiplier
+     * @param options.textOutline - Whether text outline is enabled
+     * @param options.textOutlineWidth - Width of text outline
+     * @returns Maximum width and total height of the text
+     */
     measureText(
         parsedContent: TextSegment[][],
         ctx: CanvasRenderingContext2D,

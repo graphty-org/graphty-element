@@ -49,6 +49,9 @@ export const BfsLayoutConfig = z.strictObject({
 export type BfsLayoutConfigType = z.infer<typeof BfsLayoutConfig>;
 export type BfsLayoutOpts = Partial<BfsLayoutConfigType>;
 
+/**
+ * BFS (Breadth-First Search) layout engine for tree-like graph visualization
+ */
 export class BfsLayout extends SimpleLayoutEngine {
     static type = "bfs";
     static maxDimensions = 2;
@@ -56,11 +59,20 @@ export class BfsLayout extends SimpleLayoutEngine {
     scalingFactor = 20;
     config: BfsLayoutConfigType;
 
+    /**
+     * Create a BFS layout engine
+     * @param opts - Configuration options including start node and alignment
+     */
     constructor(opts: BfsLayoutOpts) {
         super(opts);
         this.config = BfsLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for BFS layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Empty object for 2D, null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Bfs only supports 2D
         if (dimension > this.maxDimensions) {
@@ -71,6 +83,9 @@ export class BfsLayout extends SimpleLayoutEngine {
         return {};
     }
 
+    /**
+     * Compute node positions using BFS traversal
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

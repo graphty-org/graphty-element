@@ -63,6 +63,9 @@ export const ArfLayoutConfig = z.strictObject({
 export type ArfLayoutConfigType = z.infer<typeof ArfLayoutConfig>;
 export type ArfLayoutOpts = Partial<ArfLayoutConfigType>;
 
+/**
+ * ARF (Attractive-Repulsive Force) layout engine for 2D graph visualization
+ */
 export class ArfLayout extends SimpleLayoutEngine {
     static type = "arf";
     static maxDimensions = 2;
@@ -70,11 +73,20 @@ export class ArfLayout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: ArfLayoutConfigType;
 
+    /**
+     * Create an ARF layout engine
+     * @param opts - Configuration options for the ARF algorithm
+     */
     constructor(opts: ArfLayoutOpts) {
         super(opts);
         this.config = ArfLayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for ARF layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Empty object for 2D, null for 3D (unsupported)
+     */
     static getOptionsForDimension(dimension: 2 | 3): object | null {
         // Arf only supports 2D
         if (dimension > this.maxDimensions) {
@@ -85,6 +97,9 @@ export class ArfLayout extends SimpleLayoutEngine {
         return {};
     }
 
+    /**
+     * Compute node positions using the ARF algorithm
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

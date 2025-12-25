@@ -2,7 +2,7 @@
 
 # Interface: StylesOpts
 
-Defined in: [src/Styles.ts:19](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L19)
+Defined in: [src/Styles.ts:19](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L19)
 
 ## Properties
 
@@ -10,7 +10,7 @@ Defined in: [src/Styles.ts:19](https://github.com/graphty-org/graphty-element/bl
 
 > `optional` **addDefaultStyle**: `boolean`
 
-Defined in: [src/Styles.ts:21](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L21)
+Defined in: [src/Styles.ts:21](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L21)
 
 ***
 
@@ -18,4 +18,4 @@ Defined in: [src/Styles.ts:21](https://github.com/graphty-org/graphty-element/bl
 
 > `optional` **layers**: `object`
 
-Defined in: [src/Styles.ts:20](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/Styles.ts#L20)
+Defined in: [src/Styles.ts:20](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/Styles.ts#L20)

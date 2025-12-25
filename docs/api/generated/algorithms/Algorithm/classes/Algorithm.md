@@ -2,7 +2,7 @@
 
 # Abstract Class: Algorithm\<TOptions\>
 
-Defined in: [src/algorithms/Algorithm.ts:95](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L95)
+Defined in: [src/algorithms/Algorithm.ts:93](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L93)
 
 Base class for all graph algorithms
 
@@ -42,7 +42,7 @@ The options type for this algorithm (defaults to empty object)
 
 > **new Algorithm**\<`TOptions`\>(`g`, `options?`): `Algorithm`\<`TOptions`\>
 
-Defined in: [src/algorithms/Algorithm.ts:150](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L150)
+Defined in: [src/algorithms/Algorithm.ts:147](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L147)
 
 Creates a new algorithm instance
 
@@ -70,7 +70,7 @@ Optional configuration options (uses schema defaults if not provided)
 
 > `static` **namespace**: `string`
 
-Defined in: [src/algorithms/Algorithm.ts:97](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L97)
+Defined in: [src/algorithms/Algorithm.ts:95](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L95)
 
 ***
 
@@ -78,7 +78,7 @@ Defined in: [src/algorithms/Algorithm.ts:97](https://github.com/graphty-org/grap
 
 > `static` **optionsSchema**: `OptionsSchema` = `{}`
 
-Defined in: [src/algorithms/Algorithm.ts:108](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L108)
+Defined in: [src/algorithms/Algorithm.ts:105](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L105)
 
 Options schema for this algorithm
 
@@ -95,7 +95,7 @@ Use zodOptionsSchema instead for new implementations
 
 > `static` `optional` **suggestedStyles**: [`SuggestedStylesProvider`](../../../config/type-aliases/SuggestedStylesProvider.md)
 
-Defined in: [src/algorithms/Algorithm.ts:98](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L98)
+Defined in: [src/algorithms/Algorithm.ts:96](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L96)
 
 ***
 
@@ -103,7 +103,7 @@ Defined in: [src/algorithms/Algorithm.ts:98](https://github.com/graphty-org/grap
 
 > `static` **type**: `string`
 
-Defined in: [src/algorithms/Algorithm.ts:96](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L96)
+Defined in: [src/algorithms/Algorithm.ts:94](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L94)
 
 ***
 
@@ -111,7 +111,7 @@ Defined in: [src/algorithms/Algorithm.ts:96](https://github.com/graphty-org/grap
 
 > `static` `optional` **zodOptionsSchema**: [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/algorithms/Algorithm.ts:116](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L116)
+Defined in: [src/algorithms/Algorithm.ts:113](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L113)
 
 NEW: Zod-based options schema with rich metadata for UI generation.
 
@@ -126,11 +126,15 @@ This is the new unified system that provides both validation and UI metadata.
 
 > **get** **namespace**(): `string`
 
-Defined in: [src/algorithms/Algorithm.ts:177](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L177)
+Defined in: [src/algorithms/Algorithm.ts:181](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L181)
+
+Gets the algorithm namespace
 
 ##### Returns
 
 `string`
+
+The algorithm namespace identifier
 
 ***
 
@@ -140,11 +144,15 @@ Defined in: [src/algorithms/Algorithm.ts:177](https://github.com/graphty-org/gra
 
 > **get** **results**(): [`AdHocData`](../../../config/type-aliases/AdHocData.md)
 
-Defined in: [src/algorithms/Algorithm.ts:181](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L181)
+Defined in: [src/algorithms/Algorithm.ts:189](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L189)
+
+Gets all algorithm results for nodes, edges, and graph
 
 ##### Returns
 
 [`AdHocData`](../../../config/type-aliases/AdHocData.md)
+
+An object containing node, edge, and graph results
 
 ***
 
@@ -154,11 +162,15 @@ Defined in: [src/algorithms/Algorithm.ts:181](https://github.com/graphty-org/gra
 
 > **get** **type**(): `string`
 
-Defined in: [src/algorithms/Algorithm.ts:173](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L173)
+Defined in: [src/algorithms/Algorithm.ts:173](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L173)
+
+Gets the algorithm type
 
 ##### Returns
 
 `string`
+
+The algorithm type identifier
 
 ## Methods
 
@@ -166,7 +178,9 @@ Defined in: [src/algorithms/Algorithm.ts:173](https://github.com/graphty-org/gra
 
 > **addEdgeResult**(`edge`, `resultName`, `result`): `void`
 
-Defined in: [src/algorithms/Algorithm.ts:229](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L229)
+Defined in: [src/algorithms/Algorithm.ts:249](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L249)
+
+Adds a result value for a specific edge
 
 #### Parameters
 
@@ -174,13 +188,19 @@ Defined in: [src/algorithms/Algorithm.ts:229](https://github.com/graphty-org/gra
 
 [`Edge`](../../../Edge/classes/Edge.md)
 
+The edge to add the result to
+
 ##### resultName
 
 `string`
 
+The name of the result field
+
 ##### result
 
 `unknown`
+
+The result value to store
 
 #### Returns
 
@@ -192,7 +212,9 @@ Defined in: [src/algorithms/Algorithm.ts:229](https://github.com/graphty-org/gra
 
 > **addGraphResult**(`resultName`, `result`): `void`
 
-Defined in: [src/algorithms/Algorithm.ts:234](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L234)
+Defined in: [src/algorithms/Algorithm.ts:259](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L259)
+
+Adds a result value for the graph
 
 #### Parameters
 
@@ -200,9 +222,13 @@ Defined in: [src/algorithms/Algorithm.ts:234](https://github.com/graphty-org/gra
 
 `string`
 
+The name of the result field
+
 ##### result
 
 `unknown`
+
+The result value to store
 
 #### Returns
 
@@ -214,11 +240,15 @@ Defined in: [src/algorithms/Algorithm.ts:234](https://github.com/graphty-org/gra
 
 > **addNodeResult**(`nodeId`, `resultName`, `result`): `void`
 
-Defined in: [src/algorithms/Algorithm.ts:217](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L217)
+Defined in: [src/algorithms/Algorithm.ts:231](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L231)
+
+Adds a result value for a specific node
 
 #### Parameters
 
 ##### nodeId
+
+The ID of the node to add the result to
 
 `string` | `number`
 
@@ -226,9 +256,13 @@ Defined in: [src/algorithms/Algorithm.ts:217](https://github.com/graphty-org/gra
 
 `string`
 
+The name of the result field
+
 ##### result
 
 `unknown`
+
+The result value to store
 
 #### Returns
 
@@ -240,7 +274,9 @@ Defined in: [src/algorithms/Algorithm.ts:217](https://github.com/graphty-org/gra
 
 > `static` **get**(`g`, `namespace`, `type`): `Algorithm`\<`Record`\<`string`, `unknown`\>\> \| `null`
 
-Defined in: [src/algorithms/Algorithm.ts:251](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L251)
+Defined in: [src/algorithms/Algorithm.ts:288](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L288)
+
+Gets an algorithm instance from the registry
 
 #### Parameters
 
@@ -248,17 +284,25 @@ Defined in: [src/algorithms/Algorithm.ts:251](https://github.com/graphty-org/gra
 
 [`Graph`](../../../Graph/classes/Graph.md)
 
+The graph to run the algorithm on
+
 ##### namespace
 
 `string`
+
+The algorithm namespace
 
 ##### type
 
 `string`
 
+The algorithm type
+
 #### Returns
 
 `Algorithm`\<`Record`\<`string`, `unknown`\>\> \| `null`
+
+A new instance of the algorithm, or null if not found
 
 ***
 
@@ -266,7 +310,9 @@ Defined in: [src/algorithms/Algorithm.ts:251](https://github.com/graphty-org/gra
 
 > `static` **getClass**(`namespace`, `type`): `AlgorithmClass` & [`AlgorithmStatics`](../interfaces/AlgorithmStatics.md) \| `null`
 
-Defined in: [src/algorithms/Algorithm.ts:260](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L260)
+Defined in: [src/algorithms/Algorithm.ts:303](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L303)
+
+Gets an algorithm class from the registry
 
 #### Parameters
 
@@ -274,13 +320,19 @@ Defined in: [src/algorithms/Algorithm.ts:260](https://github.com/graphty-org/gra
 
 `string`
 
+The algorithm namespace
+
 ##### type
 
 `string`
 
+The algorithm type
+
 #### Returns
 
 `AlgorithmClass` & [`AlgorithmStatics`](../interfaces/AlgorithmStatics.md) \| `null`
+
+The algorithm class, or null if not found
 
 ***
 
@@ -288,7 +340,7 @@ Defined in: [src/algorithms/Algorithm.ts:260](https://github.com/graphty-org/gra
 
 > `static` **getOptionsSchema**(): `OptionsSchema`
 
-Defined in: [src/algorithms/Algorithm.ts:284](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L284)
+Defined in: [src/algorithms/Algorithm.ts:328](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L328)
 
 Get the options schema for this algorithm
 
@@ -308,7 +360,7 @@ Use getZodOptionsSchema() instead
 
 > `static` **getRegisteredAlgorithms**(`namespace?`): `string`[]
 
-Defined in: [src/algorithms/Algorithm.ts:324](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L324)
+Defined in: [src/algorithms/Algorithm.ts:365](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L365)
 
 Get all registered algorithm names.
 
@@ -332,7 +384,7 @@ Array of algorithm names in "namespace:type" format
 
 > `static` **getRegisteredTypes**(): `string`[]
 
-Defined in: [src/algorithms/Algorithm.ts:349](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L349)
+Defined in: [src/algorithms/Algorithm.ts:388](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L388)
 
 Get all registered algorithm types.
 This method is provided for API consistency with DataSource.
@@ -361,7 +413,7 @@ console.log('Available algorithms:', types);
 
 > `static` **getSuggestedStyles**(): [`SuggestedStylesConfig`](../../../config/interfaces/SuggestedStylesConfig.md) \| `null`
 
-Defined in: [src/algorithms/Algorithm.ts:274](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L274)
+Defined in: [src/algorithms/Algorithm.ts:319](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L319)
 
 Get suggested styles for this algorithm
 
@@ -369,13 +421,15 @@ Get suggested styles for this algorithm
 
 [`SuggestedStylesConfig`](../../../config/interfaces/SuggestedStylesConfig.md) \| `null`
 
+The suggested styles configuration, or null if none defined
+
 ***
 
 ### getZodOptionsSchema()
 
 > `static` **getZodOptionsSchema**(): [`OptionsSchema`](../../../config/type-aliases/OptionsSchema.md)
 
-Defined in: [src/algorithms/Algorithm.ts:305](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L305)
+Defined in: [src/algorithms/Algorithm.ts:347](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L347)
 
 Get the Zod-based options schema for this algorithm.
 
@@ -391,7 +445,7 @@ The Zod options schema, or an empty object if no schema defined
 
 > `static` **hasOptions**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:295](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L295)
+Defined in: [src/algorithms/Algorithm.ts:338](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L338)
 
 Check if this algorithm has configurable options
 
@@ -411,7 +465,7 @@ Use hasZodOptions() instead
 
 > `static` **hasSuggestedStyles**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:267](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L267)
+Defined in: [src/algorithms/Algorithm.ts:311](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L311)
 
 Check if this algorithm has suggested styles
 
@@ -419,13 +473,15 @@ Check if this algorithm has suggested styles
 
 `boolean`
 
+true if suggested styles are defined
+
 ***
 
 ### hasZodOptions()
 
 > `static` **hasZodOptions**(): `boolean`
 
-Defined in: [src/algorithms/Algorithm.ts:314](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L314)
+Defined in: [src/algorithms/Algorithm.ts:355](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L355)
 
 Check if this algorithm has a Zod-based options schema.
 
@@ -441,7 +497,9 @@ true if the algorithm has a Zod options schema defined
 
 > `static` **register**\<`T`\>(`cls`): `T`
 
-Defined in: [src/algorithms/Algorithm.ts:242](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L242)
+Defined in: [src/algorithms/Algorithm.ts:272](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L272)
+
+Registers an algorithm class in the global registry
 
 #### Type Parameters
 
@@ -455,9 +513,13 @@ Defined in: [src/algorithms/Algorithm.ts:242](https://github.com/graphty-org/gra
 
 `T`
 
+The algorithm class to register
+
 #### Returns
 
 `T`
+
+The registered algorithm class
 
 ***
 
@@ -465,7 +527,7 @@ Defined in: [src/algorithms/Algorithm.ts:242](https://github.com/graphty-org/gra
 
 > `abstract` **run**(`g`): `Promise`\<`void`\>
 
-Defined in: [src/algorithms/Algorithm.ts:204](https://github.com/graphty-org/graphty-element/blob/07816b360bd8412887d7c4b5a434daa458f40608/src/algorithms/Algorithm.ts#L204)
+Defined in: [src/algorithms/Algorithm.ts:212](https://github.com/graphty-org/graphty-element/blob/6dd6599f381a9a5f736999394f4e9ca8e436e9b3/src/algorithms/Algorithm.ts#L212)
 
 #### Parameters
 

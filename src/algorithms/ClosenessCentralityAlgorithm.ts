@@ -43,7 +43,11 @@ export class ClosenessCentralityAlgorithm extends Algorithm {
         category: "node-metric",
     });
 
-    // eslint-disable-next-line @typescript-eslint/require-await
+    /**
+     * Executes the closeness centrality algorithm on the graph
+     *
+     * Computes closeness centrality scores for all nodes and stores normalized values.
+     */
     async run(): Promise<void> {
         const g = this.graph;
         const nodes = Array.from(g.getDataManager().nodes.keys());

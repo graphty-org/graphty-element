@@ -116,6 +116,9 @@ export const ForceAtlas2LayoutConfig = z.strictObject({
 export type ForceAtlas2LayoutConfigType = z.infer<typeof ForceAtlas2LayoutConfig>;
 export type ForceAtlas2LayoutOpts = Partial<ForceAtlas2LayoutConfigType>;
 
+/**
+ * ForceAtlas2 layout engine for graph visualization with scaling and gravity options
+ */
 export class ForceAtlas2Layout extends SimpleLayoutEngine {
     static type = "forceatlas2";
     static maxDimensions = 3;
@@ -123,15 +126,27 @@ export class ForceAtlas2Layout extends SimpleLayoutEngine {
     scalingFactor = 100;
     config: ForceAtlas2LayoutConfigType;
 
+    /**
+     * Create a ForceAtlas2 layout engine
+     * @param opts - Configuration options for the ForceAtlas2 algorithm
+     */
     constructor(opts: ForceAtlas2LayoutOpts) {
         super(opts);
         this.config = ForceAtlas2LayoutConfig.parse(opts);
     }
 
+    /**
+     * Get dimension-specific options for ForceAtlas2 layout
+     * @param dimension - The desired dimension (2 or 3)
+     * @returns Options object with dim parameter
+     */
     static getOptionsForDimension(dimension: 2 | 3): object {
         return {dim: dimension};
     }
 
+    /**
+     * Compute node positions using the ForceAtlas2 algorithm
+     */
     doLayout(): void {
         this.stale = false;
         const nodes = (): LayoutNode[] => this._nodes.map((n) => n.id as LayoutNode);

@@ -32,10 +32,18 @@ export const JsonDataSourceConfig = z.object({
 export type JsonDataSourceConfigType = z.infer<typeof JsonDataSourceConfig>;
 export type JsonDataSourceConfigOpts = PartiallyOptional<JsonDataSourceConfigType, "node" | "edge">;
 
+/**
+ * Data source for loading graph data from JSON files.
+ * Supports JMESPath queries for extracting nodes and edges from complex JSON structures.
+ */
 export class JsonDataSource extends DataSource {
     static type = "json";
     opts: JsonDataSourceConfigType;
 
+    /**
+     * Creates a new JsonDataSource instance.
+     * @param anyOpts - Configuration options for JSON parsing and data extraction
+     */
     constructor(anyOpts: object) {
         const opts = JsonDataSourceConfig.parse(anyOpts);
 
@@ -69,6 +77,11 @@ export class JsonDataSource extends DataSource {
         };
     }
 
+    /**
+     * Fetches and parses JSON data into graph chunks.
+     * Uses JMESPath to extract nodes and edges from the JSON structure.
+     * @yields DataSourceChunk objects containing parsed nodes and edges
+     */
     async *sourceFetchData(): AsyncGenerator<DataSourceChunk, void, unknown> {
         let data: unknown;
 
@@ -185,6 +198,9 @@ export class JsonDataSource extends DataSource {
     /**
      * Validates a node object and logs errors if invalid.
      * Returns true if the node is valid and should be included.
+     * @param node - The node object to validate
+     * @param index - Index of the node in the array
+     * @returns True if valid, false otherwise
      */
     private isValidNode(node: unknown, index: number): boolean {
         if (node === null || node === undefined) {
@@ -247,6 +263,9 @@ export class JsonDataSource extends DataSource {
     /**
      * Validates an edge object and logs errors if invalid.
      * Returns true if the edge is valid and should be included.
+     * @param edge - The edge object to validate
+     * @param index - Index of the edge in the array
+     * @returns True if valid, false otherwise
      */
     private isValidEdge(edge: unknown, index: number): boolean {
         if (edge === null || edge === undefined) {

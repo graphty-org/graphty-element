@@ -46,6 +46,12 @@ export class RenderManager implements Manager {
     private updateCallback?: () => void;
     private resizeHandler: () => void;
 
+    /**
+     * Creates a new render manager for Babylon.js scene and rendering
+     * @param canvas - HTML canvas element for rendering
+     * @param eventManager - Event manager for emitting render events
+     * @param config - Optional render configuration
+     */
     constructor(
         private canvas: HTMLCanvasElement,
         private eventManager: EventManager,
@@ -98,6 +104,9 @@ export class RenderManager implements Manager {
         this.scene.clearColor = Color4.FromHexString(backgroundColor);
     }
 
+    /**
+     * Initialize the render manager and Babylon.js engine
+     */
     async init(): Promise<void> {
         try {
             // Initialize WebGPU engine if used
@@ -128,6 +137,9 @@ export class RenderManager implements Manager {
         }
     }
 
+    /**
+     * Dispose the render manager and clean up resources
+     */
     dispose(): void {
         // Stop render loop
         this.stopRenderLoop();
@@ -145,6 +157,7 @@ export class RenderManager implements Manager {
 
     /**
      * Start the render loop with the provided update callback
+     * @param updateCallback - Function to call before each render frame
      */
     startRenderLoop(updateCallback: () => void): void {
         if (this.renderLoopActive) {
@@ -198,6 +211,7 @@ export class RenderManager implements Manager {
 
     /**
      * Update the background color
+     * @param color - Hex color string (e.g., "#FFFFFF")
      */
     setBackgroundColor(color: string): void {
         try {
@@ -215,6 +229,7 @@ export class RenderManager implements Manager {
 
     /**
      * Get current render statistics
+     * @returns Current FPS and active mesh count
      */
     getRenderStats(): {
         fps: number;

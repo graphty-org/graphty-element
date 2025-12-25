@@ -31,7 +31,11 @@ export const SCREENSHOT_PRESETS: Record<string, Partial<ScreenshotOptions>> = {
 };
 
 /**
- * Resolves a screenshot preset and merges it with user-provided overrides
+ * Resolves a screenshot preset and merges it with user-provided overrides.
+ * Overrides take precedence over preset values.
+ * @param preset - The name of the preset to resolve
+ * @param overrides - Optional user-provided options to override preset values
+ * @returns The merged screenshot options
  */
 export function resolvePreset(
     preset: string,

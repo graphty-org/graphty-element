@@ -49,6 +49,11 @@ export interface RunAlgorithmOptions extends QueueableOptions {
 
 /**
  * Helper to wrap a method with queue support while maintaining backwards compatibility
+ * @param queueOperation - Function to queue operations with category and execution logic
+ * @param category - The category of the operation being queued
+ * @param method - The method to be wrapped with queue support
+ * @param getDescription - Optional function to generate a description from method arguments
+ * @returns The wrapped method with queue support
  */
 export function wrapWithQueue<T extends (... args: unknown[]) => unknown>(
     queueOperation: (category: OperationCategory, execute: (context: OperationContext) => Promise<void> | void, metadata?: Record<string, unknown>) => string,
@@ -106,16 +111,27 @@ export function wrapWithQueue<T extends (... args: unknown[]) => unknown>(
 export class BatchOperationContext {
     private operations: (() => Promise<void>)[] = [];
 
+    /**
+     * Add an operation to the batch
+     * @param operation - Async operation to add to the batch
+     */
     add(operation: () => Promise<void>): void {
         this.operations.push(operation);
     }
 
+    /**
+     * Execute all batched operations sequentially
+     */
     async execute(): Promise<void> {
         for (const operation of this.operations) {
             await operation();
         }
     }
 
+    /**
+     * Get the number of operations in the batch
+     * @returns The count of pending operations
+     */
     get count(): number {
         return this.operations.length;
     }

@@ -440,7 +440,7 @@ describe("Property Order Independence", () => {
      * In 2D mode, the layout should constrain all nodes to the XY plane.
      */
     function verify2DModePositions(): void {
-        assert.isTrue(graph.is2D(), "Should be in 2D mode for this verification");
+        assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode for this verification");
 
         for (const node of graph.getNodes()) {
             const pos = node.mesh.position;
@@ -469,7 +469,7 @@ describe("Property Order Independence", () => {
         // Verify layout engine type is circular
         verifyLayoutEngineType("circular");
         // Skip material check in 2D mode as mesh materials may differ
-        if (!skipMaterialCheck && !graph.is2D()) {
+        if (!skipMaterialCheck && graph.getViewMode() !== "2d") {
             verifyNodeMeshMaterials("#4CAF50");
         }
     }
@@ -1313,7 +1313,7 @@ describe("Property Order Independence", () => {
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
 
             // Verify we're in 2D mode with correct Z positions
-            assert.isTrue(graph.is2D(), "Should be in 2D mode");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode");
             verify2DModePositions();
         });
 
@@ -1328,7 +1328,7 @@ describe("Property Order Independence", () => {
             await graph.setStyleTemplate(STYLE_TEMPLATE);
 
             // Verify we're in 3D mode initially
-            assert.isFalse(graph.is2D(), "Should start in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should start in 3D mode");
 
             // Switch to 2D camera
             await delay(10);
@@ -1340,7 +1340,7 @@ describe("Property Order Independence", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify we switched to 2D mode
-            assert.isTrue(graph.is2D(), "Should be in 2D mode after switch");
+            assert.isTrue(graph.getViewMode() === "2d", "Should be in 2D mode after switch");
 
             // Verify Z positions are flattened when switching from 3D to 2D
             verify2DModePositions();
@@ -1380,7 +1380,7 @@ describe("Property Order Independence", () => {
             await graph.operationQueue.waitForCompletion();
 
             // Verify Z positions are restored
-            assert.isFalse(graph.is2D(), "Should be in 3D mode after switch back");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode after switch back");
             for (const node of graph.getNodes()) {
                 const originalZ = originalZPositions.get(node.id);
                 if (originalZ === undefined) {
@@ -1411,7 +1411,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode after final switch");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode after final switch");
 
             // Verify Z positions are restored again
             for (const node of graph.getNodes()) {
@@ -1463,7 +1463,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
         });
 
         it("Variant 28: 2D camera + algorithm", async() => {
@@ -1493,7 +1493,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
         });
 
         it("Variant 29: Algorithm + layout + camera all changing", async() => {
@@ -1530,7 +1530,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             const positions = getNodePositions();
             assert.isTrue(layoutWasApplied(positions), "Layout should have been applied to nodes");
@@ -1577,7 +1577,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             const positions = getNodePositions();
             assert.isTrue(layoutWasApplied(positions), "Layout should have been applied to nodes");
@@ -1634,7 +1634,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             const positions = getNodePositions();
             assert.isTrue(layoutWasApplied(positions), "Layout should have been applied to nodes");
@@ -1721,7 +1721,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             // Note: Algorithm config is set but algorithms don't run without runAlgorithmsOnLoad=true
         });
@@ -1760,7 +1760,7 @@ describe("Property Order Independence", () => {
             // Verify final state
             assert.equal(graph.getNodeCount(), 6, "Should have 6 nodes");
             assert.equal(graph.getEdgeCount(), 6, "Should have 6 edges");
-            assert.isFalse(graph.is2D(), "Should be in 3D mode");
+            assert.isFalse(graph.getViewMode() === "2d", "Should be in 3D mode");
 
             // Note: Algorithm config is set but algorithms don't run without runAlgorithmsOnLoad=true
         });

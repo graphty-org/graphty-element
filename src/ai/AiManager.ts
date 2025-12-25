@@ -77,6 +77,9 @@ export class AiManager {
     private disposed = false;
     private initialized = false;
 
+    /**
+     * Creates a new AiManager instance.
+     */
     constructor() {
         this.commandRegistry = new CommandRegistry();
         this.apiKeyManager = new ApiKeyManager();

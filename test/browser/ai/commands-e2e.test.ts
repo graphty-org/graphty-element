@@ -230,7 +230,7 @@ describe("AI Commands End-to-End", () => {
             const provider = getProvider();
 
             // Ensure we start in 3D
-            assert.strictEqual(graph.is2D(), false);
+            assert.strictEqual(graph.getViewMode() === "2d", false);
 
             provider.setResponse("2d", {
                 text: "",
@@ -240,7 +240,7 @@ describe("AI Commands End-to-End", () => {
             const result = await graph.aiCommand("2d");
 
             assert.strictEqual(result.success, true);
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
         });
 
         it("switches to 3D mode", async() => {
@@ -252,7 +252,7 @@ describe("AI Commands End-to-End", () => {
                 toolCalls: [{id: "1", name: "setDimension", arguments: {dimension: "2d"}}],
             });
             await graph.aiCommand("2d");
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
 
             // Now switch back to 3D
             provider.setResponse("3d", {
@@ -263,7 +263,7 @@ describe("AI Commands End-to-End", () => {
             const result = await graph.aiCommand("3d");
 
             assert.strictEqual(result.success, true);
-            assert.strictEqual(graph.is2D(), false);
+            assert.strictEqual(graph.getViewMode() === "2d", false);
         });
 
         it("handles 2d string dimension parameter", async() => {
@@ -277,7 +277,7 @@ describe("AI Commands End-to-End", () => {
             const result = await graph.aiCommand("flat");
 
             assert.strictEqual(result.success, true);
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
         });
 
         it("handles 3d string dimension parameter", async() => {
@@ -298,7 +298,7 @@ describe("AI Commands End-to-End", () => {
             const result = await graph.aiCommand("3d");
 
             assert.strictEqual(result.success, true);
-            assert.strictEqual(graph.is2D(), false);
+            assert.strictEqual(graph.getViewMode() === "2d", false);
         });
     });
 
@@ -382,7 +382,7 @@ describe("AI Commands End-to-End", () => {
             assert.strictEqual(dimResult.success, true);
 
             // Verify dimension changed
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
             // Note: dimension change may reset layout to default, which is expected behavior
         });
 
@@ -425,7 +425,7 @@ describe("AI Commands End-to-End", () => {
             await graph.aiCommand("shell");
 
             // Verify both changes took effect
-            assert.strictEqual(graph.is2D(), true);
+            assert.strictEqual(graph.getViewMode() === "2d", true);
             const layoutManager = graph.getLayoutManager();
             assert.strictEqual(layoutManager.layoutEngine?.type, "shell");
         });

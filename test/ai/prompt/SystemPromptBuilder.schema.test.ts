@@ -16,7 +16,7 @@ function createMockGraph(): Graph {
     return {
         getNodeCount: () => 10,
         getEdgeCount: () => 5,
-        is2D: () => false,
+        getViewMode: () => "3d",
         getLayoutManager: () => ({
             layoutEngine: {type: "ngraph"},
         }),

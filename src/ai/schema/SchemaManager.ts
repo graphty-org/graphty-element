@@ -2,7 +2,6 @@
  * SchemaManager - Manages schema extraction, caching, and lifecycle.
  *
  * Provides cached access to graph schema and formatted output for system prompts.
- *
  * @module ai/schema/SchemaManager
  */
 
@@ -28,7 +27,6 @@ export class SchemaManager {
 
     /**
      * Create a new SchemaManager.
-     *
      * @param graph - The graph to extract schema from
      * @param options - Options passed through to SchemaExtractor
      */
@@ -41,7 +39,6 @@ export class SchemaManager {
      * Extract schema from the graph.
      *
      * Returns cached schema if available, otherwise extracts fresh.
-     *
      * @returns The extracted schema summary
      */
     extract(): SchemaSummary {
@@ -55,7 +52,6 @@ export class SchemaManager {
 
     /**
      * Get the cached schema without triggering extraction.
-     *
      * @returns The cached schema or null if not yet extracted
      */
     getSchema(): SchemaSummary | null {
@@ -66,7 +62,6 @@ export class SchemaManager {
      * Get the schema formatted as markdown for system prompts.
      *
      * Returns cached formatted schema if available.
-     *
      * @returns Formatted markdown string
      */
     getFormattedSchema(): string {
