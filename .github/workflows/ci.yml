@@ -28,11 +28,11 @@ jobs:
         env:
           HUSKY: 0
 
-      - name: Run build
-        run: npm run build
-
       - name: Run lint
         run: npm run lint
+
+      - name: Run build
+        run: npm run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -62,11 +62,11 @@ jobs:
         shard: [default, browser, storybook, visual]
         include:
           - shard: default
-            test-command: vitest run --project=default
+            test-command: npx vitest run --project=default
           - shard: browser
-            test-command: vitest run --project=browser --project=interactions
+            test-command: npx vitest run --project=browser --project=interactions
           - shard: storybook
-            test-command: vitest run --project=storybook
+            test-command: npx vitest run --project=storybook
           - shard: visual
             test-command: npx chromatic
 
@@ -132,10 +132,10 @@ jobs:
             echo "should-release=false" >> $GITHUB_OUTPUT
           fi
 
-  # Coverage job - runs on master only, parallel to tests
+  # Coverage job - runs on master only, after all tests pass
   coverage:
     name: Generate and Publish Coverage
-    needs: build
+    needs: test-complete
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
