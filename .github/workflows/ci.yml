@@ -176,11 +176,12 @@ jobs:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
 
       - name: Upload blob reports for coverage merge
-        if: matrix.shard != 'visual'
+        if: ${{ !cancelled() && matrix.shard != 'visual' }}
         uses: actions/upload-artifact@v4
         with:
           name: blob-report-${{ matrix.shard }}
-          path: .vitest-reports/
+          path: .vitest-reports/*
+          include-hidden-files: true
           retention-days: 1
 
   # Aggregate test results - gate for downstream jobs
@@ -204,7 +205,7 @@ jobs:
   coverage:
     name: Merge and Publish Coverage
     needs: test
-    if: github.ref == 'refs/heads/master'
+    if: ${{ !cancelled() && github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
