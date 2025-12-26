@@ -405,7 +405,7 @@ initGraph();
 
 ## Interactive Examples
 
-- [Data Loading](https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default) - Data management
-- [Selection](https://graphty-org.github.io/graphty-element/storybook/?path=/story/selection--default) - Selection handling
-- [Algorithms](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms--default) - Algorithm execution
-- [Camera](https://graphty-org.github.io/graphty-element/storybook/?path=/story/camera--default) - Camera control
+- [Data Loading](https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--basic) - Data management
+- [Selection](https://graphty-org.github.io/graphty-element/storybook/?path=/story/selection--mode-3-d) - Selection handling
+- [Algorithms](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-centrality--degree-centrality) - Algorithm execution
+- [Camera](https://graphty-org.github.io/graphty-element/storybook/?path=/story/camera-controls--three-d) - Camera control

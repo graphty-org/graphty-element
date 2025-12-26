@@ -275,4 +275,4 @@ if (arSupported && /Android/.test(navigator.userAgent)) {
 
 ## Interactive Examples
 
-- [XR Examples](https://graphty-org.github.io/graphty-element/storybook/?path=/story/xr-example--default)
+- [XR Examples](https://graphty-org.github.io/graphty-element/storybook/?path=/story/xr--default)

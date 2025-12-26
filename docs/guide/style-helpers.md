@@ -235,6 +235,6 @@ const isSafe = colorblindSimulation.isPaletteSafe(myColors);
 
 ## Interactive Examples
 
-- [Palette Picker](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-palettepicker--default)
-- [Centrality with Colors](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-centrality--degree)
-- [Community Detection](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-community--louvain)
+- [Palette Picker](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-palette-picker--palette-picker)
+- [Centrality with Colors](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-centrality--degree-centrality)
+- [Community Detection](https://graphty-org.github.io/graphty-element/storybook/?path=/story/algorithms-community--louvain-community-detection)

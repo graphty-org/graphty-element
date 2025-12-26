@@ -278,10 +278,10 @@ const edgeStyle = graph.styleManager.getEdgeStyle(edge);
 
 ## Interactive Examples
 
-- [Node Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/nodestyles--default)
-- [Edge Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/edgestyles--default)
-- [Label Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/labelstyles--default)
-- [All Node Shapes](https://graphty-org.github.io/graphty-element/storybook/?path=/story/allnodeshapes--default)
-- [Bezier Edges](https://graphty-org.github.io/graphty-element/storybook/?path=/story/bezieredges--default)
-- [Bidirectional Arrows](https://graphty-org.github.io/graphty-element/storybook/?path=/story/bidirectionalarrows--default)
-- [Layered Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/layeredstyles--default)
+- [Node Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-node--default)
+- [Edge Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-edge--default)
+- [Label Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-label--default)
+- [All Node Shapes](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-node--all-node-shapes)
+- [Bezier Edges](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-edge--bezier)
+- [Bidirectional Arrows](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-edge--bidirectional)
+- [Layered Styles](https://graphty-org.github.io/graphty-element/storybook/?path=/story/styles-layered--two-layer-node-colors)

@@ -252,5 +252,4 @@ const stopOrbit = startOrbit();
 
 ## Interactive Examples
 
-- [Camera Controls](https://graphty-org.github.io/graphty-element/storybook/?path=/story/camera--default)
-- [Camera Animation](https://graphty-org.github.io/graphty-element/storybook/?path=/story/cameraanimation--default)
+- [Camera Controls](https://graphty-org.github.io/graphty-element/storybook/?path=/story/camera-controls--three-d)

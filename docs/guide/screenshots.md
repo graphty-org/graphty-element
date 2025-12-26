@@ -292,5 +292,5 @@ Add a screenshot button to your UI:
 
 ## Interactive Examples
 
-- [Screenshots](https://graphty-org.github.io/graphty-element/storybook/?path=/story/screenshot--default)
-- [Video Capture](https://graphty-org.github.io/graphty-element/storybook/?path=/story/video--default)
+- [Screenshots](https://graphty-org.github.io/graphty-element/storybook/?path=/story/screenshot--image)
+- [Video Capture](https://graphty-org.github.io/graphty-element/storybook/?path=/story/screenshot--video)

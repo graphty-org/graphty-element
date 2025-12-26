@@ -48,4 +48,4 @@ Create your first graph:
 </graphty-element>
 ```
 
-See it in action: [Basic Graph](https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--default)
+See it in action: [Basic Graph](https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--graphty)

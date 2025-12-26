@@ -125,8 +125,8 @@ Use a style template for a polished look:
 
 See these concepts in action:
 
-- [Default Graph](https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--default) - Basic graph visualization
-- [Data Loading](https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--default) - Loading data from various sources
+- [Default Graph](https://graphty-org.github.io/graphty-element/storybook/?path=/story/graphty--graphty) - Basic graph visualization
+- [Data Loading](https://graphty-org.github.io/graphty-element/storybook/?path=/story/data--basic) - Loading data from various sources
 
 ## What's Next?
 
