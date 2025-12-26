@@ -936,6 +936,8 @@ export class XRInputHandler {
      *
      * This provides intuitive control: fine adjustments when moving slowly,
      * quick repositioning when moving fast.
+     * @param velocity - The velocity of hand movement in world units per second.
+     * @returns The amplification gain factor to apply to the movement.
      */
     private calculateVelocityBasedGain(velocity: number): number {
         if (velocity < this.VELOCITY_SLOW_THRESHOLD) {
