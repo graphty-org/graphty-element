@@ -3,6 +3,7 @@
  * Uses the 'selfsigned' npm package to generate proper X.509 certificates.
  */
 
+import * as fs from "fs";
 import selfsigned from "selfsigned";
 
 export interface GeneratedCert {
@@ -70,9 +71,6 @@ export function generateSelfSignedCert(hostname = "localhost"): GeneratedCert {
  */
 export function certFilesExist(certPath: string, keyPath: string): boolean {
     try {
-        // Dynamic import to avoid issues in browser context
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const fs = require("fs") as typeof import("fs");
         fs.accessSync(certPath, fs.constants.R_OK);
         fs.accessSync(keyPath, fs.constants.R_OK);
         return true;
@@ -88,8 +86,6 @@ export function certFilesExist(certPath: string, keyPath: string): boolean {
  * @returns Object containing PEM-encoded certificate and private key
  */
 export function readCertFiles(certPath: string, keyPath: string): GeneratedCert {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const fs = require("fs") as typeof import("fs");
     return {
         cert: fs.readFileSync(certPath, "utf-8"),
         key: fs.readFileSync(keyPath, "utf-8"),

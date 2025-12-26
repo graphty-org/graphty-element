@@ -426,6 +426,14 @@ export class NodeDragHandler {
         }
     }
 
+    /**
+     * Public API to select this node.
+     * Called by XRInputHandler when user taps on a node without dragging.
+     */
+    public select(): void {
+        this.handleClick();
+    }
+
     private getWorldPositionFromRay(ray: Ray): Vector3 {
         // Strategy: Plane intersection parallel to camera view
         // This maintains predictable drag behavior
