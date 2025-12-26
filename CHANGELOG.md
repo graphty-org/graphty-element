@@ -1,3 +1,11 @@
+## [1.4.6](https://github.com/graphty-org/graphty-element/compare/v1.4.5...v1.4.6) (2025-12-26)
+
+
+### Bug Fixes
+
+* fix api gaps, update documentation ([abbf39b](https://github.com/graphty-org/graphty-element/commit/abbf39b5c01773f66e9dee85e967ac22a1a2cd90))
+* fix JS / Lit API parity, expand documentation ([6dd6599](https://github.com/graphty-org/graphty-element/commit/6dd6599f381a9a5f736999394f4e9ca8e436e9b3))
+
 ## [1.4.5](https://github.com/graphty-org/graphty-element/compare/v1.4.4...v1.4.5) (2025-12-25)
 
 
