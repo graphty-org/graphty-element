@@ -88,8 +88,27 @@ export class XRInputHandler {
     private dragHand: "left" | "right" | null = null;
     private lastDragHandPosition: Vector3 | null = null; // Previous frame position for delta calculation
 
-    // Movement amplification for XR dragging (matches working demo)
-    private readonly MOVEMENT_AMPLIFICATION = 3.0;
+    // Velocity-based gain (PRISM technique from VR research)
+    // Raw hand deltas are tiny (~0.3mm/frame at 72fps), need significant amplification
+    // User feedback: 5× was too slow - "full arm only moves 3 units"
+    // Target: full arm movement (0.6m) should move node ~15-20 units
+    private readonly VELOCITY_SLOW_THRESHOLD = 0.005; // meters/second - below this = precision mode
+    private readonly VELOCITY_FAST_THRESHOLD = 0.03; // meters/second - above this = speed mode
+    private readonly AMP_SLOW = 5.0; // Precision zone: usable but controlled
+    private readonly AMP_MEDIUM = 10.0; // Natural zone: comfortable movement
+    private readonly AMP_FAST = 20.0; // Speed zone: fast repositioning
+    private lastDragTime = 0; // For velocity calculation
+
+    // Smoothing to reduce jitter from hand tracking noise
+    private readonly SMOOTHING_FACTOR = 0.7; // 0 = no smoothing, 1 = max smoothing
+    private smoothedDelta: Vector3 | null = null;
+
+    // Drag threshold - must move this far from pick point before node actually moves
+    // Set high enough that natural hand tremor during a "click" doesn't trigger drag
+    // Testing showed 2cm was too low - clicks naturally move 4-6cm
+    private readonly DRAG_THRESHOLD = 0.08; // 8cm - requires intentional movement to drag
+    private dragStartHandPosition: Vector3 | null = null; // Position when drag started
+    private dragThresholdExceeded = false; // True once user moves far enough to start actual drag
 
     // Debug
     private frameCount = 0;
@@ -779,10 +798,12 @@ export class XRInputHandler {
         this.draggedNodeHandler = dragHandler;
         this.dragHand = handedness;
         this.lastDragHandPosition = handPosition.clone(); // Store for delta calculation
+        this.dragStartHandPosition = handPosition.clone(); // Store initial position for threshold check
+        this.dragThresholdExceeded = false; // Reset threshold flag
+        this.lastDragTime = performance.now(); // Initialize time for velocity calculation
 
-        // Call the drag handler's start method with the picked point as initial position
-        const worldPosition = pickedPoint ?? handPosition;
-        dragHandler.onDragStart(worldPosition);
+        // DON'T call onDragStart yet - wait until threshold is exceeded
+        // This prevents the node from "twitching" from hand tremor
     }
 
     /**
@@ -800,7 +821,36 @@ export class XRInputHandler {
     private dragUpdateCount = 0;
 
     private updateNodeDrag(currentHandPosition: Vector3): void {
-        if (!this.draggedNodeHandler || !this.lastDragHandPosition) {
+        if (!this.draggedNodeHandler || !this.lastDragHandPosition || !this.dragStartHandPosition) {
+            return;
+        }
+
+        const now = performance.now();
+
+        // Check if we've exceeded the drag threshold yet
+        if (!this.dragThresholdExceeded) {
+            const distanceFromStart = Vector3.Distance(currentHandPosition, this.dragStartHandPosition);
+
+            if (distanceFromStart < this.DRAG_THRESHOLD) {
+                // Still within threshold - don't move the node yet
+                // Update lastDragHandPosition so we track movement for when threshold is exceeded
+                this.lastDragHandPosition = currentHandPosition.clone();
+                this.lastDragTime = now;
+                return;
+            }
+
+            // Threshold exceeded! Now we're actually dragging
+            this.dragThresholdExceeded = true;
+            // eslint-disable-next-line no-console
+            console.log(`🎯 DRAG_THRESHOLD_EXCEEDED (dist=${distanceFromStart.toFixed(3)})`);
+
+            // NOW call onDragStart since user has committed to dragging
+            const node = this.draggedNodeHandler.getNode();
+            this.draggedNodeHandler.onDragStart(node.mesh.position.clone());
+
+            // Reset lastDragHandPosition to current so first delta is from threshold point
+            this.lastDragHandPosition = currentHandPosition.clone();
+            this.lastDragTime = now;
             return;
         }
 
@@ -815,23 +865,44 @@ export class XRInputHandler {
 
         this.dragUpdateCount++;
 
+        // Calculate velocity for PRISM-style adaptive gain
+        const deltaTimeMs = now - this.lastDragTime;
+        const deltaTimeSec = Math.max(deltaTimeMs / 1000, 0.001); // Minimum 1ms to avoid division by zero
+        const velocity = deltaLength / deltaTimeSec; // meters per second
+
+        // Apply velocity-based amplification (PRISM technique)
+        const amplification = this.calculateVelocityBasedGain(velocity);
+
         // Transform delta through pivot rotation
         const sceneDelta = this.transformDeltaToSceneSpace(xrDelta);
 
-        // Apply amplification for more responsive movement
-        sceneDelta.scaleInPlace(this.MOVEMENT_AMPLIFICATION);
+        // Apply velocity-based amplification
+        sceneDelta.scaleInPlace(amplification);
+
+        // Apply smoothing to reduce jitter from hand tracking noise
+        if (this.smoothedDelta === null) {
+            this.smoothedDelta = sceneDelta.clone();
+        } else {
+            // Exponential moving average: smoothed = smoothed * factor + new * (1 - factor)
+            this.smoothedDelta.scaleInPlace(this.SMOOTHING_FACTOR);
+            this.smoothedDelta.addInPlace(sceneDelta.scale(1 - this.SMOOTHING_FACTOR));
+        }
+
+        // Use smoothed delta for position update
+        const finalDelta = this.smoothedDelta.clone();
 
         // Get current node position and add delta
         const node = this.draggedNodeHandler.getNode();
         const currentNodePos = node.mesh.position.clone();
-        const newPosition = currentNodePos.add(sceneDelta);
+        const newPosition = currentNodePos.add(finalDelta);
 
         // DEBUG: Log only first 5 updates to catch initial movement issues
         if (this.dragUpdateCount <= 5) {
             // eslint-disable-next-line no-console
             console.log(`🎯 DRAG_UPDATE #${this.dragUpdateCount}`, {
                 delta: `(${xrDelta.x.toFixed(4)}, ${xrDelta.y.toFixed(4)}, ${xrDelta.z.toFixed(4)})`,
-                len: deltaLength.toFixed(4),
+                vel: velocity.toFixed(3),
+                amp: amplification.toFixed(2),
                 newPos: `(${newPosition.x.toFixed(3)}, ${newPosition.y.toFixed(3)}, ${newPosition.z.toFixed(3)})`,
             });
         }
@@ -841,6 +912,32 @@ export class XRInputHandler {
 
         // Store for next frame
         this.lastDragHandPosition = currentHandPosition.clone();
+        this.lastDragTime = now;
+    }
+
+    /**
+     * Calculate velocity-based gain using PRISM technique.
+     * Slow movements → low amplification (precision)
+     * Fast movements → higher amplification (speed)
+     *
+     * This provides intuitive control: fine adjustments when moving slowly,
+     * quick repositioning when moving fast.
+     */
+    private calculateVelocityBasedGain(velocity: number): number {
+        if (velocity < this.VELOCITY_SLOW_THRESHOLD) {
+            // Precision zone: reduce amplification for fine control
+            return this.AMP_SLOW;
+        }
+
+        if (velocity > this.VELOCITY_FAST_THRESHOLD) {
+            // Speed zone: increase amplification for faster repositioning
+            return this.AMP_FAST;
+        }
+
+        // Transition zone: linear interpolation between slow and fast
+        const t = (velocity - this.VELOCITY_SLOW_THRESHOLD) /
+                  (this.VELOCITY_FAST_THRESHOLD - this.VELOCITY_SLOW_THRESHOLD);
+        return this.AMP_SLOW + (t * (this.AMP_FAST - this.AMP_SLOW));
     }
 
     /**
@@ -865,19 +962,34 @@ export class XRInputHandler {
 
     /**
      * End the current node drag.
+     * If threshold was never exceeded, this was actually a selection (tap), not a drag.
      */
     private endNodeDrag(): void {
         if (this.draggedNodeHandler) {
-            // eslint-disable-next-line no-console
-            console.log(`🎯 DRAG_END (${this.dragUpdateCount} updates)`);
-            this.draggedNodeHandler.onDragEnd();
+            if (this.dragThresholdExceeded) {
+                // User actually dragged - end the drag normally
+                // eslint-disable-next-line no-console
+                console.log(`🎯 DRAG_END (${this.dragUpdateCount} updates)`);
+                this.draggedNodeHandler.onDragEnd();
+            } else {
+                // User released before threshold - this is a SELECTION, not a drag
+                // eslint-disable-next-line no-console
+                console.log("🎯 SELECT (threshold not exceeded)");
+
+                // Select the node using the drag handler's select() method
+                this.draggedNodeHandler.select();
+            }
         }
 
         this.isDraggingNode = false;
         this.draggedNodeHandler = null;
         this.dragHand = null;
         this.lastDragHandPosition = null;
+        this.dragStartHandPosition = null;
+        this.dragThresholdExceeded = false;
         this.dragUpdateCount = 0; // Reset for next drag
+        this.lastDragTime = 0; // Reset velocity tracking
+        this.smoothedDelta = null; // Reset smoothing for next drag
     }
 
     /**
