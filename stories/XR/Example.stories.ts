@@ -1,7 +1,23 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 
 import {Graphty} from "../../src/graphty-element";
-import {eventWaitingDecorator, remoteLoggingDecorator, renderFn} from "../helpers";
+import {eventWaitingDecorator, remoteLoggingDecorator, renderFn, templateCreator, waitForGraphSettled} from "../helpers";
+
+// Seeded random number generator for deterministic edge generation
+function seededRandom(seed: number): () => number {
+    return (): number => {
+        seed = ((seed * 9301) + 49297) % 233280;
+        return seed / 233280;
+    };
+}
+
+// Generate deterministic edge data using a fixed seed
+const random = seededRandom(42);
+const xrEdgeData = Array.from({length: 45}, () => {
+    const src = `${Math.floor(random() * 30)}`;
+    const dst = `${Math.floor(random() * 30)}`;
+    return {src, dst};
+});
 
 const meta: Meta = {
     title: "XR",
@@ -49,17 +65,25 @@ export const Default: Story = {
             id: `${i}`,
             label: `Node ${i}`,
         })),
-        edgeData: Array.from({length: 45}, () => {
-            const src = `${Math.floor(Math.random() * 30)}`;
-            const dst = `${Math.floor(Math.random() * 30)}`;
-            return {src, dst};
-        }),
+        edgeData: xrEdgeData,
         layout: "ngraph",
         layoutConfig: {
             seed: 42,
             dimensions: 3,
             iterations: 150,
         },
+        styleTemplate: templateCreator({
+            graph: {
+                twoD: false, // Explicitly set to 3D mode
+            },
+            behavior: {
+                layout: {
+                    // Physics-based layouts need preSteps for visual stability
+                    // Use constant value like other working ngraph stories
+                    preSteps: 8000,
+                },
+            },
+        }),
         xr: {
             enabled: true,
             ui: {enabled: true, position: "bottom-right", showAvailabilityWarning: true},
@@ -72,5 +96,9 @@ export const Default: Story = {
                 enableZAmplificationInDesktop: false,
             },
         },
+    },
+    play: async({canvasElement}) => {
+        // Wait for the graph to fully settle before taking the screenshot
+        await waitForGraphSettled(canvasElement);
     },
 };

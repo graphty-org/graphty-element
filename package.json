@@ -1,6 +1,6 @@
 {
   "name": "@graphty/graphty-element",
-  "version": "1.4.1",
+  "version": "1.4.5",
   "description": "A Web Component library for 3D/2D graph visualization built with Lit and Babylon.js",
   "type": "module",
   "main": "./dist/graphty.umd.cjs",
@@ -53,11 +53,20 @@
     "url": "https://github.com/graphty-org/graphty-element/issues"
   },
   "scripts": {
-    "test": "vitest run --project=storybook --project=default --project=browser && npm run test:visual",
+    "test": "npm run test:shards:parallel && npm run test:visual",
     "test:default": "vitest --project=default",
     "test:browser": "vitest --project=browser",
     "test:storybook": "vitest --project=storybook",
     "test:visual": "npx chromatic",
+    "test:shard:default": "time npm run test:shard:default:run",
+    "test:shard:default:run": "vitest run --project=default",
+    "test:shard:browser": "time npm run test:shard:browser:run",
+    "test:shard:browser:run": "vitest run --project=browser --project=interactions",
+    "test:shard:storybook": "time npm run test:shard:storybook:run",
+    "test:shard:storybook:run": "vitest run --project=storybook",
+    "test:shard:visual": "npx chromatic",
+    "test:shards": "npm run test:shard:default && npm run test:shard:browser && npm run test:shard:storybook && npm run test:shard:visual",
+    "test:shards:parallel": "time npm run test:shard:default:run & time npm run test:shard:browser:run & time npm run test:shard:storybook:run & wait",
     "test:visual:debug": "npx chromatic --debug",
     "test:mesh": "vitest run --config test/mesh-testing/vitest-mesh.config.ts",
     "test:mesh:watch": "vitest --config test/mesh-testing/vitest-mesh.config.ts",
@@ -79,7 +88,7 @@
     "build": "vite build && tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",
-    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p 9025 --no-open --https --ssl-cert ~/ssl/STAR_ato_ms.crt --ssl-key ~/ssl/atoms.key",
+    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && storybook dev -p ${STORYBOOK_PORT:-6006} --no-open",
     "chromatic": "npx chromatic --exit-zero-on-changes",
     "prepare": "husky",
     "build-storybook": "storybook build",
@@ -141,7 +150,13 @@
   },
   "peerDependencies": {
     "@babylonjs/core": "^8.0.0",
+    "@mlc-ai/web-llm": ">=0.2.0",
     "lit": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@mlc-ai/web-llm": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.50",

@@ -21,7 +21,7 @@
 import {resolve} from "path";
 import {chromium} from "playwright";
 
-const STORYBOOK_URL = "http://dev.ato.ms:9025";
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
 const TMP_DIR = resolve(process.cwd(), "tmp");
 
 interface ZoomLevel {

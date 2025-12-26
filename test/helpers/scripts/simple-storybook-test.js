@@ -1,5 +1,7 @@
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function main() {
     const browser = await chromium.launch({headless: true});
     const page = await browser.newPage();
@@ -8,11 +10,11 @@ async function main() {
 
     try {
     // First test if storybook is accessible
-        const response = await page.goto("http://dev.ato.ms:9025", {timeout: 5000});
+        const response = await page.goto(STORYBOOK_URL, {timeout: 5000});
         console.log(`Storybook main page status: ${response.status()}`);
 
         // Test a specific story
-        const storyResponse = await page.goto("http://dev.ato.ms:9025/iframe.html?id=layout-3d--ngraph&viewMode=story", {timeout: 5000});
+        const storyResponse = await page.goto(`${STORYBOOK_URL}/iframe.html?id=layout-3d--ngraph&viewMode=story`, {timeout: 5000});
         console.log(`Story page status: ${storyResponse.status()}`);
 
         // Check if graphty-element exists

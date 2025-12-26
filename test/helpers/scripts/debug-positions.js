@@ -1,11 +1,13 @@
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function main() {
     const browser = await chromium.launch({headless: true});
     const page = await browser.newPage();
 
     // Navigate to ngraph story
-    await page.goto("http://dev.ato.ms:9025/iframe.html?id=layout-3d--ngraph&viewMode=story");
+    await page.goto(`${STORYBOOK_URL}/iframe.html?id=layout-3d--ngraph&viewMode=story`);
 
     // Wait for graphty-element
     await page.waitForSelector("graphty-element", {timeout: 10000});

@@ -11,10 +11,10 @@
 import type {Meta, StoryObj} from "@storybook/web-components-vite";
 import {html, type TemplateResult} from "lit";
 
-import type {AiStatus} from "../../src/ai/AiStatus";
-import {ApiKeyManager} from "../../src/ai/keys/ApiKeyManager";
-import type {WebLlmProvider} from "../../src/ai/providers/WebLlmProvider";
-import {type GraphtyElement} from "../../src/graphty-element";
+import type {AiStatus} from "../src/ai/AiStatus";
+import {ApiKeyManager} from "../src/ai/keys/ApiKeyManager";
+import type {WebLlmProvider} from "../src/ai/providers/WebLlmProvider";
+import {type GraphtyElement} from "../src/graphty-element";
 
 // Sample network infrastructure graph
 const SAMPLE_NODES = [
@@ -399,7 +399,7 @@ async function setupShowcase(): Promise<void> {
 
                 if (provider === "webllm") {
                     // Dynamic import WebLlmProvider
-                    const {WebLlmProvider} = await import("../../src/ai/providers/WebLlmProvider");
+                    const {WebLlmProvider} = await import("../src/ai/providers/WebLlmProvider");
                     webllmProvider = new WebLlmProvider();
 
                     const selectedModel = ui.webllmModelSelect?.value ?? WEBLLM_MODELS[0].id;
@@ -700,7 +700,7 @@ Select an AI provider and connect to start using natural language commands.
 }
 
 const meta: Meta = {
-    title: "AI/Showcase",
+    title: "AI Control",
     tags: ["autodocs"],
     parameters: {
         docs: {

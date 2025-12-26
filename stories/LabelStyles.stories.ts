@@ -146,6 +146,9 @@ export const Default: Story = {
             seed: 42,
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Enabled: Story = {
@@ -171,6 +174,9 @@ export const Enabled: Story = {
         controls: {
             include: ["label.enabled"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -198,6 +204,9 @@ export const TextPath: Story = {
             include: ["label.textPath"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const StaticText: Story = {
@@ -223,6 +232,9 @@ export const StaticText: Story = {
         controls: {
             include: ["label.text"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -250,6 +262,9 @@ export const FontType: Story = {
         controls: {
             include: ["label.font"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -319,6 +334,9 @@ export const FontWeight: Story = {
             include: ["label.fontWeight"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const TextColor: Story = {
@@ -346,6 +364,9 @@ export const TextColor: Story = {
             include: ["label.textColor"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const BackgroundColor: Story = {
@@ -372,6 +393,9 @@ export const BackgroundColor: Story = {
         controls: {
             include: ["label.backgroundColor"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -401,6 +425,9 @@ export const CornerRadius: Story = {
             include: ["label.cornerRadius", "label.backgroundColor"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Location: Story = {
@@ -427,6 +454,9 @@ export const Location: Story = {
         controls: {
             include: ["label.location"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -459,6 +489,9 @@ export const Margin: Story = {
             include: ["label.marginTop", "label.marginBottom", "label.marginLeft", "label.marginRight", "label.backgroundColor"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const AttachOffset: Story = {
@@ -486,6 +519,9 @@ export const AttachOffset: Story = {
             include: ["label.attachOffset"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const LineHeight: Story = {
@@ -512,6 +548,9 @@ export const LineHeight: Story = {
         controls: {
             include: ["label.lineHeight"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -545,6 +584,9 @@ export const TextOutline: Story = {
             diffIncludeAntiAliasing: true,
             diffThreshold: 0.25,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -582,6 +624,9 @@ export const TextShadow: Story = {
             diffThreshold: 0.25,
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Border: Story = {
@@ -610,6 +655,9 @@ export const Border: Story = {
         controls: {
             include: ["label.borderWidth", "label.borderColor", "label.backgroundColor"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -640,6 +688,9 @@ export const BackgroundGradient: Story = {
         controls: {
             include: ["label.backgroundGradient", "label.backgroundGradientType", "label.backgroundGradientDirection"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -674,6 +725,9 @@ export const Pointer: Story = {
             include: ["label.pointer", "label.pointerDirection", "label.pointerWidth", "label.pointerHeight", "label.backgroundColor", "label.location"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const Animation: Story = {
@@ -704,6 +758,9 @@ export const Animation: Story = {
         controls: {
             include: ["label.animation", "label.animationSpeed", "label.backgroundColor"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -736,6 +793,9 @@ export const Badge: Story = {
             diffThreshold: 0.5,
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const SmartOverflow: Story = {
@@ -764,6 +824,9 @@ export const SmartOverflow: Story = {
         controls: {
             include: ["label.smartOverflow", "label.text"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -794,6 +857,9 @@ export const MaxNumber: Story = {
         controls: {
             include: ["label.maxNumber", "label.text", "label.smartOverflow"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -826,6 +892,9 @@ export const OverflowSuffix: Story = {
             include: ["label.overflowSuffix", "label.maxNumber", "label.text"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const TextAlign: Story = {
@@ -852,6 +921,9 @@ export const TextAlign: Story = {
         controls: {
             include: ["label.textAlign"],
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -882,6 +954,9 @@ export const DepthFade: Story = {
             include: ["label.depthFadeEnabled", "label.depthFadeNear", "label.depthFadeFar"],
         },
     },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
+    },
 };
 
 export const EmojiLabels: Story = {
@@ -909,6 +984,9 @@ export const EmojiLabels: Story = {
             diffIncludeAntiAliasing: true,
             diffThreshold: 0.25,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };
 
@@ -938,5 +1016,8 @@ export const UnicodeText: Story = {
             diffIncludeAntiAliasing: true,
             diffThreshold: 0.25,
         },
+    },
+    play: async({canvasElement}) => {
+        await waitForGraphSettled(canvasElement);
     },
 };

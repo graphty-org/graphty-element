@@ -1,3 +1,32 @@
+## [1.4.5](https://github.com/graphty-org/graphty-element/compare/v1.4.4...v1.4.5) (2025-12-25)
+
+
+### Bug Fixes
+
+* fix webllm dynamic import, change default server / port for dev ([323d568](https://github.com/graphty-org/graphty-element/commit/323d568c7e4a7ed9ec7365ff4717885f0939aafc))
+
+## [1.4.4](https://github.com/graphty-org/graphty-element/compare/v1.4.3...v1.4.4) (2025-12-23)
+
+
+### Bug Fixes
+
+* better web-llm optional dependency handling ([755c7ee](https://github.com/graphty-org/graphty-element/commit/755c7eeade7783600f28090890b65e9ac733177d))
+* correct zoom to fit calculations ([c9dc578](https://github.com/graphty-org/graphty-element/commit/c9dc578f9c9bc66e34e0f7d8032e0d4306632f4b))
+
+## [1.4.3](https://github.com/graphty-org/graphty-element/compare/v1.4.2...v1.4.3) (2025-12-23)
+
+
+### Bug Fixes
+
+* export ai tools from index ([1400374](https://github.com/graphty-org/graphty-element/commit/1400374ac55b0267903ae49d4ff8bfc462ba2853))
+
+## [1.4.2](https://github.com/graphty-org/graphty-element/compare/v1.4.1...v1.4.2) (2025-12-22)
+
+
+### Bug Fixes
+
+* ai key persistence api ([be2a808](https://github.com/graphty-org/graphty-element/commit/be2a8083e9479327261a2dc5b86c4493e81bb38d))
+
 ## [1.4.1](https://github.com/graphty-org/graphty-element/compare/v1.4.0...v1.4.1) (2025-12-21)
 
 

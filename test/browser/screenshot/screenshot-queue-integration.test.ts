@@ -96,11 +96,12 @@ test("screenshots can proceed immediately when waitForOperations is false", asyn
     graph = await createTestGraphWithData();
 
     // Queue a long operation (use style-apply to avoid triggering layout-update)
+    // Use 3000ms to create clear separation from expected screenshot time
     void graph.operationQueue.queueOperationAsync(
         "style-apply",
         async() => {
             await new Promise((resolve) => {
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 3000);
             });
         },
     );
@@ -112,8 +113,10 @@ test("screenshots can proceed immediately when waitForOperations is false", asyn
     });
     const elapsed = Date.now() - startTime;
 
-    // Should complete much faster than the 1000ms operation time (allow 800ms for CI variability)
-    assert.ok(elapsed < 800, `Screenshot should complete quickly, took ${elapsed}ms`);
+    // Should complete much faster than the 3000ms operation time
+    // Allow generous threshold (2000ms) for CI variability - the key assertion is that
+    // we don't wait for the full operation to complete
+    assert.ok(elapsed < 2000, `Screenshot should complete quickly, took ${elapsed}ms`);
 });
 
 test("operation queue continues after screenshot completes", async() => {

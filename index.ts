@@ -245,27 +245,11 @@ export {
     type Sink,
 } from "./src/logging/index";
 
-// AI Provider exports
-export type {
-    LlmProvider,
-    LlmResponse,
-    Message,
-    ProviderOptions,
-    ProviderType,
-    StreamCallbacks,
-    ToolCall,
-    ToolDefinition,
-    VercelProviderType,
-} from "./src/ai/providers";
-export {createProvider, MockLlmProvider, VercelAiProvider} from "./src/ai/providers";
+// =============================================================================
+// AI Module
+// =============================================================================
 
-// AI Manager and Controller exports
-export type {AiControllerOptions, ExecutionResult} from "./src/ai/AiController";
-export {AiController} from "./src/ai/AiController";
-export type {AiManagerConfig, KeyPersistenceConfig} from "./src/ai/AiManager";
-export {AiManager} from "./src/ai/AiManager";
-
-// AI Status exports
+// AI Status
 export type {
     AiStage,
     AiState,
@@ -273,22 +257,91 @@ export type {
     StatusChangeCallback,
     ToolCallStatus,
     ToolCallStatusType,
-} from "./src/ai/AiStatus";
-export {AiStatusManager} from "./src/ai/AiStatus";
+} from "./src/ai/index";
+export {AiStatusManager} from "./src/ai/index";
 
-// AI Key Management exports
-export type {PersistenceConfig} from "./src/ai/keys";
-export {ApiKeyManager} from "./src/ai/keys";
+// AI Controller
+export type {AiControllerOptions, AiEventEmitter, ExecutionResult} from "./src/ai/index";
+export {AiController} from "./src/ai/index";
 
-// AI Voice Input exports
-export type {InputAdapter, InputCallback, InputOptions} from "./src/ai/input";
-export {TextInputAdapter} from "./src/ai/input/TextInputAdapter";
+// AI Manager
+export type {AiManagerConfig, KeyPersistenceConfig} from "./src/ai/index";
+export {AiManager, createAiManager} from "./src/ai/index";
+
+// AI Commands
+export type {
+    CommandContext,
+    CommandExample,
+    CommandResult,
+    GraphCommand,
+} from "./src/ai/index";
+export {
+    captureScreenshot,
+    captureVideo,
+    clearStyles,
+    CommandRegistry,
+    describeProperty,
+    findAndStyleEdges,
+    findAndStyleNodes,
+    findNodes,
+    listAlgorithms,
+    queryGraph,
+    runAlgorithm,
+    sampleData,
+    setCameraPosition,
+    setDimension,
+    setImmersiveMode,
+    setLayout,
+    zoomToNodes,
+} from "./src/ai/index";
+
+// AI Providers
+export type {
+    LlmProvider,
+    LlmResponse,
+    Message,
+    ProgressCallback,
+    ProviderOptions,
+    ProviderType,
+    StreamCallbacks,
+    ToolCall,
+    ToolDefinition,
+    VercelProviderType,
+    WebLlmModelInfo,
+} from "./src/ai/index";
+export {
+    createProvider,
+    // Async factory for WebLLM (Safari-compatible, loads module on demand)
+    createWebLlmProvider,
+    // Async getter for WebLlmProvider class (Safari-compatible, loads module on demand)
+    getWebLlmProviderClass,
+    MockLlmProvider,
+    VercelAiProvider,
+} from "./src/ai/index";
+
+// AI Key Management
+export type {PersistenceConfig} from "./src/ai/index";
+export {ApiKeyManager} from "./src/ai/index";
+
+// AI Prompt Builder
+export type {SystemPromptOptions} from "./src/ai/index";
+export {createSystemPromptBuilder, SystemPromptBuilder} from "./src/ai/index";
+
+// AI Input Adapters
+export type {InputAdapter, InputCallback, InputOptions} from "./src/ai/index";
+export {TextInputAdapter, VoiceInputAdapter} from "./src/ai/index";
 export type {VoiceStartCallback} from "./src/ai/input/VoiceInputAdapter";
-export {VoiceInputAdapter} from "./src/ai/input/VoiceInputAdapter";
 
-// AI Command exports
-export {CommandRegistry} from "./src/ai/commands/CommandRegistry";
-export type {CommandContext, CommandExample, CommandResult, GraphCommand} from "./src/ai/commands/types";
+// AI Schema Discovery
+export type {
+    HistogramBin,
+    NumericStatistics,
+    PropertySummary,
+    PropertyType,
+    SchemaExtractorOptions,
+    SchemaSummary,
+} from "./src/ai/index";
+export {formatSchemaForPrompt, SchemaExtractor, SchemaManager} from "./src/ai/index";
 
 // =============================================================================
 // Colorblind Simulation Utilities

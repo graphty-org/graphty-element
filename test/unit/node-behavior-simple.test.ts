@@ -1,46 +1,48 @@
 // @ts-nocheck
 import {describe, expect, test, vi} from "vitest";
 
-import {NodeBehavior} from "../../src/NodeBehavior";
+// Use vi.hoisted to define mock values before vi.mock is hoisted
+const {mockActionManager, mockSixDofDragBehavior, mockExecuteCodeAction, DOUBLE_PICK_TRIGGER} = vi.hoisted(() => ({
+    DOUBLE_PICK_TRIGGER: 6,
+    mockActionManager: Object.assign(
+        vi.fn().mockImplementation(function(scene) {
+            this.scene = scene;
+            this.actions = [];
+            this.registerAction = vi.fn((action) => {
+                this.actions.push(action);
+            });
+        }),
+        {OnDoublePickTrigger: 6},
+    ),
+    mockSixDofDragBehavior: vi.fn().mockImplementation(function() {
+        this.onDragStartObservable = {add: vi.fn()};
+        this.onDragEndObservable = {add: vi.fn()};
+        this.onPositionChangedObservable = {add: vi.fn()};
+    }),
+    mockExecuteCodeAction: vi.fn().mockImplementation(function(triggerOrOptions, func) {
+        if (typeof triggerOrOptions === "object" && triggerOrOptions?.trigger) {
+            this._trigger = triggerOrOptions.trigger;
+        } else {
+            this._trigger = triggerOrOptions;
+        }
 
-// Mock ActionManager at the module level - MUST be before any imports from @babylonjs/core
-// NOTE: vi.mock is hoisted to the top of the file, so we cannot use variables defined
-// in the module scope. All values inside the mock factory must be literals or come from
-// vi.importActual.
-vi.mock("@babylonjs/core", async() => {
-    const actual = await vi.importActual("@babylonjs/core");
+        this._func = func;
+    }),
+}));
+
+// Mock @babylonjs/core - this will be merged with the global mock from setup.ts
+vi.mock("@babylonjs/core", async(importOriginal) => {
+    const actual = await importOriginal();
     return {
         ... actual,
-        ActionManager: Object.assign(
-            vi.fn().mockImplementation(function(this: {scene: unknown, actions: unknown[], registerAction: (action: unknown) => void}, scene: unknown) {
-                this.scene = scene;
-                this.actions = [];
-                this.registerAction = vi.fn((action) => {
-                    this.actions.push(action);
-                });
-            }),
-            // Add static constants to the mock constructor - use literal value (6 is OnDoublePickTrigger)
-            {OnDoublePickTrigger: 6},
-        ),
-        SixDofDragBehavior: vi.fn().mockImplementation(function(this: {onDragStartObservable: {add: unknown}, onDragEndObservable: {add: unknown}, onPositionChangedObservable: {add: unknown}}) {
-            this.onDragStartObservable = {add: vi.fn()};
-            this.onDragEndObservable = {add: vi.fn()};
-            this.onPositionChangedObservable = {add: vi.fn()};
-        }),
-        ExecuteCodeAction: vi.fn().mockImplementation(function(this: {_trigger: unknown, _func: unknown}, triggerOrOptions: {trigger?: unknown}, func: unknown) {
-            if (typeof triggerOrOptions === "object" && (triggerOrOptions as {trigger?: unknown}).trigger) {
-                this._trigger = (triggerOrOptions as {trigger: unknown}).trigger;
-            } else {
-                this._trigger = triggerOrOptions;
-            }
-
-            this._func = func;
-        }),
+        ActionManager: mockActionManager,
+        SixDofDragBehavior: mockSixDofDragBehavior,
+        ExecuteCodeAction: mockExecuteCodeAction,
     };
 });
 
-// Define constant for use in tests - must match the value in the mock above
-const DOUBLE_PICK_TRIGGER = 6;
+// Import after mock is set up
+const {NodeBehavior} = await import("../../src/NodeBehavior");
 
 describe("NodeBehavior Unit Tests", () => {
     test("addDefaultBehaviors makes node pickable", () => {

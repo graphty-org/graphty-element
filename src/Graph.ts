@@ -75,6 +75,7 @@ export class Graph implements GraphContext {
     scene: Scene;
     camera: CameraManager;
     private initialCameraState?: import("./screenshot/types.js").CameraState;
+    private initialCameraStateCaptured = false;
     private userCameraPresets = new Map<string, import("./screenshot/types.js").CameraState>();
     skybox?: string;
     xrHelper: WebXRDefaultExperience | null = null;
@@ -529,6 +530,15 @@ export class Graph implements GraphContext {
 
                         // Force a final zoom to fit after layout has truly settled
                         this.updateManager.enableZoomToFit();
+
+                        // Capture initial camera state after first settlement for resetCamera()
+                        // Use setTimeout to allow zoom-to-fit to complete first
+                        if (!this.initialCameraStateCaptured) {
+                            this.initialCameraStateCaptured = true;
+                            setTimeout(() => {
+                                this.initialCameraState = this.getCameraState();
+                            }, 100);
+                        }
                     }
 
                     // Report performance when transitioning from unsettled to settled
@@ -1821,6 +1831,9 @@ export class Graph implements GraphContext {
             // in EdgeMesh.create() work correctly (camera.mode must be ORTHOGRAPHIC for 2D)
             const cameraType: CameraKey = isTwoD ? "2d" : "orbit";
             this.camera.activateCamera(cameraType);
+
+            // Reset flag so initial camera state gets re-captured after layout settles
+            this.initialCameraStateCaptured = false;
 
             // Force all nodes to recreate their meshes (they were disposed when cache was cleared)
             // updateStyle() will detect the disposed mesh and create a new one

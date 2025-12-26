@@ -1,11 +1,13 @@
 import {createHash} from "crypto";
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function testForChromatic(page, storyId) {
     console.log(`\nTesting ${storyId} for Chromatic readiness...`);
 
     // Navigate to story and wait for complete initialization
-    await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+    await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
     await page.waitForSelector("graphty-element", {timeout: 15000});
 
     // Wait a generous amount of time for Storybook play functions to complete
@@ -49,7 +51,7 @@ async function testForChromatic(page, storyId) {
     const hashes = [];
     for (let i = 0; i < 3; i++) {
     // Reload the story each time to test true consistency
-        await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+        await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
         await page.waitForSelector("graphty-element", {timeout: 15000});
         await page.waitForTimeout(10000); // Wait for layout settling
 

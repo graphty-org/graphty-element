@@ -79,4 +79,4 @@ export const createAlgorithmStory = (algorithmId: string): Story => ({
 });
 
 // Re-export helpers for convenience
-export {templateCreator} from "../helpers";
+export {templateCreator, waitForGraphSettled} from "../helpers";

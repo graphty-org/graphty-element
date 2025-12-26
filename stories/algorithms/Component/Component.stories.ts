@@ -1,5 +1,5 @@
 import type {Graphty} from "../../../src/graphty-element";
-import {algorithmMetaBase, createAlgorithmStory, type Story, templateCreator} from "../helpers";
+import {algorithmMetaBase, createAlgorithmStory, type Story, templateCreator, waitForGraphSettled} from "../helpers";
 
 const meta = {
     ... algorithmMetaBase,
@@ -71,7 +71,7 @@ export const ConnectedComponents: Story = {
     },
     play: async({canvasElement}) => {
         // Wait for the graph to load and settle
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await waitForGraphSettled(canvasElement);
 
         // Get the graphty-element
         const element = canvasElement.querySelector("graphty-element");

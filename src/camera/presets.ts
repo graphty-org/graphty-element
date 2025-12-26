@@ -100,7 +100,7 @@ export function calculateFitToGraph(
         const canvasAspect = canvasWidth / canvasHeight;
 
         const size = Math.max(bounds.width, bounds.height / canvasAspect);
-        const zoom = canvasWidth / (size * 1.2); // 20% padding
+        const zoom = canvasWidth / (size * 1.05); // 5% padding
 
         return {
             type: "orthographic",
@@ -113,12 +113,21 @@ export function calculateFitToGraph(
     const maxDim = bounds.maxDimension;
     const arcCamera = camera as ArcRotateCamera;
     const {fov} = arcCamera;
-    const distance = (maxDim / Math.tan(fov / 2)) * 1.2; // 20% padding
+
+    // Base distance calculation for straight-on viewing
+    const baseDistance = (maxDim / Math.tan(fov / 2)) * 1.1; // 10% padding
+
+    // For isometric view (equal x,y,z offsets), the apparent size of the graph
+    // is smaller because we're viewing at an angle (~35.26° from each axis).
+    // The cos(35.26°) ≈ 0.816 factor reduces apparent height.
+    // We compensate by using a smaller distance (0.65 empirically tuned).
+    const isometricFactor = 0.65;
+    const distance = baseDistance * isometricFactor;
 
     return {
         type: "arcRotate",
         position: {
-            x: center.x + (distance * 0.577), // Equidistant from center
+            x: center.x + (distance * 0.577), // Equidistant from center (1/√3)
             y: center.y + (distance * 0.577),
             z: center.z + (distance * 0.577),
         },

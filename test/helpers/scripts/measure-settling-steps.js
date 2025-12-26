@@ -1,5 +1,7 @@
 import {chromium} from "playwright";
 
+const STORYBOOK_URL = process.env.STORYBOOK_URL ?? "https://localhost:6006";
+
 async function main() {
     const browser = await chromium.launch({headless: true});
     const page = await browser.newPage();
@@ -13,7 +15,7 @@ async function main() {
     for (const storyId of stories) {
         console.log(`\nMeasuring settling steps for ${storyId}...`);
 
-        await page.goto(`http://dev.ato.ms:9025/iframe.html?id=${storyId}&viewMode=story`);
+        await page.goto(`${STORYBOOK_URL}/iframe.html?id=${storyId}&viewMode=story`);
         await page.waitForSelector("graphty-element", {timeout: 10000});
         await page.waitForTimeout(2000);
 
