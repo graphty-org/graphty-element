@@ -1,3 +1,10 @@
+## [1.4.7](https://github.com/graphty-org/graphty-element/compare/v1.4.6...v1.4.7) (2025-12-26)
+
+
+### Bug Fixes
+
+* fix xr node selection ([0e217d3](https://github.com/graphty-org/graphty-element/commit/0e217d3128db8913cf9cf1818243277e8e29b176))
+
 ## [1.4.6](https://github.com/graphty-org/graphty-element/compare/v1.4.5...v1.4.6) (2025-12-26)
 
 
