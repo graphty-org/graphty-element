@@ -1,4 +1,3 @@
-/* eslint-disable no-console -- XR debugging requires console logging for development */
 import {Quaternion, Ray, type Scene, Vector3, type WebXRDefaultExperience, type WebXRInputSource} from "@babylonjs/core";
 
 import type {NodeDragHandler} from "../NodeBehavior";
@@ -126,10 +125,8 @@ export class XRInputHandler {
             if (timeSinceRemoval < this.INPUT_SWITCH_DELAY_MS && this.lastControllerRemovedTime > 0) {
                 // Delay setup to prevent race conditions during controller switching
                 const remainingDelay = this.INPUT_SWITCH_DELAY_MS - timeSinceRemoval;
-                console.log(`⏳ [DELAY] Controller ${controller.uniqueId} added ${timeSinceRemoval.toFixed(0)}ms after removal, delaying setup by ${remainingDelay.toFixed(0)}ms`);
 
                 setTimeout(() => {
-                    console.log(`⏳ [DELAY] Executing delayed setup for ${controller.uniqueId}`);
                     this.setupController(controller);
                     this.addGestureController(controller);
                 }, remainingDelay);
@@ -159,13 +156,7 @@ export class XRInputHandler {
             const {featuresManager} = this.xr.baseExperience;
             // Try to get already enabled feature first
             this.handTrackingFeature = featuresManager.getEnabledFeature("xr-hand-tracking");
-            if (this.handTrackingFeature) {
-                console.log("🤲 [XRInputHandler] Hand tracking feature already enabled");
-            } else {
-                console.log("🤲 [XRInputHandler] Hand tracking not enabled, will use controller triggers");
-            }
-        } catch (error) {
-            console.log("🤲 [XRInputHandler] Hand tracking not available:", error);
+        } catch {
             this.handTrackingFeature = null;
         }
     }
@@ -182,7 +173,6 @@ export class XRInputHandler {
                 controller,
                 handedness,
             });
-            console.log(`🤲 [Gesture] Added ${handedness} controller for gestures (${uniqueId})`);
         }
     }
 
@@ -192,8 +182,6 @@ export class XRInputHandler {
     private removeGestureController(controller: WebXRInputSource): void {
         const {uniqueId} = controller;
         if (this.gestureControllers.has(uniqueId)) {
-            const entry = this.gestureControllers.get(uniqueId);
-            console.log(`🤲 [Gesture] Removed ${entry?.handedness} controller from gestures (${uniqueId})`);
             this.gestureControllers.delete(uniqueId);
         }
     }
@@ -207,7 +195,6 @@ export class XRInputHandler {
             return;
         }
 
-        console.log("🎮 [XRInputHandler] Disabled");
         this.enabled = false;
 
         // Cleanup all controllers
@@ -236,7 +223,6 @@ export class XRInputHandler {
 
         // Skip if already setup THIS specific controller
         if (this.setupControllers.has(uniqueId)) {
-            console.log(`🎮 Controller ${uniqueId} already setup, skipping`);
             return;
         }
 
@@ -246,13 +232,10 @@ export class XRInputHandler {
             (p) => p.includes("hand") || p.includes("generic-trigger-touchpad"),
         );
         if (hasHandProfile) {
-            console.log(`🤲 Skipping hand controller ${uniqueId} (no thumbstick) - will use gesture handler instead`);
             return;
         }
 
-        console.log(`🎮 Setting up ${handedness} controller (${uniqueId}) for pivot input`);
-
-        const setupThumbstick = (motionController: unknown, source: string): void => {
+        const setupThumbstick = (motionController: unknown): void => {
             if (this.setupControllers.has(uniqueId)) {
                 return;
             }
@@ -266,20 +249,14 @@ export class XRInputHandler {
                 } | null;
             };
 
-            const componentIds = mc.getComponentIds();
-            console.log(`🕹️ Motion controller init for ${handedness} (${uniqueId}) via ${source}:`, componentIds);
-
             const thumbstick = mc.getComponent("xr-standard-thumbstick");
             if (!thumbstick) {
-                console.warn(`⚠️ No thumbstick on ${handedness} controller (${uniqueId})`);
                 return;
             }
 
-            console.log(`✅ Thumbstick found on ${handedness} controller (${uniqueId})`);
             this.setupControllers.set(uniqueId, true);
 
             const isLeftHand = handedness === "left";
-            const stickName = isLeftHand ? "left" : "right";
             let isCleanedUp = false;
 
             // Axis change observer
@@ -290,11 +267,6 @@ export class XRInputHandler {
 
                 const {x} = axes;
                 const {y} = axes;
-
-                // Debug: Log axis changes when significant
-                if (Math.abs(x) > 0.1 || Math.abs(y) > 0.1) {
-                    console.log(`🕹️ [${stickName}] Axis change: x=${x.toFixed(3)}, y=${y.toFixed(3)}`);
-                }
 
                 if (isLeftHand) {
                     this.leftStick.x = x;
@@ -318,7 +290,6 @@ export class XRInputHandler {
                 if (!this.setupControllers.has(uniqueId)) {
                     // Controller was removed
                     if (pollObserverRef) {
-                        console.log(`🎮 [${stickName}] Removing poll observer for disposed controller ${uniqueId}`);
                         scene.onBeforeRenderObservable.remove(pollObserverRef);
                         pollObserverRef = null;
                     }
@@ -347,28 +318,24 @@ export class XRInputHandler {
             };
 
             pollObserverRef = scene.onBeforeRenderObservable.add(pollThumbstick);
-            console.log(`🎮 [${stickName}] Added frame-by-frame thumbstick polling`);
 
             // Store cleanup function
             this.controllerCleanup.set(uniqueId, () => {
                 isCleanedUp = true;
-                console.log(`🎮 [${stickName}] Running cleanup for ${uniqueId}`);
 
                 if (axisObserver) {
                     try {
                         thumbstick.onAxisValueChangedObservable.remove(axisObserver);
-                        console.log(`🎮 [${stickName}] Removed axis observer`);
                     } catch {
-                        console.warn("⚠️ Error removing axis observer");
+                        // Ignore errors during cleanup
                     }
                 }
 
                 if (pollObserverRef) {
                     try {
                         scene.onBeforeRenderObservable.remove(pollObserverRef);
-                        console.log(`🎮 [${stickName}] Removed poll observer`);
                     } catch {
-                        console.warn("⚠️ Error removing poll observer");
+                        // Ignore errors during cleanup
                     }
                 }
             });
@@ -380,11 +347,10 @@ export class XRInputHandler {
         };
 
         if (mc.motionController) {
-            console.log(`🎮 Motion controller already available for ${handedness}`);
-            setupThumbstick(mc.motionController, "immediate");
+            setupThumbstick(mc.motionController);
         } else {
             mc.onMotionControllerInitObservable.add((motionController) => {
-                setupThumbstick(motionController, "observable");
+                setupThumbstick(motionController);
             });
 
             // Polling fallback
@@ -393,16 +359,11 @@ export class XRInputHandler {
                 attempts++;
                 if (this.setupControllers.has(uniqueId) || attempts > 20) {
                     clearInterval(poll);
-                    if (attempts >= 20 && !this.setupControllers.has(uniqueId)) {
-                        console.log(`⏱️ Motion controller polling timed out for ${handedness} (${uniqueId}) - may be a hand`);
-                    }
-
                     return;
                 }
 
                 if (mc.motionController) {
-                    console.log(`🎮 Found motion controller via polling for ${handedness} (${uniqueId}, attempt ${attempts})`);
-                    setupThumbstick(mc.motionController, "polling");
+                    setupThumbstick(mc.motionController);
                     clearInterval(poll);
                 }
             }, 100);
@@ -412,8 +373,6 @@ export class XRInputHandler {
     private cleanupController(controller: WebXRInputSource): void {
         const {uniqueId} = controller;
         const {handedness} = controller.inputSource;
-
-        console.log(`🎮 Controller removed: ${uniqueId} (${handedness})`);
 
         const cleanup = this.controllerCleanup.get(uniqueId);
         if (cleanup) {
@@ -432,7 +391,6 @@ export class XRInputHandler {
 
         // Record removal time for delay mechanism
         this.lastControllerRemovedTime = performance.now();
-        console.log(`⏳ [DELAY] Recorded controller removal at ${this.lastControllerRemovedTime.toFixed(0)}ms`);
     }
 
     /**
@@ -475,23 +433,6 @@ export class XRInputHandler {
         const rawRightX = this.rightStick.x;
         const rawRightY = this.rightStick.y;
 
-        // Log raw values periodically to debug
-        if (this.frameCount % 60 === 0) {
-            const hasRawInput =
-                Math.abs(rawLeftX) > 0.01 ||
-                Math.abs(rawLeftY) > 0.01 ||
-                Math.abs(rawRightX) > 0.01 ||
-                Math.abs(rawRightY) > 0.01;
-            if (hasRawInput) {
-                console.log(`🎮 [Frame ${this.frameCount}] Raw stick values:`, {
-                    leftX: rawLeftX.toFixed(3),
-                    leftY: rawLeftY.toFixed(3),
-                    rightX: rawRightX.toFixed(3),
-                    rightY: rawRightY.toFixed(3),
-                });
-            }
-        }
-
         // Apply deadzone with curve
         const leftX = applyDeadzone(rawLeftX, this.DEADZONE);
         const leftY = applyDeadzone(rawLeftY, this.DEADZONE);
@@ -510,10 +451,6 @@ export class XRInputHandler {
         const pitchDelta = -leftY * this.PITCH_SPEED;
 
         if (Math.abs(yawDelta) > 0.0001 || Math.abs(pitchDelta) > 0.0001) {
-            if (this.frameCount % 30 === 0) {
-                console.log(`🔄 Applying rotation: yaw=${((yawDelta * 180) / Math.PI).toFixed(2)}° pitch=${((pitchDelta * 180) / Math.PI).toFixed(2)}°`);
-            }
-
             this.pivotController.rotate(yawDelta, pitchDelta);
         }
 
@@ -527,10 +464,6 @@ export class XRInputHandler {
         // X = pan (push right = move focal point right)
         if (Math.abs(rightX) > 0.0001) {
             const panAmount = rightX * this.PAN_SPEED;
-            if (this.frameCount % 30 === 0) {
-                console.log(`🔄 Applying pan: rightX=${rightX.toFixed(3)} panAmount=${panAmount.toFixed(4)}`);
-            }
-
             this.pivotController.panViewRelative(panAmount, 0);
         }
     }
@@ -573,14 +506,6 @@ export class XRInputHandler {
             rotationAxis.scaleInPlace(1 / axisLength);
             // Negate for world-mode rotation
             this.pivotController.rotateAroundAxis(rotationAxis, -angle);
-
-            if (this.frameCount % 30 === 0) {
-                console.log("🤲 Gesture applied:", {
-                    zoom: zoomFactor.toFixed(4),
-                    rotAngle: `${((angle * 180) / Math.PI).toFixed(2)}°`,
-                    rotAxis: `(${rotationAxis.x.toFixed(2)}, ${rotationAxis.y.toFixed(2)}, ${rotationAxis.z.toFixed(2)})`,
-                });
-            }
         }
 
         this.previousDistance = currentDistance;
@@ -594,14 +519,6 @@ export class XRInputHandler {
         // Get hand state for both hands using priority: controller trigger > hand tracking
         this.leftHand = this.getHandState("left");
         this.rightHand = this.getHandState("right");
-
-        // Log hand state periodically
-        if (this.frameCount % 60 === 0 && (this.leftHand || this.rightHand)) {
-            console.log("🤲 Hand states:", {
-                left: this.leftHand ? `pinch=${this.leftHand.isPinching} strength=${this.leftHand.pinchStrength.toFixed(2)}` : "none",
-                right: this.rightHand ? `pinch=${this.rightHand.isPinching} strength=${this.rightHand.pinchStrength.toFixed(2)}` : "none",
-            });
-        }
     }
 
     /**
@@ -639,7 +556,8 @@ export class XRInputHandler {
                             if (isPinching) {
                                 // Log when trigger state changes
                                 if (!this.wasPinching[handedness]) {
-                                    console.log(`🎮 [Trigger] ${handedness} trigger pressed (value=${triggerValue.toFixed(2)})`);
+                                    // eslint-disable-next-line no-console
+                                    console.log(`🎮 TRIGGER_PRESS ${handedness} (val=${triggerValue.toFixed(2)})`);
                                 }
 
                                 this.wasPinching[handedness] = true;
@@ -651,7 +569,8 @@ export class XRInputHandler {
                                     pinchStrength: triggerValue,
                                 };
                             } else if (this.wasPinching[handedness]) {
-                                console.log(`🎮 [Trigger] ${handedness} trigger released (value=${triggerValue.toFixed(2)})`);
+                                // eslint-disable-next-line no-console
+                                console.log(`🎮 TRIGGER_RELEASE ${handedness} (val=${triggerValue.toFixed(2)})`);
                                 this.wasPinching[handedness] = false;
                                 this.resetGestureState();
                             }
@@ -695,7 +614,8 @@ export class XRInputHandler {
                             pinchDist < PINCH_THRESHOLD; // Not pinching - use tighter threshold
 
                         if (isP !== wasP) {
-                            console.log(`🤲 [Hand] ${handedness} ${isP ? "started" : "stopped"} pinching (dist=${pinchDist.toFixed(3)})`);
+                            // eslint-disable-next-line no-console
+                            console.log(`🤲 PINCH_${isP ? "START" : "END"} ${handedness} (dist=${pinchDist.toFixed(3)})`);
                             if (!isP) {
                                 this.resetGestureState();
                             }
@@ -713,11 +633,8 @@ export class XRInputHandler {
                         }
                     }
                 }
-            } catch (e) {
-                // Log hand tracking errors (throttled)
-                if (this.frameCount % 60 === 1) {
-                    console.warn(`⚠️ Hand tracking access error (${handedness}):`, e);
-                }
+            } catch {
+                // Hand tracking access error - ignore
             }
         }
 
@@ -761,16 +678,10 @@ export class XRInputHandler {
         const leftPinching = this.leftHand?.isPinching ?? false;
         const rightPinching = this.rightHand?.isPinching ?? false;
 
-        // Debug: Log when single hand is pinching (throttled)
-        if (this.frameCount % 30 === 0 && (leftPinching || rightPinching)) {
-            console.log(`🎯 [XR Node] Pinch state: left=${leftPinching}, right=${rightPinching}, dragging=${this.isDraggingNode}`);
-        }
-
         // If both hands are pinching, don't do node interaction (gestures take over)
         if (leftPinching && rightPinching) {
             // If we were dragging a node, end the drag since user wants to gesture
             if (this.isDraggingNode) {
-                console.log("🎯 [XR Node] Both hands pinching - ending drag for gesture");
                 this.endNodeDrag();
             }
 
@@ -794,10 +705,8 @@ export class XRInputHandler {
 
         // Not currently dragging - check if we should start
         if (leftPinching && !rightPinching && this.leftHand) {
-            console.log("🎯 [XR Node] Left hand pinching alone - trying to start drag");
             this.tryStartNodeDrag("left", this.leftHand.position);
         } else if (rightPinching && !leftPinching && this.rightHand) {
-            console.log("🎯 [XR Node] Right hand pinching alone - trying to start drag");
             this.tryStartNodeDrag("right", this.rightHand.position);
         }
     }
@@ -816,7 +725,6 @@ export class XRInputHandler {
         }
 
         if (!controller) {
-            console.log(`🎯 [XR Node] No controller found for ${handedness} hand`);
             return;
         }
 
@@ -838,11 +746,6 @@ export class XRInputHandler {
             ray.direction = pointerNode.forward.clone();
         }
 
-        console.log(`🎯 [XR Node] Casting ray from ${handedness}:`, {
-            origin: `(${ray.origin.x.toFixed(2)}, ${ray.origin.y.toFixed(2)}, ${ray.origin.z.toFixed(2)})`,
-            direction: `(${ray.direction.x.toFixed(2)}, ${ray.direction.y.toFixed(2)}, ${ray.direction.z.toFixed(2)})`,
-        });
-
         // Pick meshes in the scene
         const pickInfo = this.scene.pickWithRay(ray, (mesh) => {
             // Only pick node meshes (they have dragHandler in metadata or on the node)
@@ -850,36 +753,26 @@ export class XRInputHandler {
         });
 
         if (!pickInfo?.hit || !pickInfo.pickedMesh) {
-            console.log("🎯 [XR Node] Ray did not hit any mesh");
             return;
         }
-
-        console.log(`🎯 [XR Node] Ray hit mesh: ${pickInfo.pickedMesh.name}`, {
-            distance: pickInfo.distance.toFixed(2),
-            point: pickInfo.pickedPoint ?
-                `(${pickInfo.pickedPoint.x.toFixed(2)}, ${pickInfo.pickedPoint.y.toFixed(2)}, ${pickInfo.pickedPoint.z.toFixed(2)})` :
-                "null",
-        });
 
         // Try to find the NodeDragHandler for this mesh
         const dragHandler = this.findDragHandlerForMesh(pickInfo.pickedMesh);
         if (!dragHandler) {
-            console.log(`🎯 [XR Node] No drag handler for mesh: ${pickInfo.pickedMesh.name}`);
             return;
         }
 
         // Get the node's current position for debugging
         const node = dragHandler.getNode();
         const nodeMeshPosition = node.mesh.position;
+        const {pickedPoint} = pickInfo;
 
-        // Start the drag
-        console.log(`🎯 [XR Node] Starting node drag with ${handedness} hand:`, {
-            meshName: pickInfo.pickedMesh.name,
-            handPosition: `(${handPosition.x.toFixed(3)}, ${handPosition.y.toFixed(3)}, ${handPosition.z.toFixed(3)})`,
-            nodePosition: `(${nodeMeshPosition.x.toFixed(3)}, ${nodeMeshPosition.y.toFixed(3)}, ${nodeMeshPosition.z.toFixed(3)})`,
-            pickedPoint: pickInfo.pickedPoint ?
-                `(${pickInfo.pickedPoint.x.toFixed(3)}, ${pickInfo.pickedPoint.y.toFixed(3)}, ${pickInfo.pickedPoint.z.toFixed(3)})` :
-                "null",
+        // DEBUG: Log drag start with all relevant positions
+        // eslint-disable-next-line no-console
+        console.log(`🎯 DRAG_START ${handedness}`, {
+            handPos: `(${handPosition.x.toFixed(3)}, ${handPosition.y.toFixed(3)}, ${handPosition.z.toFixed(3)})`,
+            nodePos: `(${nodeMeshPosition.x.toFixed(3)}, ${nodeMeshPosition.y.toFixed(3)}, ${nodeMeshPosition.z.toFixed(3)})`,
+            pickPt: pickedPoint ? `(${pickedPoint.x.toFixed(3)}, ${pickedPoint.y.toFixed(3)}, ${pickedPoint.z.toFixed(3)})` : "null",
         });
 
         this.isDraggingNode = true;
@@ -888,13 +781,8 @@ export class XRInputHandler {
         this.lastDragHandPosition = handPosition.clone(); // Store for delta calculation
 
         // Call the drag handler's start method with the picked point as initial position
-        const worldPosition = pickInfo.pickedPoint ?? handPosition;
+        const worldPosition = pickedPoint ?? handPosition;
         dragHandler.onDragStart(worldPosition);
-
-        // Log the node position after onDragStart to check for immediate changes
-        console.log("🎯 [XR Node] After onDragStart, node position:", {
-            position: `(${node.mesh.position.x.toFixed(3)}, ${node.mesh.position.y.toFixed(3)}, ${node.mesh.position.z.toFixed(3)})`,
-        });
     }
 
     /**
@@ -908,6 +796,9 @@ export class XRInputHandler {
      *
      * This approach correctly handles pivot rotation changes during drag.
      */
+    // Track drag update count for limiting debug logs
+    private dragUpdateCount = 0;
+
     private updateNodeDrag(currentHandPosition: Vector3): void {
         if (!this.draggedNodeHandler || !this.lastDragHandPosition) {
             return;
@@ -922,8 +813,7 @@ export class XRInputHandler {
             return;
         }
 
-        // Log first few updates with detail for debugging
-        const isFirstUpdates = this.frameCount < 10 || this.frameCount % 30 === 0;
+        this.dragUpdateCount++;
 
         // Transform delta through pivot rotation
         const sceneDelta = this.transformDeltaToSceneSpace(xrDelta);
@@ -936,16 +826,13 @@ export class XRInputHandler {
         const currentNodePos = node.mesh.position.clone();
         const newPosition = currentNodePos.add(sceneDelta);
 
-        // Debug logging - more detail on first updates to catch the jump
-        if (isFirstUpdates) {
-            console.log(`🎯 [XR Drag Update] Frame ${this.frameCount}:`, {
-                currentHand: `(${currentHandPosition.x.toFixed(4)}, ${currentHandPosition.y.toFixed(4)}, ${currentHandPosition.z.toFixed(4)})`,
-                lastHand: `(${this.lastDragHandPosition.x.toFixed(4)}, ${this.lastDragHandPosition.y.toFixed(4)}, ${this.lastDragHandPosition.z.toFixed(4)})`,
-                xrDelta: `(${xrDelta.x.toFixed(4)}, ${xrDelta.y.toFixed(4)}, ${xrDelta.z.toFixed(4)})`,
-                deltaLength: deltaLength.toFixed(4),
-                sceneDelta: `(${sceneDelta.x.toFixed(4)}, ${sceneDelta.y.toFixed(4)}, ${sceneDelta.z.toFixed(4)})`,
-                currentNodePos: `(${currentNodePos.x.toFixed(3)}, ${currentNodePos.y.toFixed(3)}, ${currentNodePos.z.toFixed(3)})`,
-                newPosition: `(${newPosition.x.toFixed(3)}, ${newPosition.y.toFixed(3)}, ${newPosition.z.toFixed(3)})`,
+        // DEBUG: Log only first 5 updates to catch initial movement issues
+        if (this.dragUpdateCount <= 5) {
+            // eslint-disable-next-line no-console
+            console.log(`🎯 DRAG_UPDATE #${this.dragUpdateCount}`, {
+                delta: `(${xrDelta.x.toFixed(4)}, ${xrDelta.y.toFixed(4)}, ${xrDelta.z.toFixed(4)})`,
+                len: deltaLength.toFixed(4),
+                newPos: `(${newPosition.x.toFixed(3)}, ${newPosition.y.toFixed(3)}, ${newPosition.z.toFixed(3)})`,
             });
         }
 
@@ -981,7 +868,8 @@ export class XRInputHandler {
      */
     private endNodeDrag(): void {
         if (this.draggedNodeHandler) {
-            console.log("🎯 [XR Node] Ending node drag");
+            // eslint-disable-next-line no-console
+            console.log(`🎯 DRAG_END (${this.dragUpdateCount} updates)`);
             this.draggedNodeHandler.onDragEnd();
         }
 
@@ -989,6 +877,7 @@ export class XRInputHandler {
         this.draggedNodeHandler = null;
         this.dragHand = null;
         this.lastDragHandPosition = null;
+        this.dragUpdateCount = 0; // Reset for next drag
     }
 
     /**
@@ -1001,14 +890,8 @@ export class XRInputHandler {
         if (mesh.metadata && typeof mesh.metadata === "object") {
             const metadata = mesh.metadata as {graphNode?: {dragHandler?: NodeDragHandler}};
             if (metadata.graphNode?.dragHandler) {
-                console.log(`🎯 [XR Node] Found drag handler for mesh: ${mesh.name}`);
                 return metadata.graphNode.dragHandler;
             }
-        }
-
-        // Log for debugging if we couldn't find a handler
-        if (this.frameCount % 60 === 0) {
-            console.log(`🎯 [XR Node] No drag handler found for mesh: ${mesh.name}, metadata:`, mesh.metadata);
         }
 
         return null;

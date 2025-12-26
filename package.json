@@ -88,7 +88,7 @@
     "build": "vite build && tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "build:storybook": "npm run build-storybook",
-    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && . ./.env 2>/dev/null; storybook dev -p ${PORT:-6006} --host ${HOST:-localhost} --no-open",
+    "storybook": "rm -rf node_modules/.vite && npm run build-storybook && . ./.env 2>/dev/null; storybook dev -p ${PORT:-6006} --host ${HOST:-localhost} ${HTTPS_CERT_PATH:+--https --ssl-cert $HTTPS_CERT_PATH --ssl-key $HTTPS_KEY_PATH} --no-open",
     "chromatic": "npx chromatic --exit-zero-on-changes",
     "prepare": "husky",
     "build-storybook": "storybook build",
